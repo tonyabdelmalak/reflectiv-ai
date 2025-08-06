@@ -104,7 +104,8 @@ img {
 
 .logo img {
   /* Increase logo size for greater prominence */
-  height: 80px;
+  /* Significantly enlarge the logo for the main navigation */
+  height: 240px;
 }
 
 .nav-links {
