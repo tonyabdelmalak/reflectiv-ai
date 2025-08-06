@@ -342,8 +342,9 @@ img {
 
 /* Style citation links within the evidence list so they are clearly visible */
 .evidence-list a {
-  color: var(--color-accent);
-  text-decoration: underline;
+  /* Use !important to ensure citation numbers override global anchor styles */
+  color: var(--color-accent) !important;
+  text-decoration: underline !important;
 }
 
 .evidence-list a:hover {
