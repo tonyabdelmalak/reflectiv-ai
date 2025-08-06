@@ -103,7 +103,8 @@ img {
 }
 
 .logo img {
-  height: 48px;
+  /* Increase logo size for greater prominence */
+  height: 64px;
 }
 
 .nav-links {
