@@ -104,7 +104,7 @@ img {
 
 .logo img {
   /* Increase logo size for greater prominence */
-  height: 64px;
+  height: 80px;
 }
 
 .nav-links {
@@ -338,6 +338,16 @@ img {
 
 .evidence-list li {
   margin-bottom: 0.75rem;
+}
+
+/* Style citation links within the evidence list so they are clearly visible */
+.evidence-list a {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+.evidence-list a:hover {
+  color: var(--color-primary);
 }
 
 /* Call to Action Section */
