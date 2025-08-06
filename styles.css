@@ -15,13 +15,29 @@
 
 /* Colour palette */
 :root {
-  --color-background: #f8f7f4; /* off‑white base */
-  --color-primary: #0d1a26;    /* dark navy */
-  --color-secondary: #6c7a8c;  /* grey‑blue */
-  --color-accent: #56a3a6;     /* teal accent */
-  --color-text: #2f3a48;       /* dark slate for body text */
-  --color-light: #ffffff;      /* pure white */
-  --color-muted: #e6e4df;      /* muted light for subtle backgrounds */
+  /* Pastel light theme (slightly richer tones) */
+  /* The original palette felt too washed out on high‑contrast screens. These values deepen the pastels for more pop while keeping a calm vibe. */
+  --color-background: #f6f8f4;   /* soft cream with a hint of green */
+  --color-card: #ffffff;         /* card backgrounds remain crisp */
+  --color-primary: #1d344f;      /* deeper navy for headings */
+  --color-secondary: #596a82;    /* slightly darker muted blue for body text */
+  --color-accent: #6ab09c;       /* richer teal accent used for buttons & links */
+  --color-muted: #e3eaf3;        /* medium pastel blue for section backgrounds */
+  --color-highlight: #e6d8f2;    /* lavender shade toned up for contrast */
+  --color-light: #ffffff;        /* pure white */
+}
+
+/* Dark theme overrides using CSS variables. When the body has the .dark-theme class, these variables replace the light theme values. */
+.dark-theme {
+  --color-background: #1a1c2e;
+  --color-card: #262a44;
+  --color-primary: #f6f8ff;
+  --color-secondary: #c3c8d5;
+  --color-accent: #80c4af;
+  --color-muted: #2e344d;
+  --color-highlight: #2c4364;
+  /* Keep light colour consistent for buttons and highlights */
+  /* --color-light remains white in dark theme to ensure legibility of buttons */
 }
 
 /* Global resets */
@@ -34,7 +50,8 @@
 body {
   font-family: 'Poppins', sans-serif;
   background-color: var(--color-background);
-  color: var(--color-text);
+  /* Default body text uses the secondary colour for readability */
+  color: var(--color-secondary);
   line-height: 1.6;
 }
 
@@ -47,6 +64,49 @@ img {
   max-width: 100%;
   height: auto;
   display: block;
+}
+
+/* Fancy font class
+ * Used to stylise key phrases such as “Emotional Intelligence” in the hero section.
+ * Applies a calligraphic handwriting typeface (Caveat) and accent colour to draw the eye
+ * without using a highlighted background. */
+.fancy-font {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+/* Highlighted text in headings or copy */
+.highlight {
+  background-color: var(--color-highlight);
+  padding: 0.1rem 0.2rem;
+  border-radius: 4px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--color-primary);
+  cursor: pointer;
+  margin-left: 0.5rem;
+}
+.dark-theme .theme-toggle {
+  color: var(--color-secondary);
+}
+
+/* Hidden elements for scroll animations */
+.hidden {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
 }
 
 /* Utility classes */
@@ -72,7 +132,8 @@ img {
 }
 
 .btn-primary:hover {
-  background-color: #489093;
+  /* Darker shade of the accent for hover state */
+  background-color: #589a86;
 }
 
 .btn-secondary {
@@ -93,6 +154,12 @@ img {
   top: 0;
   width: 100%;
   z-index: 100;
+}
+
+/* Dark theme navbar background */
+.dark-theme .navbar {
+  background-color: var(--color-card);
+  border-bottom: 1px solid var(--color-muted);
 }
 
 .nav-inner {
@@ -134,7 +201,15 @@ img {
 /* Hero Section */
 .hero-section {
   padding: 4rem 0 3rem;
-  background-color: var(--color-light);
+  /* Soft gradient background inspired by Brightn */
+  /* Adjusted gradient: slightly deeper pastels for better visibility */
+  background: linear-gradient(135deg, #dcebf7, #ede4f8);
+}
+
+/* Dark theme hero gradient */
+.dark-theme .hero-section {
+  /* Dark theme gradient tuned to match richer palette */
+  background: linear-gradient(135deg, #1e2240, #343f70);
 }
 
 .hero-grid {
@@ -196,7 +271,7 @@ img {
 }
 
 .mission-card {
-  background-color: var(--color-light);
+  background-color: var(--color-card);
   padding: 1.5rem;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
@@ -239,7 +314,7 @@ img {
 }
 
 .step {
-  background-color: var(--color-light);
+  background-color: var(--color-card);
   padding: 1.5rem;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
@@ -289,7 +364,7 @@ img {
 }
 
 .feature {
-  background-color: var(--color-light);
+  background-color: var(--color-card);
   padding: 1.5rem;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
@@ -310,6 +385,108 @@ img {
 /* Evidence Section */
 .evidence-section {
   padding: 3rem 0;
+}
+
+/* Roadmap Section */
+.roadmap-section {
+  padding: 3rem 0;
+  background-color: var(--color-muted);
+}
+.roadmap-section h2 {
+  text-align: center;
+  margin-bottom: 1rem;
+  font-size: 2rem;
+  color: var(--color-primary);
+}
+.roadmap-section p {
+  max-width: 900px;
+  margin: 0 auto 2rem;
+  text-align: center;
+  color: var(--color-secondary);
+}
+.timeline-image {
+  max-width: 1000px;
+  margin: 0 auto 2rem;
+}
+.timeline-image img {
+  width: 100%;
+  height: auto;
+}
+.roadmap-table-wrapper {
+  overflow-x: auto;
+}
+.roadmap-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+.roadmap-table th,
+.roadmap-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+.roadmap-table th {
+  background-color: var(--color-accent);
+  color: var(--color-light);
+  font-weight: 600;
+}
+.dark-theme .roadmap-table th {
+  background-color: var(--color-accent);
+  color: var(--color-background);
+}
+.roadmap-table tbody tr:nth-child(odd) {
+  background-color: var(--color-card);
+}
+.roadmap-table tbody tr:nth-child(even) {
+  background-color: var(--color-light);
+}
+.dark-theme .roadmap-table tbody tr:nth-child(even) {
+  background-color: var(--color-card);
+}
+.roadmap-table td {
+  color: var(--color-secondary);
+}
+.roadmap-sources {
+  font-size: 0.8rem;
+  color: var(--color-secondary);
+  text-align: center;
+}
+
+/* What's Next Teaser */
+.whats-next-section {
+  padding: 2rem 0;
+  background-color: var(--color-card);
+  border-top: 1px solid var(--color-muted);
+}
+.whats-next-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+}
+.whats-next-section h3 {
+  font-size: 1.5rem;
+  color: var(--color-primary);
+}
+.whats-next-section p {
+  max-width: 600px;
+  color: var(--color-secondary);
+}
+.btn-inline {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: 600;
+  background-color: var(--color-accent);
+  color: var(--color-light);
+  transition: background-color 0.2s ease, color 0.2s ease;
+  text-decoration: none;
+}
+.btn-inline:hover {
+  /* Darker shade of the accent for hover on inline button */
+  background-color: #589a86;
 }
 
 .evidence-section h2 {
@@ -333,7 +510,7 @@ img {
   max-width: 900px;
   margin: 0 auto;
   padding-left: 1rem;
-  color: var(--color-text);
+  color: var(--color-primary);
   font-size: 0.95rem;
 }
 

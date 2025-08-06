@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="styles.css">
     <!-- Import Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Additional creative font for stylistic emphasis on key phrases -->
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <!-- Header & Navigation -->
@@ -21,8 +23,11 @@
                 <a href="#approach">Approach</a>
                 <a href="#features">Features</a>
                 <a href="#evidence">Evidence</a>
+                <a href="#roadmap">Roadmap</a>
                 <a href="#contact">Contact</a>
             </nav>
+            <!-- Theme toggle button for light/pastel and dark modes -->
+            <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
             <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">☰</button>
         </div>
     </header>
@@ -31,7 +36,7 @@
     <section id="hero" class="hero-section">
         <div class="container hero-grid">
             <div class="hero-text">
-                <h1>Empowering Emotional&nbsp;Intelligence for Youth</h1>
+                <h1>Empowering <span class="fancy-font">Emotional&nbsp;Intelligence</span> for Youth</h1>
                 <p>Reflectiv combines evidence‑based social and emotional learning with next‑generation agentic AI to help young people cultivate self‑awareness, resilience and purpose.</p>
                 <div class="hero-cta">
                     <a href="#contact" class="btn btn-primary">Join the Waitlist</a>
@@ -45,7 +50,7 @@
     </section>
 
     <!-- Mission Section -->
-    <section id="mission" class="mission-section">
+    <section id="mission" class="mission-section hidden">
         <div class="container">
             <h2>Our Mission</h2>
             <p>Reflectiv exists to empower the next generation with the self‑knowledge and skills needed to thrive in an uncertain world. By weaving social and emotional learning into everyday life and leveraging agentic AI, we help youth understand their emotions, build healthy relationships and make purposeful decisions. To support this journey, we offer validated emotional intelligence assessments to give young people a baseline of their strengths and growth areas and tailor support accordingly.</p>
@@ -67,7 +72,7 @@
     </section>
 
     <!-- Approach Section -->
-    <section id="approach" class="approach-section">
+    <section id="approach" class="approach-section hidden">
         <div class="container">
             <h2>The Reflectiv Approach</h2>
             <p>Our four‑step process makes cultivating emotional intelligence intuitive and engaging.</p>
@@ -97,7 +102,7 @@
     </section>
 
     <!-- Features Section -->
-    <section id="features" class="features-section">
+    <section id="features" class="features-section hidden">
         <div class="container">
             <h2>Innovative Features</h2>
             <div class="features-grid">
@@ -126,7 +131,7 @@
     </section>
 
     <!-- Evidence Section -->
-    <section id="evidence" class="evidence-section">
+    <section id="evidence" class="evidence-section hidden">
         <div class="container">
             <h2>Evidence‑Based Design</h2>
             <p>Reflectiv is built on scientific research demonstrating the power of social and emotional learning and emerging technologies.</p>
@@ -138,6 +143,72 @@
                 <li>AI companions are increasingly common: a 2025 report found that 72% of teens have used AI chatbots for companionship and 33% describe having friendships with them <a href="https://www.scientificamerican.com/article/teens-are-flocking-to-ai-chatbots-is-this-healthy/" target="_blank" rel="noopener">[5]</a>. Reflectiv teaches self‑awareness and boundaries in digital relationships.</li>
                 <li>AI literacy matters: experts note that while AI agents can support learning, they cannot fully replicate human connection. Children should be taught to understand the limitations of AI and to critically evaluate AI‑generated content <a href="https://www.gse.harvard.edu/ideas/edcast/24/10/impact-ai-childrens-development" target="_blank" rel="noopener">[6]</a>. Reflectiv integrates AI literacy tools so youth can engage safely and ethically with agentic AI.</li>
             </ul>
+        </div>
+    </section>
+
+    <!-- Roadmap Section -->
+    <section id="roadmap" class="roadmap-section hidden">
+        <div class="container">
+            <h2>Where Reflectiv Is Today — and Where We're Headed</h2>
+            <p>Reflectiv was built with a clear mission: to help youth build emotional intelligence and reflective agency when interacting with AI. Our current capabilities emphasise self‑awareness, meta‑cognition and responsible decision‑making. We’re also laying the groundwork for future features that will deepen empathy, stress regulation and ethical collaboration with digital agents.</p>
+            <!-- Timeline diagram illustrating the evolution of EI capabilities -->
+            <div class="timeline-image">
+                <img src="assets/ai-agent-journey.png" alt="AI agent journey timeline">
+            </div>
+            <!-- Table comparing current capabilities with future enhancements -->
+            <div class="roadmap-table-wrapper">
+                <table class="roadmap-table">
+                    <thead>
+                        <tr>
+                            <th>Key Area</th>
+                            <th>Current Capabilities</th>
+                            <th>Future Enhancements</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Self‑Awareness & Reflection</td>
+                            <td>Guided journaling and assessments scaffold user reflection and meta‑cognitive trust&nbsp;thermometers</td>
+                            <td>Adding mood history and emotion tracking to visualise patterns over time</td>
+                        </tr>
+                        <tr>
+                            <td>Calibrated Trust with AI</td>
+                            <td>Encourages critical questioning of AI outputs and bias awareness</td>
+                            <td>Diagnostic tools for bias detection and personalised trust calibration</td>
+                        </tr>
+                        <tr>
+                            <td>Emotion Regulation</td>
+                            <td>Not yet a primary focus</td>
+                            <td>Integrate stress coping micro‑tools, breathing prompts and screen‑off resets</td>
+                        </tr>
+                        <tr>
+                            <td>Empathy & Social Skills</td>
+                            <td>Currently outside scope</td>
+                            <td>Future modules for reading human cues, simulated‑empathy detection and boundary‑setting</td>
+                        </tr>
+                        <tr>
+                            <td>Relationships & Boundaries</td>
+                            <td>Not yet addressed</td>
+                            <td>Tools to support healthy human‑AI collaboration and belonging</td>
+                        </tr>
+                        <tr>
+                            <td>Ethics, Privacy & Cultural Equity</td>
+                            <td>Reflectiv prompts self‑diagnostics but lacks explicit guardrails</td>
+                            <td>Planned features include user‑controlled emotional data, transparency nudges and cultural calibration</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="roadmap-sources">Sources: [1]–[6] — see Evidence section for full citations.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- What's Next Teaser Section -->
+    <section id="whatsnext" class="whats-next-section hidden">
+        <div class="container whats-next-content">
+            <h3>What’s Next for Reflectiv?</h3>
+            <p>We’re expanding our emotionally intelligent AI to better support empathy, stress regulation and healthy boundaries. Curious about the journey?&nbsp;</p>
+            <a href="#roadmap" class="btn btn-primary btn-inline">View Roadmap</a>
         </div>
     </section>
 
