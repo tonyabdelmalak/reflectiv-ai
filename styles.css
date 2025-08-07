@@ -402,10 +402,8 @@ img {
 
 /* Promo Section */
 .promo-section {
-  padding: 3rem 0;
-  display: flex;
-  justify-content: center;
-  background-color: var(--color-muted);
+  /* Hide the promo section while preserving its structure for future use */
+  display: none;
 }
 
 .promo-image img {
