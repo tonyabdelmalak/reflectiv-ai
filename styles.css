@@ -170,9 +170,8 @@ img {
 }
 
 .logo img {
-  /* Increase logo size for greater prominence */
-  /* Significantly enlarge the logo for the main navigation */
-  height: 240px;
+  /* Reduce logo size to one third of its previous height */
+  height: 80px;
   /* Lighten the logo slightly to blend the off‑white background into the page */
   filter: brightness(1.1);
 }
