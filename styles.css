@@ -173,6 +173,8 @@ img {
   /* Increase logo size for greater prominence */
   /* Significantly enlarge the logo for the main navigation */
   height: 240px;
+  /* Lighten the logo slightly to blend the off‑white background into the page */
+  filter: brightness(1.1);
 }
 
 .nav-links {
@@ -397,6 +399,20 @@ img {
   margin-bottom: 1rem;
   font-size: 2rem;
   color: var(--color-primary);
+}
+
+/* Promo Section */
+.promo-section {
+  padding: 3rem 0;
+  display: flex;
+  justify-content: center;
+  background-color: var(--color-muted);
+}
+
+.promo-image img {
+  max-width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 }
 .roadmap-section p {
   max-width: 900px;
