@@ -162,11 +162,11 @@
   // ===== Persona + Coach Add-On (embedded for convenience) =====
   // Adjust persona file paths for subpath hosting.
   var TONY_PERSONAS = [
-    { name: "Coworker", url: "./chat-widget/personas/coworker.md" },
-    { name: "Manager",  url: "./chat-widget/personas/manager.md"  },
-    { name: "Family",   url: "./chat-widget/personas/family.md"   },
-    { name: "Friend",   url: "./chat-widget/personas/friend.md"   },
-  ];
+  { name: "Coworker", url: "./chat-widget/assets/chat/personas/coworker.md" },
+  { name: "Manager",  url: "./chat-widget/assets/chat/personas/manager.md"  },
+  { name: "Family",   url: "./chat-widget/assets/chat/personas/family.md"   },
+  { name: "Friend",   url: "./chat-widget/assets/chat/personas/friend.md"   },
+];
 
   var COACH_INSTRUCTIONS = `
 # Coach Mode (Private to the model — do not role-play this)
