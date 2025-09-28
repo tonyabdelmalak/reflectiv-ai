@@ -3,13 +3,13 @@
 
 (function(){
   var CONFIG = {
-    workerUrl: "https://my-chat-agent.tonyabdelmalak.workers.dev/chat", // <- keep or change
-    systemUrl: "./chat-widget/assets/chat/system.md",                   // <- baseline system
-    model: "llama-3.1-8b-instant",
-    temperature: 0.2,
-    title: "Practice Coach",
-    brand: { accent: "#3e5494", radius: "14px" }
-  };
+  workerUrl: "https://my-chat-agent.tonyabdelmalak.workers.dev/chat",
+  systemUrl: "./assets/chat/system.md",   // <- was ./chat-widget/assets/chat/system.md
+  model: "llama-3.1-8b-instant",
+  temperature: 0.2,
+  title: "Practice Coach",
+  brand: { accent: "#3e5494", radius: "14px" }
+};
 
   // ----- Utilities -----
   function $(sel, root){ return (root||document).querySelector(sel); }
