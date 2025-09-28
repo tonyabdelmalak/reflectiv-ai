@@ -265,5 +265,20 @@
     </footer>
 
     <script src="script.js"></script>
+    <!-- Chat Widget -->
+<link rel="stylesheet" href="./chat-widget/assets/chat/widget.css" />
+<script src="./chat-widget/assets/chat/widget.js" defer></script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', function () {
+    if (window.TonyChatWidget?.init) {
+      window.TonyChatWidget.init({
+        title: "Practice Coach",
+        brand: { accent: "#3e5494", radius: "16px" }
+      });
+    }
+  });
+</script>
+
 </body>
 </html>
