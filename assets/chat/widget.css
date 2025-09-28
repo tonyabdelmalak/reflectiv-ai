@@ -1,0 +1,27 @@
+/* Minimal, clean styles for Tony's floating chat */
+
+.tcw-wrap { position: fixed; right: 18px; bottom: 18px; z-index: 9999; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+.tcw-btn { display:inline-flex; align-items:center; gap:8px; padding:12px 14px; border-radius:999px; border:1px solid rgba(0,0,0,.08); background:#fff; box-shadow:0 6px 24px rgba(0,0,0,.12); cursor:pointer; }
+.tcw-btn svg { width:18px; height:18px; }
+.tcw-btn:hover { transform: translateY(-1px); box-shadow:0 8px 28px rgba(0,0,0,.16); }
+
+.tcw-panel { display:none; width:360px; height:520px; background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:16px; box-shadow:0 20px 40px rgba(0,0,0,.18); overflow:hidden; }
+.tcw-open .tcw-panel { display:block; }
+.tcw-open .tcw-btn { display:none; }
+
+.tcw-head { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid #eee; background: #f7f9fc; }
+.tcw-title { font-size:14px; font-weight:600; }
+.tcw-close { border:none; background:transparent; cursor:pointer; font-size:18px; line-height:1; }
+
+.tcw-body { height: calc(100% - 120px); overflow:auto; padding:12px; display:flex; flex-direction:column; gap:10px; background:#fafbff; }
+.tcw-msg { max-width:85%; padding:10px 12px; border-radius:14px; white-space:pre-wrap; word-wrap:break-word; font-size:14px; line-height:1.4; }
+.tcw-user { align-self:flex-end; background:#e9eefc; border:1px solid #d7e0fb; }
+.tcw-bot  { align-self:flex-start; background:#ffffff; border:1px solid #eee; }
+
+.tcw-footer { display:flex; gap:8px; padding:10px; border-top:1px solid #eee; background:#fff; }
+.tcw-input { flex:1; border:1px solid #ddd; border-radius:12px; padding:10px 12px; resize:none; height:40px; font-size:14px; }
+.tcw-send  { padding:10px 12px; border-radius:12px; border:1px solid #3e5494; background:#3e5494; color:#fff; cursor:pointer; }
+
+.persona-bar { display:flex; gap:8px; align-items:center; padding:6px 10px; border-top:1px solid #eee; background:#fafafa; }
+.persona-bar select, .persona-bar input[type="text"] { border:1px solid #ddd; border-radius:10px; padding:6px; font-size:12px; }
+.persona-bar label { font-size:12px; display:flex; align-items:center; gap:6px; }
