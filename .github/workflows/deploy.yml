@@ -1,0 +1,49 @@
+name: Deploy ReflectivEI to GitHub Pages
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  GITHUB_TOKEN: ${{ secrets.PAT_REFLECTIVEI_RW }}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validate site
+        run: |
+          test -f index.html || { echo "index.html missing"; exit 1; }
+          test -f assets/chat/config.json || { echo "config.json missing"; exit 1; }
+          test -f assets/chat/system.md || { echo "system.md missing"; exit 1; }
+          test -f assets/chat/about-ei.md || { echo "about-ei.md missing"; exit 1; }
+          test -f assets/chat/widget.js || { echo "widget.js missing"; exit 1; }
+          test -f assets/chat/widget.css || { echo "widget.css missing"; exit 1; }
+          test -f assets/chat/data/hcp_scenarios.txt || { echo "hcp_scenarios.txt missing"; exit 1; }
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
