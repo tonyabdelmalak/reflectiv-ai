@@ -1,671 +1,147 @@
 /*
- * Reflectiv Site Styles
- *
- * This stylesheet defines the look and feel of the Reflectiv landing page. It
- * borrows some of the structural cues from Brightn.app but applies an
- * entirely new colour palette and typography to align with the Reflectiv
- * brand. Colours are inspired by the provided logo: a dark navy for depth,
- * a soft grey‑blue for secondary elements, an off‑white background to keep
- * things airy, and a teal accent for calls to action. The layout uses
- * responsive flex and grid techniques so content remains readable on large
- * screens and mobile devices. Sections are clearly delineated with
- * generous padding and subtle shadows on cards to create a sense of
- * layering.
+ * Global styles for the ReflectivEI website.
+ * This stylesheet defines the pastel palette and layout used across the site.
  */
 
-/* Colour palette */
 :root {
-  /* Pastel light theme (slightly richer tones) */
-  /* The original palette felt too washed out on high‑contrast screens. These values deepen the pastels for more pop while keeping a calm vibe. */
-  --color-background: #f6f8f4;   /* soft cream with a hint of green */
-  --color-card: #ffffff;         /* card backgrounds remain crisp */
-  --color-primary: #1d344f;      /* deeper navy for headings */
-  --color-secondary: #596a82;    /* slightly darker muted blue for body text */
-  --color-accent: #6ab09c;       /* richer teal accent used for buttons & links */
-  --color-muted: #e3eaf3;        /* medium pastel blue for section backgrounds */
-  --color-highlight: #e6d8f2;    /* lavender shade toned up for contrast */
-  --color-light: #ffffff;        /* pure white */
-}
-
-/* Dark theme overrides using CSS variables. When the body has the .dark-theme class, these variables replace the light theme values. */
-.dark-theme {
-  --color-background: #1a1c2e;
-  --color-card: #262a44;
-  --color-primary: #f6f8ff;
-  --color-secondary: #c3c8d5;
-  --color-accent: #80c4af;
-  --color-muted: #2e344d;
-  --color-highlight: #2c4364;
-  /* Keep light colour consistent for buttons and highlights */
-  /* --color-light remains white in dark theme to ensure legibility of buttons */
-}
-
-/* Global resets */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+  --primary-color: #3e5494; /* dark navy accent */
+  --secondary-color: #5f82c8; /* lighter accent */
+  --highlight-color: #00bcd4; /* teal accents */
+  --bg-color: #f8f9fc; /* light background */
+  --text-color: #333;
+  --radius: 14px;
 }
 
 body {
-  font-family: 'Poppins', sans-serif;
-  background-color: var(--color-background);
-  /* Default body text uses the secondary colour for readability */
-  color: var(--color-secondary);
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
   line-height: 1.6;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
-
-/* Fancy font class
- * Used to stylise key phrases such as “Emotional Intelligence” in the hero section.
- * Applies a calligraphic handwriting typeface (Caveat) and accent colour to draw the eye
- * without using a highlighted background. */
-.fancy-font {
-  font-family: 'Caveat', cursive;
-  font-weight: 700;
-  color: var(--color-accent);
-}
-
-/* Highlighted text in headings or copy */
-.highlight {
-  background-color: var(--color-highlight);
-  padding: 0.1rem 0.2rem;
-  border-radius: 4px;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
-}
-
-/* Theme toggle button */
-.theme-toggle {
-  display: none; /* Hide the theme toggle button */
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: var(--color-primary);
-  cursor: pointer;
-  margin-left: 0.5rem;
-}
-.dark-theme .theme-toggle {
-  color: var(--color-secondary);
-}
-
-/* Hidden elements for scroll animations */
-.hidden {
-  opacity: 0;
-  transform: translateY(20px);
-}
-.fade-in {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-}
-
-/* Utility classes */
-.container {
-  width: 90%;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.btn {
-  display: inline-block;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  font-weight: 600;
-  transition: background-color 0.2s ease, color 0.2s ease;
-  text-align: center;
-  cursor: pointer;
-}
-
-.btn-primary {
-  background-color: var(--color-accent);
-  color: var(--color-light);
-}
-
-.btn-primary:hover {
-  /* Darker shade of the accent for hover state */
-  background-color: #589a86;
-}
-
-.btn-secondary {
-  background-color: var(--color-light);
-  color: var(--color-primary);
-  border: 2px solid var(--color-accent);
-}
-
-.btn-secondary:hover {
-  background-color: var(--color-muted);
-}
-
-/* Navbar */
+/* Navigation bar */
 .navbar {
-  background-color: var(--color-light);
-  border-bottom: 1px solid var(--color-muted);
-  position: sticky;
-  top: 0;
-  width: 100%;
-  z-index: 100;
-}
-
-/* Dark theme navbar background */
-.dark-theme .navbar {
-  background-color: var(--color-card);
-  border-bottom: 1px solid var(--color-muted);
-}
-
-.nav-inner {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 0;
-}
-
-.logo img {
-  /* Reduce logo size to one third of its previous height */
-  height: 80px;
-  /* Lighten the logo slightly to blend the off‑white background into the page */
-  filter: brightness(1.1);
-}
-
-.nav-links {
-  display: flex;
-  gap: 1.5rem;
-}
-
-.nav-links a {
-  font-weight: 500;
-  color: var(--color-primary);
-  transition: color 0.2s ease;
-}
-
-.nav-links a:hover {
-  color: var(--color-accent);
-}
-
-.nav-toggle {
-  display: none;
-  font-size: 2rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-/* Hero Section */
-.hero-section {
-  padding: 4rem 0 3rem;
-  /* Soft gradient background inspired by Brightn */
-  /* Adjusted gradient: slightly deeper pastels for better visibility */
-  background: linear-gradient(135deg, #dcebf7, #ede4f8);
-}
-
-/* Dark theme hero gradient */
-.dark-theme .hero-section {
-  /* Dark theme gradient tuned to match richer palette */
-  background: linear-gradient(135deg, #1e2240, #343f70);
-}
-
-.hero-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   align-items: center;
-  gap: 2rem;
+  padding: 1rem 2rem;
+  background-color: var(--primary-color);
+  color: #fff;
 }
-
-.hero-text h1 {
-  font-size: 2.5rem;
-  color: var(--color-primary);
-  margin-bottom: 1rem;
-  line-height: 1.2;
+.navbar .logo-container {
+  display: flex;
+  align-items: center;
 }
-
-.hero-text p {
-  font-size: 1.125rem;
-  color: var(--color-secondary);
-  margin-bottom: 1.5rem;
+.navbar .logo {
+  height: 40px;
+  margin-right: 0.5rem;
 }
-
-.hero-cta {
+.navbar .site-title {
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+.navbar .nav-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   gap: 1rem;
-  flex-wrap: wrap;
 }
-
-.hero-image img {
-  border-radius: 8px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
-}
-
-/* Mission Section */
-.mission-section {
-  padding: 3rem 0;
-  background-color: var(--color-muted);
-}
-
-.mission-section h2 {
-  text-align: center;
-  margin-bottom: 1rem;
-  color: var(--color-primary);
-  font-size: 2rem;
-}
-
-.mission-section p {
-  text-align: center;
-  max-width: 800px;
-  margin: 0 auto 2rem;
-  color: var(--color-secondary);
-  font-size: 1rem;
-}
-
-.mission-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
-}
-
-.mission-card {
-  background-color: var(--color-card);
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-  text-align: center;
-}
-
-.mission-card h3 {
-  margin-bottom: 0.5rem;
-  color: var(--color-primary);
-  font-size: 1.25rem;
-}
-
-.mission-card p {
-  color: var(--color-secondary);
-  font-size: 0.95rem;
-}
-
-/* Approach Section */
-.approach-section {
-  padding: 3rem 0;
-}
-
-.approach-section h2 {
-  text-align: center;
-  margin-bottom: 1rem;
-  font-size: 2rem;
-  color: var(--color-primary);
-}
-
-.approach-section p {
-  text-align: center;
-  margin-bottom: 2rem;
-  color: var(--color-secondary);
-}
-
-.steps-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.5rem;
-}
-
-.step {
-  background-color: var(--color-card);
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-  text-align: center;
-}
-
-.step-number {
-  display: inline-block;
-  background-color: var(--color-accent);
-  color: var(--color-light);
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  line-height: 36px;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-
-.step h3 {
-  margin-bottom: 0.5rem;
-  color: var(--color-primary);
-  font-size: 1.125rem;
-}
-
-.step p {
-  color: var(--color-secondary);
-  font-size: 0.95rem;
-}
-
-/* Features Section */
-.features-section {
-  padding: 3rem 0;
-  background-color: var(--color-muted);
-}
-
-.features-section h2 {
-  text-align: center;
-  margin-bottom: 1rem;
-  font-size: 2rem;
-  color: var(--color-primary);
-}
-
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.5rem;
-}
-
-.feature {
-  background-color: var(--color-card);
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-  text-align: center;
-}
-
-.feature h3 {
-  margin-bottom: 0.5rem;
-  color: var(--color-primary);
-  font-size: 1.125rem;
-}
-
-.feature p {
-  color: var(--color-secondary);
-  font-size: 0.95rem;
-}
-
-/* Evidence Section */
-.evidence-section {
-  padding: 3rem 0;
-}
-
-/* Roadmap Section */
-.roadmap-section {
-  padding: 3rem 0;
-  background-color: var(--color-muted);
-}
-.roadmap-section h2 {
-  text-align: center;
-  margin-bottom: 1rem;
-  font-size: 2rem;
-  color: var(--color-primary);
-}
-
-/* Promo Section */
-.promo-section {
-  /* Hide the promo section while preserving its structure for future use */
-  display: none;
-}
-
-.promo-image img {
-  max-width: 100%;
-  border-radius: 12px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-}
-.roadmap-section p {
-  max-width: 900px;
-  margin: 0 auto 2rem;
-  text-align: center;
-  color: var(--color-secondary);
-}
-.timeline-image {
-  max-width: 1000px;
-  margin: 0 auto 2rem;
-}
-.timeline-image img {
-  width: 100%;
-  height: auto;
-}
-.roadmap-table-wrapper {
-  overflow-x: auto;
-}
-.roadmap-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
-}
-.roadmap-table th,
-.roadmap-table td {
-  padding: 0.75rem 1rem;
-  text-align: left;
-}
-.roadmap-table th {
-  background-color: var(--color-accent);
-  color: var(--color-light);
-  font-weight: 600;
-}
-.dark-theme .roadmap-table th {
-  background-color: var(--color-accent);
-  color: var(--color-background);
-}
-.roadmap-table tbody tr:nth-child(odd) {
-  background-color: var(--color-card);
-}
-.roadmap-table tbody tr:nth-child(even) {
-  background-color: var(--color-light);
-}
-.dark-theme .roadmap-table tbody tr:nth-child(even) {
-  background-color: var(--color-card);
-}
-.roadmap-table td {
-  color: var(--color-secondary);
-}
-.roadmap-sources {
-  font-size: 0.8rem;
-  color: var(--color-secondary);
-  text-align: center;
-}
-
-/* What's Next Teaser */
-.whats-next-section {
-  padding: 2rem 0;
-  background-color: var(--color-card);
-  border-top: 1px solid var(--color-muted);
-}
-.whats-next-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 0.75rem;
-}
-.whats-next-section h3 {
-  font-size: 1.5rem;
-  color: var(--color-primary);
-}
-.whats-next-section p {
-  max-width: 600px;
-  color: var(--color-secondary);
-}
-.btn-inline {
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  font-weight: 600;
-  background-color: var(--color-accent);
-  color: var(--color-light);
-  transition: background-color 0.2s ease, color 0.2s ease;
+.navbar .nav-links a {
+  color: #fff;
   text-decoration: none;
+  transition: opacity 0.2s ease;
 }
-.btn-inline:hover {
-  /* Darker shade of the accent for hover on inline button */
-  background-color: #589a86;
-}
-
-.evidence-section h2 {
-  text-align: center;
-  margin-bottom: 1rem;
-  font-size: 2rem;
-  color: var(--color-primary);
+.navbar .nav-links a:hover {
+  opacity: 0.8;
 }
 
-.evidence-section p {
+/* Hero section */
+.hero {
+  position: relative;
+  background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 50%, var(--bg-color) 100%);
+  color: #fff;
   text-align: center;
-  margin-bottom: 1.5rem;
-  color: var(--color-secondary);
+  padding: 4rem 1rem;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("assets/hero-image.png");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.25;
+}
+.hero-content {
+  position: relative;
   max-width: 800px;
+  margin: 0 auto;
+  z-index: 1;
+}
+.hero h2 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+.hero p {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  max-width: 600px;
   margin-left: auto;
   margin-right: auto;
 }
+.btn-primary {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--highlight-color);
+  color: #fff;
+  border-radius: var(--radius);
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+.btn-primary:hover {
+  background-color: #0097a7;
+}
 
-.evidence-list {
-  list-style: disc inside;
+/* Sections */
+main section {
+  padding: 2rem 1rem;
   max-width: 900px;
   margin: 0 auto;
-  padding-left: 1rem;
-  color: var(--color-primary);
-  font-size: 0.95rem;
 }
 
-.evidence-list li {
-  margin-bottom: 0.75rem;
-}
-
-/* Style citation links within the evidence list so they are clearly visible */
-.evidence-list a {
-  /* Use !important to ensure citation numbers override global anchor styles */
-  color: var(--color-accent) !important;
-  text-decoration: underline !important;
-}
-
-.evidence-list a:hover {
-  color: var(--color-primary);
-}
-
-/* Call to Action Section */
-.cta-section {
-  padding: 3rem 0;
-  background-color: var(--color-light);
+.about {
   text-align: center;
 }
 
-.cta-section h2 {
-  margin-bottom: 1rem;
-  font-size: 2rem;
-  color: var(--color-primary);
+.chat-section {
+  background-color: #fff;
+  border-radius: var(--radius);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
 }
 
-.cta-section p {
-  margin-bottom: 1.5rem;
-  color: var(--color-secondary);
-  max-width: 700px;
-  margin-left: auto;
-  margin-right: auto;
+/* Chat widget placeholder; the real chat interface will be styled in widget.css */
+.reflectiv-widget {
+  margin-top: 1rem;
 }
 
-.cta-form {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.cta-form input[type="email"] {
-  padding: 0.75rem;
-  border-radius: 4px;
-  border: 1px solid var(--color-muted);
-  flex: 1 1 250px;
-  max-width: 300px;
-  font-size: 1rem;
-}
-
-.cta-form input[type="email"]:focus {
-  outline: none;
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(86, 163, 166, 0.2);
-}
-
-.cta-form button {
-  flex: 0 0 auto;
+/* Contact section */
+.contact {
+  text-align: center;
 }
 
 /* Footer */
 .footer {
-  background-color: var(--color-primary);
-  color: var(--color-light);
-  padding: 2rem 0 1rem;
-  font-size: 0.9rem;
-}
-
-.footer-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1.5rem;
-  align-items: flex-start;
-}
-
-.footer-logo img {
-  width: 80px;
-}
-
-.footer-links a {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: var(--color-light);
-  font-weight: 500;
-  transition: color 0.2s ease;
-}
-
-.footer-links a:hover {
-  color: var(--color-accent);
-}
-
-.footer-social p {
-  margin-bottom: 0.5rem;
-  color: var(--color-secondary);
-}
-
-.footer-social .social-icons span {
-  font-size: 1.2rem;
-  margin-right: 0.5rem;
-}
-
-.footer-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--primary-color);
+  color: #fff;
   text-align: center;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  font-size: 0.8rem;
-  color: var(--color-secondary);
-}
-
-/* Responsive Styles */
-@media (max-width: 768px) {
-  .hero-grid {
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
-  .hero-cta {
-    justify-content: center;
-  }
-  .nav-links {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background-color: var(--color-light);
-    flex-direction: column;
-    align-items: center;
-    padding: 1rem 0;
-    gap: 1rem;
-    display: none;
-  }
-  .nav-links.active {
-    display: flex;
-  }
-  .nav-toggle {
-    display: block;
-    color: var(--color-primary);
-  }
+  padding: 1rem 0;
+  margin-top: 2rem;
 }
