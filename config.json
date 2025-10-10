@@ -1,0 +1,19 @@
+{
+  "model": {
+    "primary": "groq",
+    "fallback": "openrouter"
+  },
+  "workerEndpoint": "https://my-chat-agent.tonyabdelmalak.workers.dev/chat",
+  "brand": {
+    "name": "ReflectivEI",
+    "primaryColor": "#3e5494",
+    "secondaryColor": "#5f82c8",
+    "highlightColor": "#00bcd4",
+    "borderRadius": 14
+  },
+  "modes": ["emotional-assessment", "hiv-product-knowledge", "sales-simulation"],
+  "personaFile": "persona.json",
+  "systemPromptFile": "system.md",
+  "knowledgeFile": "about-ei.md",
+  "scenariosFile": "data/hcp_scenarios.txt"
+}
