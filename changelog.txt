@@ -1,0 +1,7 @@
+2025-10-09
+  • Initial release of ReflectivEI AI Sales Enablement platform.
+  • Set up site structure with index, styles and scripts.
+  • Implemented AI chat widget with modes: Emotional Assessment, HIV Product Knowledge and Sales Simulation.
+  • Added sample healthcare provider scenarios and simple coach feedback.
+  • Added about-ei.md summarising emotional assessment protocols and HIV medication information.
+  • Created maintenance and integration documentation.
