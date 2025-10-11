@@ -70,7 +70,6 @@
     const worked=[]; if(qCount>0) worked.push("You asked a focused question."); if(val) worked.push("You referenced evidence/access/outcomes."); if(obj) worked.push("You named a barrier.");
     const improve=[]; if(qCount===0) improve.push("Ask 1–2 specific questions."); if(!asks&&mode==="sales-simulation") improve.push("Seek a small commitment."); if(unstructured||long) improve.push("Use concise bullets."); if(noCTA) improve.push("End with a clear action.");
     let phr="“Could we align on one next step for your eligible patients?”"; if(obj) phr="“What would address that top concern so we can proceed?”"; if(mode==="hiv-product-knowledge") phr="“Give 3 bullets and one clinical caveat.”";
-    // simple scoring fallback
     const subs={question_quality:Math.min(5,qCount?4:2), objection_handling:obj?4:2, value_articulation:val?4:2, cta_clarity:noCTA?2:4, compliance:4, empathy:3};
     const score=Math.round((subs.question_quality+subs.objection_handling+subs.value_articulation+subs.cta_clarity+subs.compliance+subs.empathy)/30*100);
     return { worked, improve, phrasing:phr, score, subscores:subs };
@@ -197,7 +196,6 @@ Respond in character and keep answers realistic and compliant.`});
         }
       }
 
-      // Coach directive with scoring
       messages.push({ role:"system", content:
 `After you produce your reply, output tailored coaching strictly about:
 - The user's most recent message, and
@@ -262,11 +260,9 @@ Rules: No "Tone". Be specific. Quote short fragments when useful. Keep lists 1�
 
   // ---------- Layout tweaks ----------
   function pruneLayoutAndPlaceWidget(){
-    // Hide “What’s Next for Reflectiv?”
     const headings=[...document.querySelectorAll("h1,h2,h3")];
     const nextHdr=headings.find(h=>h.textContent.trim().toLowerCase().startsWith("what’s next for reflectiv"));
     if(nextHdr){ const sec=nextHdr.closest("section")||nextHdr.parentElement; if(sec) sec.style.display="none"; }
-    // Add space above footer
     const footer=document.querySelector("footer"); if(footer) footer.style.marginTop="28px";
   }
 
@@ -307,7 +303,6 @@ Rules: No "Tone". Be specific. Quote short fragments when useful. Keep lists 1�
 
   .cw .scenario-meta .meta-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:8px;font-size:.95rem}
 
-  /* Taller viewport to reduce inner scrolling */
   .cw .chat-messages{min-height:280px;max-height:62vh;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--bg);margin-bottom:10px}
   .cw .message{margin:8px 0}
   .cw .message.user .content{background:#eef2ff;border-radius:8px;padding:10px}
@@ -321,7 +316,6 @@ Rules: No "Tone". Be specific. Quote short fragments when useful. Keep lists 1�
   .cw .chat-input{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:start}
   .cw .chat-input textarea{width:100%;min-height:48px;max-height:220px;padding:10px;border:1px solid var(--line);border-radius:8px;resize:vertical;background:var(--bg);color:var(--fg)}
 
-  /* Separate Coach Section with extra bottom space above footer */
   .cw .coach-section{background:#fffbea;border:1px solid #fde68a;border-radius:10px;padding:14px;margin:14px 0 42px}
   .cw .coach-section h3{margin:0 0 6px 0;font-size:1rem;color:#111827;font-weight:700}
   .cw .coach-section .muted{color:#6b7280}
