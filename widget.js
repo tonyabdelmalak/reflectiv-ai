@@ -11,7 +11,7 @@
   if (!container) return;
 
   // Ensure widget CSS scope class exists on root
-  container.classList.add("cw");
+  if (!container.classList.contains("cw")) container.classList.add("cw");
 
   // ---------- State ----------
   let cfg = null;
@@ -234,15 +234,12 @@
           })
         });
 
-        // Handle non-2xx quickly for clearer errors
         if (!r.ok) {
           const t = await r.text().catch(() => "");
           throw new Error(`Upstream ${r.status}: ${t || "no body"}`);
         }
 
         const data = await r.json().catch(() => ({}));
-
-        // Accept either OpenAI-style or unified format
         const reply =
           data.reply ||
           data.content ||
@@ -278,7 +275,6 @@
   // ---------- Init ----------
   async function init() {
     try {
-      // Load config and content
       cfg = await fetchLocal("./assets/chat/config.json");
       systemPrompt = await fetchLocal("./assets/chat/system.md");
       knowledge = await fetchLocal("./assets/chat/about-ei.md");
