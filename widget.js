@@ -1,11 +1,12 @@
 /*
- * ReflectivEI AI widget — drop-in
- * - Loads config and content from /assets/chat/*
- * - Renders chat UI with three modes
- * - Calls Cloudflare Worker defined in config.apiBase (or workerEndpoint)
- * - Scopes all widget styles under .cw
- * - Markdown rendering + readability polish
- * - Heuristic, turn-aware Coach Feedback
+ * ReflectivEI AI widget — full drop-in
+ * - Modes: emotional-assessment, hiv-product-knowledge, sales-simulation
+ * - Streaming (incremental tokens) with Stop
+ * - Markdown rendering (sanitized minimal)
+ * - Theme toggle (light/dark via CSS vars)
+ * - Simple emoji picker; optional file attach (base64) when cfg.allowFiles = true
+ * - Coach Feedback BELOW input. No "Tone". Uses <coach>{json}</coach> extracted from model reply.
+ * - Scopes all styles under .cw
  */
 
 (function () {
@@ -23,7 +24,10 @@
   let currentMode = "emotional-assessment";
   let currentScenarioId = null;
   let conversation = [];
-  let coachEnabled = false;
+  let coachEnabled = true;
+  let theme = "light";
+  let streamAbort = null;
+  let pendingFiles = []; // [{name,type,size,base64}]
 
   // ---------- Utils ----------
   async function fetchLocal(path) {
@@ -32,54 +36,37 @@
     const ct = resp.headers.get("content-type") || "";
     return ct.includes("application/json") ? resp.json() : resp.text();
   }
-
   function esc(s) {
     return String(s)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
-
-  // Minimal Markdown -> HTML tuned for chat
+  // Minimal Markdown -> HTML (sanitized)
   function renderMarkdown(text) {
     if (!text) return "";
     let s = esc(text).replace(/\r\n?/g, "\n");
-
-    // Remove **Name (..)**: -> Name (..):
     s = s.replace(/\*\*([^*\n]+?\([^()\n]+?\))\*\*:/g, "$1:");
-
-    // Headings
     s = s.replace(/^\s*##\s+(.+)$/gm, "<h4>$1</h4>")
          .replace(/^\s*#\s+(.+)$/gm, "<h3>$1</h3>");
-
-    // Blockquote
     s = s.replace(/^\s*>\s?(.*)$/gm, "<blockquote>$1</blockquote>");
-
-    // Bold
     s = s.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
-
-    // Ordered lists
+    s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+    s = s.replace(/```([\s\S]*?)```/g, (m, code) => `<pre><code>${esc(code)}</code></pre>`);
     s = s.replace(/(?:^|\n)(\d+\.\s+[^\n]+(?:\n\d+\.\s+[^\n]+)*)/g, m => {
       const items = m.trim().split(/\n/).map(l => l.replace(/^\d+\.\s+/, "").trim());
       return "\n<ol>" + items.map(li => `<li>${li}</li>`).join("") + "</ol>";
     });
-    // Unordered lists
     s = s.replace(/(?:^|\n)([-*]\s+[^\n]+(?:\n[-*]\s+[^\n]+)*)/g, m => {
       const items = m.trim().split(/\n/).map(l => l.replace(/^[-*]\s+/, "").trim());
       return "\n<ul>" + items.map(li => `<li>${li}</li>`).join("") + "</ul>";
     });
-
-    // Paragraphs
     const blocks = s.split(/\n{2,}/).map(chunk => {
-      if (/^\s*<(h3|h4|ul|ol|li|blockquote)/i.test(chunk)) return chunk;
+      if (/^\s*<(h3|h4|ul|ol|li|blockquote|pre|code)/i.test(chunk)) return chunk;
       return `<p>${chunk.replace(/\n/g, "<br>")}</p>`;
     });
     return blocks.join("\n");
   }
-
-  // Legacy scenarios parser (for hcp_scenarios.txt)
+  // Legacy scenarios parser
   function parseLegacyScenarios(text) {
     const lines = String(text || "").split(/\r?\n/);
     const out = [];
@@ -106,7 +93,6 @@
     if (key && obj) out.push(obj);
     return out;
   }
-
   function el(tag, cls, text) {
     const e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -114,57 +100,41 @@
     return e;
   }
 
-  // ---------- Coach Feedback (heuristic, turn-aware) ----------
-  function generateCoachFeedback(conv = [], mode = currentMode) {
-    if (!conv.length) {
-      return {
-        tone: "neutral",
-        worked: "Ready when you are.",
-        improve: "Ask a goal-directed question to begin.",
-        phrasing: "Try: “What’s the next best step and why?”"
-      };
-    }
-
+  // ---------- Coach Feedback ----------
+  // Extract <coach>{json}</coach> from assistant content
+  function extractCoach(raw) {
+    const m = String(raw || "").match(/<coach>([\s\S]*?)<\/coach>/i);
+    if (!m) return { coach: null, clean: raw };
+    let coach = null;
+    try { coach = JSON.parse(m[1]); } catch { coach = null; }
+    const clean = String(raw).replace(m[0], "").trim();
+    return { coach, clean };
+  }
+  // Heuristic fallback if model omitted coach tag
+  function heuristicCoach(conv = [], mode = currentMode) {
+    if (!conv.length) return null;
     const lastUser = [...conv].reverse().find(m => m.role === "user")?.content || "";
     const lastAI   = [...conv].reverse().find(m => m.role === "assistant")?.content || "";
-
     const qCount = (lastUser.match(/\?/g) || []).length;
     const asksForCommit = /commit|agree|can we|will you|let's|next step/i.test(lastUser);
-    const empathy = /\b(thanks|appreciate|understand|sorry|that sounds|i hear)\b/i.test(lastUser);
-    const objections = /\b(concern|barrier|issue|risk|resistance|denied|step[- ]?edit)\b/i.test(lastUser);
+    const objections = /\b(concern|barrier|issue|risk|denied|step[- ]?edit|side effect|cost|coverage|pa|prior auth)\b/i.test(lastUser);
     const valueHook = /\bbenefit|outcome|impact|why|evidence|data|guideline|access|coverage|pa|prior auth\b/i.test(lastUser);
-    const tooLongAI = lastAI.split(/\s+/).length > 180;
+    const tooLongAI = lastAI.split(/\s+/).length > 160;
     const noStructureAI = !(/<ol>|<ul>|<h3>|<h4>|•|- |\d\./i.test(lastAI));
-    const noCTA = !/\b(next step|commit|plan|consider|let's|agree|would you|schedule|start|switch)\b/i.test(lastAI);
-    const noQuestionAI = !/\?/i.test(lastAI);
-
-    let tone = "neutral";
-    if (empathy) tone = "warm";
-    if (/!\s*$/.test(lastUser) || /\b(frustrated|upset|angry)\b/i.test(lastUser)) tone = "tense";
-
-    const worked = [
-      qCount > 0 ? "You asked questions to focus the exchange." : null,
-      empathy ? "You used empathetic language." : null,
-      valueHook ? "You referenced evidence, access, or outcomes." : null,
-      objections ? "You surfaced an objection to address." : null
-    ].filter(Boolean).join(" ") || "You kept the dialog moving.";
-
-    const improveList = [];
-    if (qCount === 0) improveList.push("Ask 1–2 specific questions.");
-    if (!asksForCommit && mode === "sales-simulation") improveList.push("Seek a small commitment or next step.");
-    if (noStructureAI || tooLongAI) improveList.push("Request a concise, structured reply with bullets.");
-    if (noCTA) improveList.push("Ask for a clear action, timeline, or criteria.");
-    if (noQuestionAI && mode !== "hiv-product-knowledge") improveList.push("Invite the HCP to react with one question.");
-    const improve = improveList.join(" ");
-
-    let phrasing = "“Could you outline the next best step and why?”";
-    if (objections) phrasing = "“What would address your top concern so we can proceed?”";
-    else if (mode === "sales-simulation" && valueHook)
-      phrasing = "“Given the data and access, can we align on which patients you’ll start with?”";
-    else if (mode === "hiv-product-knowledge")
-      phrasing = "“Please give a 3-bullet summary and one clinical caveat.”";
-
-    return { tone, worked, improve, phrasing };
+    const noCTA = !/\b(next step|commit|plan|consider|agree|schedule|start|switch)\b/i.test(lastAI);
+    const worked = [];
+    if (qCount > 0) worked.push("You asked at least one focused question.");
+    if (valueHook) worked.push("You referenced evidence, access, or outcomes.");
+    if (objections) worked.push("You named a barrier to address.");
+    const improve = [];
+    if (qCount === 0) improve.push("Ask 1–2 specific questions.");
+    if (!asksForCommit && mode === "sales-simulation") improve.push("Seek a small commitment or next step.");
+    if (noStructureAI || tooLongAI) improve.push("Keep answers concise with bullets.");
+    if (noCTA) improve.push("End with a clear action.");
+    let phrasing = "“Could we align on one next step for your eligible patients?”";
+    if (objections) phrasing = "“What would address that top concern so we can proceed?”";
+    if (mode === "hiv-product-knowledge") phrasing = "“Please give a 3-bullet summary and one clinical caveat.”";
+    return { worked, improve, phrasing };
   }
 
   // ---------- UI ----------
@@ -188,7 +158,8 @@
       currentMode = modeSelect.value;
       currentScenarioId = null;
       conversation = [];
-      coachEnabled = false;
+      coachEnabled = true;
+      pendingFiles = [];
       renderMessages();
       updateScenarioSelector();
       updateScenarioMeta();
@@ -203,7 +174,7 @@
     scenarioSelect.addEventListener("change", () => {
       currentScenarioId = scenarioSelect.value || null;
       conversation = [];
-      coachEnabled = false;
+      coachEnabled = true;
       renderMessages();
       updateScenarioMeta();
       normalizeCoachPlacement();
@@ -211,14 +182,22 @@
     toolbar.appendChild(scenarioSelect);
 
     // Coach toggle
-    const coachBtn = el("button", null, "Enable Coach");
+    const coachBtn = el("button", "btn", "Coach: On");
     coachBtn.addEventListener("click", () => {
       coachEnabled = !coachEnabled;
-      coachBtn.textContent = coachEnabled ? "Disable Coach" : "Enable Coach";
+      coachBtn.textContent = coachEnabled ? "Coach: On" : "Coach: Off";
       renderMessages();
       normalizeCoachPlacement();
     });
     toolbar.appendChild(coachBtn);
+
+    // Theme toggle
+    const themeBtn = el("button", "btn", "Theme");
+    themeBtn.addEventListener("click", () => {
+      theme = theme === "light" ? "dark" : "light";
+      wrapper.setAttribute("data-theme", theme);
+    });
+    toolbar.appendChild(themeBtn);
 
     wrapper.appendChild(toolbar);
 
@@ -230,12 +209,43 @@
     const messagesEl = el("div", "chat-messages");
     wrapper.appendChild(messagesEl);
 
-    // Coach feedback panel (sibling of messages + input)
-    const coachEl = el("div", "coach-feedback");
-    wrapper.appendChild(coachEl);
-
     // Input
     const inputArea = el("div", "chat-input");
+
+    // Emoji picker
+    const emojiBtn = el("button", "btn icon", "😊");
+    const emojiMenu = el("div", "emoji-menu");
+    const EMOJIS = ["😊","👍","🙏","💡","📌","✅","❓","🚀","📞","🧪"];
+    EMOJIS.forEach(em => {
+      const b = el("button", "emoji", em);
+      b.onclick = () => { textarea.value += em; emojiMenu.style.display = "none"; textarea.focus(); };
+      emojiMenu.appendChild(b);
+    });
+    emojiBtn.onclick = () => {
+      emojiMenu.style.display = emojiMenu.style.display === "block" ? "none" : "block";
+    };
+
+    // File attach
+    const fileBtn = el("button", "btn icon", "📎");
+    const fileIn = document.createElement("input");
+    fileIn.type = "file";
+    fileIn.multiple = true;
+    fileIn.style.display = "none";
+    fileBtn.onclick = () => { if (cfg.allowFiles) fileIn.click(); };
+    const fileChips = el("div", "file-chips");
+
+    fileIn.addEventListener("change", async () => {
+      if (!cfg.allowFiles) return;
+      const files = Array.from(fileIn.files || []);
+      for (const f of files) {
+        const chip = el("span", "chip", `${f.name}`);
+        fileChips.appendChild(chip);
+        const base64 = await fileToBase64(f);
+        pendingFiles.push({ name: f.name, type: f.type, size: f.size, base64 });
+      }
+      fileIn.value = "";
+    });
+
     const textarea = el("textarea");
     textarea.placeholder = "Type your message…";
     textarea.addEventListener("keydown", (e) => {
@@ -246,7 +256,8 @@
         textarea.value = "";
       }
     });
-    const sendBtn = el("button", null, "Send");
+
+    const sendBtn = el("button", "btn primary", "Send");
     sendBtn.addEventListener("click", () => {
       const t = textarea.value.trim();
       if (t) {
@@ -254,17 +265,29 @@
         textarea.value = "";
       }
     });
+
+    const stopBtn = el("button", "btn warn", "Stop");
+    stopBtn.style.display = "none";
+    stopBtn.onclick = () => { if (streamAbort) { streamAbort.abort(); streamAbort = null; stopBtn.style.display = "none"; } };
+
+    inputArea.appendChild(emojiBtn);
+    inputArea.appendChild(fileBtn);
+    inputArea.appendChild(fileChips);
+    inputArea.appendChild(emojiMenu);
     inputArea.appendChild(textarea);
     inputArea.appendChild(sendBtn);
+    inputArea.appendChild(stopBtn);
     wrapper.appendChild(inputArea);
+
+    // Coach feedback panel BELOW input
+    const coachEl = el("div", "coach-feedback");
+    wrapper.appendChild(coachEl);
 
     container.appendChild(wrapper);
 
-    // Ensure coach panel never overlays input and always sits above it
     function normalizeCoachPlacement() {
-      // Put coach block right before input
-      if (coachEl.nextSibling !== inputArea) {
-        wrapper.insertBefore(coachEl, inputArea);
+      if (coachEl.previousSibling !== inputArea) {
+        wrapper.insertBefore(coachEl, inputArea.nextSibling);
       }
       coachEl.style.position = "relative";
       coachEl.style.zIndex = "1";
@@ -291,11 +314,13 @@
         metaEl.innerHTML = "";
         return;
       }
+      const persona = sc.personaKey ? (personas[sc.personaKey] || {}) : {};
       metaEl.innerHTML =
         `<div class="meta-card">
            <div><strong>Therapeutic Area:</strong> ${esc(sc.therapeuticArea || "—")}</div>
            <div><strong>Background:</strong> ${esc(sc.background || "—")}</div>
            <div><strong>Today’s Goal:</strong> ${esc(sc.goal || "—")}</div>
+           <div><strong>Persona:</strong> ${esc(persona.displayName || "—")}</div>
          </div>`;
     }
 
@@ -308,15 +333,18 @@
         div.appendChild(content);
         messagesEl.appendChild(div);
       }
-
+      // Coach
       coachEl.innerHTML = "";
       if (coachEnabled) {
-        const fb = generateCoachFeedback(conversation, currentMode);
-        if (fb) {
+        const last = conversation[conversation.length - 1];
+        if (last && last.role === "assistant" && last._coach) {
+          const fb = last._coach;
           const h3 = el("h3", null, "Coach Feedback");
           coachEl.appendChild(h3);
           const ul = el("ul");
-          [["Tone", fb.tone], ["What worked", fb.worked], ["What to improve", fb.improve], ["Suggested stronger phrasing", fb.phrasing]]
+          [["What worked", (fb.worked || []).join(" ") || "—"],
+           ["What to improve", (fb.improve || []).join(" ") || "—"],
+           ["Suggested stronger phrasing", fb.phrasing || "—"]]
             .forEach(([k, v]) => {
               const li = el("li");
               li.innerHTML = `<strong>${k}:</strong> ${esc(v)}`;
@@ -324,11 +352,12 @@
             });
           coachEl.appendChild(ul);
           coachEl.style.display = "";
+        } else {
+          coachEl.style.display = "none";
         }
       } else {
         coachEl.style.display = "none";
       }
-
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
@@ -339,7 +368,14 @@
 
     // ---------- Messaging ----------
     async function sendMessage(userText) {
-      conversation.push({ role: "user", content: userText });
+      // Attach any selected files as a note prefix
+      let content = userText;
+      if (cfg.allowFiles && pendingFiles.length) {
+        const summary = pendingFiles.map(f => `${f.name} (${Math.round(f.size/1024)} KB)`).join(", ");
+        content = `(Attached: ${summary})\n\n` + userText;
+      }
+
+      conversation.push({ role: "user", content });
       renderMessages();
       normalizeCoachPlacement();
 
@@ -358,60 +394,139 @@
           messages.push({
             role: "system",
             content:
-              `Act as the healthcare provider for a sales simulation.\n` +
-              `${personaLine}` +
-              `Therapeutic Area: ${sc.therapeuticArea || "HCP"}.\n` +
-              `Background: ${sc.background || "N/A"}\n` +
-              `Today’s Goal: ${sc.goal || "N/A"}\n` +
-              `Respond in character and keep answers realistic and compliant.`
+`Act as the healthcare provider for a sales simulation.
+${personaLine}Therapeutic Area: ${sc.therapeuticArea || "HCP"}.
+Background: ${sc.background || "N/A"}
+Today’s Goal: ${sc.goal || "N/A"}
+Respond in character and keep answers realistic and compliant.`
           });
         }
       }
 
-      for (const m of conversation) messages.push(m);
+      // Coach instructions appended to the final system message to force tailored feedback
+      messages.push({
+        role: "system",
+        content:
+`After you produce your reply, output tailored coaching strictly about:
+- The user's most recent message, and
+- The assistant reply you just wrote.
+
+Return coaching ONLY as JSON wrapped in tags:
+<coach>{
+  "worked": ["bullet 1","bullet 2"],
+  "improve": ["bullet 1","bullet 2"],
+  "phrasing": "one concise rewrite for a stronger ask or next step"
+}</coach>
+
+Rules: No "Tone". Be specific. Quote short fragments when useful. Keep lists 1–3 items.`
+      });
+
+      // Include attachments payload if allowed
+      let extra = {};
+      if (cfg.allowFiles && pendingFiles.length) {
+        extra.attachments = pendingFiles.map(({ name, type, size, base64 }) => ({ name, type, size, base64 }));
+      }
 
       try {
         const endpoint = (cfg.apiBase || cfg.workerEndpoint || "").trim();
         if (!endpoint) throw new Error("Missing apiBase/workerEndpoint in config.json");
 
-        const r = await fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            messages,
-            model: cfg.model || "llama-3.1-8b-instant",
-            temperature: 0.2,
-            stream: cfg.stream === true
-          })
-        });
+        const useStream = cfg.stream === true;
+        if (useStream) {
+          // Create assistant bubble now and stream into it
+          const assist = { role: "assistant", content: "" };
+          conversation.push(assist);
+          renderMessages();
+          normalizeCoachPlacement();
 
-        if (!r.ok) {
-          const t = await r.text().catch(() => "");
-          throw new Error(`Upstream ${r.status}: ${t || "no body"}`);
+          const controller = new AbortController();
+          streamAbort = controller;
+          const r = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              messages,
+              model: cfg.model || "llama-3.1-8b-instant",
+              temperature: 0.2,
+              stream: true,
+              ...extra
+            }),
+            signal: controller.signal
+          });
+          if (!r.ok || !r.body) throw new Error(`Upstream ${r.status}`);
+
+          // show Stop while streaming
+          stopBtn.style.display = "inline-block";
+
+          const reader = r.body.getReader();
+          const decoder = new TextDecoder();
+          let acc = "";
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+            acc += chunk;
+            assist.content = acc;
+            // don't render coach until done; render partial text
+            renderMessages();
+          }
+
+          // finalize: parse coach tag
+          const { coach, clean } = extractCoach(acc);
+          assist.content = clean || "";
+          assist._coach = coach || heuristicCoach(conversation);
+          renderMessages();
+        } else {
+          const r = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              messages,
+              model: cfg.model || "llama-3.1-8b-instant",
+              temperature: 0.2,
+              stream: false,
+              ...extra
+            })
+          });
+          if (!r.ok) {
+            const t = await r.text().catch(() => "");
+            throw new Error(`Upstream ${r.status}: ${t || "no body"}`);
+          }
+          const data = await r.json().catch(() => ({}));
+          const reply =
+            data.reply ||
+            data.content ||
+            data?.choices?.[0]?.message?.content ||
+            data?.message?.content ||
+            "";
+
+          if (!reply) throw new Error("Empty reply");
+
+          const { coach, clean } = extractCoach(String(reply));
+          conversation.push({ role: "assistant", content: String(clean || "").trim(), _coach: coach || heuristicCoach(conversation) });
+          renderMessages();
         }
-
-        const data = await r.json().catch(() => ({}));
-        const reply =
-          data.reply ||
-          data.content ||
-          data?.choices?.[0]?.message?.content ||
-          data?.message?.content ||
-          "";
-
-        if (!reply) throw new Error("Empty reply");
-
-        conversation.push({ role: "assistant", content: String(reply).trim() });
-        renderMessages();
-        normalizeCoachPlacement();
       } catch (err) {
         console.error("AI call failed:", err);
-        conversation.push({
-          role: "assistant",
-          content: "I couldn’t reach the AI service. Try again later."
-        });
+        conversation.push({ role: "assistant", content: "I couldn’t reach the AI service. Try again later." });
         renderMessages();
-        normalizeCoachPlacement();
+      } finally {
+        // Clear attachments after send
+        pendingFiles = [];
+        fileChips.innerHTML = "";
+        if (streamAbort) { streamAbort = null; }
+        stopBtn.style.display = "none";
       }
+    }
+
+    // helpers
+    async function fileToBase64(file) {
+      return new Promise((res, rej) => {
+        const fr = new FileReader();
+        fr.onerror = () => rej(new Error("file read error"));
+        fr.onload = () => res(String(fr.result).split(",")[1] || "");
+        fr.readAsDataURL(file);
+      });
     }
   }
 
@@ -448,28 +563,42 @@
   // ---------- Scoped styles ----------
   const style = document.createElement("style");
   style.textContent = `
-    .cw .chat-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
-    .cw select{padding:8px 10px;border:1px solid #cfd8e3;border-radius:8px}
-    .cw .scenario-meta .meta-card{background:#f9fafc;border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-bottom:10px;font-size:.95rem;color:#374151}
+  .cw [data-theme="light"] {}
+  .cw [data-theme="dark"] {}
 
-    /* Messages scroll, footer stays visible */
-    .cw .chat-messages{min-height:180px;max-height:520px;overflow:auto;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;background:#fff;margin-bottom:10px}
-    .cw .message{margin:8px 0}
-    .cw .message.user .content{background:#eef2ff;border-radius:8px;padding:10px}
-    .cw .message.assistant .content{background:#f8fafc;border-radius:8px;padding:10px}
-    .cw .message .content h3,.cw .message .content h4{margin:0 0 8px 0;color:#1f2937;font-weight:700}
-    .cw .message .content p{margin:8px 0;line-height:1.5}
-    .cw .message .content ul,.cw .message .content ol{margin:8px 0 8px 22px}
-    .cw .message .content blockquote{margin:8px 0;padding:8px 10px;border-left:3px solid #cbd5e1;background:#f9fafb;color:#334155}
+  .cw .reflectiv-chat{--bg:#ffffff;--fg:#111827;--muted:#6b7280;--card:#f9fafc;--line:#e5e7eb;--accent:#3e5494;--warn:#9b1c1c}
+  .cw .reflectiv-chat[data-theme="dark"]{--bg:#0f172a;--fg:#e5e7eb;--muted:#94a3b8;--card:#0b1220;--line:#1f2a44;--accent:#6b83d6;--warn:#ef4444}
+  .cw .reflectiv-chat{background:transparent;color:var(--fg)}
 
-    .cw .coach-feedback{position:relative;z-index:1;margin:10px 0 10px 0;background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:10px}
-    .cw .coach-feedback h3{margin:0 0 6px 0;font-size:1rem;color:#111827;font-weight:700}
-    .cw .coach-feedback ul{margin:0;padding-left:20px;color:#374151}
-    .cw .coach-feedback li{margin:4px 0;color:#374151}
+  .cw .chat-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+  .cw select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg)}
+  .cw .btn{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);cursor:pointer}
+  .cw .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .cw .btn.warn{background:var(--warn);color:#fff;border-color:var(--warn)}
+  .cw .btn.icon{width:40px}
+  .cw .scenario-meta .meta-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;font-size:.95rem}
 
-    .cw .chat-input{display:flex;gap:8px}
-    .cw .chat-input textarea{flex:1;min-height:44px;max-height:200px;padding:10px;border:1px solid #cfd8e3;border-radius:8px;resize:vertical}
-    .cw .chat-input button{padding:10px 12px;border:1px solid #cfd8e3;border-radius:8px;background:#fff;color:#1d344f;cursor:pointer}
+  .cw .chat-messages{min-height:180px;max-height:520px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--bg);margin-bottom:10px}
+  .cw .message{margin:8px 0}
+  .cw .message.user .content{background:#eef2ff;border-radius:8px;padding:10px}
+  .cw .message.assistant .content{background:var(--card);border-radius:8px;padding:10px}
+  .cw .message .content h3,.cw .message .content h4{margin:0 0 8px 0;color:var(--fg);font-weight:700}
+  .cw .message .content p{margin:8px 0;line-height:1.5}
+  .cw .message .content ul,.cw .message .content ol{margin:8px 0 8px 22px}
+  .cw .message .content blockquote{margin:8px 0;padding:8px 10px;border-left:3px solid var(--line);background:var(--card);color:var(--fg)}
+  .cw pre{background:#0b1020;color:#d1d5db;border-radius:8px;padding:8px;overflow:auto;border:1px solid #1f2937}
+
+  .cw .chat-input{display:grid;grid-template-columns:auto auto 1fr auto auto;gap:8px;align-items:start}
+  .cw .chat-input textarea{width:100%;min-height:44px;max-height:200px;padding:10px;border:1px solid var(--line);border-radius:8px;resize:vertical;background:var(--bg);color:var(--fg)}
+  .cw .emoji-menu{display:none;position:absolute;transform:translateY(-110%);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:6px;box-shadow:0 10px 24px rgba(0,0,0,.18);z-index:10}
+  .cw .emoji{padding:4px 6px;border:none;background:transparent;font-size:18px;cursor:pointer}
+  .cw .file-chips{grid-column:1 / span 5;display:flex;gap:6px;flex-wrap:wrap}
+  .cw .chip{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:12px}
+
+  .cw .coach-feedback{position:relative;z-index:1;margin:10px 0 0 0;background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:10px}
+  .cw .coach-feedback h3{margin:0 0 6px 0;font-size:1rem;color:var(--fg);font-weight:700}
+  .cw .coach-feedback ul{margin:0;padding-left:20px;color:var(--fg)}
+  .cw .coach-feedback li{margin:4px 0}
   `;
   document.head.appendChild(style);
 
