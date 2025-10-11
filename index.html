@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Reflectiv – Emotional Intelligence for Youth</title>
 
-  <!-- Site styles -->
-  <link rel="stylesheet" href="styles.css"/>
-
-  <!-- Chat widget styles -->
+  <!-- Chat widget styles FIRST so site styles can override -->
   <link rel="stylesheet" href="widget.css"/>
+
+  <!-- Site styles AFTER to win specificity conflicts -->
+  <link rel="stylesheet" href="styles.css"/>
 
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"/>
@@ -20,7 +20,6 @@
   <header class="navbar">
     <div class="container nav-inner">
       <div class="logo">
-        <!-- Updated logo to use new file -->
         <img src="assets/logo-new.jpg" alt="Reflectiv logo">
       </div>
       <nav id="navMenu" class="nav-links">
@@ -31,10 +30,8 @@
         <a href="#evidence">Evidence</a>
         <a href="#roadmap">Roadmap</a>
         <a href="#contact">Contact</a>
-        <!-- Optional deep link to the embedded coach section -->
         <a href="#chat">Coach</a>
       </nav>
-      <!-- Theme toggle button for light/pastel and dark modes -->
       <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">Theme</button>
       <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">☰</button>
     </div>
@@ -227,7 +224,7 @@
     </div>
   </section>
 
-  <!-- Embedded Coach Section (optional host for non-floating mode) -->
+  <!-- Embedded Coach Section -->
   <section id="chat" class="chat-section" aria-label="Reflectiv Coach">
     <div class="container">
       <h2 style="text-align:center;margin-bottom:0.75rem;">Try the Reflectiv Coach</h2>
@@ -277,10 +274,8 @@
     </div>
   </footer>
 
-  <!-- Site scripts -->
-  <script src="script.js"></script>
-
-  <!-- Chat widget script: loads floating launcher and uses assets/chat/system.md -->
-  <script src="widget.js"></script>
+  <!-- Defer scripts -->
+  <script defer src="script.js"></script>
+  <script defer src="widget.js"></script>
 </body>
 </html>
