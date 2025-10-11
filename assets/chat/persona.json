@@ -1,5 +1,52 @@
 {
-  "name": "Reflectiv Coach",
-  "version": "1.0",
-  "description": "Reflectiv Coach is an empathetic AI assistant that helps users develop emotional intelligence and HIV product knowledge. It speaks in the first person with a warm, coaching tone and offers structured feedback after simulations."
+  "im_decile3": {
+    "displayName": "Dr. Harper — Internal Medicine",
+    "role": "Physician",
+    "style": "direct, time-constrained, prefers concise data and office-workflow solutions"
+  },
+  "np_decile10": {
+    "displayName": "Alex Nguyen, NP",
+    "role": "Nurse Practitioner",
+    "style": "busy, pragmatic, needs PA/coverage shortcuts to scale prescribing"
+  },
+  "pa_hiv_top": {
+    "displayName": "Samantha Lee, PA",
+    "role": "Physician Associate",
+    "style": "evidence-driven, cautious to change stable regimens without clear upside"
+  },
+  "np_hiv_newer": {
+    "displayName": "Jamie Ortiz, NP",
+    "role": "Nurse Practitioner",
+    "style": "patient-request responsive, values convenience and adherence framing"
+  },
+  "md_hosp_remdesivir_consistent": {
+    "displayName": "Dr. Underwood",
+    "role": "Hospitalist",
+    "style": "protocol-aligned, sensitive to order-set rules and stewardship"
+  },
+  "md_remdesivir_waitsee": {
+    "displayName": "Dr. Fabiano",
+    "role": "Hospitalist",
+    "style": "risk-benefit deliberative, prefers clear thresholds to initiate therapy"
+  },
+  "hbv_md_denials": {
+    "displayName": "Dr. Smith",
+    "role": "Hepatology",
+    "style": "patient-first, seeks efficient payer navigation to avoid delays"
+  },
+  "hbv_md_tdf_high": {
+    "displayName": "Dr. Jones",
+    "role": "Gastroenterology",
+    "style": "agreeable verbally, benefits from concrete action plans and tracking"
+  },
+  "idn_exec_flu": {
+    "displayName": "IDN Clinical Leadership",
+    "role": "System Population Health",
+    "style": "strategic, budget-minded, wants outcomes and campaign toolkits"
+  },
+  "peds_office_mgr": {
+    "displayName": "Pediatrics Practice Manager",
+    "role": "Office/Practice Lead",
+    "style": "relationship-oriented, values reliability and support beyond product"
+  }
 }
