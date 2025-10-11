@@ -1,46 +1,60 @@
 # Integration Notes
 
-This document outlines how the ReflectivEI AI widget integrates the static GitHub Pages site with the Cloudflare Worker backend and other components.
+This document explains how the **ReflectivEI AI Widget** integrates a static GitHub Pages site with a Cloudflare Worker backend and modular AI components.
+
+---
 
 ## Overview
 
-The ReflectivEI site is served via GitHub Pages at `https://reflectivei.github.io/reflectiv-ai/`. The AI chat functionality lives entirely on the client side and communicates with a Cloudflare Worker hosted at `https://my-chat-agent.tonyabdelmalak.workers.dev/chat` (or another endpoint you specify). The Worker acts as a proxy to your chosen LLM provider.
+The ReflectivEI site is hosted via **GitHub Pages** at  
+`https://reflectivei.github.io/reflectiv-ai/`.
+
+All chat functionality runs entirely on the **client side**, communicating with a Cloudflare Worker endpoint at  
+`https://my-chat-agent.tonyabdelmalak.workers.dev/chat`  
+(or another Worker URL you configure).  
+
+The Worker serves as a lightweight proxy to your chosen **LLM provider** (e.g., Groq, OpenRouter, or OpenAI), ensuring separation between presentation and inference layers.
+
+---
 
 ## File Structure
 
-The `reflectiv-ai` folder contains:
+The repository’s `reflectiv-ai` directory contains:
 
-- `index.html` – entry point for the website.
-- `styles.css` and `script.js` – site appearance and basic behaviour.
-- `assets/chat` – chat engine assets including system prompts, persona metadata, configuration, the Worker script, widget scripts and styles, and scenario data.
-- `docs` – this directory with maintenance and integration notes.
+| Path | Purpose |
+|------|----------|
+| `index.html` | Entry point for the site and widget container. |
+| `styles.css` / `script.js` | Define layout, theming, and base interactivity. |
+| `assets/chat/` | Stores system prompts (`system.md`), persona data (`persona.json`), configuration (`config.json`), scenarios, and supporting scripts/styles. |
+| `docs/` | Includes this integration guide and maintenance documentation. |
+
+---
 
 ## Cloudflare Worker Deployment
 
-1. Ensure you have a Cloudflare account with Workers enabled.
-2. Copy `assets/chat/worker.js` into a new Cloudflare Worker. When creating the Worker:
-   - Set an environment variable `UPSTREAM_ENDPOINT` to point to your AI provider or aggregator. In our example the default is `https://my-chat-agent.tonyabdelmalak.workers.dev/chat`.
-   - Deploy the Worker and note its public URL.
-3. Update `assets/chat/config.json` with the Worker URL under the `workerEndpoint` key.
+1. **Set up Cloudflare Workers**  
+   Ensure you have a Cloudflare account with Workers enabled.
 
-The Worker simply forwards chat requests to the upstream provider. You can customise it to include authentication headers or to assemble system and persona prompts.
+2. **Deploy the Worker**  
+   - Copy `assets/chat/worker.js` into a new Worker project.  
+   - Set an environment variable:  
+     ```
+     UPSTREAM_ENDPOINT = https://my-chat-agent.tonyabdelmalak.workers.dev/chat
+     ```  
+     (or your own upstream LLM endpoint).  
+   - Deploy and note the **public Worker URL**.
 
-## GitHub Pages Configuration
+3. **Update configuration**  
+   In `assets/chat/config.json`, update the `apiBase` or `workerEndpoint` value with the Worker URL you deployed.
 
-The static site is served from the `reflectiv-ai` folder. To expose it via GitHub Pages:
+The Worker acts as a **secure relay**, optionally adding authentication headers, user tracking, or custom context assembly before forwarding to the upstream model.
 
-1. In your repository settings, enable GitHub Pages on the `main` or `gh-pages` branch and set the root to `/reflectiv-ai`.
-2. Ensure the domain `https://reflectivei.github.io/reflectiv-ai/` is registered in your DNS if using a custom domain.
-3. After pushing changes, GitHub Pages may take a few minutes to deploy the updated files.
+---
 
-## Cross-Origin Resource Sharing (CORS)
+## GitHub Pages Setup
 
-The chat widget fetches files like `config.json` and `system.md` from the same origin. It communicates with the Cloudflare Worker on a different domain. The Worker must include an `Access-Control-Allow-Origin: *` header in its responses to permit browser requests from GitHub Pages. Modify your Worker script if necessary to add CORS headers.
+To publish the site:
 
-## Markdown Parsing and Knowledge Updates
-
-The widget reads `system.md` and `about-ei.md` as plain text. When updating these files, be mindful that Markdown formatting is not automatically rendered within chat responses. If you wish to use Markdown features in system prompts, you may need to adjust the Worker or the front‑end to render them.
-
-## Future Extensions
-
-This architecture is modular. You can plug in different personas, knowledge bases or simulation data by editing the files in `assets/chat`. To integrate new AI providers or add more advanced feedback generation, update the Worker and the client‑side logic accordingly.
+1. In your GitHub repository, enable **GitHub Pages** under *Settings → Pages*.  
+2. Choose the `main` branch and set the root directory to `/reflectiv-ai`.  
+3. After saving, Pages will deploy to:  
