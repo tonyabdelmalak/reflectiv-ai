@@ -160,6 +160,48 @@ img{max-width:100%;height:auto;display:block}
 .footer-social .social-icons span{font-size:1.2rem;margin-right:.5rem}
 .footer-bottom{border-top:1px solid rgba(255,255,255,.1);text-align:center;margin-top:1rem;padding-top:1rem;font-size:.8rem;color:var(--color-secondary)}
 
+/* ---------- Chat Widget Layout (prevents overlap) ---------- */
+.tcw-wrap{position:fixed;right:16px;bottom:16px;z-index:2147483647}
+.tcw-btn{width:64px;height:64px;border-radius:50%;border:none;box-shadow:0 10px 26px rgba(0,0,0,.24);cursor:pointer;background:var(--color-accent);color:#fff;font-weight:700}
+
+.tcw-panel{
+  position:fixed;right:16px;bottom:96px;width:380px;max-width:92vw;max-height:72vh;
+  display:none;flex-direction:column;background:#fff;border:1px solid #d9dde3;border-radius:14px;
+  box-shadow:0 18px 40px rgba(0,0,0,.18)
+}
+.tcw-open .tcw-panel{display:flex}
+
+.tcw-head{padding:10px 12px;border-bottom:1px solid #e6e9ef;background:#fff}
+.persona-bar{display:flex;gap:8px;padding:8px 12px;border-bottom:1px solid #e6e9ef;flex-wrap:wrap;background:#fff}
+
+.tcw-body{
+  flex:1;overflow:auto;padding:12px;background:#fafbfc;
+  scroll-behavior:smooth
+}
+
+/* Coach feedback block inside body should scroll, not cover footer */
+.tcw-body .coach-feedback,
+.tcw-body .tcw-coach{max-height:none}
+
+.tcw-footer{
+  display:flex;gap:8px;padding:10px 12px;border-top:1px solid #e6e9ef;background:#fff;
+  position:sticky;bottom:0
+}
+.tcw-input{flex:1;resize:vertical;min-height:44px;max-height:120px;padding:.6rem .7rem;border:1px solid #d4dae4;border-radius:10px;font:inherit}
+.tcw-input:focus{outline:none;box-shadow:0 0 0 3px rgba(106,176,156,.25);border-color:#9fb9b2}
+.tcw-send{min-width:80px;padding:.6rem .8rem;border-radius:10px;border:0;background:var(--color-accent);color:#fff;font-weight:600;cursor:pointer}
+.tcw-send:disabled{opacity:.6;cursor:not-allowed}
+
+/* Optional: compact spacing for message items */
+.tcw-msg{margin:.35rem 0}
+.tcw-msg.system{color:#6b7280;font-size:.9rem}
+
+/* Mobile adjustments for widget */
+@media (max-width:480px){
+  .tcw-panel{right:8px;left:8px;bottom:88px;width:auto;max-height:70vh}
+  .tcw-wrap{right:8px;bottom:8px}
+}
+
 /* Responsive */
 @media (max-width:768px){
   .hero-grid{grid-template-columns:1fr;text-align:center}
