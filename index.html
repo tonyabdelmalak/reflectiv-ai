@@ -34,7 +34,7 @@
         <a href="#chat">Coach</a>
       </nav>
       <div class="nav-actions">
-        <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">Theme</button>
+        <!-- Theme toggle removed per requirements -->
         <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">☰</button>
       </div>
     </div>
@@ -138,7 +138,7 @@
     </div>
   </section>
 
-  <!-- Promo Section (kept hidden for later use) -->
+  <!-- Promo Section (hidden for later use) -->
   <section id="promo" class="promo-section" style="display:none;">
     <div class="container">
       <div class="promo-image">
@@ -218,20 +218,13 @@
     </div>
   </section>
 
-  <!-- What's Next Teaser Section -->
-  <section id="whatsnext" class="whats-next-section">
-    <div class="container whats-next-content">
-      <h3>What’s Next for Reflectiv?</h3>
-      <p>We’re expanding our emotionally intelligent AI to better support empathy, stress regulation and healthy boundaries. Curious about the journey?&nbsp;</p>
-      <a href="#roadmap" class="btn btn-primary btn-inline">View Roadmap</a>
-    </div>
-  </section>
+  <!-- What's Next section removed per requirements -->
 
   <!-- Embedded Coach Section -->
   <section id="chat" class="chat-section" aria-label="Reflectiv Coach">
     <div class="container">
       <h2 style="text-align:center;margin-bottom:0.75rem;">Try the Reflectiv Coach</h2>
-      <p style="text-align:center;margin:0 0 1.25rem;">Open the floating launcher at bottom-right. If embedded mode is enabled, it will render below.</p>
+      <p style="text-align:center;margin:0 0 1.25rem;">The embedded coach renders below.</p>
       <div id="reflectiv-widget" class="reflectiv-widget">
         <noscript>You need JavaScript to use the Reflectiv Coach.</noscript>
       </div>
@@ -277,11 +270,10 @@
     </div>
   </footer>
 
-  <!-- Defer main scripts -->
-<script defer src="script.js?v=2"></script>
+  <!-- Defer site script -->
+  <script defer src="script.js?v=2"></script>
 
-<!-- Chat widget -->
-<link rel="stylesheet" href="./widget.css">
-<script defer src="./widget.js"></script>
+  <!-- Chat widget (single include) -->
+  <script defer src="./widget.js"></script>
 </body>
 </html>
