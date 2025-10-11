@@ -26,6 +26,8 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
+    <!-- Chat widget styles come before site styles so they can be overridden -->
+    <link rel="stylesheet" href="widget.css?v=2" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -217,6 +219,10 @@
           <li><strong>Spaced‑repetition refreshers:</strong> revisit key concepts at optimal intervals to ensure retention.</li>
         </ul>
         <p class="note">Need last‑minute advice before a call? Use the in‑product chat widget to ask our AI.</p>
+        <!-- Embed ReflectivAI chat widget container -->
+        <div id="reflectiv-widget" class="reflectiv-widget">
+          <noscript>You need JavaScript to use the ReflectivAI Coach.</noscript>
+        </div>
       </div>
     </section>
 
@@ -480,5 +486,7 @@
         <li id="fn11"><span class="citation">Commercial Inefficiencies</span> — The same study notes that pharmaceutical companies invest over US$137 billion annually in sales and marketing yet still face major inefficiencies due to high costs, access challenges and poor CRM utilization【93008223825873†L61-L64】.</li>
       </ol>
     </section>
+    <!-- Include chat widget script -->
+    <script defer src="./widget.js"></script>
   </body>
 </html>
