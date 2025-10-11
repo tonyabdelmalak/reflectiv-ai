@@ -4,6 +4,7 @@
  * - Renders chat UI with three modes
  * - Calls Cloudflare Worker defined in config.apiBase (or workerEndpoint)
  * - Scopes all widget styles under .cw to avoid site CSS conflicts
+ * - NEW: lightweight Markdown rendering and readability polish
  */
 
 (function () {
@@ -30,6 +31,66 @@
     if (!resp.ok) throw new Error(`Failed to load ${path} (${resp.status})`);
     const ct = resp.headers.get("content-type") || "";
     return ct.includes("application/json") ? resp.json() : resp.text();
+  }
+
+  // Basic HTML escape to prevent injection
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  // Minimal Markdown -> HTML renderer tuned for our content
+  function renderMarkdown(text) {
+    if (!text) return "";
+    // Work on escaped text so we only re-introduce allowed tags below
+    let s = esc(text);
+
+    // Normalize newlines
+    s = s.replace(/\r\n?/g, "\n");
+
+    // Remove bolding around medication names pattern:
+    // **Name (something)**:  ->  Name (something):
+    s = s.replace(/\*\*([^*\n]+?\([^()\n]+?\))\*\*:/g, "$1:");
+
+    // Headings: ## -> h4, # -> h3 (compact for chat)
+    s = s
+      .replace(/^\s*##\s+(.+)$/gm, "<h4>$1</h4>")
+      .replace(/^\s*#\s+(.+)$/gm, "<h3>$1</h3>");
+
+    // Blockquote
+    s = s.replace(/^\s*>\s?(.*)$/gm, "<blockquote>$1</blockquote>");
+
+    // Bold (general) — after medication de-bold
+    s = s.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
+
+    // Lists: build <ol> and <ul>
+    // Ordered
+    s = s.replace(
+      /(?:^|\n)(\d+\.\s+[^\n]+(?:\n\d+\.\s+[^\n]+)*)/g,
+      (m) => {
+        const items = m.trim().split(/\n/).map(line => line.replace(/^\d+\.\s+/, "").trim());
+        return "\n<ol>" + items.map(li => `<li>${li}</li>`).join("") + "</ol>";
+      }
+    );
+    // Unordered
+    s = s.replace(
+      /(?:^|\n)([-*]\s+[^\n]+(?:\n[-*]\s+[^\n]+)*)/g,
+      (m) => {
+        const items = m.trim().split(/\n/).map(line => line.replace(/^[-*]\s+/, "").trim());
+        return "\n<ul>" + items.map(li => `<li>${li}</li>`).join("") + "</ul>";
+      }
+    );
+
+    // Paragraphs: split on double newlines that aren't already tags
+    const blocks = s.split(/\n{2,}/).map(chunk => {
+      if (/^\s*<(h3|h4|ul|ol|li|blockquote)/i.test(chunk)) return chunk;
+      return `<p>${chunk.replace(/\n/g, "<br>")}</p>`;
+    });
+    return blocks.join("\n");
   }
 
   function parseLegacyScenarios(text) {
@@ -176,9 +237,9 @@
       }
       metaEl.innerHTML =
         `<div class="meta-card">
-           <div><strong>Therapeutic Area:</strong> ${sc.therapeuticArea || "—"}</div>
-           <div><strong>Background:</strong> ${sc.background || "—"}</div>
-           <div><strong>Today’s Goal:</strong> ${sc.goal || "—"}</div>
+           <div><strong>Therapeutic Area:</strong> ${esc(sc.therapeuticArea || "—")}</div>
+           <div><strong>Background:</strong> ${esc(sc.background || "—")}</div>
+           <div><strong>Today’s Goal:</strong> ${esc(sc.goal || "—")}</div>
          </div>`;
     }
 
@@ -186,7 +247,9 @@
       messagesEl.innerHTML = "";
       for (const m of conversation) {
         const div = el("div", `message ${m.role}`);
-        div.textContent = m.content;
+        const content = el("div", "content");
+        content.innerHTML = renderMarkdown(m.content);
+        div.appendChild(content);
         messagesEl.appendChild(div);
       }
 
@@ -202,7 +265,7 @@
           [["Tone", fb.tone], ["What worked", fb.worked], ["What to improve", fb.improve], ["Suggested stronger phrasing", fb.phrasing]]
             .forEach(([k, v]) => {
               const li = el("li");
-              li.innerHTML = `<strong>${k}:</strong> ${v}`;
+              li.innerHTML = `<strong>${k}:</strong> ${esc(v)}`;
               ul.appendChild(li);
             });
           panel.appendChild(ul);
@@ -331,21 +394,28 @@
     }
   }
 
-  // Scoped styles (selector + meta)
+  // Scoped styles
   const style = document.createElement("style");
   style.textContent = `
-    .cw .chat-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+    .cw .chat-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
     .cw select{padding:8px 10px;border:1px solid #cfd8e3;border-radius:8px}
-    .cw .scenario-meta .meta-card{background:#f9fafc;border:1px solid #e5e7eb;border-radius:10px;padding:10px;margin-bottom:8px;font-size:.92rem;color:#374151}
-    .cw .chat-messages{min-height:180px;max-height:420px;overflow:auto;border:1px solid #e5e7eb;border-radius:10px;padding:10px;background:#fff;margin-bottom:8px}
-    .cw .message.user{margin:6px 0;padding:8px 10px;border-radius:8px;background:#eef2ff}
-    .cw .message.assistant{margin:6px 0;padding:8px 10px;border-radius:8px;background:#f3f4f6}
+    .cw .scenario-meta .meta-card{background:#f9fafc;border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-bottom:10px;font-size:.95rem;color:#374151}
+    .cw .chat-messages{min-height:180px;max-height:520px;overflow:auto;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;background:#fff;margin-bottom:10px}
+    .cw .message{margin:8px 0}
+    .cw .message.user .content{background:#eef2ff;border-radius:8px;padding:10px}
+    .cw .message.assistant .content{background:#f8fafc;border-radius:8px;padding:10px}
+    .cw .message .content h3,.cw .message .content h4{margin:0 0 8px 0;color:#1f2937;font-weight:700}
+    .cw .message .content p{margin:8px 0;line-height:1.5}
+    .cw .message .content ul,.cw .message .content ol{margin:8px 0 8px 22px}
+    .cw .message .content blockquote{margin:8px 0;padding:8px 10px;border-left:3px solid #cbd5e1;background:#f9fafb;color:#334155}
     .cw .chat-input{display:flex;gap:8px}
-    .cw .chat-input textarea{flex:1;min-height:42px;max-height:160px;padding:8px 10px;border:1px solid #cfd8e3;border-radius:8px;resize:vertical}
-    .cw .chat-input button{padding:8px 12px;border:1px solid #cfd8e3;border-radius:8px;background:#fff;color:#1d344f;cursor:pointer}
+    .cw .chat-input textarea{flex:1;min-height:44px;max-height:200px;padding:10px;border:1px solid #cfd8e3;border-radius:8px;resize:vertical}
+    .cw .chat-input button{padding:10px 12px;border:1px solid #cfd8e3;border-radius:8px;background:#fff;color:#1d344f;cursor:pointer}
     .cw .coach-feedback{margin-top:10px;background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:10px}
-    .cw .coach-feedback h3{margin:0 0 6px 0;font-size:1rem}
-    .cw .coach-feedback ul{margin:0;padding-left:18px}
+    .cw .coach-feedback h3{margin:0 0 6px 0;font-size:1rem;color:#111827;font-weight:700}
+    /* Darker bullets/text per request */
+    .cw .coach-feedback ul{margin:0;padding-left:20px;color:#374151}
+    .cw .coach-feedback li{margin:4px 0;color:#374151}
   `;
   document.head.appendChild(style);
 
