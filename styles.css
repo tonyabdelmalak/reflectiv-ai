@@ -137,7 +137,7 @@ img{max-width:100%;height:auto;display:block}
 .chat-section{padding:3rem 0;background:var(--color-light)}
 .reflectiv-widget{margin-top:1rem}
 
-/* Promo (kept hidden structurally) */
+/* Promo */
 .promo-section{display:none}
 .promo-image img{border-radius:12px;box-shadow:0 4px 8px rgba(0,0,0,.05)}
 
@@ -160,7 +160,7 @@ img{max-width:100%;height:auto;display:block}
 .footer-social .social-icons span{font-size:1.2rem;margin-right:.5rem}
 .footer-bottom{border-top:1px solid rgba(255,255,255,.1);text-align:center;margin-top:1rem;padding-top:1rem;font-size:.8rem;color:var(--color-secondary)}
 
-/* ---------- Chat Widget Layout (prevents overlap) ---------- */
+/* ---------- Floating Chat Widget (launcher version) ---------- */
 .tcw-wrap{position:fixed;right:16px;bottom:16px;z-index:2147483647}
 .tcw-btn{width:64px;height:64px;border-radius:50%;border:none;box-shadow:0 10px 26px rgba(0,0,0,.24);cursor:pointer;background:var(--color-accent);color:#fff;font-weight:700}
 
@@ -174,18 +174,15 @@ img{max-width:100%;height:auto;display:block}
 .tcw-head{padding:10px 12px;border-bottom:1px solid #e6e9ef;background:#fff}
 .persona-bar{display:flex;gap:8px;padding:8px 12px;border-bottom:1px solid #e6e9ef;flex-wrap:wrap;background:#fff}
 
-.tcw-body{
-  flex:1;overflow:auto;padding:12px;background:#fafbfc;
-  scroll-behavior:smooth
-}
+.tcw-body{flex:1;overflow:auto;padding:12px;background:#fafbfc;scroll-behavior:smooth}
 
-/* Coach feedback block inside body should scroll, not cover footer */
+/* Coach feedback must scroll in body, never overlay footer */
 .tcw-body .coach-feedback,
-.tcw-body .tcw-coach{max-height:none}
+.tcw-body .tcw-coach{position:relative !important;z-index:1;margin:12px;max-width:100%}
 
 .tcw-footer{
   display:flex;gap:8px;padding:10px 12px;border-top:1px solid #e6e9ef;background:#fff;
-  position:sticky;bottom:0
+  position:sticky;bottom:0;z-index:2
 }
 .tcw-input{flex:1;resize:vertical;min-height:44px;max-height:120px;padding:.6rem .7rem;border:1px solid #d4dae4;border-radius:10px;font:inherit}
 .tcw-input:focus{outline:none;box-shadow:0 0 0 3px rgba(106,176,156,.25);border-color:#9fb9b2}
