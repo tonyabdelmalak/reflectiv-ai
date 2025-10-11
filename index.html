@@ -1,279 +1,484 @@
+<!--
+  ReflectivAI Rebrand Website
+  This single‑page site introduces ReflectivAI, an AI‑powered sales enablement
+  platform for life‑sciences organizations. The content emphasizes disease
+  state modules, realistic HCP personas, interactive simulations, analytics
+  dashboards and a comprehensive ethics/governance program. Footnotes at
+  the bottom reference authoritative sources and guidelines.
+-->
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Reflectiv – Emotional Intelligence for Youth</title>
-
-  <!-- Chat widget styles FIRST so site styles can override -->
-  <link rel="stylesheet" href="widget.css?v=2"/>
-
-  <!-- Site styles AFTER to win specificity conflicts -->
-  <link rel="stylesheet" href="styles.css?v=3"/>
-
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap" rel="stylesheet"/>
-</head>
-<body>
-  <!-- Header & Navigation -->
-  <header class="navbar">
-    <div class="container nav-inner">
-      <a class="logo" href="#hero" aria-label="Reflectiv home">
-        <img src="assets/logo-new.jpg" alt="Reflectiv logo">
-      </a>
-      <nav id="navMenu" class="nav-links" aria-label="Primary">
-        <a href="#hero">Home</a>
-        <a href="#mission">Mission</a>
-        <a href="#approach">Approach</a>
-        <a href="#features">Features</a>
-        <a href="#evidence">Evidence</a>
-        <a href="#roadmap">Roadmap</a>
-        <a href="#contact">Contact</a>
-        <a href="#chat">Coach</a>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ReflectivAI – AI Sales Enablement for Life Sciences</title>
+    <!-- Poppins font to match the existing brand typography -->
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Navigation -->
+    <header class="site-header">
+      <nav class="nav">
+        <a href="#home" class="nav-logo">ReflectivAI</a>
+        <div class="nav-links">
+          <a href="#platform">Platform</a>
+          <a href="#disease-states">Disease&nbsp;States</a>
+          <a href="#hcp-profiles">HCP&nbsp;Profiles</a>
+          <a href="#simulations">Simulations</a>
+          <a href="#analytics">Analytics</a>
+          <a href="#ethics">Ethics</a>
+          <a href="#faq">FAQ</a>
+          <a href="#contact">Contact</a>
+        </div>
       </nav>
-      <div class="nav-actions">
-        <!-- Theme toggle removed per requirements -->
-        <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">☰</button>
-      </div>
-    </div>
-  </header>
+    </header>
 
-  <!-- Hero Section -->
-  <section id="hero" class="hero-section">
-    <div class="container hero-grid">
-      <div class="hero-text">
-        <h1>Empowering <span class="fancy-font">Emotional&nbsp;Intelligence</span> for Youth</h1>
-        <p>Reflectiv combines evidence-based social and emotional learning with next-generation agentic AI to help young people cultivate self-awareness, resilience and purpose.</p>
-        <div class="hero-cta">
-          <a href="#contact" class="btn btn-primary">Join the Waitlist</a>
-          <a href="#mission" class="btn btn-secondary">Learn More</a>
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+      <div class="hero-content">
+        <h1>Empowering Pharma Sales Teams with Reflective Intelligence</h1>
+        <p>
+          AI‑driven simulations, physician personas and analytics that help field
+          teams learn faster, connect deeper and communicate compliantly. Built
+          on Emotional Intelligence principles — designed for real‑world sales
+          performance.
+        </p>
+        <div class="cta-buttons">
+          <a href="#contact" class="btn primary">Request a Demo</a>
+          <a href="#simulations" class="btn secondary">Explore Simulations</a>
         </div>
       </div>
       <div class="hero-image">
-        <img src="assets/hero-image.png" alt="Abstract illustration representing growth and emotional intelligence">
+        <img
+          src="assets/hero-image.png"
+          alt="Doctor interacting with holographic brain and human body in a digital analytics interface"
+        />
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Mission Section -->
-  <section id="mission" class="mission-section">
-    <div class="container">
-      <h2>Our Mission</h2>
-      <p>Reflectiv exists to empower the next generation with the self-knowledge and skills needed to thrive in an uncertain world. By weaving social and emotional learning into everyday life and leveraging agentic AI, we help youth understand their emotions, build healthy relationships and make purposeful decisions. To support this journey, we offer validated emotional intelligence assessments to give young people a baseline of their strengths and growth areas and tailor support accordingly.</p>
-      <div class="mission-grid">
-        <div class="mission-card">
-          <h3>Self-Awareness</h3>
-          <p>Identify, name and understand emotions through guided journaling and reflective prompts. Knowing what you feel is the first step toward emotional intelligence.</p>
-        </div>
-        <div class="mission-card">
-          <h3>Resilience</h3>
-          <p>Build coping strategies and bounce back from challenges with supportive activities, challenges and feedback informed by agentic AI.</p>
-        </div>
-        <div class="mission-card">
-          <h3>Purpose</h3>
-          <p>Connect your strengths and passions to actions that matter. Reflectiv helps youth explore meaningful goals and align daily choices with their values.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Approach Section -->
-  <section id="approach" class="approach-section">
-    <div class="container">
-      <h2>The Reflectiv Approach</h2>
-      <p>Our four-step process makes cultivating emotional intelligence intuitive and engaging.</p>
-      <div class="steps-grid">
-        <div class="step">
-          <span class="step-number">01</span>
-          <h3>Assess & Reflect</h3>
-          <p>Complete a brief assessment to understand your emotional strengths and growth areas. Begin journaling to discover patterns in your mood and thoughts.</p>
-        </div>
-        <div class="step">
-          <span class="step-number">02</span>
-          <h3>Personalized Path</h3>
-          <p>Agentic AI curates opportunities and challenges aligned with your goals—from mindfulness exercises to cooperative projects—so you stay motivated.</p>
-        </div>
-        <div class="step">
-          <span class="step-number">03</span>
-          <h3>Daily Habits</h3>
-          <p>Practice simple routines each day: mood check-ins, gratitude journaling and empathy games help turn insight into action.</p>
-        </div>
-        <div class="step">
-          <span class="step-number">04</span>
-          <h3>Long-Term Routines</h3>
-          <p>Develop enduring habits that reinforce resilience and self-regulation, supported by progress tracking and periodic reflections.</p>
+    <!-- Platform Section -->
+    <section id="platform" class="section platform">
+      <div class="section-inner">
+        <h2>How ReflectivAI Works</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">01</div>
+            <h3>Assess &amp; Benchmark</h3>
+            <p>
+              Evaluate current skills, knowledge and behavioral baselines to
+              personalize each rep’s learning journey.
+            </p>
+          </div>
+          <div class="step">
+            <div class="step-num">02</div>
+            <h3>Simulate &amp; Practice</h3>
+            <p>
+              Role‑play with AI‑powered HCP personas by disease state and
+              profile to build muscle memory and confidence.
+            </p>
+          </div>
+          <div class="step">
+            <div class="step-num">03</div>
+            <h3>Coach &amp; Reinforce</h3>
+            <p>
+              Receive instant feedback on tone, empathy and medical accuracy to
+              reinforce compliant communication.
+            </p>
+          </div>
+          <div class="step">
+            <div class="step-num">04</div>
+            <h3>Analyze &amp; Scale</h3>
+            <p>
+              Monitor readiness, compliance and ROI with dashboards across
+              reps, teams and territories.
+            </p>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Features Section -->
-  <section id="features" class="features-section">
-    <div class="container">
-      <h2>Innovative Features</h2>
-      <div class="features-grid">
-        <div class="feature">
-          <h3>AI-Powered Journaling</h3>
-          <p>Receive intelligent prompts and insights as you write, helping you recognize emotional patterns and growth opportunities.</p>
+    <!-- Disease States Section -->
+    <section id="disease-states" class="section disease">
+      <div class="section-inner">
+        <h2>Train by Therapeutic Area</h2>
+        <div class="card-grid">
+          <div class="card">
+            <h3>HIV&nbsp;PrEP</h3>
+            <ul>
+              <li>Urgency framing and prevention benefits</li>
+              <li>Stigma sensitivity and inclusive language</li>
+              <li>Addressing adherence and risk reduction</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Vaccines</h3>
+            <ul>
+              <li>Overcome hesitancy with evidence‑based translation</li>
+              <li>Highlight population and community impact</li>
+              <li>Clarify schedules, safety and eligibility</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Hepatitis&nbsp;B</h3>
+            <ul>
+              <li>Access and affordability considerations</li>
+              <li>Step edits, resistance and safety framing</li>
+              <li>Navigating screening and vaccination guidelines</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Oncology</h3>
+            <ul>
+              <li>Complex data interpretation and compassionate dialogue</li>
+              <li>Payer concerns and value‑based conversations</li>
+              <li>Empathy for patients and caregivers</li>
+            </ul>
+          </div>
         </div>
-        <div class="feature">
-          <h3>Take Your EI Assessment</h3>
-          <p>Get a baseline of your emotional skills with a scientifically validated test. <a href="https://storefront.mhs.com/collections/msceit-yrv" target="_blank" rel="noopener">Start your assessment</a> to see where you are today and how Reflectiv can help you grow.</p>
-        </div>
-        <div class="feature">
-          <h3>Mood & Habit Tracking</h3>
-          <p>Visualize your emotional journey with intuitive graphs. Earn points and rewards for positive habits that nurture well-being.</p>
-        </div>
-        <div class="feature">
-          <h3>Personalized Challenges</h3>
-          <p>Explore activities designed for you—from kindness missions to creative expression—to build empathy, focus and confidence.</p>
-        </div>
-        <div class="feature">
-          <h3>Community Support</h3>
-          <p>Connect with peers and mentors in a safe, moderated space. Share experiences, celebrate wins and grow together.</p>
-        </div>
+        <p class="note">
+          Our scenario library grows continually — new therapeutic areas and
+          objections are added with each launch.
+        </p>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Promo Section (hidden for later use) -->
-  <section id="promo" class="promo-section" style="display:none;">
-    <div class="container">
-      <div class="promo-image">
-        <img src="assets/promo.jpg" alt="ReflectivEQ.ai promo">
-      </div>
-    </div>
-  </section>
-
-  <!-- Evidence Section -->
-  <section id="evidence" class="evidence-section">
-    <div class="container">
-      <h2>Evidence-Based Design</h2>
-      <p>Reflectiv is built on scientific research demonstrating the power of social and emotional learning and emerging technologies.</p>
-      <ul class="evidence-list">
-        <li>Social and emotional learning (SEL) teaches emotional management, resilience and relationship skills and is linked to positive outcomes such as improved emotional intelligence, reduced distress and enhanced academic performance <a href="https://www.kff.org/policy-watch/addressing-youth-mental-health-with-social-and-emotional-learning-in-schools/" target="_blank" rel="noopener">[1]</a>.</li>
-        <li>During the 2023-24 school year, 63% of U.S. public schools implemented SEL curricula, and 72% of those schools reported moderate to high effectiveness in improving student outcomes <a href="https://www.kff.org/policy-watch/addressing-youth-mental-health-with-social-and-emotional-learning-in-schools/" target="_blank" rel="noopener">[2]</a>.</li>
-        <li>Game-based SEL interventions like Brain Agents show that trauma-informed digital experiences can enhance resilience and emotional intelligence among youth exposed to adversity <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12289224/" target="_blank" rel="noopener">[3]</a>.</li>
-        <li>Agentic AI refers to autonomous systems that plan, reason and act with minimal human oversight <a href="https://microsoft.github.io/PartnerResources/skilling/ai-ml-academy/#agentic-ai" target="_blank" rel="noopener">[4]</a>.</li>
-        <li>AI companions are increasingly common; youth report frequent use and even friendships with chatbots <a href="https://www.scientificamerican.com/article/teens-are-flocking-to-ai-chatbots-is-this-healthy/" target="_blank" rel="noopener">[5]</a>.</li>
-        <li>AI literacy matters. Experts note AI cannot replace human connection and learners should evaluate AI outputs critically <a href="https://www.gse.harvard.edu/ideas/edcast/24/10/impact-ai-childrens-development" target="_blank" rel="noopener">[6]</a>.</li>
-      </ul>
-    </div>
-  </section>
-
-  <!-- Roadmap Section -->
-  <section id="roadmap" class="roadmap-section">
-    <div class="container">
-      <h2>Where Reflectiv Is Today — and Where We're Headed</h2>
-      <p>Reflectiv was built with a clear mission: to help youth build emotional intelligence and reflective agency when interacting with AI. Our current capabilities emphasise self-awareness, meta-cognition and responsible decision-making. We’re laying the groundwork for future features that will deepen empathy, stress regulation and ethical collaboration with digital agents.</p>
-      <div class="timeline-image">
-        <img src="assets/timeline.jpg" alt="Reflectiv Execution Roadmap">
-      </div>
-      <div class="roadmap-table-wrapper">
-        <table class="roadmap-table">
-          <thead>
-            <tr>
-              <th>Key Area</th>
-              <th>Current Capabilities</th>
-              <th>Future Enhancements</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Self-Awareness & Reflection</td>
-              <td>Guided journaling and assessments scaffold reflection and meta-cognitive trust thermometers</td>
-              <td>Mood history and emotion tracking to visualize patterns</td>
-            </tr>
-            <tr>
-              <td>Calibrated Trust with AI</td>
-              <td>Critical questioning of AI outputs and bias awareness</td>
-              <td>Bias diagnostics and personalized trust calibration</td>
-            </tr>
-            <tr>
-              <td>Emotion Regulation</td>
-              <td>Not yet a primary focus</td>
-              <td>Stress-coping micro-tools, breathing prompts, screen-off resets</td>
-            </tr>
-            <tr>
-              <td>Empathy & Social Skills</td>
-              <td>Currently outside scope</td>
-              <td>Human-cue reading, simulated-empathy detection, boundary-setting</td>
-            </tr>
-            <tr>
-              <td>Relationships & Boundaries</td>
-              <td>Not yet addressed</td>
-              <td>Healthy human-AI collaboration and belonging tools</td>
-            </tr>
-            <tr>
-              <td>Ethics, Privacy & Cultural Equity</td>
-              <td>Self-diagnostics, limited explicit guardrails</td>
-              <td>User-controlled emotional data, transparency nudges, cultural calibration</td>
-            </tr>
-          </tbody>
-        </table>
-        <p class="roadmap-sources">Sources: [1]–[6] — see Evidence section for full citations.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- What's Next section removed per requirements -->
-
-  <!-- Embedded Coach Section -->
-  <section id="chat" class="chat-section" aria-label="Reflectiv Coach">
-    <div class="container">
-      <h2 style="text-align:center;margin-bottom:0.75rem;">Try the Reflectiv Coach</h2>
-      <p style="text-align:center;margin:0 0 1.25rem;">The embedded coach renders below.</p>
-      <div id="reflectiv-widget" class="reflectiv-widget">
-        <noscript>You need JavaScript to use the Reflectiv Coach.</noscript>
-      </div>
-    </div>
-  </section>
-
-  <!-- Contact / Call to Action Section -->
-  <section id="contact" class="cta-section">
-    <div class="container">
-      <h2>Stay in the Loop</h2>
-      <p>We’re building Reflectiv with educators, parents and youth. Join our waitlist to receive updates and early access.</p>
-      <form class="cta-form">
-        <input type="email" placeholder="Enter your email" aria-label="Email address" required>
-        <button type="submit" class="btn btn-primary">Join Waitlist</button>
-      </form>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="container footer-grid">
-      <div class="footer-logo">
-        <img src="assets/logo.png" alt="Reflectiv logo small">
-      </div>
-      <div class="footer-links">
-        <a href="#hero">Home</a>
-        <a href="#mission">Mission</a>
-        <a href="#approach">Approach</a>
-        <a href="#features">Features</a>
-        <a href="#evidence">Evidence</a>
-      </div>
-      <div class="footer-social">
-        <p>Follow Us (coming soon)</p>
-        <div class="social-icons">
-          <span>🌐</span>
-          <span>💬</span>
-          <span>📧</span>
+    <!-- HCP Profiles Section -->
+    <section id="hcp-profiles" class="section hcp-profiles">
+      <div class="section-inner">
+        <h2>Practice with Realistic Personas</h2>
+        <div class="card-grid">
+          <div class="card">
+            <h3>Internal Medicine&nbsp;MD</h3>
+            <ul>
+              <li>Objectives: preventative care, chronic disease management</li>
+              <li>Objections: time constraints, formulary limitations</li>
+              <li>Questions: safety data, comparative efficacy, guidelines</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Nurse Practitioner (NP)</h3>
+            <ul>
+              <li>Objectives: holistic patient education, adherence support</li>
+              <li>Objections: workload, reimbursement clarity</li>
+              <li>Questions: dosing, side‑effects, patient resources</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Physician Assistant (PA)</h3>
+            <ul>
+              <li>Objectives: collaborative care, acute case triage</li>
+              <li>Objections: scope of practice, administrative burden</li>
+              <li>Questions: prescribing authority, sample access</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Infectious Disease Specialist</h3>
+            <ul>
+              <li>Objectives: evidence translation, antimicrobial stewardship</li>
+              <li>Objections: resistance, drug–drug interactions</li>
+              <li>Questions: real‑world data, emerging therapies</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Oncology Fellow</h3>
+            <ul>
+              <li>Objectives: research advancements, precision medicine</li>
+              <li>Objections: cost, quality‑of‑life considerations</li>
+              <li>Questions: trial eligibility, biomarkers, survivorship</li>
+            </ul>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="footer-bottom">
-      <p>© <span id="year"></span> Reflectiv. All rights reserved.</p>
-    </div>
-  </footer>
+    </section>
 
-  <!-- Defer site script -->
-  <script defer src="script.js?v=2"></script>
+    <!-- Simulations Section -->
+    <section id="simulations" class="section simulations">
+      <div class="section-inner">
+        <h2>Interactive Sales Simulations</h2>
+        <ul class="feature-list">
+          <li><strong>AI role‑play coach:</strong> responsive persona that adapts to your messaging and tone.</li>
+          <li><strong>Scenario library:</strong> hundreds of practice calls mapped to disease states, objections and profiles.</li>
+          <li><strong>Territory scoring:</strong> benchmark performance by geography, team and rep.</li>
+          <li><strong>Compliance guardrails:</strong> real‑time checks for fair balance and regulated language.</li>
+          <li><strong>Multilingual prompts:</strong> practice conversations in the languages your HCPs speak.</li>
+          <li><strong>Spaced‑repetition refreshers:</strong> revisit key concepts at optimal intervals to ensure retention.</li>
+        </ul>
+        <p class="note">Need last‑minute advice before a call? Use the in‑product chat widget to ask our AI.</p>
+      </div>
+    </section>
 
-  <!-- Chat widget (single include) -->
-  <script defer src="./widget.js"></script>
-</body>
+    <!-- Analytics Section -->
+    <section id="analytics" class="section analytics">
+      <div class="section-inner">
+        <h2>Performance Analytics &amp; Coaching Intelligence</h2>
+        <div class="analytics-content">
+          <div class="analytics-image">
+        <img
+          src="assets/analytics.png"
+          alt="Team collaborating around digital dashboards and analytics"
+        />
+          </div>
+          <div class="analytics-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Empathy&nbsp;Score</td>
+                  <td>Measures emotional attunement and rapport building with HCPs.</td>
+                </tr>
+                <tr>
+                  <td>Accuracy&nbsp;Index</td>
+                  <td>Assesses the clinical correctness and regulatory alignment of responses.</td>
+                </tr>
+                <tr>
+                  <td>Confidence&nbsp;Rating</td>
+                  <td>Shows the rep’s self‑reported confidence versus objective scoring.</td>
+                </tr>
+                <tr>
+                  <td>Compliance&nbsp;Monitor</td>
+                  <td>Flags deviations from approved messaging and detects off‑label risks.</td>
+                </tr>
+                <tr>
+                  <td>Ramp&nbsp;Velocity</td>
+                  <td>Tracks onboarding speed and progression to proficiency.</td>
+                </tr>
+              </tbody>
+            </table>
+            <p>
+              Track progress by rep, team, territory and therapeutic area. Export
+              summaries for MLR reviewers and leadership.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Ethics, Privacy & Governance Section -->
+    <section id="ethics" class="section ethics">
+      <div class="section-inner">
+        <h2>Ethics, Privacy &amp; Governance</h2>
+        <p class="lead">
+          ReflectivAI is built for life‑sciences training. We avoid Protected
+          Health Information (PHI) by default and apply strict safeguards when
+          customers choose to integrate real data.
+        </p>
+        <h3>Data privacy &amp; security</h3>
+        <ul>
+          <li>PHI is off by default; training uses synthetic or de‑identified data.</li>
+          <li>When a customer enables PHI, we require a signed data‑processing
+            agreement and a HIPAA business associate agreement. Data is encrypted
+            in transit and at rest, access is role‑based, audit logs are
+            retained and data is purged on expiration<span class="footnote-ref">[1]</span>.
+          </li>
+          <li>Vendor risk management: we vet sub‑processors for equivalent
+            safeguards and conduct annual security reviews with a right‑to‑audit
+            clause.</li>
+        </ul>
+        <h3>Informed consent</h3>
+        <ul>
+          <li>If real patient data is used to power enablement, customers must
+            obtain explicit, documented consent distinct from clinical consent and
+            provide a clear opt‑out option.</li>
+        </ul>
+        <h3>Algorithmic bias &amp; fairness</h3>
+        <ul>
+          <li>We conduct pre‑deployment bias testing on representative datasets and
+            repeat tests periodically.</li>
+          <li>We monitor for disparate performance across specialties, geographies
+            and demographic contexts and publish remediation steps.</li>
+          <li>Sales targeting guardrails prohibit using non‑clinical demographic
+            proxies that could drive inequity.</li>
+        </ul>
+        <h3>Transparency &amp; explainability</h3>
+        <ul>
+          <li>In‑product recommendations include reason codes.</li>
+          <li>We publish model cards detailing data sources, limitations and
+            update cadence.</li>
+          <li>AI‑generated content is clearly labeled throughout training materials.</li>
+        </ul>
+        <h3>Human oversight &amp; accountability</h3>
+        <ul>
+          <li>Human reviewers curate scenario content and feedback rubrics.</li>
+          <li>Escalation paths exist for model errors; responsibilities are
+            defined between client, platform and vendors.</li>
+          <li>All scenario versions and message libraries are versioned for MLR
+            traceability.</li>
+        </ul>
+        <h3>Doctor‑patient relationship</h3>
+        <ul>
+          <li>Training is designed to support, not manipulate, HCP judgement.</li>
+          <li>Off‑label promotion is prohibited and risky language is flagged.</li>
+        </ul>
+        <h3>Compliance anchors</h3>
+        <p>
+          We align our program with recognized standards and guidelines:
+          <a href="https://www.hhs.gov/hipaa/for-professionals/privacy/index.html">HIPAA Privacy Rule</a>,
+          <a href="https://www.pharma.org/" target="_blank">PhRMA Code</a>,
+          <a href="https://www.fda.gov/about-fda/cder-offices-and-divisions/office-prescription-drug-promotion-opdp">FDA promotional guidance</a>,
+          <a href="https://www.nist.gov/itl/ai-risk-management-framework">NIST AI RMF</a>,
+          <a href="https://www.iso.org/standard/27001">ISO/IEC&nbsp;27001</a>,
+          <a href="https://www.iso.org/standard/42001">ISO/IEC&nbsp;42001</a> and
+          <a href="https://oecd.ai/en/ai-principles">OECD AI Principles</a>.
+          These links open in new tabs and point to authoritative sources on
+          privacy, security and responsible AI.
+        </p>
+      </div>
+    </section>
+
+    <!-- Evidence & Insights Section -->
+    <section id="evidence" class="section evidence">
+      <div class="section-inner">
+        <h2>Why AI Sales Enablement Works</h2>
+        <ul class="evidence-list">
+          <li>
+            <strong>AI adoption is accelerating:</strong> A May&nbsp;2025 survey of
+            107 life‑sciences commercial leaders found that over 80% of
+            organizations have moved beyond pilots, more than one‑third are
+            “AI Advanced,” and nearly half dedicate more than 20% of their
+            commercial budgets to AI. Leaders report 58% achieving 2× ROI and
+            7% seeing 3× or more<span class="footnote-ref">[8]</span>.
+          </li>
+          <li>
+            <strong>Value creation is substantial:</strong> McKinsey &amp; Company
+            estimates that AI innovations could unlock US$8–16 billion in annual
+            commercial value and generate a projected 10–15% gain in field team
+            productivity across life‑sciences organizations<span class="footnote-ref">[9]</span>.
+          </li>
+          <li>
+            <strong>Meeting HCP needs:</strong> A 2024 pan‑European survey of HCPs
+            revealed that 52% seek more clinical data, 67% expect more disease
+            awareness content and 42% cite lack of contact with medical science
+            liaisons as a barrier to value‑based engagement<span class="footnote-ref">[10]</span>. AI‑powered
+            enablement allows reps to deliver tailored, data‑rich conversations
+            that address these needs.
+          </li>
+          <li>
+            <strong>Fixing inefficiencies:</strong> Pharmaceutical companies
+            collectively invest over US$137 billion annually in sales and
+            marketing but still face major inefficiencies due to high costs,
+            access challenges and poor CRM utilization<span class="footnote-ref">[11]</span>. AI and advanced
+            analytics help teams allocate resources more effectively and focus on
+            the right opportunities.
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="section faq">
+      <div class="section-inner">
+        <h2>Frequently Asked Questions</h2>
+        <div class="faq-item">
+          <h3>What sets ReflectivAI apart?</h3>
+          <p>
+            ReflectivAI combines emotionally intelligent feedback with
+            life‑sciences compliance guardrails. Our simulations respond to
+            tone, empathy and clarity while adhering to regulatory rules.
+          </p>
+        </div>
+        <div class="faq-item">
+          <h3>Does it replace human coaching?</h3>
+          <p>
+            No. ReflectivAI augments managers by providing scalable practice and
+            analytics. Human coaches remain essential to interpret data,
+            reinforce skills and personalize development plans.
+          </p>
+        </div>
+        <div class="faq-item">
+          <h3>How do you handle PHI?</h3>
+          <p>
+            PHI usage is off by default. When enabled, we operate under HIPAA
+            controls: minimum‑necessary scope, encryption in transit and at rest,
+            audit logging and a signed business associate agreement<span class="footnote-ref">[1]</span>.
+          </p>
+        </div>
+        <div class="faq-item">
+          <h3>Is it customizable by disease state and region?</h3>
+          <p>
+            Yes. Modules, objections and labeling are aligned to your specific
+            therapeutic areas and geographic regulations.
+          </p>
+        </div>
+        <div class="faq-item">
+          <h3>Can it integrate with LMS/CRM?</h3>
+          <p>
+            Absolutely. We offer export packs and APIs for Salesforce, Veeva and
+            popular learning management systems.
+          </p>
+        </div>
+        <div class="faq-item">
+          <h3>How do you mitigate bias?</h3>
+          <p>
+            We perform pre‑ and post‑deployment bias testing, monitor disparate
+            performance and document remediation steps. This commitment is part
+            of our broader governance program.
+          </p>
+        </div>
+        <div class="faq-item">
+          <h3>What about explainability?</h3>
+          <p>
+            The platform provides in‑product reason codes for recommendations,
+            publishes model cards and maintains change logs for transparency.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="section contact">
+      <div class="section-inner">
+          <h2>Let’s Redefine Your Sales Training</h2>
+          <form class="contact-form" onsubmit="return false;">
+            <div class="form-group">
+              <label for="name">Name</label>
+              <input type="text" id="name" name="name" placeholder="Your name" required />
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" placeholder="you@example.com" required />
+            </div>
+            <div class="form-group">
+              <label for="message">Message</label>
+              <textarea id="message" name="message" rows="4" placeholder="Tell us about your team and goals"></textarea>
+            </div>
+            <button type="submit" class="btn primary">Request Demo</button>
+          </form>
+      </div>
+    </section>
+
+    <!-- Footnotes -->
+    <section class="footnotes">
+      <ol>
+        <li id="fn1"><span class="citation">HIPAA Privacy Rule</span> — The U.S. Department of Health &amp; Human Services notes that the HIPAA Privacy Rule establishes national standards to protect individuals’ medical records and other personally identifiable health information. It requires appropriate safeguards and gives individuals rights over their health data【643714545742846†L114-L125】.</li>
+        <li id="fn2"><span class="citation">NIST AI Risk Management Framework</span> — NIST’s AI Risk Management Framework is a voluntary framework designed to help organizations manage risks associated with AI and incorporate trustworthiness into design, development and use【154664526172006†L174-L181】.</li>
+        <li id="fn3"><span class="citation">ISO/IEC&nbsp;27001</span> — The International Organization for Standardization describes ISO/IEC 27001 as the world’s best‑known standard for information security management systems (ISMS). It provides guidance for establishing, implementing, maintaining and continually improving an ISMS【76354395616205†L140-L152】.</li>
+        <li id="fn4"><span class="citation">ISO/IEC&nbsp;42001</span> — ISO/IEC 42001 is the first AI management system standard. It specifies requirements for establishing, implementing, maintaining and improving an AI management system and addresses ethical considerations, transparency and risk management【435931407231619†L129-L144】.</li>
+        <li id="fn5"><span class="citation">OECD AI Principles</span> — The OECD AI Principles promote use of AI that is innovative and trustworthy, respects human rights and democratic values, and provide recommendations for policymakers. The Principles were first adopted in 2019 and updated in 2024【25463486849228†L88-L103】.</li>
+        <li id="fn6"><span class="citation">PhRMA Code on Interactions with Healthcare Professionals</span> — The PhRMA Code underscores ethical relationships with healthcare professionals, stating that interactions should benefit patients, provide scientific information and support medical research【652100143911058†L34-L47】.</li>
+        <li id="fn7"><span class="citation">FDA OPDP</span> — The FDA’s Office of Prescription Drug Promotion protects public health by ensuring that prescription drug promotion is truthful, balanced and accurately communicated through surveillance, compliance and education programs【391169293782306†L118-L124】.</li>
+        <li id="fn8"><span class="citation">AI Adoption Survey</span> — A 2025 IQVIA survey of 107 life‑sciences commercial leaders reports that over 80% of organizations have moved beyond AI pilots, more than one‑third are “AI Advanced,” nearly half invest >20% of their commercial budgets in AI, and 58% of leaders see 2× ROI while 7% achieve 3× ROI【857649263890263†L48-L63】.</li>
+        <li id="fn9"><span class="citation">AI Value &amp; Productivity</span> — McKinsey &amp; Company estimates that AI innovations could unlock $8–16 billion in annual commercial value for life‑sciences companies and produce a 10–15% gain in field team productivity【93008223825873†L77-L81】.</li>
+        <li id="fn10"><span class="citation">HCP Engagement Survey</span> — A 2024 pan‑European survey reported that 52% of healthcare professionals seek more clinical data, 67% expect more disease awareness content and 42% identify lack of contact with medical science liaisons as a barrier to engagement【93008223825873†L114-L119】.</li>
+        <li id="fn11"><span class="citation">Commercial Inefficiencies</span> — The same study notes that pharmaceutical companies invest over US$137 billion annually in sales and marketing yet still face major inefficiencies due to high costs, access challenges and poor CRM utilization【93008223825873†L61-L64】.</li>
+      </ol>
+    </section>
+  </body>
 </html>
