@@ -1,6 +1,6 @@
 /*
  * ReflectivEI AI widget — drop-in
- * - Loads config and content from /assets/chat/*
+ * - Loads config, personas, and scenarios from /assets/chat/*
  * - Renders chat UI with three modes
  * - Calls Cloudflare Worker defined in config.apiBase (or workerEndpoint)
  * - Scopes all widget styles under .cw to avoid site CSS conflicts
@@ -17,9 +17,11 @@
   let cfg = null;
   let systemPrompt = "";
   let knowledge = "";
-  let scenarios = {};
+  let personas = {};
+  let scenariosList = [];          // array of {id,label,therapeuticArea,background,goal,personaKey}
+  let scenariosById = new Map();   // id -> scenario
   let currentMode = "emotional-assessment";
-  let currentScenarioKey = null;
+  let currentScenarioId = null;
   let conversation = [];
   let coachEnabled = false;
 
@@ -31,27 +33,31 @@
     return ct.includes("application/json") ? resp.json() : resp.text();
   }
 
-  function parseScenarios(text) {
+  // Legacy TXT parser fallback
+  function parseLegacyScenarios(text) {
     const lines = String(text || "").split(/\r?\n/);
-    const out = {};
+    const out = [];
     let key = null, obj = null;
     for (const raw of lines) {
       const line = raw.trim();
       if (line.startsWith("# Scenario:")) {
-        if (key && obj) out[key] = obj;
+        if (key && obj) out.push(obj);
         key = line.slice("# Scenario:".length).trim();
-        obj = {};
+        obj = { id: key, label: key, therapeuticArea: "", background: "", goal: "", personaKey: "" };
         continue;
       }
       if (!key || !line) continue;
       const idx = line.indexOf(":");
       if (idx > 0) {
-        const k = line.slice(0, idx).trim();
+        const k = line.slice(0, idx).trim().toLowerCase();
         const v = line.slice(idx + 1).trim();
-        obj[k] = v;
+        if (k === "background") obj.background = v;
+        else if (k === "goal for today" || k === "goal") obj.goal = v;
+        else if (k === "area" || k === "therapeutic area") obj.therapeuticArea = v;
+        else if (k === "persona" || k === "personakey") obj.personaKey = v;
       }
     }
-    if (key && obj) out[key] = obj;
+    if (key && obj) out.push(obj);
     return out;
   }
 
@@ -81,7 +87,7 @@
     modeSelect.value = currentMode;
     modeSelect.addEventListener("change", () => {
       currentMode = modeSelect.value;
-      currentScenarioKey = null;
+      currentScenarioId = null;
       conversation = [];
       coachEnabled = false;
       renderMessages();
@@ -89,14 +95,15 @@
     });
     toolbar.appendChild(modeSelect);
 
-    // Scenario select (only for sales-simulation)
+    // Scenario select (sales-simulation only)
     const scenarioSelect = el("select");
     scenarioSelect.style.display = "none";
     scenarioSelect.addEventListener("change", () => {
-      currentScenarioKey = scenarioSelect.value || null;
+      currentScenarioId = scenarioSelect.value || null;
       conversation = [];
       coachEnabled = false;
       renderMessages();
+      updateScenarioMeta();
     });
     toolbar.appendChild(scenarioSelect);
 
@@ -110,6 +117,10 @@
     toolbar.appendChild(coachBtn);
 
     wrapper.appendChild(toolbar);
+
+    // Scenario meta
+    const metaEl = el("div", "scenario-meta");
+    wrapper.appendChild(metaEl);
 
     // Messages area
     const messagesEl = el("div", "chat-messages");
@@ -145,16 +156,31 @@
     function updateScenarioSelector() {
       if (currentMode === "sales-simulation") {
         scenarioSelect.style.display = "";
-        scenarioSelect.innerHTML = "<option value=''>Select Scenario</option>";
-        Object.keys(scenarios).forEach((k) => {
+        scenarioSelect.innerHTML = "<option value=''>Select Physician Profile</option>";
+        scenariosList.forEach((sc) => {
           const opt = el("option");
-          opt.value = k;
-          opt.textContent = k;
+          opt.value = sc.id;
+          opt.textContent = sc.label || sc.id;
           scenarioSelect.appendChild(opt);
         });
       } else {
         scenarioSelect.style.display = "none";
+        metaEl.innerHTML = "";
       }
+    }
+
+    function updateScenarioMeta() {
+      const sc = scenariosById.get(currentScenarioId);
+      if (!sc) {
+        metaEl.innerHTML = "";
+        return;
+      }
+      metaEl.innerHTML =
+        `<div class="meta-card">
+           <div><strong>Area:</strong> ${sc.therapeuticArea || "—"}</div>
+           <div><strong>Background:</strong> ${sc.background || "—"}</div>
+           <div><strong>Today’s Goal:</strong> ${sc.goal || "—"}</div>
+         </div>`;
     }
 
     function renderMessages() {
@@ -201,7 +227,6 @@
       conversation.push({ role: "user", content: userText });
       renderMessages();
 
-      // Build system and context
       const messages = [{ role: "system", content: systemPrompt }];
 
       if (currentMode === "hiv-product-knowledge") {
@@ -209,16 +234,27 @@
         messages.push({ role: "system", content: knowledge });
       } else if (currentMode === "emotional-assessment") {
         messages.push({ role: "system", content: "You are helping the user reflect on their emotional intelligence and communication style." });
-      } else if (currentMode === "sales-simulation" && currentScenarioKey && scenarios[currentScenarioKey]) {
-        const sc = scenarios[currentScenarioKey];
-        messages.push({ role: "system", content: `Act as a healthcare provider for simulation. Background: ${sc.Background}. Goal: ${sc["Goal for Today"]}. Respond as this provider would.` });
+      } else if (currentMode === "sales-simulation" && currentScenarioId) {
+        const sc = scenariosById.get(currentScenarioId);
+        if (sc) {
+          const persona = sc.personaKey ? (personas[sc.personaKey] || {}) : {};
+          const personaLine = persona.displayName ? `Persona: ${persona.displayName} (${persona.role || "HCP"}). Style: ${persona.style || "concise"}.\n` : "";
+          messages.push({
+            role: "system",
+            content:
+              `Act as the healthcare provider for a sales simulation.\n` +
+              `${personaLine}` +
+              `Therapeutic Area: ${sc.therapeuticArea || "HCP"}.\n` +
+              `Background: ${sc.background || "N/A"}\n` +
+              `Today’s Goal: ${sc.goal || "N/A"}\n` +
+              `Respond in character and keep answers realistic and compliant.`
+          });
+        }
       }
 
-      // Add transcript
       for (const m of conversation) messages.push(m);
 
       try {
-        // Use apiBase if present, else workerEndpoint for backward compatibility
         const endpoint = (cfg.apiBase || cfg.workerEndpoint || "").trim();
         if (!endpoint) throw new Error("Missing apiBase/workerEndpoint in config.json");
 
@@ -229,8 +265,7 @@
             messages,
             model: cfg.model || "llama-3.1-8b-instant",
             temperature: 0.2,
-            stream: cfg.stream === true ? true : false
-            // Do NOT send systemUrl/kbUrl/personaUrl. The server Worker selects by Origin.
+            stream: cfg.stream === true
           })
         });
 
@@ -255,7 +290,7 @@
         console.error("AI call failed:", err);
         conversation.push({
           role: "assistant",
-          content: "I’m sorry, I couldn’t reach the AI service. Please try again later."
+          content: "I couldn’t reach the AI service. Try again later."
         });
         renderMessages();
       }
@@ -278,8 +313,25 @@
       cfg = await fetchLocal("./assets/chat/config.json");
       systemPrompt = await fetchLocal("./assets/chat/system.md");
       knowledge = await fetchLocal("./assets/chat/about-ei.md");
-      const scenText = await fetchLocal("./assets/chat/data/hcp_scenarios.txt");
-      scenarios = parseScenarios(scenText);
+
+      // personas optional
+      try { personas = await fetchLocal("./assets/chat/persona.json"); } catch { personas = {}; }
+
+      // scenarios from config.json, else legacy TXT
+      if (Array.isArray(cfg.scenarios) && cfg.scenarios.length) {
+        scenariosList = cfg.scenarios.map(s => ({
+          id: s.id,
+          label: s.label || s.id,
+          therapeuticArea: s.therapeuticArea || "",
+          background: s.background || "",
+          goal: s.goal || "",
+          personaKey: s.personaKey || ""
+        }));
+      } else {
+        const legacy = await fetchLocal("./assets/chat/data/hcp_scenarios.txt");
+        scenariosList = parseLegacyScenarios(legacy);
+      }
+      scenariosById = new Map(scenariosList.map(s => [s.id, s]));
 
       buildUI();
     } catch (e) {
@@ -287,6 +339,24 @@
       container.textContent = "Failed to load ReflectivEI Coach. Check the console for details.";
     }
   }
+
+  // Minimal scoped styles for selector/meta
+  const style = document.createElement("style");
+  style.textContent = `
+    .cw .chat-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+    .cw select{padding:8px 10px;border:1px solid #cfd8e3;border-radius:8px}
+    .cw .scenario-meta .meta-card{background:#f9fafc;border:1px solid #e5e7eb;border-radius:10px;padding:10px;margin-bottom:8px;font-size:.92rem;color:#374151}
+    .cw .chat-messages{min-height:180px;max-height:420px;overflow:auto;border:1px solid #e5e7eb;border-radius:10px;padding:10px;background:#fff;margin-bottom:8px}
+    .cw .message.user{margin:6px 0;padding:8px 10px;border-radius:8px;background:#eef2ff}
+    .cw .message.assistant{margin:6px 0;padding:8px 10px;border-radius:8px;background:#f3f4f6}
+    .cw .chat-input{display:flex;gap:8px}
+    .cw .chat-input textarea{flex:1;min-height:42px;max-height:160px;padding:8px 10px;border:1px solid #cfd8e3;border-radius:8px;resize:vertical}
+    .cw .chat-input button{padding:8px 12px;border:1px solid #cfd8e3;border-radius:8px;background:#fff;color:#1d344f;cursor:pointer}
+    .cw .coach-feedback{margin-top:10px;background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:10px}
+    .cw .coach-feedback h3{margin:0 0 6px 0;font-size:1rem}
+    .cw .coach-feedback ul{margin:0;padding-left:18px}
+  `;
+  document.head.appendChild(style);
 
   init();
 })();
