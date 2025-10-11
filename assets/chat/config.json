@@ -1,9 +1,17 @@
 {
-  "model": {
+  "apiBase": "https://my-chat-agent.tonyabdelmalak.workers.dev/chat",
+  "provider": "groq",
+  "model": "llama-3.1-8b-instant",
+  "timeoutMs": 45000,
+  "stream": false,
+
+  "modelRouting": {
     "primary": "groq",
     "fallback": "openrouter"
   },
+
   "workerEndpoint": "https://my-chat-agent.tonyabdelmalak.workers.dev/chat",
+
   "brand": {
     "name": "ReflectivEI",
     "primaryColor": "#3e5494",
@@ -11,7 +19,9 @@
     "highlightColor": "#00bcd4",
     "borderRadius": 14
   },
+
   "modes": ["emotional-assessment", "hiv-product-knowledge", "sales-simulation"],
+
   "personaFile": "persona.json",
   "systemPromptFile": "system.md",
   "knowledgeFile": "about-ei.md",
