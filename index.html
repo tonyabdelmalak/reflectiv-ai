@@ -9,9 +9,10 @@
   <link rel="stylesheet" href="widget.css?v=2"/>
 
   <!-- Site styles AFTER to win specificity conflicts -->
-  <link rel="stylesheet" href="styles.css?v=2"/>
+  <link rel="stylesheet" href="styles.css?v=3"/>
 
   <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap" rel="stylesheet"/>
 </head>
@@ -19,10 +20,10 @@
   <!-- Header & Navigation -->
   <header class="navbar">
     <div class="container nav-inner">
-      <div class="logo">
+      <a class="logo" href="#hero" aria-label="Reflectiv home">
         <img src="assets/logo-new.jpg" alt="Reflectiv logo">
-      </div>
-      <nav id="navMenu" class="nav-links">
+      </a>
+      <nav id="navMenu" class="nav-links" aria-label="Primary">
         <a href="#hero">Home</a>
         <a href="#mission">Mission</a>
         <a href="#approach">Approach</a>
@@ -32,8 +33,10 @@
         <a href="#contact">Contact</a>
         <a href="#chat">Coach</a>
       </nav>
-      <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">Theme</button>
-      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">☰</button>
+      <div class="nav-actions">
+        <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">Theme</button>
+        <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">☰</button>
+      </div>
     </div>
   </header>
 
@@ -135,8 +138,8 @@
     </div>
   </section>
 
-  <!-- Promo Section -->
-  <section id="promo" class="promo-section" style="display: none;">
+  <!-- Promo Section (kept hidden for later use) -->
+  <section id="promo" class="promo-section" style="display:none;">
     <div class="container">
       <div class="promo-image">
         <img src="assets/promo.jpg" alt="ReflectivEQ.ai promo">
@@ -275,7 +278,7 @@
   </footer>
 
   <!-- Defer scripts -->
-  <script defer src="script.js"></script>
-  <script defer src="widget.js"></script>
+  <script defer src="script.js?v=2"></script>
+  <script defer src="widget.js?v=2"></script>
 </body>
 </html>
