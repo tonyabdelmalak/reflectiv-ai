@@ -1,7 +1,18 @@
-2025-10-09
-  • Initial release of ReflectivEI AI Sales Enablement platform.
-  • Set up site structure with index, styles and scripts.
-  • Implemented AI chat widget with modes: Emotional Assessment, HIV Product Knowledge and Sales Simulation.
-  • Added sample healthcare provider scenarios and simple coach feedback.
-  • Added about-ei.md summarising emotional assessment protocols and HIV medication information.
-  • Created maintenance and integration documentation.
+# ReflectivEI Changelog
+
+## 2025-10-09 — Initial Release
+
+- **Initial release** of the ReflectivEI AI Sales Enablement Platform.  
+- **Site structure** established with `index.html`, `styles.css`, `script.js`, and supporting assets.  
+- **Implemented AI Chat Widget** with three functional modes:  
+  - *Emotional Assessment*  
+  - *HIV Product Knowledge*  
+  - *Sales Simulation*  
+- **Added healthcare provider scenarios** for simulation practice and integrated basic coach feedback generation.  
+- **Added** `about-ei.md`, summarizing Emotional Assessment protocols and HIV medication information.  
+- **Created** system, persona, and configuration files (`system.md`, `persona.json`, `config.json`) for AI context.  
+- **Published documentation** under `/docs`, including `maintenance.md` and `integration-notes.md`.
+
+---
+
+_ReflectivEI is an evolving project — future updates will include expanded therapeutic areas, improved analytics, and adaptive feedback loops._
