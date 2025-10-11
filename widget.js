@@ -5,6 +5,7 @@
  * - Calls Cloudflare Worker defined in config.apiBase (or workerEndpoint)
  * - Scopes all widget styles under .cw
  * - Markdown rendering + readability polish
+ * - Heuristic, turn-aware Coach Feedback
  */
 
 (function () {
@@ -41,7 +42,7 @@
       .replace(/'/g, "&#39;");
   }
 
-  // Minimal Markdown -> HTML
+  // Minimal Markdown -> HTML tuned for chat
   function renderMarkdown(text) {
     if (!text) return "";
     let s = esc(text).replace(/\r\n?/g, "\n");
@@ -56,7 +57,7 @@
     // Blockquote
     s = s.replace(/^\s*>\s?(.*)$/gm, "<blockquote>$1</blockquote>");
 
-    // Bold (general)
+    // Bold (general) — after medication de-bold
     s = s.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
 
     // Ordered lists
@@ -78,6 +79,7 @@
     return blocks.join("\n");
   }
 
+  // Legacy scenarios parser (for hcp_scenarios.txt)
   function parseLegacyScenarios(text) {
     const lines = String(text || "").split(/\r?\n/);
     const out = [];
@@ -110,6 +112,59 @@
     if (cls) e.className = cls;
     if (text != null) e.textContent = text;
     return e;
+  }
+
+  // ---------- Coach Feedback (heuristic, turn-aware) ----------
+  function generateCoachFeedback(conv = [], mode = currentMode) {
+    if (!conv.length) {
+      return {
+        tone: "neutral",
+        worked: "Ready when you are.",
+        improve: "Ask a goal-directed question to begin.",
+        phrasing: "Try: “What’s the next best step and why?”"
+      };
+    }
+
+    const lastUser = [...conv].reverse().find(m => m.role === "user")?.content || "";
+    const lastAI   = [...conv].reverse().find(m => m.role === "assistant")?.content || "";
+
+    const qCount = (lastUser.match(/\?/g) || []).length;
+    const asksForCommit = /commit|agree|can we|will you|let's|next step/i.test(lastUser);
+    const empathy = /\b(thanks|appreciate|understand|sorry|that sounds|i hear)\b/i.test(lastUser);
+    const objections = /\b(concern|barrier|issue|risk|resistance|denied|step[- ]?edit)\b/i.test(lastUser);
+    const valueHook = /\bbenefit|outcome|impact|why|evidence|data|guideline|access|coverage|pa|prior auth\b/i.test(lastUser);
+    const tooLongAI = lastAI.split(/\s+/).length > 180;
+    const noStructureAI = !(/<ol>|<ul>|<h3>|<h4>|•|- |\d\./i.test(lastAI));
+    const noCTA = !/\b(next step|commit|plan|consider|let's|agree|would you|schedule|start|switch)\b/i.test(lastAI);
+    const noQuestionAI = !/\?/i.test(lastAI);
+
+    let tone = "neutral";
+    if (empathy) tone = "warm";
+    if (/!\s*$/.test(lastUser) || /\b(frustrated|upset|angry)\b/i.test(lastUser)) tone = "tense";
+
+    const worked = [
+      qCount > 0 ? "You asked questions to focus the exchange." : null,
+      empathy ? "You used empathetic language." : null,
+      valueHook ? "You referenced evidence, access, or outcomes." : null,
+      objections ? "You surfaced an objection to address." : null
+    ].filter(Boolean).join(" ") || "You kept the dialog moving.";
+
+    const improveList = [];
+    if (qCount === 0) improveList.push("Ask 1–2 specific questions.");
+    if (!asksForCommit && mode === "sales-simulation") improveList.push("Seek a small commitment or next step.");
+    if (noStructureAI || tooLongAI) improveList.push("Request a concise, structured reply with bullets.");
+    if (noCTA) improveList.push("Ask for a clear action, timeline, or criteria.");
+    if (noQuestionAI && mode !== "hiv-product-knowledge") improveList.push("Invite the HCP to react with one question.");
+    const improve = improveList.join(" ");
+
+    let phrasing = "“Could you outline the next best step and why?”";
+    if (objections) phrasing = "“What would address your top concern so we can proceed?”";
+    else if (mode === "sales-simulation" && valueHook)
+      phrasing = "“Given the data and access, can we align on which patients you’ll start with?”";
+    else if (mode === "hiv-product-knowledge")
+      phrasing = "“Please give a 3-bullet summary and one clinical caveat.”";
+
+    return { tone, worked, improve, phrasing };
   }
 
   // ---------- UI ----------
@@ -172,7 +227,7 @@
     const messagesEl = el("div", "chat-messages");
     wrapper.appendChild(messagesEl);
 
-    // Coach feedback panel placeholder (lives in wrapper)
+    // Coach feedback panel (lives inside wrapper)
     const coachEl = el("div", "coach-feedback");
     wrapper.appendChild(coachEl);
 
@@ -233,7 +288,6 @@
     }
 
     function renderMessages() {
-      // Messages
       messagesEl.innerHTML = "";
       for (const m of conversation) {
         const div = el("div", `message ${m.role}`);
@@ -243,10 +297,9 @@
         messagesEl.appendChild(div);
       }
 
-      // Coach feedback
       coachEl.innerHTML = "";
       if (coachEnabled) {
-        const fb = generateCoachFeedback();
+        const fb = generateCoachFeedback(conversation, currentMode);
         if (fb) {
           const h3 = el("h3", null, "Coach Feedback");
           coachEl.appendChild(h3);
@@ -346,23 +399,6 @@
     }
   }
 
-  function generateCoachFeedback() {
-    if (!conversation.length) {
-      return {
-        tone: "neutral",
-        worked: "Awaiting your first message.",
-        improve: "Ask a goal-directed question to begin.",
-        phrasing: "Try: “What’s the next best step and why?”"
-      };
-    }
-    return {
-      tone: "neutral",
-      worked: "You engaged with the chat and explored the content.",
-      improve: "Ask specific, goal-directed questions to get targeted guidance.",
-      phrasing: "Try: “Could you walk me through the next best step and why?”"
-    };
-  }
-
   // ---------- Init ----------
   async function init() {
     try {
@@ -393,7 +429,7 @@
     }
   }
 
-  // Scoped styles
+  // ---------- Scoped styles ----------
   const style = document.createElement("style");
   style.textContent = `
     .cw .chat-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
