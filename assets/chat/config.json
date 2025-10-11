@@ -1,7 +1,7 @@
 {
   "version": "2025-10-10",
   "model": "llama-3.1-8b-instant",
-  "apiBase": "https://YOUR-CF-WORKER-URL/chat",
+  "apiBase": "https://my-chat-agent.tonyabdelmalak.workers.dev/chat",
   "stream": false,
   "modes": ["emotional-assessment", "hiv-product-knowledge", "sales-simulation"],
   "scenarios": [
