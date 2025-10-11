@@ -4,6 +4,7 @@
   "apiBase": "https://my-chat-agent.tonyabdelmalak.workers.dev/chat",
   "stream": false,
   "modes": ["emotional-assessment", "hiv-product-knowledge", "sales-simulation"],
+  "analyticsEndpoint": "https://my-chat-agent.tonyabdelmalak.workers.dev/coach-metrics",
   "scenarios": [
     {
       "id": "prep_im_decile3_lowshare",
