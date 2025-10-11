@@ -1,88 +1,85 @@
-
 /*
- * ReflectivEI AI widget
- *
- * This script builds a chat interface with three modes: emotional assessment,
- * HIV product knowledge and sales simulation. It loads configuration and
- * content files, manages conversation state, and communicates with the
- * upstream worker endpoint defined in config.json. When run on the ReflectivEI
- * site it attaches itself to an element with id="reflectiv-widget".
+ * ReflectivEI AI widget — drop-in
+ * - Loads config and content from /assets/chat/*
+ * - Renders chat UI with three modes
+ * - Calls Cloudflare Worker defined in config.apiBase (or workerEndpoint)
+ * - Scopes all widget styles under .cw to avoid site CSS conflicts
  */
 
 (function () {
-  const container = document.getElementById('reflectiv-widget');
+  const container = document.getElementById("reflectiv-widget");
   if (!container) return;
 
-  // Internal state
-  let config = null;
-  let systemPrompt = '';
-  let knowledge = '';
+  // Ensure widget CSS scope class exists on root
+  container.classList.add("cw");
+
+  // ---------- State ----------
+  let cfg = null;
+  let systemPrompt = "";
+  let knowledge = "";
   let scenarios = {};
-  let currentMode = 'emotional-assessment';
+  let currentMode = "emotional-assessment";
   let currentScenarioKey = null;
   let conversation = [];
   let coachEnabled = false;
 
-  // Helper to fetch JSON or text
+  // ---------- Utils ----------
   async function fetchLocal(path) {
-    const resp = await fetch(path);
-    if (!resp.ok) throw new Error(`Failed to load ${path}`);
-    const contentType = resp.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      return resp.json();
-    }
-    return resp.text();
+    const resp = await fetch(path, { cache: "no-store" });
+    if (!resp.ok) throw new Error(`Failed to load ${path} (${resp.status})`);
+    const ct = resp.headers.get("content-type") || "";
+    return ct.includes("application/json") ? resp.json() : resp.text();
   }
 
-  // Parse scenarios file into a simple object
   function parseScenarios(text) {
-    const lines = text.split(/\r?\n/);
-    const result = {};
-    let key = null;
-    let obj = null;
-    lines.forEach(line => {
-      const trimmed = line.trim();
-      if (trimmed.startsWith('# Scenario:')) {
-        if (key && obj) {
-          result[key] = obj;
-        }
-        key = trimmed.substring('# Scenario:'.length).trim();
+    const lines = String(text || "").split(/\r?\n/);
+    const out = {};
+    let key = null, obj = null;
+    for (const raw of lines) {
+      const line = raw.trim();
+      if (line.startsWith("# Scenario:")) {
+        if (key && obj) out[key] = obj;
+        key = line.slice("# Scenario:".length).trim();
         obj = {};
-      } else if (key) {
-        const idx = trimmed.indexOf(':');
-        if (idx > 0) {
-          const k = trimmed.substring(0, idx).trim();
-          const v = trimmed.substring(idx + 1).trim();
-          obj[k] = v;
-        }
+        continue;
       }
-    });
-    if (key && obj) {
-      result[key] = obj;
+      if (!key || !line) continue;
+      const idx = line.indexOf(":");
+      if (idx > 0) {
+        const k = line.slice(0, idx).trim();
+        const v = line.slice(idx + 1).trim();
+        obj[k] = v;
+      }
     }
-    return result;
+    if (key && obj) out[key] = obj;
+    return out;
   }
 
-  // Build UI once files are loaded
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  // ---------- UI ----------
   function buildUI() {
-    container.innerHTML = '';
-    const wrapper = document.createElement('div');
-    wrapper.className = 'reflectiv-chat';
+    container.innerHTML = "";
+    const wrapper = el("div", "reflectiv-chat");
+
     // Toolbar
-    const toolbar = document.createElement('div');
-    toolbar.className = 'chat-toolbar';
-    // Mode selector
-    const modeSelect = document.createElement('select');
-    config.modes.forEach(mode => {
-      const opt = document.createElement('option');
-      opt.value = mode;
-      opt.textContent = mode
-        .replace(/-/g, ' ')
-        .replace(/\b(\w)/g, c => c.toUpperCase());
+    const toolbar = el("div", "chat-toolbar");
+
+    // Mode select
+    const modeSelect = el("select");
+    (cfg.modes || []).forEach((m) => {
+      const opt = el("option");
+      opt.value = m;
+      opt.textContent = m.replace(/-/g, " ").replace(/\b(\w)/g, (c) => c.toUpperCase());
       modeSelect.appendChild(opt);
     });
     modeSelect.value = currentMode;
-    modeSelect.addEventListener('change', () => {
+    modeSelect.addEventListener("change", () => {
       currentMode = modeSelect.value;
       currentScenarioKey = null;
       conversation = [];
@@ -91,179 +88,209 @@
       updateScenarioSelector();
     });
     toolbar.appendChild(modeSelect);
-    // Scenario selector (populated later for sales simulation)
-    const scenarioSelect = document.createElement('select');
-    scenarioSelect.style.display = 'none';
-    scenarioSelect.addEventListener('change', () => {
+
+    // Scenario select (only for sales-simulation)
+    const scenarioSelect = el("select");
+    scenarioSelect.style.display = "none";
+    scenarioSelect.addEventListener("change", () => {
       currentScenarioKey = scenarioSelect.value || null;
       conversation = [];
       coachEnabled = false;
       renderMessages();
     });
     toolbar.appendChild(scenarioSelect);
+
     // Coach toggle
-    const coachButton = document.createElement('button');
-    coachButton.textContent = 'Enable Coach';
-    coachButton.addEventListener('click', () => {
+    const coachBtn = el("button", null, "Enable Coach");
+    coachBtn.addEventListener("click", () => {
       coachEnabled = !coachEnabled;
-      coachButton.textContent = coachEnabled ? 'Disable Coach' : 'Enable Coach';
+      coachBtn.textContent = coachEnabled ? "Disable Coach" : "Enable Coach";
+      renderMessages();
     });
-    toolbar.appendChild(coachButton);
+    toolbar.appendChild(coachBtn);
 
     wrapper.appendChild(toolbar);
-    // Messages
-    const messagesContainer = document.createElement('div');
-    messagesContainer.className = 'chat-messages';
-    wrapper.appendChild(messagesContainer);
+
+    // Messages area
+    const messagesEl = el("div", "chat-messages");
+    wrapper.appendChild(messagesEl);
+
     // Input area
-    const inputArea = document.createElement('div');
-    inputArea.className = 'chat-input';
-    const textarea = document.createElement('textarea');
-    textarea.placeholder = 'Type your message…';
-    textarea.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !e.shiftKey) {
+    const inputArea = el("div", "chat-input");
+    const textarea = el("textarea");
+    textarea.placeholder = "Type your message…";
+    textarea.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        sendMessage(textarea.value.trim());
-        textarea.value = '';
+        const t = textarea.value.trim();
+        if (t) sendMessage(t);
+        textarea.value = "";
       }
     });
-    const sendBtn = document.createElement('button');
-    sendBtn.textContent = 'Send';
-    sendBtn.addEventListener('click', () => {
-      const text = textarea.value.trim();
-      if (text) {
-        sendMessage(text);
-        textarea.value = '';
+    const sendBtn = el("button", null, "Send");
+    sendBtn.addEventListener("click", () => {
+      const t = textarea.value.trim();
+      if (t) {
+        sendMessage(t);
+        textarea.value = "";
       }
     });
     inputArea.appendChild(textarea);
     inputArea.appendChild(sendBtn);
     wrapper.appendChild(inputArea);
+
     container.appendChild(wrapper);
 
-    // Helper to update scenario select options
+    // Helpers
     function updateScenarioSelector() {
-      if (currentMode === 'sales-simulation') {
-        scenarioSelect.style.display = '';
-        scenarioSelect.innerHTML = '<option value="">Select Scenario</option>';
-        Object.keys(scenarios).forEach(key => {
-          const opt = document.createElement('option');
-          opt.value = key;
-          opt.textContent = key;
+      if (currentMode === "sales-simulation") {
+        scenarioSelect.style.display = "";
+        scenarioSelect.innerHTML = "<option value=''>Select Scenario</option>";
+        Object.keys(scenarios).forEach((k) => {
+          const opt = el("option");
+          opt.value = k;
+          opt.textContent = k;
           scenarioSelect.appendChild(opt);
         });
       } else {
-        scenarioSelect.style.display = 'none';
+        scenarioSelect.style.display = "none";
       }
     }
-    updateScenarioSelector();
 
-    // Render messages and (optionally) coach feedback
     function renderMessages() {
-      messagesContainer.innerHTML = '';
-      conversation.forEach(msg => {
-        const div = document.createElement('div');
-        div.className = 'message ' + msg.role;
-        div.textContent = msg.content;
-        messagesContainer.appendChild(div);
-      });
-      // Coach feedback
-      const existingFeedback = container.querySelector('.coach-feedback');
-      if (existingFeedback) existingFeedback.remove();
-      if (coachEnabled && conversation.length > 0) {
-        const feedback = generateCoachFeedback();
-        if (feedback) {
-          const fbDiv = document.createElement('div');
-          fbDiv.className = 'coach-feedback';
-          const h3 = document.createElement('h3');
-          h3.textContent = 'Coach Feedback';
-          fbDiv.appendChild(h3);
-          const list = document.createElement('ul');
-          ['Tone', 'What worked', 'What to improve', 'Suggested stronger phrasing'].forEach(field => {
-            const li = document.createElement('li');
-            li.innerHTML = `<strong>${field}:</strong> ${feedback[field.toLowerCase()]}`;
-            list.appendChild(li);
-          });
-          fbDiv.appendChild(list);
-          container.appendChild(fbDiv);
+      messagesEl.innerHTML = "";
+      for (const m of conversation) {
+        const div = el("div", `message ${m.role}`);
+        div.textContent = m.content;
+        messagesEl.appendChild(div);
+      }
+
+      // Coach feedback panel
+      const old = container.querySelector(".coach-feedback");
+      if (old) old.remove();
+      if (coachEnabled && conversation.length) {
+        const fb = generateCoachFeedback();
+        if (fb) {
+          const panel = el("div", "coach-feedback");
+          const h3 = el("h3", null, "Coach Feedback");
+          panel.appendChild(h3);
+          const ul = el("ul");
+          const fields = [
+            ["Tone", fb.tone],
+            ["What worked", fb.worked],
+            ["What to improve", fb.improve],
+            ["Suggested stronger phrasing", fb.phrasing],
+          ];
+          for (const [k, v] of fields) {
+            const li = el("li");
+            li.innerHTML = `<strong>${k}:</strong> ${v}`;
+            ul.appendChild(li);
+          }
+          panel.appendChild(ul);
+          container.appendChild(panel);
         }
       }
-      // Scroll to bottom
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
-    // Send message to upstream
-    async function sendMessage(content) {
-      if (!content) return;
-      conversation.push({ role: 'user', content });
+    updateScenarioSelector();
+    renderMessages();
+
+    // ---------- Messaging ----------
+    async function sendMessage(userText) {
+      conversation.push({ role: "user", content: userText });
       renderMessages();
-      // Build system message
-      const messages = [];
-      messages.push({ role: 'system', content: systemPrompt });
-      // Mode specific context
-      if (currentMode === 'hiv-product-knowledge') {
-        messages.push({ role: 'system', content: 'You are answering questions about HIV medications using the provided evidence-based knowledge.' });
-        messages.push({ role: 'system', content: knowledge });
-      } else if (currentMode === 'emotional-assessment') {
-        messages.push({ role: 'system', content: 'You are helping the user reflect on their emotional intelligence and communication style.' });
-      } else if (currentMode === 'sales-simulation' && currentScenarioKey && scenarios[currentScenarioKey]) {
+
+      // Build system and context
+      const messages = [{ role: "system", content: systemPrompt }];
+
+      if (currentMode === "hiv-product-knowledge") {
+        messages.push({ role: "system", content: "You are answering questions about HIV medications using the provided evidence-based knowledge." });
+        messages.push({ role: "system", content: knowledge });
+      } else if (currentMode === "emotional-assessment") {
+        messages.push({ role: "system", content: "You are helping the user reflect on their emotional intelligence and communication style." });
+      } else if (currentMode === "sales-simulation" && currentScenarioKey && scenarios[currentScenarioKey]) {
         const sc = scenarios[currentScenarioKey];
-        messages.push({ role: 'system', content: `Act as a healthcare provider for simulation. Background: ${sc.Background}. Goal: ${sc['Goal for Today']}. Respond as this provider would.` });
+        messages.push({ role: "system", content: `Act as a healthcare provider for simulation. Background: ${sc.Background}. Goal: ${sc["Goal for Today"]}. Respond as this provider would.` });
       }
-      // Add previous conversation turns
-      conversation.forEach(msg => messages.push(msg));
+
+      // Add transcript
+      for (const m of conversation) messages.push(m);
+
       try {
-        const resp = await fetch(config.workerEndpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages })
+        // Use apiBase if present, else workerEndpoint for backward compatibility
+        const endpoint = (cfg.apiBase || cfg.workerEndpoint || "").trim();
+        if (!endpoint) throw new Error("Missing apiBase/workerEndpoint in config.json");
+
+        const r = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages,
+            model: cfg.model || "llama-3.1-8b-instant",
+            temperature: 0.2,
+            stream: cfg.stream === true ? true : false
+            // Do NOT send systemUrl/kbUrl/personaUrl. The server Worker selects by Origin.
+          })
         });
-        if (resp.ok) {
-          const data = await resp.json();
-          // Expect { reply: string }
-          const reply = data?.reply || data?.choices?.[0]?.message?.content;
-          if (reply) {
-            conversation.push({ role: 'assistant', content: reply.trim() });
-            renderMessages();
-            return;
-          }
+
+        // Handle non-2xx quickly for clearer errors
+        if (!r.ok) {
+          const t = await r.text().catch(() => "");
+          throw new Error(`Upstream ${r.status}: ${t || "no body"}`);
         }
-        throw new Error('Invalid response');
+
+        const data = await r.json().catch(() => ({}));
+
+        // Accept either OpenAI-style or unified format
+        const reply =
+          data.reply ||
+          data.content ||
+          data?.choices?.[0]?.message?.content ||
+          data?.message?.content ||
+          "";
+
+        if (!reply) throw new Error("Empty reply");
+
+        conversation.push({ role: "assistant", content: String(reply).trim() });
+        renderMessages();
       } catch (err) {
-        conversation.push({ role: 'assistant', content: 'I’m sorry, I couldn’t reach the AI service. Please try again later.' });
+        console.error("AI call failed:", err);
+        conversation.push({
+          role: "assistant",
+          content: "I’m sorry, I couldn’t reach the AI service. Please try again later."
+        });
         renderMessages();
       }
     }
-
-    // Generate simple coach feedback based on the conversation
-    function generateCoachFeedback() {
-      if (conversation.length === 0) return null;
-      // Basic heuristics: count user vs assistant messages
-      let tone = 'neutral';
-      let worked = 'You engaged with the chat and explored the content.';
-      let improve = 'Try asking more specific questions to get detailed answers.';
-      let phrasing = 'Use open‑ended questions such as “Can you tell me more about…?” to encourage richer responses.';
-      return { tone, 'what worked': worked, 'what to improve': improve, 'suggested stronger phrasing': phrasing };
-    }
-
-    // Initial render
-    renderMessages();
   }
 
+  function generateCoachFeedback() {
+    if (!conversation.length) return null;
+    return {
+      tone: "neutral",
+      worked: "You engaged with the chat and explored the content.",
+      improve: "Ask specific, goal-directed questions to get targeted guidance.",
+      phrasing: "Try: “Could you walk me through the next best step and why?”"
+    };
+  }
+
+  // ---------- Init ----------
   async function init() {
     try {
-      // When serving from file:// or GitHub Pages the working directory is the
-      // project root. Prefix relative paths with './' to ensure they resolve.
-      config = await fetchLocal('./assets/chat/config.json');
-      systemPrompt = await fetchLocal('./assets/chat/system.md');
-      knowledge = await fetchLocal('./assets/chat/about-ei.md');
-      const scenarioText = await fetchLocal('./assets/chat/data/hcp_scenarios.txt');
-      scenarios = parseScenarios(scenarioText);
+      // Load config and content
+      cfg = await fetchLocal("./assets/chat/config.json");
+      systemPrompt = await fetchLocal("./assets/chat/system.md");
+      knowledge = await fetchLocal("./assets/chat/about-ei.md");
+      const scenText = await fetchLocal("./assets/chat/data/hcp_scenarios.txt");
+      scenarios = parseScenarios(scenText);
+
       buildUI();
-    } catch (err) {
-      console.error(err);
-      container.textContent = 'Failed to load ReflectivEI Coach. Check the console for details.';
+    } catch (e) {
+      console.error(e);
+      container.textContent = "Failed to load ReflectivEI Coach. Check the console for details.";
     }
   }
+
   init();
 })();
