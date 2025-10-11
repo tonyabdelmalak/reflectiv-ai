@@ -1,16 +1,15 @@
 /*
  * ReflectivEI AI widget — drop-in
- * - Loads config, personas, and scenarios from /assets/chat/*
+ * - Loads config and content from /assets/chat/*
  * - Renders chat UI with three modes
  * - Calls Cloudflare Worker defined in config.apiBase (or workerEndpoint)
- * - Scopes all widget styles under .cw to avoid site CSS conflicts
- * - NEW: lightweight Markdown rendering and readability polish
+ * - Scopes all widget styles under .cw
+ * - Markdown rendering + readability polish
  */
 
 (function () {
   const container = document.getElementById("reflectiv-widget");
   if (!container) return;
-
   if (!container.classList.contains("cw")) container.classList.add("cw");
 
   // ---------- State ----------
@@ -33,7 +32,6 @@
     return ct.includes("application/json") ? resp.json() : resp.text();
   }
 
-  // Basic HTML escape to prevent injection
   function esc(s) {
     return String(s)
       .replace(/&/g, "&amp;")
@@ -43,49 +41,36 @@
       .replace(/'/g, "&#39;");
   }
 
-  // Minimal Markdown -> HTML renderer tuned for our content
+  // Minimal Markdown -> HTML
   function renderMarkdown(text) {
     if (!text) return "";
-    // Work on escaped text so we only re-introduce allowed tags below
-    let s = esc(text);
+    let s = esc(text).replace(/\r\n?/g, "\n");
 
-    // Normalize newlines
-    s = s.replace(/\r\n?/g, "\n");
-
-    // Remove bolding around medication names pattern:
-    // **Name (something)**:  ->  Name (something):
+    // Remove **Name (..)**: -> Name (..):
     s = s.replace(/\*\*([^*\n]+?\([^()\n]+?\))\*\*:/g, "$1:");
 
-    // Headings: ## -> h4, # -> h3 (compact for chat)
-    s = s
-      .replace(/^\s*##\s+(.+)$/gm, "<h4>$1</h4>")
-      .replace(/^\s*#\s+(.+)$/gm, "<h3>$1</h3>");
+    // Headings
+    s = s.replace(/^\s*##\s+(.+)$/gm, "<h4>$1</h4>")
+         .replace(/^\s*#\s+(.+)$/gm, "<h3>$1</h3>");
 
     // Blockquote
     s = s.replace(/^\s*>\s?(.*)$/gm, "<blockquote>$1</blockquote>");
 
-    // Bold (general) — after medication de-bold
+    // Bold (general)
     s = s.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
 
-    // Lists: build <ol> and <ul>
-    // Ordered
-    s = s.replace(
-      /(?:^|\n)(\d+\.\s+[^\n]+(?:\n\d+\.\s+[^\n]+)*)/g,
-      (m) => {
-        const items = m.trim().split(/\n/).map(line => line.replace(/^\d+\.\s+/, "").trim());
-        return "\n<ol>" + items.map(li => `<li>${li}</li>`).join("") + "</ol>";
-      }
-    );
-    // Unordered
-    s = s.replace(
-      /(?:^|\n)([-*]\s+[^\n]+(?:\n[-*]\s+[^\n]+)*)/g,
-      (m) => {
-        const items = m.trim().split(/\n/).map(line => line.replace(/^[-*]\s+/, "").trim());
-        return "\n<ul>" + items.map(li => `<li>${li}</li>`).join("") + "</ul>";
-      }
-    );
+    // Ordered lists
+    s = s.replace(/(?:^|\n)(\d+\.\s+[^\n]+(?:\n\d+\.\s+[^\n]+)*)/g, m => {
+      const items = m.trim().split(/\n/).map(l => l.replace(/^\d+\.\s+/, "").trim());
+      return "\n<ol>" + items.map(li => `<li>${li}</li>`).join("") + "</ol>";
+    });
+    // Unordered lists
+    s = s.replace(/(?:^|\n)([-*]\s+[^\n]+(?:\n[-*]\s+[^\n]+)*)/g, m => {
+      const items = m.trim().split(/\n/).map(l => l.replace(/^[-*]\s+/, "").trim());
+      return "\n<ul>" + items.map(li => `<li>${li}</li>`).join("") + "</ul>";
+    });
 
-    // Paragraphs: split on double newlines that aren't already tags
+    // Paragraphs
     const blocks = s.split(/\n{2,}/).map(chunk => {
       if (/^\s*<(h3|h4|ul|ol|li|blockquote)/i.test(chunk)) return chunk;
       return `<p>${chunk.replace(/\n/g, "<br>")}</p>`;
@@ -155,7 +140,7 @@
     });
     toolbar.appendChild(modeSelect);
 
-    // Scenario select (sales-simulation only)
+    // Scenario select
     const scenarioSelect = el("select");
     scenarioSelect.style.display = "none";
     scenarioSelect.setAttribute("aria-label", "Select Physician Profile");
@@ -179,15 +164,19 @@
 
     wrapper.appendChild(toolbar);
 
-    // Scenario meta (inline info panel)
+    // Scenario meta
     const metaEl = el("div", "scenario-meta");
     wrapper.appendChild(metaEl);
 
-    // Messages area
+    // Messages
     const messagesEl = el("div", "chat-messages");
     wrapper.appendChild(messagesEl);
 
-    // Input area
+    // Coach feedback panel placeholder (lives in wrapper)
+    const coachEl = el("div", "coach-feedback");
+    wrapper.appendChild(coachEl);
+
+    // Input
     const inputArea = el("div", "chat-input");
     const textarea = el("textarea");
     textarea.placeholder = "Type your message…";
@@ -244,6 +233,7 @@
     }
 
     function renderMessages() {
+      // Messages
       messagesEl.innerHTML = "";
       for (const m of conversation) {
         const div = el("div", `message ${m.role}`);
@@ -253,14 +243,13 @@
         messagesEl.appendChild(div);
       }
 
-      const old = container.querySelector(".coach-feedback");
-      if (old) old.remove();
-      if (coachEnabled && conversation.length) {
+      // Coach feedback
+      coachEl.innerHTML = "";
+      if (coachEnabled) {
         const fb = generateCoachFeedback();
         if (fb) {
-          const panel = el("div", "coach-feedback");
           const h3 = el("h3", null, "Coach Feedback");
-          panel.appendChild(h3);
+          coachEl.appendChild(h3);
           const ul = el("ul");
           [["Tone", fb.tone], ["What worked", fb.worked], ["What to improve", fb.improve], ["Suggested stronger phrasing", fb.phrasing]]
             .forEach(([k, v]) => {
@@ -268,10 +257,13 @@
               li.innerHTML = `<strong>${k}:</strong> ${esc(v)}`;
               ul.appendChild(li);
             });
-          panel.appendChild(ul);
-          container.appendChild(panel);
+          coachEl.appendChild(ul);
+          coachEl.style.display = "";
         }
+      } else {
+        coachEl.style.display = "none";
       }
+
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
@@ -355,7 +347,14 @@
   }
 
   function generateCoachFeedback() {
-    if (!conversation.length) return null;
+    if (!conversation.length) {
+      return {
+        tone: "neutral",
+        worked: "Awaiting your first message.",
+        improve: "Ask a goal-directed question to begin.",
+        phrasing: "Try: “What’s the next best step and why?”"
+      };
+    }
     return {
       tone: "neutral",
       worked: "You engaged with the chat and explored the content.",
@@ -411,9 +410,9 @@
     .cw .chat-input{display:flex;gap:8px}
     .cw .chat-input textarea{flex:1;min-height:44px;max-height:200px;padding:10px;border:1px solid #cfd8e3;border-radius:8px;resize:vertical}
     .cw .chat-input button{padding:10px 12px;border:1px solid #cfd8e3;border-radius:8px;background:#fff;color:#1d344f;cursor:pointer}
-    .cw .coach-feedback{margin-top:10px;background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:10px}
+    .cw .coach-feedback{margin:10px 0 0 0;background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:10px}
     .cw .coach-feedback h3{margin:0 0 6px 0;font-size:1rem;color:#111827;font-weight:700}
-    /* Darker bullets/text per request */
+    /* Dark charcoal bullets/text */
     .cw .coach-feedback ul{margin:0;padding-left:20px;color:#374151}
     .cw .coach-feedback li{margin:4px 0;color:#374151}
   `;
