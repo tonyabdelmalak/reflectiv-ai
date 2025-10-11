@@ -1,62 +1,36 @@
-# Integration Notes
+# Maintenance Guide
 
-This document explains how the **ReflectivEI AI Widget** integrates a static GitHub Pages site with a Cloudflare Worker backend and modular AI components.
+This document describes how to maintain and update the ReflectivAI site and chat widget. It reflects the updated ReflectivAI brand and minimises references to emotional intelligence.
 
 ---
 
 ## Overview
 
-The ReflectivEI site is hosted via **GitHub Pages** at  
-`https://reflectivei.github.io/reflectiv-ai/`.
-
-All chat functionality runs entirely on the **client side**, communicating with a Cloudflare Worker endpoint at  
-`https://my-chat-agent.tonyabdelmalak.workers.dev/chat`  
-(or another Worker URL you configure).
-
-The Worker serves as a lightweight proxy to your chosen **LLM provider** (e.g., Groq, OpenRouter, or OpenAI), ensuring separation between presentation and inference layers.
+The site is hosted via **GitHub Pages** at `https://reflectivei.github.io/reflectiv-ai/` and uses a Cloudflare Worker to interface with your chosen LLM provider. All chat functionality runs on the client side.
 
 ---
 
-## File Structure
+## Updating the Widget
 
-The repository’s `reflectiv-ai` directory contains:
-
-| Path | Purpose |
-|------|----------|
-| `index.html` | Entry point for the site and widget container. |
-| `styles.css` / `script.js` | Define layout, theming, and base interactivity. |
-| `assets/chat/` | Stores system prompts (`system.md`), persona data (`persona.json`), configuration (`config.json`), scenarios, and supporting scripts/styles. |
-| `docs/` | Includes this integration guide and maintenance documentation. |
+- **Add new scenarios or persona data**: modify files in `assets/chat/` such as `system.md`, `persona.json`, or the scenarios file.
+- **Adjust configuration**: update keys in `assets/chat/config.json`.
+- **Style tweaks**: modify `widget.css` for the chat container or `styles.css` for site-level themes.
 
 ---
 
-## Cloudflare Worker Deployment
+## Updating the Worker
 
-1. **Set up Cloudflare Workers**  
-   Ensure you have a Cloudflare account with Workers enabled.
-
-2. **Deploy the Worker**  
-   - Copy `assets/chat/worker.js` into a new Worker project.  
-   - Set an environment variable:  
-     ```
-     UPSTREAM_ENDPOINT = https://my-chat-agent.tonyabdelmalak.workers.dev/chat
-     ```  
-     (or your own upstream LLM endpoint).  
-   - Deploy and note the **public Worker URL**.
-
-3. **Update configuration**  
-   In `assets/chat/config.json`, set **one** of the following keys to your Worker URL:
-   - `"apiBase": "https://<your-worker>/chat"`  
-   - or `"workerEndpoint": "https://<your-worker>/chat"`
-
-The widget prefers `apiBase` when present; otherwise it uses `workerEndpoint`.
+- Make changes to `assets/chat/worker.js` and redeploy your Cloudflare Worker.
+- If the upstream LLM provider changes, update the `UPSTREAM_ENDPOINT` environment variable and redeploy.
 
 ---
 
-## GitHub Pages Setup
+## Redeploying GitHub Pages
 
-To publish the site:
+After committing changes to the repository (on the branch configured for GitHub Pages), the site will automatically redeploy. To trigger a redeployment manually, you can rerun the build-and-deploy workflow under the **Actions** tab.
 
-1. In your GitHub repository, enable **GitHub Pages** under *Settings → Pages*.  
-2. Choose the `main` branch (or `gh-pages`) and set the root directory to `/reflectiv-ai`.  
-3. After saving, Pages will deploy to:  
+---
+
+## Additional Resources
+
+See `integration-notes.md` for full integration steps and environment configuration details.
