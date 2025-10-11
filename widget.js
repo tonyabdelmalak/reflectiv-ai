@@ -57,7 +57,7 @@
     // Blockquote
     s = s.replace(/^\s*>\s?(.*)$/gm, "<blockquote>$1</blockquote>");
 
-    // Bold (general) — after medication de-bold
+    // Bold
     s = s.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
 
     // Ordered lists
@@ -192,6 +192,7 @@
       renderMessages();
       updateScenarioSelector();
       updateScenarioMeta();
+      normalizeCoachPlacement();
     });
     toolbar.appendChild(modeSelect);
 
@@ -205,6 +206,7 @@
       coachEnabled = false;
       renderMessages();
       updateScenarioMeta();
+      normalizeCoachPlacement();
     });
     toolbar.appendChild(scenarioSelect);
 
@@ -214,6 +216,7 @@
       coachEnabled = !coachEnabled;
       coachBtn.textContent = coachEnabled ? "Disable Coach" : "Enable Coach";
       renderMessages();
+      normalizeCoachPlacement();
     });
     toolbar.appendChild(coachBtn);
 
@@ -227,7 +230,7 @@
     const messagesEl = el("div", "chat-messages");
     wrapper.appendChild(messagesEl);
 
-    // Coach feedback panel (lives inside wrapper)
+    // Coach feedback panel (sibling of messages + input)
     const coachEl = el("div", "coach-feedback");
     wrapper.appendChild(coachEl);
 
@@ -257,7 +260,16 @@
 
     container.appendChild(wrapper);
 
-    // Helpers
+    // Ensure coach panel never overlays input and always sits above it
+    function normalizeCoachPlacement() {
+      // Put coach block right before input
+      if (coachEl.nextSibling !== inputArea) {
+        wrapper.insertBefore(coachEl, inputArea);
+      }
+      coachEl.style.position = "relative";
+      coachEl.style.zIndex = "1";
+    }
+
     function updateScenarioSelector() {
       if (currentMode === "sales-simulation") {
         scenarioSelect.style.display = "";
@@ -323,11 +335,13 @@
     updateScenarioSelector();
     updateScenarioMeta();
     renderMessages();
+    normalizeCoachPlacement();
 
     // ---------- Messaging ----------
     async function sendMessage(userText) {
       conversation.push({ role: "user", content: userText });
       renderMessages();
+      normalizeCoachPlacement();
 
       const messages = [{ role: "system", content: systemPrompt }];
 
@@ -388,6 +402,7 @@
 
         conversation.push({ role: "assistant", content: String(reply).trim() });
         renderMessages();
+        normalizeCoachPlacement();
       } catch (err) {
         console.error("AI call failed:", err);
         conversation.push({
@@ -395,6 +410,7 @@
           content: "I couldn’t reach the AI service. Try again later."
         });
         renderMessages();
+        normalizeCoachPlacement();
       }
     }
   }
@@ -435,6 +451,8 @@
     .cw .chat-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
     .cw select{padding:8px 10px;border:1px solid #cfd8e3;border-radius:8px}
     .cw .scenario-meta .meta-card{background:#f9fafc;border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-bottom:10px;font-size:.95rem;color:#374151}
+
+    /* Messages scroll, footer stays visible */
     .cw .chat-messages{min-height:180px;max-height:520px;overflow:auto;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;background:#fff;margin-bottom:10px}
     .cw .message{margin:8px 0}
     .cw .message.user .content{background:#eef2ff;border-radius:8px;padding:10px}
@@ -443,14 +461,15 @@
     .cw .message .content p{margin:8px 0;line-height:1.5}
     .cw .message .content ul,.cw .message .content ol{margin:8px 0 8px 22px}
     .cw .message .content blockquote{margin:8px 0;padding:8px 10px;border-left:3px solid #cbd5e1;background:#f9fafb;color:#334155}
+
+    .cw .coach-feedback{position:relative;z-index:1;margin:10px 0 10px 0;background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:10px}
+    .cw .coach-feedback h3{margin:0 0 6px 0;font-size:1rem;color:#111827;font-weight:700}
+    .cw .coach-feedback ul{margin:0;padding-left:20px;color:#374151}
+    .cw .coach-feedback li{margin:4px 0;color:#374151}
+
     .cw .chat-input{display:flex;gap:8px}
     .cw .chat-input textarea{flex:1;min-height:44px;max-height:200px;padding:10px;border:1px solid #cfd8e3;border-radius:8px;resize:vertical}
     .cw .chat-input button{padding:10px 12px;border:1px solid #cfd8e3;border-radius:8px;background:#fff;color:#1d344f;cursor:pointer}
-    .cw .coach-feedback{margin:10px 0 0 0;background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:10px}
-    .cw .coach-feedback h3{margin:0 0 6px 0;font-size:1rem;color:#111827;font-weight:700}
-    /* Dark charcoal bullets/text */
-    .cw .coach-feedback ul{margin:0;padding-left:20px;color:#374151}
-    .cw .coach-feedback li{margin:4px 0;color:#374151}
   `;
   document.head.appendChild(style);
 
