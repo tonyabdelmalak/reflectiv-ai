@@ -10,7 +10,6 @@
   const container = document.getElementById("reflectiv-widget");
   if (!container) return;
 
-  // Ensure widget CSS scope class exists on root
   if (!container.classList.contains("cw")) container.classList.add("cw");
 
   // ---------- State ----------
@@ -18,8 +17,8 @@
   let systemPrompt = "";
   let knowledge = "";
   let personas = {};
-  let scenariosList = [];          // array of {id,label,therapeuticArea,background,goal,personaKey}
-  let scenariosById = new Map();   // id -> scenario
+  let scenariosList = [];
+  let scenariosById = new Map();
   let currentMode = "emotional-assessment";
   let currentScenarioId = null;
   let conversation = [];
@@ -33,7 +32,6 @@
     return ct.includes("application/json") ? resp.json() : resp.text();
   }
 
-  // Legacy TXT parser fallback
   function parseLegacyScenarios(text) {
     const lines = String(text || "").split(/\r?\n/);
     const out = [];
@@ -92,12 +90,14 @@
       coachEnabled = false;
       renderMessages();
       updateScenarioSelector();
+      updateScenarioMeta();
     });
     toolbar.appendChild(modeSelect);
 
     // Scenario select (sales-simulation only)
     const scenarioSelect = el("select");
     scenarioSelect.style.display = "none";
+    scenarioSelect.setAttribute("aria-label", "Select Physician Profile");
     scenarioSelect.addEventListener("change", () => {
       currentScenarioId = scenarioSelect.value || null;
       conversation = [];
@@ -118,7 +118,7 @@
 
     wrapper.appendChild(toolbar);
 
-    // Scenario meta
+    // Scenario meta (inline info panel)
     const metaEl = el("div", "scenario-meta");
     wrapper.appendChild(metaEl);
 
@@ -165,19 +165,18 @@
         });
       } else {
         scenarioSelect.style.display = "none";
-        metaEl.innerHTML = "";
       }
     }
 
     function updateScenarioMeta() {
       const sc = scenariosById.get(currentScenarioId);
-      if (!sc) {
+      if (!sc || currentMode !== "sales-simulation") {
         metaEl.innerHTML = "";
         return;
       }
       metaEl.innerHTML =
         `<div class="meta-card">
-           <div><strong>Area:</strong> ${sc.therapeuticArea || "—"}</div>
+           <div><strong>Therapeutic Area:</strong> ${sc.therapeuticArea || "—"}</div>
            <div><strong>Background:</strong> ${sc.background || "—"}</div>
            <div><strong>Today’s Goal:</strong> ${sc.goal || "—"}</div>
          </div>`;
@@ -191,7 +190,6 @@
         messagesEl.appendChild(div);
       }
 
-      // Coach feedback panel
       const old = container.querySelector(".coach-feedback");
       if (old) old.remove();
       if (coachEnabled && conversation.length) {
@@ -201,17 +199,12 @@
           const h3 = el("h3", null, "Coach Feedback");
           panel.appendChild(h3);
           const ul = el("ul");
-          const fields = [
-            ["Tone", fb.tone],
-            ["What worked", fb.worked],
-            ["What to improve", fb.improve],
-            ["Suggested stronger phrasing", fb.phrasing],
-          ];
-          for (const [k, v] of fields) {
-            const li = el("li");
-            li.innerHTML = `<strong>${k}:</strong> ${v}`;
-            ul.appendChild(li);
-          }
+          [["Tone", fb.tone], ["What worked", fb.worked], ["What to improve", fb.improve], ["Suggested stronger phrasing", fb.phrasing]]
+            .forEach(([k, v]) => {
+              const li = el("li");
+              li.innerHTML = `<strong>${k}:</strong> ${v}`;
+              ul.appendChild(li);
+            });
           panel.appendChild(ul);
           container.appendChild(panel);
         }
@@ -220,6 +213,7 @@
     }
 
     updateScenarioSelector();
+    updateScenarioMeta();
     renderMessages();
 
     // ---------- Messaging ----------
@@ -313,11 +307,8 @@
       cfg = await fetchLocal("./assets/chat/config.json");
       systemPrompt = await fetchLocal("./assets/chat/system.md");
       knowledge = await fetchLocal("./assets/chat/about-ei.md");
-
-      // personas optional
       try { personas = await fetchLocal("./assets/chat/persona.json"); } catch { personas = {}; }
 
-      // scenarios from config.json, else legacy TXT
       if (Array.isArray(cfg.scenarios) && cfg.scenarios.length) {
         scenariosList = cfg.scenarios.map(s => ({
           id: s.id,
@@ -340,7 +331,7 @@
     }
   }
 
-  // Minimal scoped styles for selector/meta
+  // Scoped styles (selector + meta)
   const style = document.createElement("style");
   style.textContent = `
     .cw .chat-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
