@@ -1,9 +1,19 @@
 # Scenario: Decile3IM
 HCP_Type: Internal Medicine Doctor
-Background: Dr. Smith is a decile 3 prescriber of HIV medications with low awareness of Descovy. He sees many at‑risk patients and focuses on preventive care.
-Goal for Today: Increase awareness about Descovy’s efficacy and safety for PrEP and address concerns about renal safety.
+Background: Dr. Harper is a Decile 3 prescriber of HIV medications with limited awareness of Descovy for PrEP. He treats many at-risk patients and focuses on preventive care but underutilizes PrEP in practice. Recent clinic data show steady STI testing volumes in young MSM populations, suggesting a missed prevention opportunity.
+Goal for Today: Create urgency around prescribing Descovy for appropriate PrEP candidates, emphasizing its safety and efficacy profile and addressing concerns about renal health.
 
 # Scenario: NP64NBRx
 HCP_Type: Nurse Practitioner
-Background: This nurse practitioner has a 64% New‑to‑Brand (NBRx) share for HIV treatments and is open to innovative therapies. They work in a community clinic with a high adherence burden.
-Goal for Today: Discuss Biktarvy as a convenient once‑daily pill and Cabenuva as a long‑acting option, emphasising patient adherence and convenience.
+Background: Alex Nguyen, NP, maintains a 64% New-to-Brand (NBRx) share for HIV treatments and is known for adopting innovative therapies. Their community clinic manages a large patient base with complex adherence challenges. They are supportive of newer regimens but concerned about time and workflow impact when switching patients.
+Goal for Today: Reinforce Biktarvy as a convenient once-daily regimen and introduce Cabenuva as a long-acting alternative for select, adherent patients, highlighting adherence benefits and streamlined follow-up.
+
+# Scenario: PA_TopHIVClinic
+HCP_Type: Physician Assistant
+Background: Samantha Lee, PA, works in a top-tier HIV clinic with over 10 years of experience. Initially a strong advocate for Biktarvy, her switching rate has slowed in recent months. She notes most patients are already on stable regimens and reluctant to change, citing “if it’s working, why switch?”
+Goal for Today: Rebuild confidence in Biktarvy data and outcomes, empowering the PA to proactively identify patients who would benefit from switching and educate them on the long-term benefits.
+
+# Scenario: NP_FavoringCAB
+HCP_Type: Nurse Practitioner
+Background: Jamie Ortiz, NP, has practiced in HIV care for about 3 years. Recently, her Cabenuva share has grown above national average as patients request the long-acting injectable. While supportive, she tends to over-accommodate requests without evaluating adherence or resistance history.
+Goal for Today: Discuss resistance and long-term treatment implications, aligning on criteria for appropriate patient selection and monitoring when using long-acting regimens.
