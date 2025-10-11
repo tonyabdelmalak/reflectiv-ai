@@ -11,7 +11,7 @@ The ReflectivEI site is hosted via **GitHub Pages** at
 
 All chat functionality runs entirely on the **client side**, communicating with a Cloudflare Worker endpoint at  
 `https://my-chat-agent.tonyabdelmalak.workers.dev/chat`  
-(or another Worker URL you configure).  
+(or another Worker URL you configure).
 
 The Worker serves as a lightweight proxy to your chosen **LLM provider** (e.g., Groq, OpenRouter, or OpenAI), ensuring separation between presentation and inference layers.
 
@@ -45,9 +45,11 @@ The repository’s `reflectiv-ai` directory contains:
    - Deploy and note the **public Worker URL**.
 
 3. **Update configuration**  
-   In `assets/chat/config.json`, update the `apiBase` or `workerEndpoint` value with the Worker URL you deployed.
+   In `assets/chat/config.json`, set **one** of the following keys to your Worker URL:
+   - `"apiBase": "https://<your-worker>/chat"`  
+   - or `"workerEndpoint": "https://<your-worker>/chat"`
 
-The Worker acts as a **secure relay**, optionally adding authentication headers, user tracking, or custom context assembly before forwarding to the upstream model.
+The widget prefers `apiBase` when present; otherwise it uses `workerEndpoint`.
 
 ---
 
@@ -56,5 +58,5 @@ The Worker acts as a **secure relay**, optionally adding authentication headers,
 To publish the site:
 
 1. In your GitHub repository, enable **GitHub Pages** under *Settings → Pages*.  
-2. Choose the `main` branch and set the root directory to `/reflectiv-ai`.  
+2. Choose the `main` branch (or `gh-pages`) and set the root directory to `/reflectiv-ai`.  
 3. After saving, Pages will deploy to:  
