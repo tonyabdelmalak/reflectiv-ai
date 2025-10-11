@@ -14,7 +14,7 @@
   let cfg = null, systemPrompt = "", knowledge = "", personas = {};
   let scenariosList = [], scenariosById = new Map();
   let currentMode = "sales-simulation", currentScenarioId = null;
-  let conversation = [], coachEnabled = true, streamAbort = null;
+  let conversation = [], coachEnabled = true;
 
   async function fetchLocal(path) {
     const r = await fetch(path, { cache: "no-store" });
@@ -79,7 +79,8 @@
     const modeSelect = el("select");
     (cfg.modes || []).forEach(m => {
       const o = el("option");
-      o.value = m; o.textContent = m.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      o.value = m;
+      o.textContent = m.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
       modeSelect.appendChild(o);
     });
     modeSelect.value = currentMode;
@@ -106,16 +107,28 @@
     toolbar.appendChild(coachBtn);
     wrapper.appendChild(toolbar);
 
-    const metaEl = el("div", "scenario-meta"); wrapper.appendChild(metaEl);
-    const messagesEl = el("div", "chat-messages"); wrapper.appendChild(messagesEl);
+    const metaEl = el("div", "scenario-meta");
+    wrapper.appendChild(metaEl);
+    const messagesEl = el("div", "chat-messages");
+    wrapper.appendChild(messagesEl);
 
     const inputArea = el("div", "chat-input");
     const textarea = el("textarea");
     textarea.placeholder = "Type your message…";
+    textarea.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendBtn.click();
+      }
+    });
+
     const sendBtn = el("button", "btn primary", "Send");
     sendBtn.onclick = () => {
       const t = textarea.value.trim();
-      if (t) { sendMessage(t); textarea.value = ""; }
+      if (t) {
+        sendMessage(t);
+        textarea.value = "";
+      }
     };
     inputArea.appendChild(textarea);
     inputArea.appendChild(sendBtn);
@@ -153,7 +166,8 @@
         const d = el("div", `message ${m.role}`);
         const c = el("div", "content");
         c.innerHTML = renderMarkdown(m.content);
-        d.appendChild(c); messagesEl.appendChild(d);
+        d.appendChild(c);
+        messagesEl.appendChild(d);
       }
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
@@ -177,10 +191,15 @@
         </ul>`;
     }
 
-    updateScenarioSelector(); updateScenarioMeta(); renderMessages(); renderCoach();
+    updateScenarioSelector();
+    updateScenarioMeta();
+    renderMessages();
+    renderCoach();
 
     async function sendMessage(userText) {
-      conversation.push({ role: "user", content: userText }); renderMessages(); renderCoach();
+      conversation.push({ role: "user", content: userText });
+      renderMessages();
+      renderCoach();
 
       const messages = [{ role: "system", content: systemPrompt }];
       if (currentMode === "sales-simulation" && currentScenarioId) {
@@ -194,16 +213,33 @@
       });
 
       try {
-        const endpoint = cfg.apiBase.trim();
-        const r = await fetch(endpoint, {
-          method: "POST", headers: { "Content-Type": "application/json" },
+        const r = await fetch(cfg.apiBase.trim(), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ messages, model: cfg.model })
         });
         const data = await r.json();
         const { coach, clean } = extractCoach(data.content || "");
-        conversation.push({ role: "assistant", content: clean, _coach: coach || heuristicCoach(conversation) });
-        renderMessages(); renderCoach();
-      } catch (e) {
+        const fb = coach || heuristicCoach(conversation);
+        conversation.push({ role: "assistant", content: clean, _coach: fb });
+        renderMessages();
+        renderCoach();
+
+        if (cfg.analyticsEndpoint) {
+          fetch(cfg.analyticsEndpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ts: Date.now(),
+              mode: currentMode,
+              scenarioId: currentScenarioId,
+              turn: conversation.length,
+              score: fb.score,
+              subscores: fb.subscores
+            })
+          }).catch(() => { });
+        }
+      } catch {
         conversation.push({ role: "assistant", content: "Error contacting model." });
         renderMessages();
       }
