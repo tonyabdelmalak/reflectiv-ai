@@ -1,9 +1,0 @@
-# Scenario: Decile3IM
-HCP_Type: Internal Medicine Doctor
-Background: Dr. Smith is a decile 3 prescriber of HIV medications with low awareness of Descovy. He sees many at‑risk patients and focuses on preventive care.
-Goal for Today: Increase awareness about Descovy’s efficacy and safety for PrEP and address concerns about renal safety.
-
-# Scenario: NP64NBRx
-HCP_Type: Nurse Practitioner
-Background: This nurse practitioner has a 64% New‑to‑Brand (NBRx) share for HIV treatments and is open to innovative therapies. They work in a community clinic with a high adherence burden.
-Goal for Today: Discuss Biktarvy as a convenient once‑daily pill and Cabenuva as a long‑acting option, emphasising patient adherence and convenience.
