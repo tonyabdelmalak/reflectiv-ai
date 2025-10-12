@@ -191,7 +191,7 @@ ${COMMON}`.trim();
 
     const style = document.createElement("style");
     style.textContent = `
-      .reflectiv-chat{display:flex;flex-direction:column;gap:8px;border:1px solid #d6dbe3;border-radius:12px;overflow:hidden;background:#fff}
+      .reflectiv-chat{display:flex;flex-direction:column;gap:8px;border:2px solid #d6dbe3;border-radius:12px;overflow:hidden;background:#fff}
       .chat-toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end;padding:10px;background:#f7f9fc;border-bottom:1px solid #e5e9f0}
       .chat-messages{height:320px;max-height:50vh;overflow:auto;padding:12px;background:#fafbfd}
       .message{margin:8px 0;display:flex}
