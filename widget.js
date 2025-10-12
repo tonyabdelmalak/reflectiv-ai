@@ -486,17 +486,28 @@ ${COMMON}`.trim();
   }
 
   // ---------- init ----------
-  async function init() {
+async function init() {
+  try {
     cfg = await fetchLocal("./assets/chat/config.json");
-    systemPrompt = await fetchLocal("./assets/chat/system.md").catch(() => "");
-    await loadScenarios();
-
-    if (cfg.modes && cfg.defaultMode && cfg.modes.includes(cfg.defaultMode)) {
-      currentMode = cfg.defaultMode;
-    }
-
-    buildUI();
+  } catch (e) {
+    console.error("config.json load failed:", e);
+    return; // cannot run without config
   }
+
+  try {
+    systemPrompt = await fetchLocal("./assets/chat/system.md");
+  } catch (_) {
+    systemPrompt = ""; // ok to continue without system.md
+  }
+
+  await loadScenarios();
+
+  if (cfg.modes && cfg.defaultMode && cfg.modes.includes(cfg.defaultMode)) {
+    currentMode = cfg.defaultMode;
+  }
+
+  buildUI();
+}
 
   init();
 })();
