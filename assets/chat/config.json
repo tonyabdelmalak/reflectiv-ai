@@ -12,5 +12,5 @@
 
   "brand": { "accent": "#2f3a4f", "radius": "14px" },
 
-  "scenariosUrl": "/assets/chat/data/scenarios.merged.json"
+  "scenariosUrl": "./assets/chat/data/scenarios.merged.json"
 }
