@@ -1,0 +1,38 @@
+[
+  {
+    "id": "hiv_im_decile3_prep_lowshare",
+    "label": "Internal Medicine Doctor — Low Descovy share, missed PrEP opportunity",
+    "personaKey": "im_decile3",
+    "therapeuticArea": "HIV",
+    "hcpRole": "Internal Medicine Doctor",
+    "background": "Dr. Harper, Decile 3 prescriber, focuses on preventive care but underutilizes PrEP. Descovy TRx share 32%, NBRx 20%. States the clinic lacks many PrEP patients despite increased STI testing among young MSM. Descovy is often prescribed only upon request. Follow-ups and quarterly labs are inconsistent.",
+    "goal": "Create urgency around PrEP gaps; commit to proactively prescribe Descovy to appropriate candidates, address renal-safety questions, and implement standardized quarterly PrEP follow-up and labs."
+  },
+  {
+    "id": "hiv_np_decile10_highshare_access",
+    "label": "Nurse Practitioner — High Descovy share but access and staffing barriers",
+    "personaKey": "np_decile10",
+    "therapeuticArea": "HIV",
+    "hcpRole": "Nurse Practitioner",
+    "background": "Alex Nguyen, NP, Decile 10. Descovy TRx 59%, NBRx 64%, unrestricted access 75%. Large panel with adherence challenges. Main constraint is prior authorization workload and workflow friction, which limits breadth of appropriate Descovy prescribing.",
+    "goal": "Broaden appropriate Descovy use by batching prior-auths twice weekly, delegating PA tasks to support staff or pharmacy partner, and revisiting generic TDF users with unrestricted coverage."
+  },
+  {
+    "id": "hiv_pa_decile9_treat_switch_slowdown",
+    "label": "Physician Assistant — Slowing Biktarvy switches",
+    "personaKey": "pa_decile9",
+    "therapeuticArea": "HIV",
+    "hcpRole": "Physician Assistant",
+    "background": "Samantha Lee, PA, top-tier HIV clinic, 10+ years experience. Biktarvy share 50%, DVY/TVY 12%, Triumeq 9%. Initial high switching rate has dropped to 1–2 in the past 13 weeks. Belief: most patients are stable and reluctant to switch.",
+    "goal": "Reinforce Biktarvy clinical durability and convenience; identify clear switch criteria and integrate a quarterly 'optimization review' to surface candidates."
+  },
+  {
+    "id": "hiv_np_decile5_cab_growth",
+    "label": "Nurse Practitioner — Favoring CAB over Biktarvy",
+    "personaKey": "np_decile5",
+    "therapeuticArea": "HIV",
+    "hcpRole": "Nurse Practitioner",
+    "background": "Jamie Ortiz, NP, ~3 years in HIV care. Biktarvy share down 10% in 4 months; CAB share 7% and growing. Often honors patient requests for long-acting injections without systematic resistance/adherence evaluation.",
+    "goal": "Align on CAB candidacy and monitoring criteria, educate on resistance risks, and set a checklist to protect long-term regimen durability."
+  }
+]
