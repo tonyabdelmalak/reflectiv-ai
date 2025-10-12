@@ -1,1 +1,141 @@
+[
+  {
+    "id": "hiv_im_decile4_prep_apretude_gap",
+    "label": "Internal Medicine MD — PrEP: low Apretude vs Descovy/Truvada",
+    "personaKey": "im_decile4",
+    "therapeuticArea": "HIV",
+    "hcpRole": "Internal Medicine MD",
+    "background": "Decile 4 community IM. Panel skews 24–39 MSM and TGNB. PrEP mix last 13 weeks: Descovy 41%, generic TDF/FTC 47%, Apretude 3%. Rising STI testing and missed quarterly PrEP follow-ups. PA backlog for TAF PrEP; no standing lab protocol. Misperception that long-acting injectable requires ultra-adherence.",
+    "goal": "Re-segment candidates; offer Apretude to adherence-challenged patients; convert high-risk TDF/FTC users with renal risk to Descovy where access allows; establish nurse-led lab and injection calendar."
+  },
+  {
+    "id": "hiv_np_decile9_prep_ops_cap",
+    "label": "Nurse Practitioner — PrEP: strong but operationally capped",
+    "personaKey": "np_decile9",
+    "therapeuticArea": "HIV",
+    "hcpRole": "Nurse Practitioner",
+    "background": "Decile 9 NP in FQHC. Share: Descovy 58%, TDF/FTC 28%, Apretude 9%. Prior-auth burden caps TAF and Apretude; two MAs rotate PAs manually. Pharmacy partner can run benefits checks but engagement is ad-hoc. New PrEP starts surge after community testing events.",
+    "goal": "Batch prior-auths twice weekly with pharmacy tech support, default naive high-risk starts to Descovy when renal/BMD concerns exist, and run a monthly Apretude start day with on-site injections."
+  },
+  {
+    "id": "hiv_pa_decile7_treat_switch_day",
+    "label": "Physician Assistant — Treatment: slowing Biktarvy switches, CAB/RPV curiosity",
+    "personaKey": "pa_decile7",
+    "therapeuticArea": "HIV",
+    "hcpRole": "Physician Assistant",
+    "background": "Decile 7 PA in hospital-affiliated ID clinic. Biktarvy share 52% of TRx; Dovato 14%; Cabenuva 6% and rising among younger adherent patients. Only 1–2 switches in 13 weeks; perception that most patients are optimized. No structured 'switch day'.",
+    "goal": "Stand up a quarterly optimization clinic, define Cabenuva candidacy and resistance counseling steps, and track 90-day viral suppression and missed-dose events by regimen."
+  },
 
+  {
+    "id": "onc_md_decile10_io_adc_pathways",
+    "label": "Medical Oncologist — IO backbone heavy, ADC toxicity bandwidth",
+    "personaKey": "onc_md_decile10",
+    "therapeuticArea": "Cancer",
+    "hcpRole": "Medical Oncologist",
+    "background": "Decile 10 solid-tumor center. First-line shares: Keytruda dominant; Opdivo in select combos; evaluating ADCs such as Enhertu for HER2-low. P&T scrutinizes cost per response and infusion chair time. Prior-auth throughput strong; toxicity management bandwidth for ADCs is the main constraint.",
+    "goal": "Define biomarker-driven subset where therapy adds ΔOS/ΔPFS and reduces chair or AE load; commit to add into order sets and tumor-board protocols."
+  },
+  {
+    "id": "onc_np_decile6_pathway_ops",
+    "label": "Oncology NP — Community site, pathway-driven care",
+    "personaKey": "onc_np_decile6",
+    "therapeuticArea": "Cancer",
+    "hcpRole": "Nurse Practitioner",
+    "background": "Decile 6 community infusion center following national pathways. IO doublets used conservatively; step-edits common. Nurse-managed AE clinics prevent ER bounce-backs but are short-staffed. Patient education packets inconsistent for new starts.",
+    "goal": "Install standardized NP-led education bundle and toxicity call-tree for the regimen; add drug-specific AE one-pager to pathway handouts."
+  },
+  {
+    "id": "onc_pa_decile7_gu_oral_onc_tminus7",
+    "label": "Oncology PA — GU subspecialty, oral oncolytic onboarding",
+    "personaKey": "onc_pa_decile7",
+    "therapeuticArea": "Cancer",
+    "hcpRole": "Physician Assistant",
+    "background": "Decile 7 PA embedded with GU team. Competition across IO, TKIs, emerging ADCs. Barriers: fragmented oral oncolytic onboarding, late hub forms, and refill gaps at day 25–30.",
+    "goal": "Adopt 'T-7 onboarding': hub enrollment at decision day, pharmacy benefits check within 24h, and PA-led toxicity tele-visit at day 10 to lift on-therapy rates through cycle 2."
+  },
+
+  {
+    "id": "vac_id_decile8_adult_flu_playbook",
+    "label": "Infectious Disease Specialist — Adult flu program underperforming",
+    "personaKey": "id_md_decile8",
+    "therapeuticArea": "Vaccines",
+    "hcpRole": "Infectious Disease Specialist",
+    "background": "Decile 8 ID group managing LTC and high-risk adults. Last season pre-book cut 12%; coverage fell in 65+. Uses mix of Fluzone/Flublok, Fluarix/FluLaval, Fluad/Flucelvax. Supply arrives on time but clinic days launch late and reminder-recall is weak.",
+    "goal": "Lock pre-book mix with age-appropriate formulations, schedule four early clinic days, stand up SMS reminders, and publish standing orders across LTC sites."
+  },
+  {
+    "id": "vac_np_decile5_primary_care_capture",
+    "label": "Family Medicine NP — Primary care hub with fragmented workflows",
+    "personaKey": "fm_np_decile5",
+    "therapeuticArea": "Vaccines",
+    "hcpRole": "Nurse Practitioner",
+    "background": "Decile 5 FM clinic. Storage adequate; billing flags denials for high-dose claims in 65+. Staff rotation causes VIS documentation misses. Community demand exists but Saturday clinics are ad-hoc.",
+    "goal": "Implement standing orders, pre-shift huddle checklists, and two fixed Saturday clinics in Sept–Oct; add EHR prompts for 65+ high-dose/adjuvanted selection."
+  },
+  {
+    "id": "vac_pa_decile6_oh_campus_outreach",
+    "label": "Physician Assistant — Occupational health and college outreach",
+    "personaKey": "oh_pa_decile6",
+    "therapeuticArea": "Vaccines",
+    "hcpRole": "Physician Assistant",
+    "background": "Decile 6 PA supports employer clinics and a local college. Uptake high among healthcare workers, low among students. Inventory turns slow due to late campus events.",
+    "goal": "Run campus pop-ups during orientation and midterms with pre-registration; redistribute excess inventory to employer sites by week 6."
+  },
+
+  {
+    "id": "covid_pulm_md_decile9_antiviral_ddi_path",
+    "label": "Pulmonologist — Outpatient antivirals under-utilized",
+    "personaKey": "pulm_md_decile9",
+    "therapeuticArea": "COVID",
+    "hcpRole": "Pulmonologist",
+    "background": "Decile 9 pulmonary group with high-risk COPD/ILD. Prefers Paxlovid first line; rarely uses 3-day IV remdesivir due to infusion capacity; molnupiravir for contraindications. Staff uncertainty on drug–drug interaction triage slows prescribing.",
+    "goal": "Adopt a rapid DDI triage protocol and a standing remdesivir slot with a partner infusion center for Paxlovid-ineligible patients; set a 48-hour treatment window KPI."
+  },
+  {
+    "id": "covid_pulm_np_decile6_postcovid_adherence",
+    "label": "Pulmonary NP — Post-COVID clinic, adherence issues",
+    "personaKey": "pulm_np_decile6",
+    "therapeuticArea": "COVID",
+    "hcpRole": "Nurse Practitioner",
+    "background": "Decile 6 NP runs follow-up for high-risk patients. Eligible patients often present on day 4–5; pharmacy callbacks delay start. Education on rebound and isolation is inconsistent.",
+    "goal": "Implement same-day eRx workflow template, provide patient one-pager on rebound expectations, and route day-2 positives to NP-led tele-start to increase initiation within 48 hours."
+  },
+  {
+    "id": "covid_pulm_pa_decile5_hospital_at_home",
+    "label": "Pulmonary PA — Hospital-at-home link",
+    "personaKey": "pulm_pa_decile5",
+    "therapeuticArea": "COVID",
+    "hcpRole": "Physician Assistant",
+    "background": "Decile 5 PA coordinates transitions. Many discharges qualify for outpatient therapy but lack transportation for IV remdesivir. Home-infusion vendor exists but is underused.",
+    "goal": "Default referral to home-infusion for remdesivir day 1–3 when Paxlovid is contraindicated; measure 7-day readmissions pre/post."
+  },
+
+  {
+    "id": "cv_card_md_decile10_hf_gdmt_uptake",
+    "label": "Cardiologist — HFrEF clinic with uneven GDMT adoption",
+    "personaKey": "card_md_decile10",
+    "therapeuticArea": "Cardiovascular",
+    "hcpRole": "Cardiologist",
+    "background": "Decile 10 cardiology group. Entresto on 62% of eligible HFrEF; SGLT2 use at 38% due to PCP handoffs and copays. Prior-auths routed to fellows; refill gaps at day 30. Earlier generic uncertainty created hesitancy.",
+    "goal": "Adopt discharge GDMT checklist plus pharmacy tech enrollment for copay assistance; target +10 percentage points SGLT2 uptake over 90 days and halve 30-day gaps."
+  },
+  {
+    "id": "cv_np_decile6_ckd_sglt2_calendar",
+    "label": "Cardiology NP — Rural HF program, renal concerns",
+    "personaKey": "card_np_decile6",
+    "therapeuticArea": "Cardiovascular",
+    "hcpRole": "Nurse Practitioner",
+    "background": "Decile 6 NP manages titration visits. SGLT2s underused in CKD stage 3 due to misconceptions and infection fears; Jardiance broadly covered. No titration calendar.",
+    "goal": "Implement a titration calendar and CKD-safe counseling script; standardize SGLT2 initiation with sick-day rules; track eGFR and UACR at baseline and 12 weeks."
+  },
+  {
+    "id": "cv_pa_decile7_postmi_transitions",
+    "label": "Cardiology PA — Post-MI and HF transitions",
+    "personaKey": "card_pa_decile7",
+    "therapeuticArea": "Cardiovascular",
+    "hcpRole": "Physician Assistant",
+    "background": "Decile 7 PA coordinates inpatient-to-outpatient starts. SGLT2 initiation often deferred to PCP. Entresto starts delayed pending 'echo at 4 weeks.' Readmissions at 30 days above benchmark.",
+    "goal": "Start SGLT2s prior to discharge when eligible and convert ACE/ARB to Entresto within 48–72 hours per protocol; schedule pharmacy follow-up at day 7 to prevent abandonment."
+  }
+]
