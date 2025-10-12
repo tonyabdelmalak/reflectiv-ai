@@ -487,8 +487,8 @@ ${COMMON}`.trim();
 
   // ---------- init ----------
   async function init() {
-    cfg = await fetchLocal("/assets/chat/config.json");
-    systemPrompt = await fetchLocal("/assets/chat/system.md").catch(() => "");
+    cfg = await fetchLocal("./assets/chat/config.json");
+    systemPrompt = await fetchLocal("./assets/chat/system.md").catch(() => "");
     await loadScenarios();
 
     if (cfg.modes && cfg.defaultMode && cfg.modes.includes(cfg.defaultMode)) {
