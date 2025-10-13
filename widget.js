@@ -2,7 +2,6 @@
  * ReflectivAI Chat/Coach — drop-in
  * Learning Center: Emotional Intelligence | Product Knowledge | Sales Simulation
  */
-
 (function () {
   // ---------- boot ----------
   let mount = null;
@@ -47,32 +46,44 @@
     const ct = r.headers.get("content-type")||"";
     return ct.includes("application/json") ? r.json() : r.text();
   }
+
   const esc = s => String(s||"")
-    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#39;");
+
   function md(text){
     if(!text) return "";
     let s = esc(text).replace(/\r\n?/g,"\n");
-    s = s.replace(/\*\*([^*\n]+)\*\*/g,"<strong>$1</strong>").replace(/`([^`]+)`/g,"<code>$1</code>");
+    s = s.replace(/\*\*([^*\n]+)\*\*/g,"<strong>$1</strong>")
+         .replace(/`([^`]+)`/g,"<code>$1</code>");
     s = s.replace(/^(?:-\s+|\*\s+).+(?:\n(?:-\s+|\*\s+).+)*/gm, blk=>{
       const items = blk.split("\n").map(l=>l.replace(/^(?:-\s+|\*\s+)(.+)$/, "<li>$1</li>")).join("");
       return `<ul>${items}</ul>`;
     });
     return s.split(/\n{2,}/).map(p=>p.startsWith("<ul>")?p:`<p>${p.replace(/\n/g,"<br>")}</p>`).join("\n");
   }
+
   function el(tag, cls, text){ const n=document.createElement(tag); if(cls) n.className=cls; if(text!=null) n.textContent=text; return n; }
+
   function sanitizeLLM(raw){
     let s = String(raw||"");
-    s = s.replace(/```[\s\S]*?```/g,"").replace(/<pre[\s\S]*?<\/pre>/gi,"").replace(/^\s*#{1,6}\s+/gm,"");
+    s = s.replace(/```[\s\S]*?```/g,"")
+         .replace(/<pre[\s\S]*?<\/pre>/gi,"")
+         .replace(/^\s*#{1,6}\s+/gm,"");
     s = s.replace(/\n{3,}/g,"\n\n").trim();
     return s;
   }
+
   function extractCoach(raw){
     const m = String(raw||"").match(/<coach>([\s\S]*?)<\/coach>/i);
     if(!m) return { coach:null, clean:sanitizeLLM(raw) };
     let coach=null; try{ coach=JSON.parse(m[1]); }catch{}
     return { coach, clean:sanitizeLLM(String(raw).replace(m[0],"").trim()) };
   }
+
   function normalizeDS(x){
     if(!x) return "";
     const base = String(x).replace(/\bHiv\b/ig,"HIV").trim();
@@ -155,7 +166,6 @@ ${COMMON}`.trim();
     mount.innerHTML = "";
     if(!mount.classList.contains("cw")) mount.classList.add("cw");
 
-    // safety CSS so shell always renders
     const style = document.createElement("style");
     style.textContent = `
       #reflectiv-widget .reflectiv-chat{display:flex;flex-direction:column;gap:12px;border:3px solid #bfc7d4;border-radius:14px;background:#fff;overflow:hidden;}
@@ -186,8 +196,7 @@ ${COMMON}`.trim();
     const controls = el("div","sim-controls");
 
     // Learning Center
-    const lcLabel = el("label","", "Learning Center");
-    lcLabel.htmlFor = "lc-mode";
+    const lcLabel = el("label","", "Learning Center"); lcLabel.htmlFor = "lc-mode";
     const lcSel = el("select"); lcSel.id="lc-mode";
     LC_OPTIONS.forEach(txt=>{ const o=el("option"); o.value=txt; o.textContent=txt; lcSel.appendChild(o); });
     const initialLC = Object.keys(LC_MAP).find(k=>LC_MAP[k]===(cfg.defaultMode||"sales-simulation")) || "Sales Simulation";
@@ -195,21 +204,18 @@ ${COMMON}`.trim();
     currentMode = LC_MAP[lcSel.value];
 
     // Coach
-    const coachLbl = el("label","", "Coach");
-    coachLbl.htmlFor = "cw-coach";
+    const coachLbl = el("label","", "Coach"); coachLbl.htmlFor = "cw-coach";
     const coachSel = el("select"); coachSel.id="cw-coach";
     [{v:"on",t:"Coach On"},{v:"off",t:"Coach Off"}].forEach(({v,t})=>{ const o=el("option"); o.value=v; o.textContent=t; coachSel.appendChild(o);});
     coachSel.value = coachOn ? "on" : "off";
     coachSel.onchange = ()=>{ coachOn = coachSel.value==="on"; renderCoach(); };
 
     // Disease State
-    const dsLabel = el("label","", "Disease State");
-    dsLabel.htmlFor = "cw-ds";
+    const dsLabel = el("label","", "Disease State"); dsLabel.htmlFor = "cw-ds";
     const dsSel = el("select"); dsSel.id="cw-ds";
 
     // HCP Profiles
-    const hcpLabel = el("label","", "HCP Profiles");
-    hcpLabel.htmlFor = "cw-hcp";
+    const hcpLabel = el("label","", "HCP Profiles"); hcpLabel.htmlFor = "cw-hcp";
     const hcpSel = el("select"); hcpSel.id="cw-hcp";
 
     controls.appendChild(lcLabel); controls.appendChild(lcSel);
@@ -219,11 +225,8 @@ ${COMMON}`.trim();
     bar.appendChild(controls);
     shell.appendChild(bar);
 
-    const meta = el("div","scenario-meta");
-    shell.appendChild(meta);
-
-    const msgs = el("div","chat-messages");
-    shell.appendChild(msgs);
+    const meta = el("div","scenario-meta"); shell.appendChild(meta);
+    const msgs = el("div","chat-messages"); shell.appendChild(msgs);
 
     const input = el("div","chat-input");
     const ta = el("textarea"); ta.placeholder="Type your message…";
@@ -261,8 +264,9 @@ ${COMMON}`.trim();
     function populateDiseases(){ setOpts(dsSel, diseaseStates()); }
     function populateHCP(ds){
       const key = normalizeDS(ds).toLowerCase();
-      const list = scenarios.filter(s => normalizeDS(s.therapeuticArea||s.diseaseState).toLowerCase().startsWith(key))
-                            .map(s => ({ value:s.id, label:s.label||s.id }));
+      const list = scenarios
+        .filter(s => normalizeDS(s.therapeuticArea||s.diseaseState).toLowerCase().startsWith(key))
+        .map(s => ({ value:s.id, label:s.label||s.id }));
       setOpts(hcpSel, list);
     }
 
