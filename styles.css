@@ -2,7 +2,7 @@
  * ReflectivAI Site Stylesheet
  *
  * This stylesheet defines the color palette, typography and layout for the
- * ReflectivAI single‑page application. It keeps the existing palette (navy,
+ * ReflectivAI single-page application. It keeps the existing palette (navy,
  * teal, slate and white) and uses Poppins for body text. Layouts are
  * responsive and leverage flexbox for simple grids. Minor tweaks to accent
  * colors can be made by adjusting the CSS variables below.
@@ -160,7 +160,7 @@ h3 {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Steps */
+/* Steps (How It Works) */
 .steps {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -413,23 +413,6 @@ th {
   margin-left: 2px;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .hero {
-    flex-direction: column;
-    text-align: center;
-  }
-  .hero-content {
-    padding-right: 0;
-    margin-bottom: 2rem;
-  }
-  .analytics-content {
-    flex-direction: column;
-  }
-  .nav-links {
-    gap: 0.75rem;
-  }
-}
 /* ===== Compact spacing for Platform Modules ===== */
 .section.platform.compact .grid-3.tight {
   display: flex;
@@ -447,4 +430,62 @@ th {
 
 .section.platform.compact h2 {
   margin-bottom: 1rem;
+}
+
+/* ===================== */
+/* Reveal Animations     */
+/* ===================== */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity .6s ease, transform .6s ease;
+}
+.revealed {
+  opacity: 1;
+  transform: none;
+}
+
+/* --- How It Works: fade-up, stagger, gentle hover lift --- */
+#how .step {
+  will-change: transform, box-shadow, opacity;
+  transition: transform .25s ease, box-shadow .25s ease, opacity .6s ease, transform .6s ease;
+}
+@media (hover:hover){
+  #how .step.revealed:hover{
+    transform: translateY(-6px);
+    box-shadow: 0 10px 22px rgba(30,42,58,.12);
+  }
+}
+/* Stagger timing per card */
+.reveal{ transition-delay: var(--delay, 0s); }
+#how .steps .step:nth-child(1){ --delay: 0s; }
+#how .steps .step:nth-child(2){ --delay: .15s; }
+#how .steps .step:nth-child(3){ --delay: .30s; }
+#how .steps .step:nth-child(4){ --delay: .45s; }
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce){
+  .reveal, .revealed, #how .step{
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+  }
+  .hero-content {
+    padding-right: 0;
+    margin-bottom: 2rem;
+  }
+  .analytics-content {
+    flex-direction: column;
+  }
+  .nav-links {
+    gap: 0.75rem;
+  }
 }
