@@ -4,9 +4,24 @@
  */
 
 (function () {
-  const mount = document.getElementById("reflectiv-widget");
-  if (!mount) return;
-  if (!mount.classList.contains("cw")) mount.classList.add("cw");
+  // ---------- safe bootstrapping ----------
+  let mount = null;
+  function onReady(fn){ if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn, { once:true }); else fn(); }
+  function waitForMount(cb){
+    const tryGet = () => {
+      mount = document.getElementById("reflectiv-widget");
+      if (mount) return cb();
+      // observe DOM until the mount appears, then proceed
+      const obs = new MutationObserver(() => {
+        mount = document.getElementById("reflectiv-widget");
+        if (mount) { obs.disconnect(); cb(); }
+      });
+      obs.observe(document.documentElement, { childList:true, subtree:true });
+      // hard timeout failsafe to avoid infinite wait
+      setTimeout(() => obs.disconnect(), 15000);
+    };
+    onReady(tryGet);
+  }
 
   // ---------- config/state ----------
   let cfg = null;
@@ -188,45 +203,86 @@ ${COMMON}`.trim();
   // ---------- UI ----------
   function buildUI() {
     mount.innerHTML = "";
+    if (!mount.classList.contains("cw")) mount.classList.add("cw");
 
-const style = document.createElement("style");
-style.textContent = `
-  .reflectiv-chat{display:flex;flex-direction:column;gap:8px;border:2px solid #cfd6df;border-radius:12px;overflow:hidden;background:#fff}
-
-  /* make toolbar full-width single column */
-  .chat-toolbar{display:block;padding:12px 16px;background:#f7f9fc;border-bottom:1px solid #e5e9f0}
-
-  /* 4-column label/select grid inside the toolbar */
-  .sim-controls{display:grid;grid-template-columns:180px 1fr 180px 1fr;gap:10px 16px;align-items:center}
-
-  .sim-controls label{font-size:13px;font-weight:600;justify-self:end;color:#2f3a4f}
-  .sim-controls .select,
-  .sim-controls select{width:100%;height:36px;padding:6px 10px;font-size:14px}
-
-  .chat-messages{height:320px;max-height:50vh;overflow:auto;padding:12px;background:#fafbfd}
-  .message{margin:8px 0;display:flex}
-  .message.user{justify-content:flex-end}
-  .message.assistant{justify-content:flex-start}
-  .message .content{max-width:85%;border-radius:14px;padding:10px 12px;border:1px solid #d6dbe3;line-height:1.45;font-size:14px;background:#e9edf3;color:#0f1522}
-  .message.user .content{background:#e0e0e0;color:#000}
-  .chat-input{display:flex;gap:8px;padding:10px;border-top:1px solid #e5e9f0;background:#fff}
-  .chat-input textarea{flex:1;resize:none;min-height:44px;max-height:120px;padding:10px 12px;border:1px solid #cfd6df;border-radius:10px;outline:none}
-  .chat-input .btn{min-width:84px;border:0;border-radius:999px;background:#2f3a4f;color:#fff;font-weight:600}
-  .coach-section{margin-top:10px;padding:12px;border:1px solid #e5e9f0;border-radius:12px;background:#fffbe8}
-  .coach-score{margin-bottom:8px}
-  .coach-subs .pill{display:inline-block;background:#f1f3f7;border:1px solid #d6dbe3;border-radius:999px;padding:2px 8px;margin-right:6px;font-size:12px}
-  .scenario-meta .meta-card{padding:10px 12px;background:#f7f9fc;border:1px solid #e5e9f0;border-radius:10px}
-
-  /* responsive: stack controls on narrow screens */
-  @media (max-width:900px){
-    .sim-controls{grid-template-columns:1fr;gap:8px}
-    .sim-controls label{justify-self:start}
-  }
-
-  @media (max-width:520px){.chat-messages{height:46vh}}
-`;
-document.head.appendChild(style);
-
+    // Injected styles — scoped and thicker border to fix layout and overlap
+    const style = document.createElement("style");
+    style.textContent = `
+      /* Scope everything to avoid site CSS collisions */
+      #reflectiv-widget .reflectiv-chat{
+        display:flex; flex-direction:column; gap:12px;
+        border:3px solid #bfc7d4; border-radius:14px;
+        background:#fff; overflow:hidden;
+      }
+      #reflectiv-widget .chat-toolbar{
+        display:block; padding:14px 16px;
+        background:#f6f8fb; border-bottom:1px solid #e1e6ef;
+      }
+      /* Four columns: label|select, label|select */
+      #reflectiv-widget .sim-controls{
+        display:grid; grid-template-columns:220px 1fr 200px 1fr;
+        gap:12px 16px; align-items:center;
+      }
+      #reflectiv-widget .sim-controls label{
+        font-size:13px; font-weight:600; color:#2f3a4f;
+        justify-self:end; white-space:nowrap;
+      }
+      #reflectiv-widget .sim-controls .select,
+      #reflectiv-widget .sim-controls select{
+        width:100%; height:38px; padding:6px 10px; font-size:14px;
+        border:1px solid #cfd6df; border-radius:8px; background:#fff;
+      }
+      /* Message stage */
+      #reflectiv-widget .chat-messages{
+        min-height:260px; height:320px; max-height:50vh;
+        overflow:auto; padding:12px 14px; background:#fafbfd;
+      }
+      /* Bubbles */
+      #reflectiv-widget .message{ margin:8px 0; display:flex; }
+      #reflectiv-widget .message.user{ justify-content:flex-end; }
+      #reflectiv-widget .message.assistant{ justify-content:flex-start; }
+      #reflectiv-widget .message .content{
+        max-width:85%; line-height:1.45; font-size:14px;
+        padding:10px 12px; border-radius:14px;
+        border:1px solid #d6dbe3; color:#0f1522; background:#e9edf3;
+      }
+      #reflectiv-widget .message.user .content{ background:#e0e0e0; color:#000; }
+      /* Input row stays below messages; never overlaps */
+      #reflectiv-widget .chat-input{
+        display:flex; gap:8px; padding:10px 12px;
+        border-top:1px solid #e1e6ef; background:#fff;
+      }
+      #reflectiv-widget .chat-input textarea{
+        flex:1; resize:none; min-height:44px; max-height:120px;
+        padding:10px 12px; border:1px solid #cfd6df; border-radius:10px; outline:none;
+      }
+      #reflectiv-widget .chat-input .btn{
+        min-width:86px; border:0; border-radius:999px;
+        background:#2f3a4f; color:#fff; font-weight:600;
+      }
+      /* Coach panel is separate; no overlap */
+      #reflectiv-widget .coach-section{
+        margin-top:0; padding:12px 14px;
+        border:1px solid #e1e6ef; border-radius:12px; background:#fffbe8;
+      }
+      #reflectiv-widget .coach-score{ margin-bottom:8px; }
+      #reflectiv-widget .coach-subs .pill{
+        display:inline-block; padding:2px 8px; margin-right:6px; font-size:12px;
+        background:#f1f3f7; border:1px solid #d6dbe3; border-radius:999px;
+      }
+      #reflectiv-widget .scenario-meta .meta-card{
+        padding:10px 12px; background:#f7f9fc; border:1px solid #e1e6ef; border-radius:10px;
+      }
+      /* Responsive: stack controls on narrow screens only */
+      @media (max-width:900px){
+        #reflectiv-widget .sim-controls{ grid-template-columns:1fr; gap:8px; }
+        #reflectiv-widget .sim-controls label{ justify-self:start; }
+      }
+      @media (max-width:520px){
+        #reflectiv-widget .chat-messages{ height:46vh; }
+      }
+    `;
+    document.head.appendChild(style);
 
     const shell = el("div", "reflectiv-chat");
 
@@ -234,73 +290,71 @@ document.head.appendChild(style);
     const bar = el("div", "chat-toolbar");
 
     // Controls container (4 columns)
-const simControls = el("div","sim-controls");
+    const simControls = el("div","sim-controls");
 
-// Learning Center (formerly modeSel)
-const lcLabel = el("label", "", "Learning Center");
-lcLabel.htmlFor = "cw-mode";
-const modeSel = el("select","select"); modeSel.id = "cw-mode";
-(cfg.modes || []).forEach((m) => {
-  const o = el("option"); o.value = m;
-  o.textContent = m.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-  modeSel.appendChild(o);
-});
-modeSel.value = currentMode;
-modeSel.onchange = () => {
-  currentMode = modeSel.value;
-  currentScenarioId = null;
-  conversation = [];
-  renderMessages(); renderCoach(); renderMeta();
+    // Learning Center
+    const lcLabel = el("label", "", "Learning Center");
+    lcLabel.htmlFor = "cw-mode";
+    const modeSel = el("select","select"); modeSel.id = "cw-mode";
+    (cfg?.modes || []).forEach((m) => {
+      const o = el("option"); o.value = m;
+      o.textContent = m.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      modeSel.appendChild(o);
+    });
+    modeSel.value = currentMode;
+    modeSel.onchange = () => {
+      currentMode = modeSel.value;
+      currentScenarioId = null;
+      conversation = [];
+      renderMessages(); renderCoach(); renderMeta();
 
-  const showSim = currentMode === "sales-simulation";
-  diseaseLabel.style.display = showSim ? "" : "none";
-  diseaseSelect.style.display = showSim ? "" : "none";
-  hcpLabel.style.display = showSim ? "" : "none";
-  hcpSelect.style.display = showSim ? "" : "none";
-};
+      const showSim = currentMode === "sales-simulation";
+      diseaseLabel.style.display = showSim ? "" : "none";
+      diseaseSelect.style.display = showSim ? "" : "none";
+      hcpLabel.style.display = showSim ? "" : "none";
+      hcpSelect.style.display = showSim ? "" : "none";
+    };
 
-// Coach as styled select
-const coachLabel = el("label", "", "Coach");
-coachLabel.htmlFor = "cw-coach";
-const coachSel = el("select","select"); coachSel.id = "cw-coach";
-[{v:"on",t:"Coach On"},{v:"off",t:"Coach Off"}].forEach(({v,t})=>{
-  const o = el("option"); o.value=v; o.textContent=t; coachSel.appendChild(o);
-});
-coachSel.value = coachOn ? "on" : "off";
-coachSel.onchange = () => { coachOn = coachSel.value === "on"; renderCoach(); };
+    // Coach toggle
+    const coachLabel = el("label", "", "Coach");
+    coachLabel.htmlFor = "cw-coach";
+    const coachSel = el("select","select"); coachSel.id = "cw-coach";
+    [{v:"on",t:"Coach On"},{v:"off",t:"Coach Off"}].forEach(({v,t})=>{
+      const o = el("option"); o.value=v; o.textContent=t; coachSel.appendChild(o);
+    });
+    coachSel.value = coachOn ? "on" : "off";
+    coachSel.onchange = () => { coachOn = coachSel.value === "on"; renderCoach(); };
 
-// Disease / Product Knowledge (existing logic)
-const diseaseLabel = el("label", "", "Disease / Product Knowledge");
-diseaseLabel.htmlFor = "cw-disease";
-const diseaseSelect = el("select","select"); diseaseSelect.id = "cw-disease";
-const defaultOpt = el("option", "", "Select…");
-defaultOpt.value = ""; defaultOpt.selected = true; defaultOpt.disabled = true;
-diseaseSelect.appendChild(defaultOpt);
-const og1 = document.createElement("optgroup"); og1.label = "Disease State";
-Object.keys(DISEASE_STATES).forEach(ds=>{
-  const o=el("option","",ds); o.value=`disease::${ds}`; og1.appendChild(o);
-});
-const og2 = document.createElement("optgroup"); og2.label = "Product Knowledge";
-Object.keys(DISEASE_STATES).forEach(ds=>{
-  const o=el("option","",`${ds}: Product Knowledge`); o.value=`pk::${ds}`; og2.appendChild(o);
-});
-diseaseSelect.appendChild(og1); diseaseSelect.appendChild(og2);
+    // Disease / Product Knowledge
+    const diseaseLabel = el("label", "", "Disease / Product Knowledge");
+    diseaseLabel.htmlFor = "cw-disease";
+    const diseaseSelect = el("select","select"); diseaseSelect.id = "cw-disease";
+    const defaultOpt = el("option", "", "Select…");
+    defaultOpt.value = ""; defaultOpt.selected = true; defaultOpt.disabled = true;
+    diseaseSelect.appendChild(defaultOpt);
+    const og1 = document.createElement("optgroup"); og1.label = "Disease State";
+    Object.keys(DISEASE_STATES).forEach(ds=>{
+      const o=el("option","",ds); o.value=`disease::${ds}`; og1.appendChild(o);
+    });
+    const og2 = document.createElement("optgroup"); og2.label = "Product Knowledge";
+    Object.keys(DISEASE_STATES).forEach(ds=>{
+      const o=el("option","",`${ds}: Product Knowledge`); o.value=`pk::${ds}`; og2.appendChild(o);
+    });
+    diseaseSelect.appendChild(og1); diseaseSelect.appendChild(og2);
 
-// HCP Profile (existing logic)
-const hcpLabel = el("label","","HCP Profile"); hcpLabel.htmlFor="cw-hcp";
-const hcpSelect = el("select","select"); hcpSelect.id="cw-hcp";
-const hcpDef = el("option","","Select HCP…"); hcpDef.value=""; hcpDef.selected=true; hcpDef.disabled=true;
-hcpSelect.appendChild(hcpDef); hcpSelect.disabled = true;
+    // HCP Profile
+    const hcpLabel = el("label","","HCP Profile"); hcpLabel.htmlFor="cw-hcp";
+    const hcpSelect = el("select","select"); hcpSelect.id="cw-hcp";
+    const hcpDef = el("option","","Select HCP…"); hcpDef.value=""; hcpDef.selected=true; hcpDef.disabled=true;
+    hcpSelect.appendChild(hcpDef); hcpSelect.disabled = true;
 
-// Assemble in grid order
-simControls.appendChild(lcLabel);    simControls.appendChild(modeSel);
-simControls.appendChild(coachLabel); simControls.appendChild(coachSel);
-simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
-simControls.appendChild(hcpLabel);     simControls.appendChild(hcpSelect);
+    // Assemble
+    simControls.appendChild(lcLabel);    simControls.appendChild(modeSel);
+    simControls.appendChild(coachLabel); simControls.appendChild(coachSel);
+    simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
+    simControls.appendChild(hcpLabel);     simControls.appendChild(hcpSelect);
 
-// Add to toolbar
-bar.appendChild(simControls);
-    
+    bar.appendChild(simControls);
     shell.appendChild(bar);
 
     // meta
@@ -343,7 +397,6 @@ bar.appendChild(simControls);
       if(kind === "pk"){
         const pkMode = DISEASE_STATES[ds]?.productKnowledgeMode;
         if(pkMode && (cfg?.modes||[]).includes(pkMode)){ currentMode = pkMode; hcpSelect.disabled = true; hcpSelect.value=""; }
-        else { /* leave mode as-is if not implemented */ }
         modeSel.value = currentMode;
         simControls.style.display = currentMode === "sales-simulation" ? "" : "none";
       } else {
@@ -415,11 +468,11 @@ bar.appendChild(simControls);
 
   // ---------- transport ----------
   async function callModel(messages) {
-    const r = await fetch((cfg.apiBase || cfg.workerUrl || "").trim(), {
+    const r = await fetch((cfg?.apiBase || cfg?.workerUrl || "").trim(), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: cfg.model || "llama-3.1-8b-instant",
+        model: (cfg && cfg.model) || "llama-3.1-8b-instant",
         temperature: 0.2,
         stream: false,
         messages
@@ -459,7 +512,7 @@ bar.appendChild(simControls);
       conversation.push({ role: "assistant", content: clean, _coach: finalCoach });
       renderMessages(); renderCoach();
 
-      if (cfg.analyticsEndpoint) {
+      if (cfg && cfg.analyticsEndpoint) {
         fetch(cfg.analyticsEndpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -481,24 +534,21 @@ bar.appendChild(simControls);
 
   // ---------- scenarios loader ----------
   async function loadScenarios() {
-    // Prefer external merged file if config provides it
     if (cfg && cfg.scenariosUrl) {
       const payload = await fetchLocal(cfg.scenariosUrl);
       const arr = Array.isArray(payload) ? payload : (payload.scenarios || []);
       scenarios = arr.map((s)=>({
         id: s.id,
         label: s.label || s.id,
-        therapeuticArea: s.therapeuticArea, // must be one of registry keys
+        therapeuticArea: s.therapeuticArea,
         hcpRole: s.hcpRole || "",
         background: s.background || "",
         goal: s.goal || ""
       }));
-    } else if (Array.isArray(cfg.scenarios)) {
-      // backwards compatibility with inline scenarios
+    } else if (Array.isArray(cfg?.scenarios)) {
       scenarios = cfg.scenarios.map((s)=>({
         id: s.id,
         label: s.label || s.id,
-        // try to normalize "HIV - PrEP" -> "HIV"
         therapeuticArea: (s.therapeuticArea||"").split(" - ")[0],
         hcpRole: s.hcpRole || "",
         background: s.background || "",
@@ -511,28 +561,30 @@ bar.appendChild(simControls);
   }
 
   // ---------- init ----------
-async function init() {
-  try {
-    cfg = await fetchLocal("./assets/chat/config.json");
-  } catch (e) {
-    console.error("config.json load failed:", e);
-    return; // cannot run without config
+  async function init() {
+    try {
+      cfg = await fetchLocal("./assets/chat/config.json");
+    } catch (e) {
+      console.error("config.json load failed:", e);
+      // continue with defaults; widget still renders
+      cfg = { modes:["emotional-assessment","hiv-product-knowledge","sales-simulation"], defaultMode:"sales-simulation" };
+    }
+
+    try {
+      systemPrompt = await fetchLocal("./assets/chat/system.md");
+    } catch (_) {
+      systemPrompt = "";
+    }
+
+    await loadScenarios();
+
+    if (cfg.modes && cfg.defaultMode && cfg.modes.includes(cfg.defaultMode)) {
+      currentMode = cfg.defaultMode;
+    }
+
+    buildUI();
   }
 
-  try {
-    systemPrompt = await fetchLocal("./assets/chat/system.md");
-  } catch (_) {
-    systemPrompt = ""; // ok to continue without system.md
-  }
-
-  await loadScenarios();
-
-  if (cfg.modes && cfg.defaultMode && cfg.modes.includes(cfg.defaultMode)) {
-    currentMode = cfg.defaultMode;
-  }
-
-  buildUI();
-}
-
-  init();
+  // ---------- start ----------
+  waitForMount(init);
 })();
