@@ -12,8 +12,8 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border: 3px solid #bfc7d4;         /* thicker per spec */
-  border-radius: 14px;                 /* matches JS-injected style */
+  border: 3px solid #bfc7d4;
+  border-radius: 14px;
   overflow: hidden;
   background: #fff;
 }
@@ -66,10 +66,7 @@
 }
 
 /* ---------- Message Bubbles ---------- */
-.message {
-  margin: 8px 0;
-  display: flex;
-}
+.message { margin: 8px 0; display: flex; }
 .message.user { justify-content: flex-end; }
 .message.assistant { justify-content: flex-start; }
 
@@ -84,10 +81,7 @@
   color: #0f1522;
 }
 
-.message.user .content {
-  background: #e0e0e0;
-  color: #000;
-}
+.message.user .content { background: #e0e0e0; color: #000; }
 
 /* ---------- Input Area ---------- */
 .chat-input {
@@ -158,13 +152,11 @@
 
 /* ---------- Utilities ---------- */
 .hidden { display: none !important; }
+.muted { opacity: .75; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
-  .sim-controls {
-    grid-template-columns: 1fr;   /* stack labels+fields on narrow screens */
-    gap: 8px;
-  }
+  .sim-controls { grid-template-columns: 1fr; gap: 8px; }
   .sim-controls label { justify-self: start; }
 }
 @media (max-width: 520px) {
