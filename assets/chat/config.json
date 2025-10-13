@@ -4,9 +4,13 @@
   "apiBase": "https://my-chat-agent.tonyabdelmalak.workers.dev/chat",
   "workerUrl": "https://my-chat-agent.tonyabdelmalak.workers.dev/chat",
   "stream": false,
+
+  "modes": ["emotional-assessment", "hiv-product-knowledge", "sales-simulation"],
   "defaultMode": "sales-simulation",
+
   "analyticsEndpoint": "https://my-chat-agent.tonyabdelmalak.workers.dev/coach-metrics",
+
   "brand": { "accent": "#2f3a4f", "radius": "14px" },
-  "diseaseStates": ["HIV", "Oncology", "Vaccines", "Hepatitis B", "Pulmonology", "Cardiology"],
+
   "scenariosUrl": "./assets/chat/data/scenarios.merged.json"
 }
