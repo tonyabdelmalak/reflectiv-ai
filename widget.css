@@ -1,164 +1,40 @@
-/* =====================================================
-   ReflectivAI Chat Widget Styles
-   ===================================================== */
+/* ReflectivAI widget external stylesheet (optional).
+   Keep minimal; core safety CSS is injected by widget.js. */
 
-.cw, .reflectiv-chat {
-  font-family: "Poppins", sans-serif;
-  color: #0f1522;
-}
+.cw, .reflectiv-chat { font-family: "Poppins", system-ui, sans-serif; color:#0f1522; }
 
-/* ---------- Widget Shell ---------- */
-.reflectiv-chat {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  border: 3px solid #bfc7d4;
-  border-radius: 14px;
-  overflow: hidden;
-  background: #fff;
-}
+.reflectiv-chat { display:flex; flex-direction:column; gap:8px; border:3px solid #bfc7d4; border-radius:14px; overflow:hidden; background:#fff; }
 
-/* ---------- Toolbar ---------- */
-.chat-toolbar {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-  padding: 12px 14px;
-  background: #f6f8fb;
-  border-bottom: 1px solid #e5e9f0;
-}
+.chat-toolbar { display:grid; grid-template-columns:1fr; gap:8px; padding:12px 14px; background:#f6f8fb; border-bottom:1px solid #e5e9f0; }
 
-/* ---------- Scenario / Dropdown Controls ---------- */
-.sim-controls {
-  display: grid;
-  grid-template-columns: 220px 1fr 200px 1fr; /* label|select, label|select */
-  gap: 12px 16px;
-  align-items: center;
-}
+.sim-controls { display:grid; grid-template-columns:220px 1fr 200px 1fr; gap:12px 16px; align-items:center; }
+.sim-controls label { font-size:13px; font-weight:600; color:#2f3a4f; justify-self:end; white-space:nowrap; }
+.sim-controls select { height:38px; padding:6px 10px; border-radius:8px; border:1px solid #cfd6df; background:#fff; font-size:14px; color:#0f1522; width:100%; }
 
-.sim-controls label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #2f3a4f;
-  justify-self: end;
-  white-space: nowrap;
-}
+.chat-messages { min-height:260px; height:320px; max-height:50vh; overflow:auto; padding:12px 14px; background:#fafbfd; }
 
-.sim-controls select {
-  height: 38px;
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid #cfd6df;
-  background: #fff;
-  font-size: 14px;
-  color: #0f1522;
-  width: 100%;
-}
+.message { margin:8px 0; display:flex; }
+.message.user { justify-content:flex-end; }
+.message.assistant { justify-content:flex-start; }
+.message .content { max-width:85%; border-radius:14px; padding:10px 12px; border:1px solid #d6dbe3; line-height:1.45; font-size:14px; background:#e9edf3; color:#0f1522; }
+.message.user .content { background:#e0e0e0; color:#000; }
 
-/* ---------- Chat Area ---------- */
-.chat-messages {
-  min-height: 260px;
-  height: 320px;
-  max-height: 50vh;
-  overflow: auto;
-  padding: 12px 14px;
-  background: #fafbfd;
-}
+.chat-input { display:flex; gap:8px; padding:10px 12px; border-top:1px solid #e5e9f0; background:#fff; }
+.chat-input textarea { flex:1; resize:none; min-height:44px; max-height:120px; padding:10px 12px; border:1px solid #cfd6df; border-radius:10px; outline:none; font-family:"Poppins",system-ui,sans-serif; font-size:14px; }
+.chat-input .btn { min-width:86px; border:0; border-radius:999px; background:#2f3a4f; color:#fff; font-weight:600; cursor:pointer; }
+.chat-input .btn:hover { background:#394768; }
 
-/* ---------- Message Bubbles ---------- */
-.message { margin: 8px 0; display: flex; }
-.message.user { justify-content: flex-end; }
-.message.assistant { justify-content: flex-start; }
+.scenario-meta .meta-card { padding:10px 12px; background:#f7f9fc; border:1px solid #e5e9f0; border-radius:10px; font-size:13px; line-height:1.4; }
 
-.message .content {
-  max-width: 85%;
-  border-radius: 14px;
-  padding: 10px 12px;
-  border: 1px solid #d6dbe3;
-  line-height: 1.45;
-  font-size: 14px;
-  background: #e9edf3;
-  color: #0f1522;
-}
+.coach-section { margin-top:0; padding:12px 14px; border:1px solid #e5e9f0; border-radius:12px; background:#fffbe8; }
+.coach-section h3 { font-size:15px; margin:0 0 6px 0; color:#2f3a4f; }
+.coach-score { margin-bottom:8px; font-weight:600; }
+.coach-subs .pill { display:inline-block; background:#f1f3f7; border:1px solid #d6dbe3; border-radius:999px; padding:2px 8px; margin-right:6px; font-size:12px; }
+.coach-list { padding-left:16px; font-size:13px; color:#0f1522; }
+.coach-list li { margin-bottom:4px; }
 
-.message.user .content { background: #e0e0e0; color: #000; }
+.hidden { display:none !important; }
+.muted { opacity:.75; }
 
-/* ---------- Input Area ---------- */
-.chat-input {
-  display: flex;
-  gap: 8px;
-  padding: 10px 12px;
-  border-top: 1px solid #e5e9f0;
-  background: #fff;
-}
-.chat-input textarea {
-  flex: 1;
-  resize: none;
-  min-height: 44px;
-  max-height: 120px;
-  padding: 10px 12px;
-  border: 1px solid #cfd6df;
-  border-radius: 10px;
-  outline: none;
-  font-family: "Poppins", sans-serif;
-  font-size: 14px;
-}
-.chat-input .btn {
-  min-width: 86px;
-  border: 0;
-  border-radius: 999px;
-  background: #2f3a4f;
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
-}
-.chat-input .btn:hover { background: #394768; }
-
-/* ---------- Meta (Scenario Background) ---------- */
-.scenario-meta .meta-card {
-  padding: 10px 12px;
-  background: #f7f9fc;
-  border: 1px solid #e5e9f0;
-  border-radius: 10px;
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-/* ---------- Coach Feedback ---------- */
-.coach-section {
-  margin-top: 0;
-  padding: 12px 14px;
-  border: 1px solid #e5e9f0;
-  border-radius: 12px;
-  background: #fffbe8;
-}
-.coach-section h3 {
-  font-size: 15px;
-  margin: 0 0 6px 0;
-  color: #2f3a4f;
-}
-.coach-score { margin-bottom: 8px; font-weight: 600; }
-.coach-subs .pill {
-  display: inline-block;
-  background: #f1f3f7;
-  border: 1px solid #d6dbe3;
-  border-radius: 999px;
-  padding: 2px 8px;
-  margin-right: 6px;
-  font-size: 12px;
-}
-.coach-list { padding-left: 16px; font-size: 13px; color: #0f1522; }
-.coach-list li { margin-bottom: 4px; }
-
-/* ---------- Utilities ---------- */
-.hidden { display: none !important; }
-.muted { opacity: .75; }
-
-/* ---------- Responsive ---------- */
-@media (max-width: 900px) {
-  .sim-controls { grid-template-columns: 1fr; gap: 8px; }
-  .sim-controls label { justify-self: start; }
-}
-@media (max-width: 520px) {
-  .chat-messages { height: 46vh; }
-}
+@media (max-width:900px){ .sim-controls{ grid-template-columns:1fr; gap:8px; } .sim-controls label{ justify-self:start; } }
+@media (max-width:520px){ .chat-messages{ height:46vh; } }
