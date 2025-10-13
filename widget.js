@@ -191,122 +191,42 @@ ${COMMON}`.trim();
 
 const style = document.createElement("style");
 style.textContent = `
-  .reflectiv-chat {
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-    border:2px solid #b8c2cc;
-    border-radius:12px;
-    overflow:hidden;
-    background:#fff;
-  }
+  .reflectiv-chat{display:flex;flex-direction:column;gap:8px;border:2px solid #cfd6df;border-radius:12px;overflow:hidden;background:#fff}
 
-  .chat-toolbar {
-    padding:16px;
-    background:#f7f9fc;
-    border-bottom:1px solid #dce1e8;
-  }
+  /* make toolbar full-width single column */
+  .chat-toolbar{display:block;padding:12px 16px;background:#f7f9fc;border-bottom:1px solid #e5e9f0}
 
-  .sim-controls {
-    display:grid;
-    grid-template-columns:150px 1fr 150px 1fr;
-    grid-auto-rows:min-content;
-    align-items:center;
-    column-gap:16px;
-    row-gap:14px;
-    width:100%;
-  }
+  /* 4-column label/select grid inside the toolbar */
+  .sim-controls{display:grid;grid-template-columns:180px 1fr 180px 1fr;gap:10px 16px;align-items:center}
 
-  .sim-controls label {
-    font-size:13px;
-    font-weight:500;
-    color:#2f3a4f;
-    justify-self:end;
-    white-space:nowrap;
-  }
+  .sim-controls label{font-size:13px;font-weight:600;justify-self:end;color:#2f3a4f}
+  .sim-controls .select,
+  .sim-controls select{width:100%;height:36px;padding:6px 10px;font-size:14px}
 
-  .sim-controls select {
-    width:100%;
-    height:40px;
-    font-size:14px;
-    border:1px solid #cfd6df;
-    border-radius:8px;
-    padding:6px 10px;
-    background:#fff;
-    color:#0f1522;
-  }
+  .chat-messages{height:320px;max-height:50vh;overflow:auto;padding:12px;background:#fafbfd}
+  .message{margin:8px 0;display:flex}
+  .message.user{justify-content:flex-end}
+  .message.assistant{justify-content:flex-start}
+  .message .content{max-width:85%;border-radius:14px;padding:10px 12px;border:1px solid #d6dbe3;line-height:1.45;font-size:14px;background:#e9edf3;color:#0f1522}
+  .message.user .content{background:#e0e0e0;color:#000}
+  .chat-input{display:flex;gap:8px;padding:10px;border-top:1px solid #e5e9f0;background:#fff}
+  .chat-input textarea{flex:1;resize:none;min-height:44px;max-height:120px;padding:10px 12px;border:1px solid #cfd6df;border-radius:10px;outline:none}
+  .chat-input .btn{min-width:84px;border:0;border-radius:999px;background:#2f3a4f;color:#fff;font-weight:600}
+  .coach-section{margin-top:10px;padding:12px;border:1px solid #e5e9f0;border-radius:12px;background:#fffbe8}
+  .coach-score{margin-bottom:8px}
+  .coach-subs .pill{display:inline-block;background:#f1f3f7;border:1px solid #d6dbe3;border-radius:999px;padding:2px 8px;margin-right:6px;font-size:12px}
+  .scenario-meta .meta-card{padding:10px 12px;background:#f7f9fc;border:1px solid #e5e9f0;border-radius:10px}
 
-  /* responsive collapse */
+  /* responsive: stack controls on narrow screens */
   @media (max-width:900px){
-    .sim-controls {grid-template-columns:150px 1fr;}
-  }
-  @media (max-width:520px){
-    .sim-controls {grid-template-columns:1fr;}
-    .sim-controls label {justify-self:start;}
+    .sim-controls{grid-template-columns:1fr;gap:8px}
+    .sim-controls label{justify-self:start}
   }
 
-  .chat-messages {
-    height:320px;
-    max-height:50vh;
-    overflow:auto;
-    padding:12px;
-    background:#fafbfd;
-  }
-
-  .message {margin:8px 0;display:flex;}
-  .message.user {justify-content:flex-end;}
-  .message.assistant {justify-content:flex-start;}
-  .message .content {
-    max-width:85%;
-    border-radius:14px;
-    padding:10px 12px;
-    border:1px solid #d6dbe3;
-    line-height:1.45;
-    font-size:14px;
-    background:#e9edf3;
-    color:#0f1522;
-  }
-  .message.user .content {background:#e0e0e0;color:#000;}
-
-  .chat-input {
-    display:flex;
-    gap:8px;
-    padding:10px;
-    border-top:1px solid #e5e9f0;
-    background:#fff;
-  }
-  .chat-input textarea {
-    flex:1;
-    resize:none;
-    min-height:44px;
-    max-height:120px;
-    padding:10px 12px;
-    border:1px solid #cfd6df;
-    border-radius:10px;
-    outline:none;
-  }
-  .chat-input .btn {
-    min-width:84px;
-    border:0;
-    border-radius:999px;
-    background:#2f3a4f;
-    color:#fff;
-    font-weight:600;
-  }
-
-  .coach-section {
-    margin-top:10px;
-    padding:12px;
-    border:1px solid #e5e9f0;
-    border-radius:12px;
-    background:#fffbe8;
-  }
-
-  @media (max-width:520px){
-    .chat-messages {height:46vh;}
-  }
+  @media (max-width:520px){.chat-messages{height:46vh}}
 `;
-    document.head.appendChild(style);
+document.head.appendChild(style);
+
 
     const shell = el("div", "reflectiv-chat");
 
