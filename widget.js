@@ -190,27 +190,56 @@ ${COMMON}`.trim();
     mount.innerHTML = "";
 
     const style = document.createElement("style");
-    style.textContent = `
-      .reflectiv-chat{display:flex;flex-direction:column;gap:8px;border:2px solid #d6dbe3;border-radius:12px;overflow:hidden;background:#fff}
-      .chat-toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end;padding:10px;background:#f7f9fc;border-bottom:1px solid #e5e9f0}
-      .chat-messages{height:320px;max-height:50vh;overflow:auto;padding:12px;background:#fafbfd}
-      .message{margin:8px 0;display:flex}
-      .message.user{justify-content:flex-end}
-      .message.assistant{justify-content:flex-start}
-      .message .content{max-width:85%;border-radius:14px;padding:10px 12px;border:1px solid #d6dbe3;line-height:1.45;font-size:14px;background:#e9edf3;color:#0f1522}
-      .message.user .content{background:#e0e0e0;color:#000}
-      .chat-input{display:flex;gap:8px;padding:10px;border-top:1px solid #e5e9f0;background:#fff}
-      .chat-input textarea{flex:1;resize:none;min-height:44px;max-height:120px;padding:10px 12px;border:1px solid #cfd6df;border-radius:10px;outline:none}
-      .chat-input .btn{min-width:84px;border:0;border-radius:999px;background:#2f3a4f;color:#fff;font-weight:600}
-      .coach-section{margin-top:10px;padding:12px;border:1px solid #e5e9f0;border-radius:12px;background:#fffbe8}
-      .coach-score{margin-bottom:8px}
-      .coach-subs .pill{display:inline-block;background:#f1f3f7;border:1px solid #d6dbe3;border-radius:999px;padding:2px 8px;margin-right:6px;font-size:12px}
-      .scenario-meta .meta-card{padding:10px 12px;background:#f7f9fc;border:1px solid #e5e9f0;border-radius:10px}
-      .sim-controls{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 12px;align-items:end}
-      .sim-controls label{font-size:12px}
-      .sim-controls .select{height:36px;padding:6px 8px;font-size:14px}
-      @media (max-width:520px){.chat-messages{height:46vh}}
-    `;
+style.textContent = `
+  .reflectiv-chat{display:flex;flex-direction:column;gap:8px;border:2px solid #cfd6df;border-radius:12px;overflow:hidden;background:#fff}
+  .chat-toolbar{display:block;padding:10px;background:#f7f9fc;border-bottom:1px solid #e5e9f0}
+  .chat-messages{height:320px;max-height:50vh;overflow:auto;padding:12px;background:#fafbfd}
+  .message{margin:8px 0;display:flex}
+  .message.user{justify-content:flex-end}
+  .message.assistant{justify-content:flex-start}
+  .message .content{max-width:85%;border-radius:14px;padding:10px 12px;border:1px solid #d6dbe3;line-height:1.45;font-size:14px;background:#e9edf3;color:#0f1522}
+  .message.user .content{background:#e0e0e0;color:#000}
+  .chat-input{display:flex;gap:8px;padding:10px;border-top:1px solid #e5e9f0;background:#fff}
+  .chat-input textarea{flex:1;resize:none;min-height:44px;max-height:120px;padding:10px 12px;border:1px solid #cfd6df;border-radius:10px;outline:none}
+  .chat-input .btn{min-width:84px;border:0;border-radius:999px;background:#2f3a4f;color:#fff;font-weight:600}
+  .coach-section{margin-top:10px;padding:12px;border:1px solid #e5e9f0;border-radius:12px;background:#fffbe8}
+  .coach-score{margin-bottom:8px}
+  .coach-subs .pill{display:inline-block;background:#f1f3f7;border:1px solid #d6dbe3;border-radius:999px;padding:2px 8px;margin-right:6px;font-size:12px}
+  .scenario-meta .meta-card{padding:10px 12px;background:#f7f9fc;border:1px solid #e5e9f0;border-radius:10px}
+
+  /* controls grid: label|select  label|select */
+  .sim-controls{
+    display:grid;
+    grid-template-columns:auto 1fr auto 1fr;
+    grid-auto-rows:min-content;
+    column-gap:12px;
+    row-gap:10px;
+    align-items:center;
+  }
+  .sim-controls label{
+    font-size:12px;
+    justify-self:end;
+    white-space:nowrap;
+  }
+  .sim-controls select,
+  .sim-controls .select{
+    height:36px;
+    padding:6px 8px;
+    font-size:14px;
+    width:100%;
+  }
+
+  /* responsive collapse */
+  @media (max-width:900px){
+    .sim-controls{grid-template-columns:auto 1fr}
+  }
+  @media (max-width:520px){
+    .sim-controls{grid-template-columns:1fr}
+    .sim-controls label{justify-self:start}
+  }
+
+  @media (max-width:520px){.chat-messages{height:46vh}}
+`;
     document.head.appendChild(style);
 
     const shell = el("div", "reflectiv-chat");
