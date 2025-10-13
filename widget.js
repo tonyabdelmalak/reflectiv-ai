@@ -191,7 +191,7 @@ ${COMMON}`.trim();
 
     const style = document.createElement("style");
     style.textContent = `
-      .reflectiv-chat{display:flex;flex-direction:column;gap:8px;border:1px solid #d6dbe3;border-radius:12px;overflow:hidden;background:#fff}
+      .reflectiv-chat{display:flex;flex-direction:column;gap:8px;border:2px solid #d6dbe3;border-radius:12px;overflow:hidden;background:#fff}
       .chat-toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end;padding:10px;background:#f7f9fc;border-bottom:1px solid #e5e9f0}
       .chat-messages{height:320px;max-height:50vh;overflow:auto;padding:12px;background:#fafbfd}
       .message{margin:8px 0;display:flex}
@@ -206,7 +206,7 @@ ${COMMON}`.trim();
       .coach-score{margin-bottom:8px}
       .coach-subs .pill{display:inline-block;background:#f1f3f7;border:1px solid #d6dbe3;border-radius:999px;padding:2px 8px;margin-right:6px;font-size:12px}
       .scenario-meta .meta-card{padding:10px 12px;background:#f7f9fc;border:1px solid #e5e9f0;border-radius:10px}
-      .sim-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;align-items:end}
+      .sim-controls{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 12px;align-items:end}
       .sim-controls label{font-size:12px}
       .sim-controls .select{height:36px;padding:6px 8px;font-size:14px}
       @media (max-width:520px){.chat-messages{height:46vh}}
@@ -218,64 +218,74 @@ ${COMMON}`.trim();
     // toolbar
     const bar = el("div", "chat-toolbar");
 
-    // Mode selector
-    const modeSel = el("select");
-    (cfg.modes || []).forEach((m) => {
-      const o = el("option");
-      o.value = m;
-      o.textContent = m.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-      modeSel.appendChild(o);
-    });
-    modeSel.value = currentMode;
-    modeSel.onchange = () => {
-      currentMode = modeSel.value;
-      currentScenarioId = null;
-      conversation = [];
-      renderMessages(); renderCoach(); renderMeta();
-      // hide scenario controls if not simulation
-      simControls.style.display = currentMode === "sales-simulation" ? "" : "none";
-    };
-    bar.appendChild(modeSel);
+    // Controls container (4 columns)
+const simControls = el("div","sim-controls");
 
-    // Dependent dropdowns container
-    const simControls = el("div","sim-controls");
-    simControls.style.display = currentMode === "sales-simulation" ? "" : "none";
+// Learning Center (formerly modeSel)
+const lcLabel = el("label", "", "Learning Center");
+lcLabel.htmlFor = "cw-mode";
+const modeSel = el("select","select"); modeSel.id = "cw-mode";
+(cfg.modes || []).forEach((m) => {
+  const o = el("option"); o.value = m;
+  o.textContent = m.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  modeSel.appendChild(o);
+});
+modeSel.value = currentMode;
+modeSel.onchange = () => {
+  currentMode = modeSel.value;
+  currentScenarioId = null;
+  conversation = [];
+  renderMessages(); renderCoach(); renderMeta();
 
-    // Disease/Product Knowledge dropdown
-    const diseaseLabel = el("label", "", "Disease / Product Knowledge");
-    diseaseLabel.htmlFor = "cw-disease";
-    const diseaseSelect = el("select","select");
-    diseaseSelect.id = "cw-disease";
-    const defaultOpt = el("option", "", "Select…");
-    defaultOpt.value = ""; defaultOpt.selected = true; defaultOpt.disabled = true;
-    diseaseSelect.appendChild(defaultOpt);
-    const og1 = document.createElement("optgroup"); og1.label = "Disease State";
-    Object.keys(DISEASE_STATES).forEach(ds=>{
-      const o=el("option","",ds); o.value=`disease::${ds}`; og1.appendChild(o);
-    });
-    const og2 = document.createElement("optgroup"); og2.label = "Product Knowledge";
-    Object.keys(DISEASE_STATES).forEach(ds=>{
-      const o=el("option","",`${ds}: Product Knowledge`); o.value=`pk::${ds}`; og2.appendChild(o);
-    });
-    diseaseSelect.appendChild(og1); diseaseSelect.appendChild(og2);
+  const showSim = currentMode === "sales-simulation";
+  diseaseLabel.style.display = showSim ? "" : "none";
+  diseaseSelect.style.display = showSim ? "" : "none";
+  hcpLabel.style.display = showSim ? "" : "none";
+  hcpSelect.style.display = showSim ? "" : "none";
+};
 
-    // HCP dropdown
-    const hcpLabel = el("label","","HCP Profile"); hcpLabel.htmlFor="cw-hcp";
-    const hcpSelect = el("select","select"); hcpSelect.id="cw-hcp";
-    const hcpDef = el("option","","Select HCP…"); hcpDef.value=""; hcpDef.selected=true; hcpDef.disabled=true;
-    hcpSelect.appendChild(hcpDef); hcpSelect.disabled = true;
+// Coach as styled select
+const coachLabel = el("label", "", "Coach");
+coachLabel.htmlFor = "cw-coach";
+const coachSel = el("select","select"); coachSel.id = "cw-coach";
+[{v:"on",t:"Coach On"},{v:"off",t:"Coach Off"}].forEach(({v,t})=>{
+  const o = el("option"); o.value=v; o.textContent=t; coachSel.appendChild(o);
+});
+coachSel.value = coachOn ? "on" : "off";
+coachSel.onchange = () => { coachOn = coachSel.value === "on"; renderCoach(); };
 
-    simControls.appendChild(diseaseLabel);
-    simControls.appendChild(diseaseSelect);
-    simControls.appendChild(hcpLabel);
-    simControls.appendChild(hcpSelect);
-    bar.appendChild(simControls);
+// Disease / Product Knowledge (existing logic)
+const diseaseLabel = el("label", "", "Disease / Product Knowledge");
+diseaseLabel.htmlFor = "cw-disease";
+const diseaseSelect = el("select","select"); diseaseSelect.id = "cw-disease";
+const defaultOpt = el("option", "", "Select…");
+defaultOpt.value = ""; defaultOpt.selected = true; defaultOpt.disabled = true;
+diseaseSelect.appendChild(defaultOpt);
+const og1 = document.createElement("optgroup"); og1.label = "Disease State";
+Object.keys(DISEASE_STATES).forEach(ds=>{
+  const o=el("option","",ds); o.value=`disease::${ds}`; og1.appendChild(o);
+});
+const og2 = document.createElement("optgroup"); og2.label = "Product Knowledge";
+Object.keys(DISEASE_STATES).forEach(ds=>{
+  const o=el("option","",`${ds}: Product Knowledge`); o.value=`pk::${ds}`; og2.appendChild(o);
+});
+diseaseSelect.appendChild(og1); diseaseSelect.appendChild(og2);
 
-    // Coach toggle
-    const coachBtn = el("button", "btn", "Coach: On");
-    coachBtn.onclick = () => { coachOn = !coachOn; coachBtn.textContent = coachOn ? "Coach: On" : "Coach: Off"; renderCoach(); };
-    bar.appendChild(coachBtn);
+// HCP Profile (existing logic)
+const hcpLabel = el("label","","HCP Profile"); hcpLabel.htmlFor="cw-hcp";
+const hcpSelect = el("select","select"); hcpSelect.id="cw-hcp";
+const hcpDef = el("option","","Select HCP…"); hcpDef.value=""; hcpDef.selected=true; hcpDef.disabled=true;
+hcpSelect.appendChild(hcpDef); hcpSelect.disabled = true;
 
+// Assemble in grid order
+simControls.appendChild(lcLabel);    simControls.appendChild(modeSel);
+simControls.appendChild(coachLabel); simControls.appendChild(coachSel);
+simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
+simControls.appendChild(hcpLabel);     simControls.appendChild(hcpSelect);
+
+// Add to toolbar
+bar.appendChild(simControls);
+    
     shell.appendChild(bar);
 
     // meta
