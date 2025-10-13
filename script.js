@@ -1,8 +1,7 @@
 // script.js
-// Site interactions: smooth scroll, mobile nav, reveal animations, theme toggle, footer year.
+// Site interactions: smooth scroll, mobile nav, theme toggle, footer year.
 
 document.addEventListener('DOMContentLoaded', () => {
-
   /* ---------- Smooth scroll for on-page anchors ---------- */
   const links = document.querySelectorAll('a[href^="#"]');
   links.forEach(link => {
@@ -33,19 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (window.innerWidth > 768) navMenu.classList.remove('active');
     });
   }
-
-  /* ---------- Reveal-on-scroll animation (fade-up + stagger) ---------- */
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('revealed');
-        io.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.12 });
-
-  // Observe all elements with the .reveal class
-  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
   /* ---------- Theme toggle with persistence ---------- */
   const THEME_KEY = 'reflectiv-theme';
