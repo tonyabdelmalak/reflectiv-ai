@@ -555,24 +555,22 @@
       </div>
     </section>
 
-    <!-- Footnotes -->
+      <!-- Footnotes -->
     <section class="footnotes">
-      <ol>
-        <li id="fn1"><span class="citation">HIPAA Privacy Rule</span> — The U.S. Department of Health &amp; Human Services notes that the HIPAA Privacy Rule establishes national standards to protect individuals’ medical records and other personally identifiable health information. It requires appropriate safeguards and gives individuals rights over their health data.</li>
-        <li id="fn2"><span class="citation">NIST AI Risk Management Framework</span> — NIST’s AI Risk Management Framework is a voluntary framework designed to help organizations manage risks associated with AI and incorporate trustworthiness into design, development and use.</li>
-        <li id="fn3"><span class="citation">ISO/IEC&nbsp;27001</span> — The International Organization for Standardization describes ISO/IEC 27001 as the world’s best-known standard for information security management systems (ISMS). It provides guidance for establishing, implementing, maintaining and continually improving an ISMS.</li>
-        <li id="fn4"><span class="citation">ISO/IEC&nbsp;42001</span> — ISO/IEC 42001 is the first AI management system standard. It specifies requirements for establishing, implementing, maintaining and improving an AI management system and addresses ethical considerations, transparency and risk management.</li>
-        <li id="fn5"><span class="citation">OECD AI Principles</span> — The OECD AI Principles promote use of AI that is innovative and trustworthy, respects human rights and democratic values, and provide recommendations for policymakers. The Principles were first adopted in 2019 and updated in 2024.</li>
-        <li id="fn6"><span class="citation">PhRMA Code on Interactions with Healthcare Professionals</span> — The PhRMA Code underscores ethical relationships with healthcare professionals, stating that interactions should benefit patients, provide scientific information and support medical research.</li>
-        <li id="fn7"><span class="citation">FDA OPDP</span> — The FDA’s Office of Prescription Drug Promotion protects public health by ensuring that prescription drug promotion is truthful, balanced and accurately communicated through surveillance, compliance and education programs.</li>
-        <li id="fn8"><span class="citation">AI Adoption Survey</span> — A 2025 IQVIA survey of 107 life-sciences commercial leaders reports that over 80% of organizations have moved beyond AI pilots, more than one-third are “AI Advanced,” nearly half invest >20% of their commercial budgets in AI, and 58% of leaders see 2× ROI while 7% achieve 3× ROI.</li>
-        <li id="fn9"><span class="citation">AI Value &amp; Productivity</span> — McKinsey &amp; Company estimates that AI innovations could unlock $8–16 billion in annual commercial value for life-sciences companies and produce a 10–15% gain in field team productivity.</li>
-        <li id="fn10"><span class="citation">HCP Engagement Survey</span> — A 2024 pan-European survey reported that 52% of healthcare professionals seek more clinical data, 67% expect more disease awareness content and 42% identify lack of contact with medical science liaisons as a barrier to engagement.</li>
-        <li id="fn11"><span class="citation">Commercial Inefficiencies</span> — The same study notes that pharmaceutical companies invest over US$137 billion annually in sales and marketing yet still face major inefficiencies due to high costs, access challenges and poor CRM utilization.</li>
-      </ol>
+      <!-- keep your <ol>…</ol> here -->
     </section>
 
-    <!-- Widget -->
-    <script defer src="widget.js?v=9"></script>
+    <!-- Widget debug + load -->
+    <script>
+      console.log("probe: before widget");
+      window.onerror = (m, s, l, c, e) => {
+        const n = document.createElement('pre');
+        n.style.cssText =
+          'position:fixed;bottom:8px;left:8px;z-index:99999;max-width:90vw;max-height:40vh;overflow:auto;border:1px solid #b00020;padding:8px;border-radius:8px;background:#fff;color:#b00020;font:12px/1.4 monospace';
+        n.textContent = "Widget error: " + (e && e.stack ? e.stack : m);
+        document.body.appendChild(n);
+      };
+    </script>
+    <script defer src="widget.js?v=11"></script>
   </body>
 </html>
