@@ -47,7 +47,9 @@
     const ct = r.headers.get("content-type")||"";
     return ct.includes("application/json") ? r.json() : r.text();
   }
-  const esc = s => String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  const esc = s => String(s||"")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
   function md(text){
     if(!text) return "";
     let s = esc(text).replace(/\r\n?/g,"\n");
