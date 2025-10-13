@@ -430,3 +430,21 @@ th {
     gap: 0.75rem;
   }
 }
+/* ===== Compact spacing for Platform Modules ===== */
+.section.platform.compact .grid-3.tight {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* reduced vertical spacing between cards */
+}
+
+.section.platform.compact .card {
+  margin: 0;
+  padding: 1.2rem 1.5rem;
+  border-radius: 10px;
+  background: #f8f9fc;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.section.platform.compact h2 {
+  margin-bottom: 1rem;
+}
