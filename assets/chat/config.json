@@ -4,21 +4,9 @@
   "apiBase": "https://my-chat-agent.tonyabdelmalak.workers.dev/chat",
   "workerUrl": "https://my-chat-agent.tonyabdelmalak.workers.dev/chat",
   "stream": false,
-
-  /* Learning Center options are enforced in widget.js:
-     ["Emotional Intelligence","Product Knowledge","Sales Simulation"] */
-
   "defaultMode": "sales-simulation",
-
   "analyticsEndpoint": "https://my-chat-agent.tonyabdelmalak.workers.dev/coach-metrics",
-
   "brand": { "accent": "#2f3a4f", "radius": "14px" },
-
-  /* Added: disease states used to populate the Disease State dropdowns.
-     Casing normalized; HIV forced uppercase. */
   "diseaseStates": ["HIV", "Oncology", "Vaccines", "Hepatitis B", "Pulmonology", "Cardiology"],
-
-  /* Scenarios are loaded from this file and filtered by disease state to
-     populate the HCP Profiles/Scenarios dropdown when in Sales Simulation. */
   "scenariosUrl": "./assets/chat/data/scenarios.merged.json"
 }
