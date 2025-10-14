@@ -1,30 +1,80 @@
-<script>
-/* ReflectivAI Coach Widget — v4 (layout preserved)
- * Goals implemented:
- * - Correct dropdown relationships: Disease -> HCP filtered; Mode = ["Product Knowledge","Sales Simulation"]
- * - Coach toggle hidden in Product Knowledge (preserves your dropdown UI)
- * - Deterministic, per-turn coach feedback (JSON contract) tied to the user’s latest turn + active scenario
- * - Weighted scoring (0–10) + rolling average; hard-fail gates on Accuracy/Compliance
- * - Subtle EI: empathy score, tone label, evidence quote in Coach (not a separate mode)
- * - State resets on any control change; localStorage persistence
- * - Mobile-safe: no input overlap; panel scrolls
- * - Zero layout edits: script locates your existing controls by their headings/labels
+/* ReflectivAI Coach Widget — v4c (combined)
+ * - Keeps your legacy helpers (esc, sanitizeLLM, md, extractCoach, scoreReply, buildPreface) for compatibility.
+ * - Implements deterministic per-turn coach, rubric scoring with rolling average, EI badges, hard-fail gates.
+ * - Correct dropdown relationships; Coach hidden in Product Knowledge; state resets; persistence.
+ * - No layout changes: finds existing controls by labels/headings.
  */
 
 (function(){
   "use strict";
 
-  // -------- Config --------
+  /* ---------- Legacy compatibility block (retained) ---------- */
+  // Safe boot helpers (kept but unused by new flow)
+  function onReady(fn){ if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn, { once:true }); else fn(); }
+  function fetchLocal(path){
+    return fetch(path, { cache:"no-store" }).then(async r=>{
+      if(!r.ok) throw new Error(`Failed to load ${path} (${r.status})`);
+      const ct = r.headers.get("content-type")||"";
+      return ct.includes("application/json") ? r.json() : r.text();
+    });
+  }
+  // Escapes (fixed from your raw)
+  function esc(s){ return String(s||"")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
+  function sanitizeLLM(raw){
+    let s = String(raw||"");
+    s = s.replace(/```[\s\S]*?```/g,"");
+    s = s.replace(/<[^>]+>/gi,"");              // strip tags
+    s = s.replace(/^\s*#{1,6}\s+/gm,"");
+    s = s.replace(/^\s*i['’]m\s+tony[^\n]*\n?/i,"");
+    s = s.replace(/^\s*(hi|hello|hey)[^\n]*\n+/i,"");
+    s = s.replace(/\n{3,}/g,"\n\n").trim();
+    return s;
+  }
+  function md(text){
+    if(!text) return "";
+    let s = esc(text).replace(/\r\n?/g,"\n");
+    s = s.replace(/\*\*([^*\n]+)\*\*/g,"$1");     // drop bold
+    s = s.replace(/`([^`]+)`/g,"`$1`");           // keep inline code
+    s = s.replace(/^(?:-\s+|\*\s+).+(?:\n(?:-\s+|\*\s+).+)*/gm,(blk)=>{
+      const items = blk.split("\n").map(l=>l.replace(/^(?:-\s+|\*\s+)(.+)$/,"<li>$1</li>")).join("");
+      return `<ul>${items}</ul>`;
+    });
+    return s.split(/\n{2,}/).map(p=>p.startsWith("<ul>")?p:`<p>${p.replace(/\n/g,"<br>")}</p>`).join("\n");
+  }
+  function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+  function extractCoach(raw){
+    const m = String(raw||"").match(/<coach>([\s\S]*?)<\/coach>/i);
+    if(!m) return { coach:null, clean:sanitizeLLM(raw) };
+    let coach=null; try{ coach=JSON.parse(m[1]); }catch{}
+    const clean = sanitizeLLM(String(raw).replace(m[0],"").trim());
+    return { coach, clean };
+  }
+  // Legacy heuristic scorer (kept for reference; not called by new flow)
+  function scoreReply(){ return { score: 70, subscores:{question_quality:2,objection_handling:2,empathy:2,compliance:2}, worked:[], improve:[], phrasing:"" }; }
+  // Legacy preface stub (not used)
+  function buildPreface(){ return ""; }
+  // Legacy DISEASE_STATES map (superseded by CATALOG but preserved)
+  const DISEASE_STATES = {
+    "HIV":{ productKnowledgeMode:"hiv-product-knowledge", hcpRoles:["Internal Medicine MD","Internal Medicine Doctor","Nurse Practitioner","Physician Assistant"] },
+    "Cancer":{ productKnowledgeMode:"oncology-product-knowledge", hcpRoles:["Medical Oncologist","Nurse Practitioner","Physician Assistant"] },
+    "Vaccines":{ productKnowledgeMode:"vaccines-product-knowledge", hcpRoles:["Infectious Disease Specialist","Nurse Practitioner","Physician Assistant"] },
+    "COVID":{ productKnowledgeMode:"covid-product-knowledge", hcpRoles:["Pulmonologist","Nurse Practitioner","Physician Assistant"] },
+    "Cardiovascular":{ productKnowledgeMode:"cardio-product-knowledge", hcpRoles:["Cardiologist","Nurse Practitioner","Physician Assistant"] }
+  };
+  /* ---------- End legacy compatibility block ---------- */
+
+  /* ---------- Config ---------- */
   const CFG = {
     workerUrl: "https://my-chat-agent.tonyabdelmalak.workers.dev/chat",
     model: "llama-3.1-8b-instant",
     temperature: 0.2,
     systemUrl: "assets/chat/system.md",
-    storeKey: "reflectivai:coach:v4"
+    storeKey: "reflectivai:coach:v4c"
   };
 
-  // -------- Catalog (Disease -> HCP/Scenario) --------
-  // Keep names matching your site content. Expand as needed.
+  /* ---------- Catalog (Disease → HCP/Scenario) ---------- */
   const CATALOG = {
     "HIV": [
       { id:"hiv_fp_prep", label:"Internal Medicine MD", brief:"Busy IM who initiates PrEP occasionally. Goal: confirm screening workflow, initiation criteria, and set coverage follow-up." },
@@ -53,10 +103,10 @@
     ]
   };
 
-  // Modes are fixed for clarity. Do NOT read legacy config modes.
-  const MODES = ["Product Knowledge","Sales Simulation"];
+  /* ---------- Fixed Modes ---------- */
+  const MODES = ["Product Knowledge","Sales Simulation"]; // do not read legacy config modes
 
-  // -------- Locate existing controls by headings/labels (preserves layout) --------
+  /* ---------- Locate existing controls (preserve layout) ---------- */
   const q = (sel) => document.querySelector(sel);
   function norm(s){ return String(s||"").trim().toLowerCase(); }
   function findSelectByHeading(text){
@@ -74,15 +124,15 @@
     hcp:     findSelectByHeading("hcp profile") || findSelectByHeading("hcp profiles / scenarios")
   };
 
-  // Message area + input + send button; create safe fallbacks if missing
+  // Message area + input + send button; fallbacks if missing
   const log    = q(".cw-messages") || q("#chat-log") || createFallbackLog();
   const input  = q(".chat-input textarea") || q("#message") || q("textarea") || createFallbackInput();
   const send   = q("button[type=submit]") || q(".chat-send") || createFallbackSend();
 
-  // Coach panel creation if not present
+  // Coach panel node
   const coachPanel = ensureCoachPanel();
 
-  // -------- State --------
+  /* ---------- State ---------- */
   let state = {
     systemPrimer: "",
     messages: [],
@@ -90,12 +140,11 @@
     scores: { turns: [], avg: 0 }
   };
 
-  // -------- Boot: hydrate controls, restore persisted values --------
+  /* ---------- Boot ---------- */
   hydrateModes();
   hydrateDiseases();
   hydrateHcps(get(ui.disease));
 
-  // Restore persisted
   try {
     const saved = JSON.parse(localStorage.getItem(CFG.storeKey) || "{}");
     if (saved.mode && MODES.includes(saved.mode)) set(ui.mode, saved.mode);
@@ -108,7 +157,7 @@
   syncCoachVisibility();
   renderBrief();
 
-  // -------- Events --------
+  /* ---------- Events ---------- */
   ui.mode?.addEventListener("change", () => { syncCoachVisibility(); persist(); resetContext(); });
   ui.coach?.addEventListener("change", () => { persist(); });
   ui.disease?.addEventListener("change", () => {
@@ -120,27 +169,25 @@
   send?.addEventListener("click", onSubmit);
   input?.form?.addEventListener("submit", (e)=>{ e.preventDefault(); onSubmit(); });
 
-  // -------- Helpers: get/set/selects --------
+  /* ---------- Helpers ---------- */
   function get(sel){ return sel?.value || ""; }
   function set(sel, val){ if (sel) sel.value = val; }
   function setOptions(selectEl, items, values){
-    // keep a disabled placeholder for clarity (does not alter layout structure)
     const html = items.map((lab,i)=>`<option value="${values?values[i]:lab}">${lab}</option>`).join("");
     selectEl.innerHTML = html;
   }
   function setCoachDropdown(on){
-    if (![...ui.coach.options].length) {
+    if (ui.coach && ![...ui.coach.options].length) {
       ui.coach.innerHTML = `<option value="on">Coach On</option><option value="off">Coach Off</option>`;
     }
-    ui.coach.value = on ? "on" : "off";
+    if (ui.coach) ui.coach.value = on ? "on" : "off";
   }
   function coachOn(){ return get(ui.mode) === "Sales Simulation" && get(ui.coach) !== "off"; }
 
-  // -------- Hydration --------
   function hydrateModes(){
     if (!ui.mode) return;
     setOptions(ui.mode, MODES);
-    if (!get(ui.mode)) set(ui.mode, "Sales Simulation"); // default to Sim as in screenshots
+    if (!get(ui.mode)) set(ui.mode, "Sales Simulation"); // default
   }
   function hydrateDiseases(){
     if (!ui.disease) return;
@@ -154,7 +201,16 @@
     if (list[0]) set(ui.hcp, list[0].id);
   }
 
-  // -------- Brief card under controls --------
+  function ensureBrief(){
+    let n = document.getElementById("scenario-brief");
+    if (!n){
+      n = document.createElement("section");
+      n.id = "scenario-brief";
+      n.className = "scenario-brief";
+      log.parentElement.insertBefore(n, log);
+    }
+    return n;
+  }
   function renderBrief(){
     const d = get(ui.disease);
     const it = (CATALOG[d]||[]).find(x=>x.id===get(ui.hcp));
@@ -169,18 +225,7 @@
         <p><strong>Today’s Goal:</strong> ${it.brief.includes("Goal:") ? it.brief.split("Goal:")[1].trim() : ""}</p>
       </div>`;
   }
-  function ensureBrief(){
-    let n = document.getElementById("scenario-brief");
-    if (!n){
-      n = document.createElement("section");
-      n.id = "scenario-brief";
-      n.className = "scenario-brief";
-      log.parentElement.insertBefore(n, log);
-    }
-    return n;
-  }
 
-  // -------- Coach panel / visibility --------
   function ensureCoachPanel(){
     let panel = document.getElementById("coach-panel");
     if (!panel){
@@ -204,7 +249,6 @@
     coachPanel.hidden = !show || !coachOn();
   }
 
-  // -------- Render chat rows --------
   function addRow(role, text){
     const row = document.createElement("div");
     row.className = "row " + role;
@@ -216,7 +260,6 @@
     log.scrollTop = log.scrollHeight;
   }
 
-  // -------- Persistence --------
   function persist(){
     try{
       localStorage.setItem(CFG.storeKey, JSON.stringify({
@@ -234,13 +277,10 @@
     const score = document.getElementById("coach-score"); if (score) score.textContent = "";
   }
 
-  // -------- LLM utilities --------
-  async function fetchText(url){
-    try{ const r = await fetch(url, {cache:"no-store"}); if(!r.ok) throw 0; return await r.text(); } catch { return ""; }
-  }
+  /* ---------- LLM utilities ---------- */
   async function ensureSystem(){
     if (state.systemPrimer) return state.systemPrimer;
-    const base = await fetchText(CFG.systemUrl);
+    const base = await fetchLocal(CFG.systemUrl).catch(()=> "");
     state.systemPrimer = (base || "You are a compliant pharma sales enablement assistant. Use on-label only. Refuse PHI.").trim();
     return state.systemPrimer;
   }
@@ -259,18 +299,19 @@
     } catch { return null; }
   }
 
-  // -------- Scoring --------
+  /* ---------- Scoring ---------- */
   // Weights: Accuracy×3, Compliance×3, Discovery×2, Objection×2, Value×2, Empathy×1, Clarity×1
   function scoreTurn(r){
     const w = { acc:3, comp:3, need:2, obj:2, val:2, emp:1, clr:1 };
-    const s = w.acc*r.accuracy + w.comp*r.compliance + w.need*r.discovery + w.obj*r.objection + w.val*r.value + w.emp*r.empathy + w.clr*r.clarity;
-    const turn = Math.round(((s / (5*(w.acc+w.comp+w.need+w.obj+w.val+w.emp+w.clr))) * 10) * 10) / 10; // 0.0–10.0
+    const sum = w.acc*r.accuracy + w.comp*r.compliance + w.need*r.discovery + w.obj*r.objection + w.val*r.value + w.emp*r.empathy + w.clr*r.clarity;
+    const max = 5*(w.acc+w.comp+w.need+w.obj+w.val+w.emp+w.clr); // 70
+    const turn = Math.round(((sum/max) * 10) * 10) / 10;          // 0.0–10.0
     state.scores.turns.push(turn);
     state.scores.avg = state.scores.turns.reduce((a,b)=>a+b,0)/state.scores.turns.length;
     return { turn, avg: state.scores.avg };
   }
 
-  // -------- Submit flow --------
+  /* ---------- Submit flow ---------- */
   async function onSubmit(){
     if (state.sending) return;
     const text = String(input.value || "").trim();
@@ -305,11 +346,9 @@
       if (isSim && coachOn()){
         const evalMsgs = buildEvalMessages(text, reply||"", disease, scenario);
         let obj = parseJSONLoose(await callLLM(evalMsgs));
-        // one retry if bad JSON
-        if (!obj) obj = parseJSONLoose(await callLLM(evalMsgs));
+        if (!obj) obj = parseJSONLoose(await callLLM(evalMsgs)); // retry once
 
         let html="", sc=null;
-
         if (obj && obj.rubric){
           const r = {
             accuracy:+obj.rubric.accuracy||0,
@@ -322,12 +361,10 @@
           };
           sc = scoreTurn(r);
 
-          // Hard-fail gates: if either is 0, prepend compliance alert
           const complianceAlert = (r.accuracy===0 || r.compliance===0)
             ? `<p class="coach-alert">Compliance/Accuracy risk detected — lead with on-label, fair-balance language.</p>`
             : "";
 
-          // EI badges
           const ei = obj.ei || {};
           const eiHtml = renderEi(ei);
 
@@ -349,7 +386,7 @@
     }
   }
 
-  // -------- Evaluator prompt --------
+  /* ---------- Evaluator prompt ---------- */
   function buildEvalMessages(userUtterance, assistantReply, disease, scenario){
     const system = [
       "You are a strict coaching evaluator for compliant pharma sales role-plays.",
@@ -375,7 +412,7 @@
     return [{ role:"system", content: system }, { role:"user", content: user }];
   }
 
-  // -------- Coach render --------
+  /* ---------- Coach render ---------- */
   function setCoach(html, score){
     const body = document.getElementById("coach-body");
     const scoreEl = document.getElementById("coach-score");
@@ -391,24 +428,9 @@
     return `<div class="ei-badges"><span class="badge">Empathy ${emp}/5</span><span class="chip ${tone}">${tone}</span>${quote}</div>`;
   }
 
-  // -------- Fallback elements (only used if page lacks them) --------
-  function createFallbackLog(){
-    const s = document.createElement("section");
-    s.className = "cw-messages";
-    document.body.appendChild(s);
-    return s;
-  }
-  function createFallbackInput(){
-    const t = document.createElement("textarea");
-    t.placeholder = "Type your message…";
-    document.body.appendChild(t);
-    return t;
-  }
-  function createFallbackSend(){
-    const b = document.createElement("button");
-    b.type = "button"; b.textContent = "Send";
-    document.body.appendChild(b);
-    return b;
-  }
+  /* ---------- Fallback DOM if page lacks elements ---------- */
+  function createFallbackLog(){ const s=document.createElement("section"); s.className="cw-messages"; document.body.appendChild(s); return s; }
+  function createFallbackInput(){ const t=document.createElement("textarea"); t.placeholder="Type your message…"; document.body.appendChild(t); return t; }
+  function createFallbackSend(){ const b=document.createElement("button"); b.type="button"; b.textContent="Send"; document.body.appendChild(b); return b; }
+
 })();
-</script>
