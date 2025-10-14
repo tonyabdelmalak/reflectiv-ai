@@ -93,14 +93,11 @@
   }
 
   function scoreReply(userText, replyText, mode) {
-    // Simplified deterministic scoring compatible with instructions and example
     const t = (replyText || "").toLowerCase();
     const words = (replyText || "").split(/\s+/).filter(Boolean).length;
     const endsWithQuestion = /\?\s*$/.test(replyText || "");
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-    // Example scoring weights: accuracy (3), compliance (3), discovery (2), objection (2), value (2), empathy (1), clarity (1)
-    // For brevity, using simplified cues for empathy & compliance flags
     const containsComplianceRisk = /off-label|superior|best/i.test(t);
     const accuracyRisk = /inaccurate|false/i.test(t);
 
@@ -133,7 +130,6 @@
     };
   }
 
-  // System prompt builder
   function buildPreface(mode, sc) {
     const COMMON = `
 # ReflectivAI — Output Contract
@@ -179,28 +175,15 @@ ${COMMON}`.trim();
     return COMMON;
   }
 
-  // UI Builders and Rendering
   function buildUI() {
     mount.innerHTML = "";
     if (!mount.classList.contains("cw")) mount.classList.add("cw");
 
-    // Inject Stylesheet Scoped for Widget
-    const styleId = "reflectiv-widget-style";
-    let styleEl = document.getElementById(styleId);
-    if (!styleEl) {
-      styleEl = document.createElement("style");
-      styleEl.id = styleId;
-      styleEl.textContent = `/* ... Styles omitted here: use widget.css as linked above ... */`;
-      document.head.appendChild(styleEl);
-    }
-
     const shell = el("div", "reflectiv-chat");
 
-    // Toolbar
     const toolbar = el("div", "chat-toolbar");
     const simControls = el("div", "sim-controls");
 
-    // Mode Dropdown
     const lcLabel = el("label", "", "Learning Center");
     lcLabel.htmlFor = "cw-mode";
     const modeSel = el("select", "select");
@@ -233,7 +216,6 @@ ${COMMON}`.trim();
       saveState();
     };
 
-    // Coach toggle dropdown
     const coachLabel = el("label", "", "Coach");
     coachLabel.htmlFor = "cw-coach";
 
@@ -254,7 +236,6 @@ ${COMMON}`.trim();
       saveState();
     };
 
-    // Disease select
     const diseaseLabel = el("label", "", "Disease / Product Knowledge");
     diseaseLabel.htmlFor = "cw-disease";
     const diseaseSelect = el("select", "select");
@@ -285,7 +266,6 @@ ${COMMON}`.trim();
     diseaseSelect.appendChild(diseaseOg1);
     diseaseSelect.appendChild(diseaseOg2);
 
-    // HCP select
     const hcpLabel = el("label", "", "HCP Profile");
     hcpLabel.htmlFor = "cw-hcp";
     const hcpSelect = el("select", "select");
@@ -309,15 +289,12 @@ ${COMMON}`.trim();
     toolbar.appendChild(simControls);
     shell.appendChild(toolbar);
 
-    // Meta info
     const meta = el("div", "scenario-meta");
     shell.appendChild(meta);
 
-    // Messages
     const msgs = el("div", "chat-messages");
     shell.appendChild(msgs);
 
-    // Input area
     const inputArea = el("div", "chat-input");
     const textarea = el("textarea");
     textarea.placeholder = "Type your message…";
@@ -341,14 +318,12 @@ ${COMMON}`.trim();
     inputArea.appendChild(sendBtn);
     shell.appendChild(inputArea);
 
-    // Coach feedback panel
     const coachPanel = el("div", "coach-section");
     coachPanel.innerHTML = `<h3>Coach Feedback</h3><div class="coach-body muted">Awaiting the first assistant reply…</div>`;
     shell.appendChild(coachPanel);
 
     mount.appendChild(shell);
 
-    // Helper for populating HCP select on disease change
     function populateHcpForDisease(ds) {
       hcpSelect.innerHTML = "";
       const def = el("option", "", "Select HCP...");
@@ -365,7 +340,6 @@ ${COMMON}`.trim();
       hcpSelect.disabled = roles.length === 0;
     }
 
-    // Control event listeners
     diseaseSelect.addEventListener("change", () => {
       const val = diseaseSelect.value;
       if (!val) return;
@@ -457,7 +431,7 @@ ${COMMON}`.trim();
           <li><strong>What to improve:</strong> ${esc((fb.improve || []).join(" ") || "—")}</li>
           <li><strong>Suggested phrasing:</strong> ${esc(fb.phrasing || "—")}</li>
         </ul>`;
-      // Append EI badges below feedback
+
       if (fb.ei) {
         const eiHtml = document.createElement("div");
         eiHtml.className = "ei-badges";
@@ -582,8 +556,8 @@ ${COMMON}`.trim();
       const state = JSON.parse(saved);
       if (state.mode && cfg?.modes.includes(state.mode)) currentMode = state.mode;
       if (state.coachOn !== undefined) coachOn = state.coachOn;
-      if (state.disease) diseaseSelect.value = state.disease;
-      if (state.hcp) hcpSelect.value = state.hcp;
+      if (state.disease) document.getElementById("cw-disease").value = state.disease;
+      if (state.hcp) document.getElementById("cw-hcp").value = state.hcp;
       renderMessages();
       renderCoach();
       renderMeta();
