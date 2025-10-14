@@ -1,204 +1,302 @@
-/* widget.js v4c4 — baked-in fallback + floating launcher + never-disappear */
+/* widget.js — ReflectivAI chat/coach (drop-in, self-contained)
+ * - Scopes all DOM to #reflectiv-widget.cw
+ * - Loads config.json and scenarios.merged.json
+ * - Chat via config.apiBase
+ * - Coach panel toggles in-flow below composer
+ * - Prevents page scroll and wrong focus when toggling coach
+ */
+
 (function () {
-  function onReady(fn){ if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",fn,{once:true}); else fn(); }
-  onReady(init);
+  // ---------- safe bootstrapping ----------
+  let mount = null;
+  function onReady(fn){
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn, { once:true });
+    else fn();
+  }
+  function waitForMount(cb){
+    const tryGet = () => {
+      mount = document.getElementById("reflectiv-widget");
+      if (mount) return cb();
+      const obs = new MutationObserver(() => {
+        mount = document.getElementById("reflectiv-widget");
+        if (mount) { obs.disconnect(); cb(); }
+      });
+      obs.observe(document.documentElement, { childList:true, subtree:true });
+      setTimeout(() => obs.disconnect(), 15000);
+    };
+    onReady(tryGet);
+  }
 
-  function init(){
-    const banner = mkBanner();
-    status("booting…");
+  // ---------- helpers scoped to widget ----------
+  let cfg = null;
+  let scenarios = [];
+  const qs  = sel => mount.querySelector(sel);
+  const qsa = sel => mount.querySelectorAll(sel);
 
-    try{
-      // ---- constants ----
-      const STORE_KEY="reflectivai:coach:v4c";
-      const DEFAULT_MODE="sales-simulation";
-      const MODEL_NAME="llama-3.1-8b-instant";
-      const TEMP=0.2;
-      const COACH_VALUES=["Coach On","Coach Off"];
-      const CATALOG={
-        "HIV":[{id:"im_md",label:"Internal Medicine MD",brief:"Primary care physician managing prevention and chronic care. Goal: assess PrEP suitability and adherence support."},{id:"np",label:"Nurse Practitioner",brief:"NP balances prevention counseling with workflow realities. Goal: clarify risk screening and follow-up cadence."},{id:"pa",label:"Physician Assistant",brief:"PA focuses on practical initiation steps. Goal: reduce process friction for starts and refills."},{id:"id",label:"Infectious Disease Specialist",brief:"Specialist prioritizes risk stratification and resistance. Goal: remain on-label, cite guideline data."}],
-        "Cancer":[{id:"onco",label:"Oncologist",brief:"Treats tumors. Goal: concise on-label efficacy with fair balance."},{id:"np_onc",label:"Nurse Practitioner",brief:"Coordinates AE management. Goal: practical monitoring per label."},{id:"pa_onc",label:"Physician Assistant",brief:"Executes protocols/logistics. Goal: clarify prior-auth and infusion flow."}],
-        "Vaccines":[{id:"im_doc",label:"Internal Medicine Doctor",brief:"Adult immunization catch-up. Goal: eligibility, timing, co-admin clarity."},{id:"np_vax",label:"Nurse Practitioner",brief:"Hesitancy and access. Goal: ACIP-aligned risk/benefit."},{id:"pa_vax",label:"Physician Assistant",brief:"Screening and contraindications. Goal: green-light criteria."}],
-        "COVID":[{id:"pulm",label:"Pulmonologist",brief:"Respiratory impacts. Goal: on-label data for indicated groups."},{id:"pa_covid",label:"Physician Assistant",brief:"Testing and triage. Goal: eligibility decision clarity."},{id:"np_covid",label:"Nurse Practitioner",brief:"Counseling and follow-up. Goal: AE guidance per label."}],
-        "Cardiovascular":[{id:"np_cv",label:"Nurse Practitioner",brief:"Risk factors and titration. Goal: guideline-framed benefit-risk."},{id:"im_cv",label:"Internal Medicine MD",brief:"Comorbidities and polypharmacy. Goal: indication fit and DDI awareness."}]
-      };
+  function focusMsg() {
+    const el = qs('textarea.cw-input, textarea[data-role="cw-input"]');
+    if (el) el.focus({ preventScroll:true });
+  }
 
-      // ---- config with baked-in fallback ----
-      let CFG={ apiBase:"https://my-chat-agent.tonyabdelmalak.workers.dev/chat", workerEndpoint:"", model:MODEL_NAME, stream:false };
-      (async()=>{
-        try{
-          const r=await fetch("./config.json",{cache:"no-store"});
-          if(r.ok){ const j=await r.json(); CFG={...CFG,...j, apiBase:j.apiBase||j.workerEndpoint||j.workerUrl||CFG.apiBase}; status("config loaded", true); }
-          else status("config 404, using baked-in", false);
-        }catch{ status("config load failed, using baked-in", false); }
-      })();
+  function el(tag, attrs={}, children=[]) {
+    const n = document.createElement(tag);
+    for (const [k,v] of Object.entries(attrs)) {
+      if (k === "class") n.className = v;
+      else if (k === "dataset") Object.entries(v).forEach(([dk,dv]) => n.dataset[dk]=dv);
+      else if (k.startsWith("on") && typeof v === "function") n.addEventListener(k.slice(2), v);
+      else if (v !== null && v !== undefined) n.setAttribute(k, v);
+    }
+    (Array.isArray(children)?children:[children]).forEach(c => {
+      if (c == null) return;
+      n.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+    });
+    return n;
+  }
 
-      // ---- utils ----
-      const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
-      const escAttr=s=>esc(s).replace(/"/g,"&quot;");
-      const linkify=t=>String(t).replace(/(https?:\/\/[^\s)]+|www\.[^\s)]+)/g,m=>`<a href="${m.startsWith('http')?m:'https://'+m}" target="_blank" rel="noopener">${m}</a>`);
-      const looseJson=t=>{try{return JSON.parse(t);}catch{} const i=t.indexOf("{"),j=t.lastIndexOf("}"); if(i>=0&&j>i){try{return JSON.parse(t.slice(i,j+1));}catch{}} return null;};
-      const sanitize=s=>{ const d=document.createElement("div"); d.innerHTML=s||""; d.querySelectorAll("script,style,iframe,object").forEach(n=>n.remove()); d.querySelectorAll("*").forEach(el=>{[...el.attributes].forEach(a=>{if(a.name.startsWith("on")) el.removeAttribute(a.name);});}); return d.innerHTML; };
-      const num=x=>Math.max(0,Math.min(5,Number(x)||0)).toFixed(1).replace(/\.0$/,"");
-      const byLabel=pfx=>{const all=[...document.querySelectorAll("label, h2, h3, h4, p, span, strong")]; const n=all.find(el=>pfx.some(p=>(el.textContent||"").trim().toLowerCase().startsWith(p))); if(!n) return null; if(n.tagName==="LABEL"){const id=n.getAttribute("for"); if(id){const t=document.getElementById(id); if(t&&t.tagName==="SELECT") return t;} const s=n.parentElement&&n.parentElement.querySelector&&n.parentElement.querySelector("select"); if(s) return s;} const scope=n.closest("section, form, .container, .field, .row")||document; return scope.querySelector("select");};
-      const setOptions=(sel,items)=>{ if(!sel) return; const v=sel.value; sel.innerHTML=items.map(o=>`<option value="${escAttr(o.v)}">${esc(o.t)}</option>`).join(""); if(items.some(o=>o.v===v)) sel.value=v; };
+  async function fetchJSON(path){
+    const r = await fetch(path, { cache:"no-store" });
+    if (!r.ok) throw new Error(`Failed to load ${path} (${r.status})`);
+    return r.json();
+  }
 
-      // ---- shell + launcher ----
-      const messagesEl = ensureShell(); // appends at body end if absent
-      const launcher = ensureLauncher(); // fixed button to jump to shell
+  // ---------- UI render ----------
+  function renderShell() {
+    mount.classList.add("cw");
+    mount.innerHTML = "";
 
-      function ensureShell(){
-        let box=document.querySelector(".cw-messages")||document.getElementById("chat-log");
-        if(box) return box;
-        const sec=document.createElement("section");
-        sec.className="cw-fallback";
-        sec.id="cw-fallback";
-        sec.innerHTML=`<div class="scenario-brief"></div><div class="cw-messages" role="log" aria-live="polite"></div><div class="coach-panel" data-hidden="true"><div class="coach-head"><strong>Coach</strong><div class="ei-badges"></div></div><div class="coach-body"></div><div class="coach-score"></div></div>`;
-        document.body.appendChild(sec);
-        return sec.querySelector(".cw-messages");
-      }
-      function ensureLauncher(){
-        let b=document.getElementById("cw-launch");
-        if(b) return b;
-        b=document.createElement("button");
-        b.id="cw-launch";
-        b.type="button";
-        b.textContent="Open Coach";
-        b.addEventListener("click", ()=>{
-          const host=document.getElementById("cw-fallback")||messagesEl?.parentElement;
-          if(host){ host.style.display="block"; host.scrollIntoView({behavior:"smooth",block:"end"}); }
-          const ta=document.querySelector(".chat-input textarea")||document.getElementById("message")||document.querySelector("textarea");
-          if(ta) ta.focus();
-        });
-        document.body.appendChild(b);
-        return b;
-      }
+    const shell = el("div", { class:"cw-shell" });
 
-      // ---- IO ----
-      const {ta:inputEl, btn:sendBtn} = getIO();
-      function getIO(){
-        const ta=document.querySelector(".chat-input textarea")||document.getElementById("message")||document.querySelector("textarea")||createInput();
-        let btn=document.querySelector('button[type="submit"]')||document.querySelector(".chat-send")||createBtn(ta);
-        return {ta,btn};
-      }
-      function createInput(){ const ta=document.createElement("textarea"); ta.placeholder="Type here…"; ta.style.cssText="width:100%;min-height:44px;margin-top:8px;"; const a=document.querySelector(".cw-messages"); (a?a.parentElement:document.body).appendChild(ta); return ta; }
-      function createBtn(ta){ const b=document.createElement("button"); b.type="button"; b.className="chat-send"; b.textContent="Send"; b.style.cssText="min-height:44px;margin-top:6px;"; (ta&&ta.parentElement?ta.parentElement:document.body).appendChild(b); return b; }
-      function coachPanel(){ let p=document.querySelector(".coach-panel"); if(p) return p; p=document.createElement("div"); p.className="coach-panel"; p.setAttribute("data-hidden","true"); p.innerHTML=`<div class="coach-head"><strong>Coach</strong><div class="ei-badges"></div></div><div class="coach-body"></div><div class="coach-score"></div>`; const a=document.querySelector(".cw-messages"); (a?a.parentElement:document.body).appendChild(p); return p; }
+    const controls = el("div", { class:"cw-controls" }, [
+      el("select", { class:"cw-select", id:"dsSelect", "aria-label":"Disease State" }, []),
+      el("select", { class:"cw-select", id:"modeSelect", "aria-label":"Mode" }, []),
+      el("select", { class:"cw-select", id:"profileSelect", "aria-label":"HCP Profile" }, [])
+    ]);
 
-      // ---- state ----
-      const persisted=(()=>{try{return JSON.parse(localStorage.getItem(STORE_KEY)||"{}");}catch{return {};}})();
-      let mode=persisted.mode||DEFAULT_MODE;
-      let coachOn=persisted.coachOn!==undefined?persisted.coachOn:true;
-      let disease=persisted.disease||"HIV";
-      let hcpId=persisted.hcp||(CATALOG[disease]?CATALOG[disease][0].id:"");
-      let conversation=[]; let scores={turns:[],avg:0};
-      const persist=()=>{try{localStorage.setItem(STORE_KEY,JSON.stringify({mode,coachOn,disease,hcp:hcpId}));}catch{}};
+    const transcript = el("div", { class:"cw-transcript", id:"transcript" });
 
-      // ---- controls ----
-      const modeSel=byLabel(["learning center","mode"]);
-      const coachSel=byLabel(["coach"]);
-      const diseaseSel=byLabel(["disease / product knowledge","disease state","disease"]);
-      const hcpSel=byLabel(["hcp profile","hcp profiles / scenarios"]);
+    const composer = el("div", { class:"cw-composer" }, [
+      el("textarea", { class:"cw-input", id:"msgInput", placeholder:"Type your message…" }),
+      el("button", { class:"cw-send", id:"sendBtn", type:"button" }, "Send")
+    ]);
 
-      if(modeSel){ setOptions(modeSel,[{v:"sales-simulation",t:"Sales Simulation"},{v:"product-knowledge",t:"Product Knowledge"}]); modeSel.value=mode; modeSel.addEventListener("change",()=>{mode=modeSel.value; persist(); vis(); reset(true); brief();}); }
-      if(coachSel){ setOptions(coachSel, COACH_VALUES.map(v=>({v,t:v}))); coachSel.value=coachOn?"Coach On":"Coach Off"; coachSel.addEventListener("change",()=>{coachOn=coachSel.value==="Coach On"; persist(); reset(); vis();}); }
-      if(diseaseSel){ setOptions(diseaseSel,Object.keys(CATALOG).map(k=>({v:k,t:k}))); diseaseSel.value=disease; diseaseSel.addEventListener("change",()=>{disease=diseaseSel.value; reHCP(); persist(); reset(false); brief();}); }
-      function reHCP(){ if(!hcpSel) return; const list=CATALOG[disease]||[]; setOptions(hcpSel,list.map(i=>({v:i.id,t:i.label}))); if(!list.some(x=>x.id===hcpId)) hcpId=list[0]?list[0].id:""; hcpSel.value=hcpId; }
-      if(hcpSel){ reHCP(); hcpSel.addEventListener("change",()=>{hcpId=hcpSel.value; persist(); reset(false); brief();}); }
+    const toggleRow = el("div", { class:"cw-toggle-row" }, [
+      el("button", { "data-coach-toggle":"", "aria-expanded":"false", type:"button" }, "Open Coach")
+    ]);
 
-      function vis(){ const panel=coachPanel(); const hide=mode!=="sales-simulation"; if(coachSel&&coachSel.parentElement) coachSel.parentElement.style.display=hide?"none":""; panel.setAttribute("data-hidden", hide||!coachOn ? "true":"false"); }
-      function reset(keepBrief=true){ conversation=[]; scores={turns:[],avg:0}; const p=coachPanel(); const b=p.querySelector(".coach-body"); const bd=p.querySelector(".ei-badges"); const s=p.querySelector(".coach-score"); if(b) b.innerHTML=""; if(bd) bd.innerHTML=""; if(s) s.textContent=""; if(!keepBrief){ const sb=document.querySelector(".scenario-brief"); if(sb) sb.innerHTML=""; } }
-      function curBrief(){ const list=CATALOG[disease]||[]; const f=list.find(x=>x.id===hcpId)||list[0]; return f?f.brief:""; }
-      function brief(){ const host=document.querySelector(".scenario-brief"); if(!host) return; const list=CATALOG[disease]||[]; const f=list.find(x=>x.id===hcpId); host.innerHTML=`<div class="card"><div class="row"><div class="col"><strong>${esc(disease)}</strong> · <span>${esc(f?f.label:"HCP")}</span></div></div><p>${esc(f?f.brief:"")}</p></div>`; }
-      brief(); vis();
+    const coachPanel = el("div", { class:"coach-panel", id:"coachPanel" }, [
+      el("div", { class:"coach-title" }, "Coach"),
+      el("div", { class:"coach-tip", id:"coachTip" }, "Coach is listening for tone. Tips will appear after your next message."),
+      el("div", { class:"coach-muted" }, "Feedback is scenario-aware.")
+    ]);
 
-      // ---- chat ----
-      function bubble(role,text){ const r=document.createElement("div"); r.className="row"; const b=document.createElement("div"); b.className="bubble "+(role==="user"?"user":"assistant"); b.innerHTML=linkify(esc(text)); r.appendChild(b); messagesEl.appendChild(r); messagesEl.scrollTop=messagesEl.scrollHeight; }
-      function typing(){ const r=document.createElement("div"); r.className="row"; r.innerHTML=`<div class="bubble assistant"><span class="dots"><i></i><i></i><i></i></span></div>`; messagesEl.appendChild(r); messagesEl.scrollTop=messagesEl.scrollHeight; return r; }
+    shell.appendChild(controls);
+    shell.appendChild(transcript);
+    shell.appendChild(composer);
+    shell.appendChild(toggleRow);
+    shell.appendChild(coachPanel);
+    mount.appendChild(shell);
+  }
 
-      sendBtn && sendBtn.addEventListener("click", onSend);
-      inputEl && inputEl.addEventListener("keydown", e=>{ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); onSend(); } });
+  // ---------- options + state ----------
+  let current = {
+    disease: "",
+    mode: "sales-simulation",
+    profile: "",
+    conversation: []
+  };
 
-      async function onSend(){
-        const txt=(inputEl&&inputEl.value||"").trim(); if(!txt) return;
-        bubble("user",txt); if(inputEl) inputEl.value="";
-        conversation.push({role:"user",content:txt});
+  function populateControls() {
+    const ds = qs("#dsSelect");
+    const mode = qs("#modeSelect");
+    const prof = qs("#profileSelect");
 
-        const sys=await sysPrimer();
-        const pre = mode==="sales-simulation"
-          ? `You are role-playing as an HCP in ${disease}. Use only on-label language. Keep replies concise. Scenario: ${curBrief()}`
-          : `You are answering Product Knowledge questions in ${disease}. Use only on-label language. Provide concise, source-named support when relevant.`;
-        const msgs=[{role:"system",content:sys},{role:"system",content:pre},...conversation];
+    // Disease states from scenarios list
+    const diseaseList = Array.from(new Set(scenarios.map(s => s.disease || s.therapy || s.area || "General")));
+    ds.innerHTML = "";
+    ds.appendChild(el("option", { value:"", disabled:"", selected:"" }, "Disease State"));
+    diseaseList.forEach(name => ds.appendChild(el("option", { value:name }, name.toUpperCase()==="HIV"?"HIV":name)));
 
-        const t=typing();
-        let a="Upstream error. Try again.";
-        try{ a=await chatCall(msgs); }catch{}
-        t.remove();
-        bubble("assistant", a);
-        conversation.push({role:"assistant",content:a});
-        if(mode==="sales-simulation" && coachOn){ await coachRun(txt); }
-      }
+    // Modes from config
+    mode.innerHTML = "";
+    const modes = cfg?.modes?.length ? cfg.modes : ["sales-simulation","product-knowledge","emotional-assessment"];
+    modes.forEach(m => {
+      const label = m.replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase());
+      mode.appendChild(el("option", { value:m, selected: m===cfg?.defaultMode }, label));
+    });
 
-      async function coachRun(latest){
-        const p=coachPanel(); const body=p.querySelector(".coach-body"); const badges=p.querySelector(".ei-badges"); const scoreEl=p.querySelector(".coach-score"); p.setAttribute("data-hidden","false");
-        const sys=`You are a strict coaching evaluator for compliant pharma sales role-plays.
-Score ONLY the user's latest message relative to the active scenario.
-Rubric 0–5: accuracy, compliance, discovery, objection, value, empathy, clarity.
-If any compliance or accuracy risk exists, set that dimension to 0.
-Return pure JSON (no preface):
-{
-  "feedback_html": "<p>...</p>",
-  "rubric": {"accuracy":0-5,"compliance":0-5,"discovery":0-5,"objection":0-5,"value":0-5,"empathy":0-5,"clarity":0-5},
-  "ei": {"empathy_score":0-5,"tone_label":"supportive|neutral|transactional","evidence_quote":"4–18 word excerpt"}
-}
-feedback_html must include sections Tone, What worked, Tighten, Suggested rewrite, tailored to THIS message and scenario.`;
-        const ctx=`Disease: ${disease}. HCP: ${(CATALOG[disease]||[]).find(x=>x.id===hcpId)?.label||"HCP"}.
-Brief: ${curBrief()}
-User message: """${latest}"""`;
-        const evalMsgs=[{role:"system",content:sys},{role:"user",content:ctx}];
+    // Profiles depend on disease
+    prof.innerHTML = "";
+    prof.appendChild(el("option", { value:"", disabled:"", selected:"" }, "HCP Profile"));
+  }
 
-        let out=null; try{ const raw=await chatCall(evalMsgs); out=looseJson(raw); if(!out){ const raw2=await chatCall(evalMsgs); out=looseJson(raw2); } }catch{}
-        if(!out||!out.rubric||!out.ei){ body.innerHTML=`<div class="coach-card"><p>Coach unavailable. Neutral fallback:</p><ul><li>Lead with on-label, fair balance.</li><li>Ask one clarifier.</li><li>Agree next step.</li></ul></div>`; badges.innerHTML=""; scoreEl.textContent=""; return; }
+  function refreshProfiles() {
+    const prof = qs("#profileSelect");
+    const chosen = current.disease;
+    const list = scenarios.filter(s => (s.disease||s.therapy||s.area||"General") === chosen);
+    const unique = new Map();
+    list.forEach(s => {
+      const label = s.profile || s.hcpTitle || s.title || "Generalist";
+      if (!unique.has(label)) unique.set(label, s.id || label);
+    });
+    prof.innerHTML = "";
+    prof.appendChild(el("option", { value:"", disabled:"", selected:"" }, "HCP Profile"));
+    unique.forEach((id,label) => prof.appendChild(el("option", { value:id }, label)));
+  }
 
-        const fail=(out.rubric.accuracy===0||out.rubric.compliance===0);
-        const W={accuracy:3,compliance:3,discovery:2,objection:2,value:2,empathy:1,clarity:1};
-        const sum=Object.entries(out.rubric).reduce((a,[k,v])=>a+(v*(W[k]||0)),0);
-        const turn=Math.round(((sum/70)*10)*10)/10; scores.turns.push(turn);
-        const avg=Math.round((scores.turns.reduce((a,b)=>a+b,0)/scores.turns.length)*10)/10; scores.avg=isFinite(avg)?avg:0;
+  // ---------- transcript ----------
+  function addMsg(role, text){
+    const row = el("div", { class:`msg ${role}` }, [
+      el("div", { class:"bubble" }, text)
+    ]);
+    qs("#transcript").appendChild(row);
+    qs("#transcript").scrollTop = qs("#transcript").scrollHeight;
+  }
 
-        const alert= fail ? `<div class="coach-alert">Compliance/Accuracy risk detected — lead with on-label, fair-balance language.</div>` : "";
-        body.innerHTML=`<div class="coach-card">${alert}${sanitize(out.feedback_html)}</div>`;
-        badges.innerHTML=`<span class="chip tone-${esc(out.ei.tone_label||'neutral')}">${(out.ei.tone_label||'neutral').replace(/^\w/,c=>c.toUpperCase())}</span><span class="chip emp">Empathy ${num(out.ei.empathy_score)}/5</span><span class="snippet">“${esc(out.ei.evidence_quote||"") }”</span>`;
-        scoreEl.textContent=`Score — Turn: ${turn.toFixed(1)} | Avg: ${scores.avg.toFixed(1)}`;
-      }
+  // ---------- coach ----------
+  function wireCoachToggle(){
+    qsa('[data-coach-toggle]').forEach(elm => {
+      elm.setAttribute('role','button');
+      elm.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        const panel = qs('.coach-panel');
+        if (!panel) return;
+        const open = panel.classList.toggle('is-open');
+        elm.setAttribute('aria-expanded', String(open));
+        focusMsg();
+      });
+    });
+  }
 
-      async function chatCall(messages){
-        const url = CFG.apiBase || CFG.workerEndpoint;
-        if(!url){ status("no API endpoint", false); return "Upstream error. Try again."; }
-        const res = await fetch(url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({model:CFG.model||MODEL_NAME,temperature:TEMP,messages})});
-        if(!res.ok){ status(`upstream ${res.status}`, false); return "Upstream error. Try again."; }
-        const data=await res.json().catch(()=>null);
-        const content=data?.content || data?.choices?.[0]?.message?.content || data?.output_text || "";
-        if(!content){ status("empty upstream", false); return "Upstream error. Try again."; }
-        status("ready", true);
-        setTimeout(()=>{const s=document.getElementById("cw-selfcheck"); if(s && s.textContent.includes("ready")) s.remove();},1500);
-        return String(content);
-      }
+  function coachFeedback(userText, aiText){
+    // Lightweight heuristic tuned for sales-sim and PK
+    const tips = [];
+    const t = userText.toLowerCase();
 
-      async function sysPrimer(){
-        try{ const r=await fetch("assets/chat/system.md",{cache:"no-store"}); if(r.ok) return await r.text(); }catch{}
-        return "You are a compliant, on-label pharma conversational agent. Avoid PHI. Provide concise, balanced information.";
-      }
-
-      // seed coach text
-      (function seed(){ const p=coachPanel(); const b=p.querySelector(".coach-body"); if(b&&!b.innerHTML){ b.innerHTML=`<div class="coach-card muted"><p><strong>Coach is listening for tone.</strong> Tips will appear after your next message.</p></div>`; } })();
-
-    }catch(e){
-      status("fatal boot error", false); console.error(e);
-      try{ const s=document.createElement("section"); s.className="cw-fallback"; s.innerHTML=`<div class="cw-messages"><div class="row"><div class="bubble assistant">Widget boot error. Check console.</div></div></div>`; document.body.appendChild(s);}catch{}
+    // compliance
+    if (/\b(cure|guarantee|100%|no side effects)\b/.test(t)) {
+      tips.push("Avoid absolute claims. Reframe to evidence levels and labeled indications.");
+    }
+    // tone
+    if (/(you should|you need to|must)/.test(t)) {
+      tips.push("Use collaborative language. Ask permission and offer options.");
+    }
+    // HIV PrEP specific
+    if ((current.disease||"").toUpperCase()==="HIV" && !/\b(adherence|creatinine|sti|risk|prep|screen)\b/.test(t)) {
+      tips.push("Mention adherence support, baseline labs, and risk counseling for PrEP.");
+    }
+    // objection handling
+    if (/cost|price|expensive|coverage/.test(t)) {
+      tips.push("Surface access resources and payer support. Offer benefits investigation.");
+    }
+    // empathy marker
+    if (!/sorry|understand|appreciate|thanks|thank you/.test(t)) {
+      tips.push("Acknowledge the HCP's perspective briefly before offering information.");
     }
 
-    // --- helpers: banner ---
-    function mkBanner(){ const d=document.createElement("div"); d.id="cw-selfcheck"; d.style.cssText="position:fixed;bottom:8px;right:8px;z-index:2147483647;background:#111;color:#fff;padding:6px 8px;border-radius:8px;font:12px system-ui;opacity:.92"; document.body.appendChild(d); return d; }
-    function status(t, ok){ const b=document.getElementById("cw-selfcheck"); if(!b) return; b.textContent=`Widget: ${t}`; b.style.background= ok===undefined ? "#111" : ok ? "#0a4" : "#b32"; }
+    if (!tips.length) tips.push("Good structure. Keep questions open-ended and reference labeled data when comparing.");
+
+    qs("#coachTip").textContent = "• " + tips.join(" • ");
   }
+
+  // ---------- chat ----------
+  async function sendToModel(prompt){
+    const api = cfg?.apiBase || cfg?.workerUrl;
+    if (!api) return "API endpoint missing in config.json.";
+    try{
+      const body = {
+        model: cfg?.model || "llama-3.1-8b-instant",
+        stream: false,
+        messages: [
+          { role:"system", content:`Mode=${current.mode}; Disease=${current.disease}; Profile=${current.profile || "General"}; Respond concisely.` },
+          ...current.conversation,
+          { role:"user", content: prompt }
+        ]
+      };
+      const r = await fetch(api, { method:"POST", headers:{ "content-type":"application/json" }, body: JSON.stringify(body) });
+      if (!r.ok) return `Upstream error ${r.status}`;
+      const data = await r.json();
+      const content = data?.choices?.[0]?.message?.content ?? data?.content ?? "(no content)";
+      return content;
+    } catch(err){
+      return String(err.message || err);
+    }
+  }
+
+  function wireSend(){
+    const btn = qs("#sendBtn");
+    const ta  = qs("#msgInput");
+    const coachPanel = qs("#coachPanel");
+
+    async function actSend(){
+      const val = ta.value.trim();
+      if (!val) return;
+      addMsg("user", val);
+      current.conversation.push({ role:"user", content: val });
+      ta.value = "";
+      btn.disabled = true;
+
+      const reply = await sendToModel(val);
+      addMsg("ai", reply);
+      current.conversation.push({ role:"assistant", content: reply });
+
+      // coach updates in place but does not overlay input
+      coachFeedback(val, reply);
+      coachPanel.classList.add("is-open");
+      qsa('[data-coach-toggle]').forEach(t => t.setAttribute('aria-expanded','true'));
+
+      btn.disabled = false;
+      focusMsg();
+    }
+
+    btn.addEventListener("click", actSend);
+    ta.addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        actSend();
+      }
+    });
+  }
+
+  // ---------- wiring ----------
+  async function init(){
+    renderShell();
+
+    // load config + scenarios
+    try{
+      cfg = await fetchJSON("./config.json");
+    } catch{ cfg = { modes:["sales-simulation","product-knowledge","emotional-assessment"], defaultMode:"sales-simulation" }; }
+
+    try{
+      const url = cfg?.scenariosUrl || "./assets/chat/data/scenarios.merged.json";
+      scenarios = await fetchJSON(url);
+      if (!Array.isArray(scenarios)) scenarios = [];
+    } catch { scenarios = []; }
+
+    populateControls();
+
+    // select wiring
+    qs("#dsSelect").addEventListener("change", e => {
+      current.disease = e.target.value;
+      refreshProfiles();
+      current.conversation = [];
+      qs("#transcript").innerHTML = "";
+    });
+    qs("#modeSelect").addEventListener("change", e => {
+      current.mode = e.target.value;
+      current.conversation = [];
+      qs("#transcript").innerHTML = "";
+    });
+    qs("#profileSelect").addEventListener("change", e => {
+      current.profile = e.target.value;
+      current.conversation = [];
+      qs("#transcript").innerHTML = "";
+    });
+
+    wireSend();
+    wireCoachToggle();
+    focusMsg();
+  }
+
+  waitForMount(init);
 })();
