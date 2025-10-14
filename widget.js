@@ -1,4 +1,4 @@
-<script>
+
 /*
  * ReflectivAI Chat/Coach — drop-in
  * Modes come from ./assets/chat/config.json
@@ -39,27 +39,35 @@
   let conversation = [];
   let coachOn = true;
 
-  // Disease registry for dependent dropdowns
+  // Disease registry for dependent dropdowns (aligned with your earlier requests)
   const DISEASE_STATES = {
     "HIV": {
       productKnowledgeMode: "hiv-product-knowledge",
-      hcpRoles: ["Internal Medicine MD","Internal Medicine Doctor","Nurse Practitioner","Physician Assistant"]
+      hcpRoles: ["Internal Medicine MD","Infectious Disease Specialist","Nurse Practitioner","Physician Assistant"]
     },
-    "Cancer": {
+    "Oncology": {
       productKnowledgeMode: "oncology-product-knowledge",
-      hcpRoles: ["Medical Oncologist","Nurse Practitioner","Physician Assistant"]
+      hcpRoles: ["Medical Oncologist","Hematologist-Oncologist","Nurse Practitioner","Physician Assistant"]
     },
     "Vaccines": {
       productKnowledgeMode: "vaccines-product-knowledge",
-      hcpRoles: ["Infectious Disease Specialist","Nurse Practitioner","Physician Assistant"]
+      hcpRoles: ["Infectious Disease Specialist","Pediatrician","Family Medicine MD","Nurse Practitioner"]
+    },
+    "Hepatitis B": {
+      productKnowledgeMode: "hbv-product-knowledge",
+      hcpRoles: ["Hepatologist","Gastroenterologist","Infectious Disease Specialist","Nurse Practitioner"]
     },
     "COVID": {
       productKnowledgeMode: "covid-product-knowledge",
-      hcpRoles: ["Pulmonologist","Nurse Practitioner","Physician Assistant"]
+      hcpRoles: ["Pulmonologist","Infectious Disease Specialist","Hospitalist","Nurse Practitioner"]
     },
-    "Cardiovascular": {
-      productKnowledgeMode: "cardio-product-knowledge",
-      hcpRoles: ["Cardiologist","Nurse Practitioner","Physician Assistant"]
+    "Cardiology": {
+      productKnowledgeMode: "cardiology-product-knowledge",
+      hcpRoles: ["Cardiologist","Internal Medicine MD","Nurse Practitioner","Physician Assistant"]
+    },
+    "Pulmonology": {
+      productKnowledgeMode: "pulmonology-product-knowledge",
+      hcpRoles: ["Pulmonologist","Internal Medicine MD","Nurse Practitioner","Physician Assistant"]
     }
   };
 
@@ -235,6 +243,10 @@ ${COMMON}`.trim();
       o.textContent = m.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
       modeSel.appendChild(o);
     });
+    // Default mode guard
+    if (cfg?.defaultMode && (cfg.modes||[]).includes(cfg.defaultMode)) {
+      currentMode = cfg.defaultMode;
+    }
     modeSel.value = currentMode;
 
     // Coach toggle
@@ -257,7 +269,11 @@ ${COMMON}`.trim();
     });
     const og2 = document.createElement("optgroup"); og2.label = "Product Knowledge";
     Object.keys(DISEASE_STATES).forEach(ds=>{
-      const o=el("option","",`${ds}: Product Knowledge`); o.value=`pk::${ds}`; og2.appendChild(o);
+      const pkMode = DISEASE_STATES[ds].productKnowledgeMode;
+      // Only show PK option if config actually exposes that mode
+      if ((cfg?.modes||[]).includes(pkMode)) {
+        const o=el("option","",`${ds}: Product Knowledge`); o.value=`pk::${ds}`; og2.appendChild(o);
+      }
     });
     diseaseSelect.appendChild(og1); diseaseSelect.appendChild(og2);
 
@@ -289,7 +305,7 @@ ${COMMON}`.trim();
 
     mount.appendChild(shell);
 
-    // coach section
+    // coach section sits outside chat shell to avoid overlap (CSS controls layout)
     const coach = el("div", "coach-section");
     coach.innerHTML = `<h3>Coach Feedback</h3><div class="coach-body muted">Awaiting the first assistant reply…</div>`;
     mount.appendChild(coach);
@@ -356,7 +372,11 @@ ${COMMON}`.trim();
     hcpSelect.addEventListener("change", ()=>{
       const dsv = diseaseSelect.value.startsWith("disease::") ? diseaseSelect.value.split("::")[1] : null;
       const role = hcpSelect.value || null; if(!dsv || !role) return;
-      const filtered = scenarios.filter(s => (s.therapeuticArea === dsv) && (s.hcpRole === role));
+      // accept exact or case-normalized therapeuticArea match
+      const filtered = scenarios.filter(s => {
+        const ta = (s.therapeuticArea||"").trim().toLowerCase();
+        return (ta === dsv.trim().toLowerCase()) && (s.hcpRole === role);
+      });
       if(filtered.length >= 1){ currentScenarioId = filtered[0].id; }
       conversation=[]; renderMessages(); renderCoach(); renderMeta();
     });
@@ -417,7 +437,9 @@ ${COMMON}`.trim();
 
   // ---------- transport ----------
   async function callModel(messages) {
-    const r = await fetch((cfg?.apiBase || cfg?.workerUrl || "").trim(), {
+    const endpoint = (cfg?.apiBase || cfg?.workerUrl || "").trim();
+    if (!endpoint) throw new Error("No apiBase/workerUrl configured");
+    const r = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -455,8 +477,8 @@ ${COMMON}`.trim();
     try {
       const raw = await callModel(messages);
       const { coach, clean } = extractCoach(raw);
-      const computed = scoreReply(userText, clean, currentMode, sc);
-      const finalCoach = coach && coach.score && coach.subscores ? coach : computed;
+      const computed = scoreReply(userText, clean, currentMode);
+      const finalCoach = (coach && coach.score && coach.subscores) ? coach : computed;
 
       conversation.push({ role: "assistant", content: clean, _coach: finalCoach });
       renderMessages(); renderCoach();
@@ -536,4 +558,3 @@ ${COMMON}`.trim();
   // ---------- start ----------
   waitForMount(init);
 })();
-</script>
