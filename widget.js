@@ -1,13 +1,10 @@
-
 /*
  * ReflectivAI Chat/Coach — drop-in
- * Modes come from ./assets/chat/config.json
- * Expects:
- *   - ./assets/chat/config.json  (apiBase/workerUrl, modes, defaultMode, scenariosUrl, analyticsEndpoint)
- *   - ./assets/chat/system.md    (optional)
- *   - scenarios via config.scenariosUrl (array or {scenarios:[]})
- *
- * Relies on site styles in widget.css. No JS-injected CSS.
+ * Paths for this setup:
+ *   - ./widget.css
+ *   - ./widget.js
+ *   - ./assets/chat/config.json
+ *   - scenarios via config.scenariosUrl (e.g., "assets/chat/data/scenarios.merged.json")
  */
 
 (function () {
@@ -39,7 +36,7 @@
   let conversation = [];
   let coachOn = true;
 
-  // Disease registry for dependent dropdowns (aligned with your earlier requests)
+  // Disease registry for dependent dropdowns
   const DISEASE_STATES = {
     "HIV": {
       productKnowledgeMode: "hiv-product-knowledge",
@@ -115,7 +112,7 @@
   function normalizeMode(mode) {
     if (/product-knowledge$/i.test(mode)) return "product_knowledge";
     if (/sales-simulation/i.test(mode)) return "sales-simulation";
-    return mode; // emotional-assessment etc.
+    return mode;
   }
 
   // ---------- MODE-SPECIFIC scoring fallback ----------
@@ -216,7 +213,6 @@ Return a concise educational overview with reputable citations. Structure: key t
 ${COMMON}`.trim();
     }
 
-    // emotional-assessment
     return `
 Provide brief, practical self-reflection tips tied to communication with HCPs. No clinical or drug guidance.
 - 3–5 sentences, then one reflective question.
@@ -243,10 +239,7 @@ ${COMMON}`.trim();
       o.textContent = m.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
       modeSel.appendChild(o);
     });
-    // Default mode guard
-    if (cfg?.defaultMode && (cfg.modes||[]).includes(cfg.defaultMode)) {
-      currentMode = cfg.defaultMode;
-    }
+    if (cfg?.defaultMode && (cfg.modes||[]).includes(cfg.defaultMode)) currentMode = cfg.defaultMode;
     modeSel.value = currentMode;
 
     // Coach toggle
@@ -270,7 +263,6 @@ ${COMMON}`.trim();
     const og2 = document.createElement("optgroup"); og2.label = "Product Knowledge";
     Object.keys(DISEASE_STATES).forEach(ds=>{
       const pkMode = DISEASE_STATES[ds].productKnowledgeMode;
-      // Only show PK option if config actually exposes that mode
       if ((cfg?.modes||[]).includes(pkMode)) {
         const o=el("option","",`${ds}: Product Knowledge`); o.value=`pk::${ds}`; og2.appendChild(o);
       }
@@ -305,7 +297,7 @@ ${COMMON}`.trim();
 
     mount.appendChild(shell);
 
-    // coach section sits outside chat shell to avoid overlap (CSS controls layout)
+    // coach section (outside shell to avoid overlap)
     const coach = el("div", "coach-section");
     coach.innerHTML = `<h3>Coach Feedback</h3><div class="coach-body muted">Awaiting the first assistant reply…</div>`;
     mount.appendChild(coach);
@@ -316,19 +308,16 @@ ${COMMON}`.trim();
       const isSim = norm === "sales-simulation";
       const isPK  = norm === "product_knowledge";
 
-      // Disease/HCP shown only for sales-simulation
       diseaseLabel.style.display = isSim ? "" : "none";
       diseaseSelect.style.display = isSim ? "" : "none";
       hcpLabel.style.display = isSim ? "" : "none";
       hcpSelect.style.display = isSim ? "" : "none";
 
-      // Coach hidden for product-knowledge
       const showCoach = !isPK;
       coachLabel.style.display = showCoach ? "" : "none";
       coachSel.style.display   = showCoach ? "" : "none";
       coachOn = showCoach ? (coachSel.value === "on") : false;
 
-      // Coach panel visibility
       const coachPanel = mount.querySelector(".coach-section");
       coachPanel.style.display = coachOn ? "" : "none";
     }
@@ -360,7 +349,6 @@ ${COMMON}`.trim();
         const pkMode = DISEASE_STATES[ds]?.productKnowledgeMode;
         if(pkMode && (cfg?.modes||[]).includes(pkMode)){ currentMode = pkMode; }
         modeSel.value = currentMode;
-        // PK: no HCP, coach off
         hcpSelect.disabled = true; hcpSelect.value="";
       } else {
         currentMode = "sales-simulation"; modeSel.value = currentMode;
@@ -372,7 +360,6 @@ ${COMMON}`.trim();
     hcpSelect.addEventListener("change", ()=>{
       const dsv = diseaseSelect.value.startsWith("disease::") ? diseaseSelect.value.split("::")[1] : null;
       const role = hcpSelect.value || null; if(!dsv || !role) return;
-      // accept exact or case-normalized therapeuticArea match
       const filtered = scenarios.filter(s => {
         const ta = (s.therapeuticArea||"").trim().toLowerCase();
         return (ta === dsv.trim().toLowerCase()) && (s.hcpRole === role);
@@ -534,6 +521,7 @@ ${COMMON}`.trim();
   // ---------- init ----------
   async function init() {
     try {
+      // root → assets/chat/config.json
       cfg = await fetchLocal("./assets/chat/config.json");
     } catch (e) {
       console.error("config.json load failed:", e);
