@@ -1,19 +1,14 @@
-/* widget.js v4c3 — baked-in endpoint if config.json 404s */
+/* widget.js v4c4 — baked-in fallback + floating launcher + never-disappear */
 (function () {
   function onReady(fn){ if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",fn,{once:true}); else fn(); }
   onReady(init);
 
   function init(){
-    const banner = document.createElement("div");
-    banner.id="cw-selfcheck";
-    banner.style.cssText="position:fixed;bottom:8px;right:8px;z-index:99999;background:#111;color:#fff;padding:6px 8px;border-radius:8px;font:12px system-ui;opacity:.9";
-    banner.textContent="Widget: booting…";
-    document.body.appendChild(banner);
-    const ok=t=>{ banner.textContent=`Widget: ${t}`; banner.style.background="#0a4"; };
-    const err=t=>{ banner.textContent=`Widget: ${t}`; banner.style.background="#b32"; };
+    const banner = mkBanner();
+    status("booting…");
 
     try{
-      // ---------- constants ----------
+      // ---- constants ----
       const STORE_KEY="reflectivai:coach:v4c";
       const DEFAULT_MODE="sales-simulation";
       const MODEL_NAME="llama-3.1-8b-instant";
@@ -27,36 +22,59 @@
         "Cardiovascular":[{id:"np_cv",label:"Nurse Practitioner",brief:"Risk factors and titration. Goal: guideline-framed benefit-risk."},{id:"im_cv",label:"Internal Medicine MD",brief:"Comorbidities and polypharmacy. Goal: indication fit and DDI awareness."}]
       };
 
-      // ---------- config with baked-in fallback ----------
+      // ---- config with baked-in fallback ----
       let CFG={ apiBase:"https://my-chat-agent.tonyabdelmalak.workers.dev/chat", workerEndpoint:"", model:MODEL_NAME, stream:false };
       (async()=>{
         try{
           const r=await fetch("./config.json",{cache:"no-store"});
-          if(r.ok){ const j=await r.json(); CFG={...CFG,...j, apiBase:j.apiBase||j.workerEndpoint||j.workerUrl||CFG.apiBase}; ok("config loaded"); }
-          else err("config 404, using baked-in");
-        }catch{ err("config load failed, using baked-in"); }
+          if(r.ok){ const j=await r.json(); CFG={...CFG,...j, apiBase:j.apiBase||j.workerEndpoint||j.workerUrl||CFG.apiBase}; status("config loaded", true); }
+          else status("config 404, using baked-in", false);
+        }catch{ status("config load failed, using baked-in", false); }
       })();
 
-      // ---------- utils ----------
+      // ---- utils ----
       const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
       const escAttr=s=>esc(s).replace(/"/g,"&quot;");
+      const linkify=t=>String(t).replace(/(https?:\/\/[^\s)]+|www\.[^\s)]+)/g,m=>`<a href="${m.startsWith('http')?m:'https://'+m}" target="_blank" rel="noopener">${m}</a>`);
       const looseJson=t=>{try{return JSON.parse(t);}catch{} const i=t.indexOf("{"),j=t.lastIndexOf("}"); if(i>=0&&j>i){try{return JSON.parse(t.slice(i,j+1));}catch{}} return null;};
       const sanitize=s=>{ const d=document.createElement("div"); d.innerHTML=s||""; d.querySelectorAll("script,style,iframe,object").forEach(n=>n.remove()); d.querySelectorAll("*").forEach(el=>{[...el.attributes].forEach(a=>{if(a.name.startsWith("on")) el.removeAttribute(a.name);});}); return d.innerHTML; };
-      const linkify=t=>String(t).replace(/(https?:\/\/[^\s)]+|www\.[^\s)]+)/g,m=>`<a href="${m.startsWith('http')?m:'https://'+m}" target="_blank" rel="noopener">${m}</a>`);
       const num=x=>Math.max(0,Math.min(5,Number(x)||0)).toFixed(1).replace(/\.0$/,"");
       const byLabel=pfx=>{const all=[...document.querySelectorAll("label, h2, h3, h4, p, span, strong")]; const n=all.find(el=>pfx.some(p=>(el.textContent||"").trim().toLowerCase().startsWith(p))); if(!n) return null; if(n.tagName==="LABEL"){const id=n.getAttribute("for"); if(id){const t=document.getElementById(id); if(t&&t.tagName==="SELECT") return t;} const s=n.parentElement&&n.parentElement.querySelector&&n.parentElement.querySelector("select"); if(s) return s;} const scope=n.closest("section, form, .container, .field, .row")||document; return scope.querySelector("select");};
       const setOptions=(sel,items)=>{ if(!sel) return; const v=sel.value; sel.innerHTML=items.map(o=>`<option value="${escAttr(o.v)}">${esc(o.t)}</option>`).join(""); if(items.some(o=>o.v===v)) sel.value=v; };
 
-      // ---------- guaranteed shell ----------
+      // ---- shell + launcher ----
+      const messagesEl = ensureShell(); // appends at body end if absent
+      const launcher = ensureLauncher(); // fixed button to jump to shell
+
       function ensureShell(){
         let box=document.querySelector(".cw-messages")||document.getElementById("chat-log");
         if(box) return box;
         const sec=document.createElement("section");
         sec.className="cw-fallback";
+        sec.id="cw-fallback";
         sec.innerHTML=`<div class="scenario-brief"></div><div class="cw-messages" role="log" aria-live="polite"></div><div class="coach-panel" data-hidden="true"><div class="coach-head"><strong>Coach</strong><div class="ei-badges"></div></div><div class="coach-body"></div><div class="coach-score"></div></div>`;
         document.body.appendChild(sec);
         return sec.querySelector(".cw-messages");
       }
+      function ensureLauncher(){
+        let b=document.getElementById("cw-launch");
+        if(b) return b;
+        b=document.createElement("button");
+        b.id="cw-launch";
+        b.type="button";
+        b.textContent="Open Coach";
+        b.addEventListener("click", ()=>{
+          const host=document.getElementById("cw-fallback")||messagesEl?.parentElement;
+          if(host){ host.style.display="block"; host.scrollIntoView({behavior:"smooth",block:"end"}); }
+          const ta=document.querySelector(".chat-input textarea")||document.getElementById("message")||document.querySelector("textarea");
+          if(ta) ta.focus();
+        });
+        document.body.appendChild(b);
+        return b;
+      }
+
+      // ---- IO ----
+      const {ta:inputEl, btn:sendBtn} = getIO();
       function getIO(){
         const ta=document.querySelector(".chat-input textarea")||document.getElementById("message")||document.querySelector("textarea")||createInput();
         let btn=document.querySelector('button[type="submit"]')||document.querySelector(".chat-send")||createBtn(ta);
@@ -66,7 +84,7 @@
       function createBtn(ta){ const b=document.createElement("button"); b.type="button"; b.className="chat-send"; b.textContent="Send"; b.style.cssText="min-height:44px;margin-top:6px;"; (ta&&ta.parentElement?ta.parentElement:document.body).appendChild(b); return b; }
       function coachPanel(){ let p=document.querySelector(".coach-panel"); if(p) return p; p=document.createElement("div"); p.className="coach-panel"; p.setAttribute("data-hidden","true"); p.innerHTML=`<div class="coach-head"><strong>Coach</strong><div class="ei-badges"></div></div><div class="coach-body"></div><div class="coach-score"></div>`; const a=document.querySelector(".cw-messages"); (a?a.parentElement:document.body).appendChild(p); return p; }
 
-      // ---------- state ----------
+      // ---- state ----
       const persisted=(()=>{try{return JSON.parse(localStorage.getItem(STORE_KEY)||"{}");}catch{return {};}})();
       let mode=persisted.mode||DEFAULT_MODE;
       let coachOn=persisted.coachOn!==undefined?persisted.coachOn:true;
@@ -75,10 +93,7 @@
       let conversation=[]; let scores={turns:[],avg:0};
       const persist=()=>{try{localStorage.setItem(STORE_KEY,JSON.stringify({mode,coachOn,disease,hcp:hcpId}));}catch{}};
 
-      // ---------- mount ----------
-      const messagesEl=ensureShell(); if(!messagesEl){ err("no container"); return; }
-      const {ta:inputEl, btn:sendBtn}=getIO();
-
+      // ---- controls ----
       const modeSel=byLabel(["learning center","mode"]);
       const coachSel=byLabel(["coach"]);
       const diseaseSel=byLabel(["disease / product knowledge","disease state","disease"]);
@@ -96,6 +111,7 @@
       function brief(){ const host=document.querySelector(".scenario-brief"); if(!host) return; const list=CATALOG[disease]||[]; const f=list.find(x=>x.id===hcpId); host.innerHTML=`<div class="card"><div class="row"><div class="col"><strong>${esc(disease)}</strong> · <span>${esc(f?f.label:"HCP")}</span></div></div><p>${esc(f?f.brief:"")}</p></div>`; }
       brief(); vis();
 
+      // ---- chat ----
       function bubble(role,text){ const r=document.createElement("div"); r.className="row"; const b=document.createElement("div"); b.className="bubble "+(role==="user"?"user":"assistant"); b.innerHTML=linkify(esc(text)); r.appendChild(b); messagesEl.appendChild(r); messagesEl.scrollTop=messagesEl.scrollHeight; }
       function typing(){ const r=document.createElement("div"); r.className="row"; r.innerHTML=`<div class="bubble assistant"><span class="dots"><i></i><i></i><i></i></span></div>`; messagesEl.appendChild(r); messagesEl.scrollTop=messagesEl.scrollHeight; return r; }
 
@@ -157,13 +173,14 @@ User message: """${latest}"""`;
 
       async function chatCall(messages){
         const url = CFG.apiBase || CFG.workerEndpoint;
-        if(!url){ err("no API endpoint"); return "Upstream error. Try again."; }
+        if(!url){ status("no API endpoint", false); return "Upstream error. Try again."; }
         const res = await fetch(url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({model:CFG.model||MODEL_NAME,temperature:TEMP,messages})});
-        if(!res.ok){ err(`upstream ${res.status}`); return "Upstream error. Try again."; }
+        if(!res.ok){ status(`upstream ${res.status}`, false); return "Upstream error. Try again."; }
         const data=await res.json().catch(()=>null);
         const content=data?.content || data?.choices?.[0]?.message?.content || data?.output_text || "";
-        if(!content){ err("empty upstream"); return "Upstream error. Try again."; }
-        ok("ready"); setTimeout(()=>{ if(banner&&banner.textContent.startsWith("Widget: ready")) banner.remove(); }, 1500);
+        if(!content){ status("empty upstream", false); return "Upstream error. Try again."; }
+        status("ready", true);
+        setTimeout(()=>{const s=document.getElementById("cw-selfcheck"); if(s && s.textContent.includes("ready")) s.remove();},1500);
         return String(content);
       }
 
@@ -172,13 +189,16 @@ User message: """${latest}"""`;
         return "You are a compliant, on-label pharma conversational agent. Avoid PHI. Provide concise, balanced information.";
       }
 
-      // seed visible coach text so UI is present
-      (function seed(){
-        const p=coachPanel(); const b=p.querySelector(".coach-body"); if(b&&!b.innerHTML){ b.innerHTML=`<div class="coach-card muted"><p><strong>Coach is listening for tone.</strong> Tips will appear after your next message.</p></div>`; }
-      })();
+      // seed coach text
+      (function seed(){ const p=coachPanel(); const b=p.querySelector(".coach-body"); if(b&&!b.innerHTML){ b.innerHTML=`<div class="coach-card muted"><p><strong>Coach is listening for tone.</strong> Tips will appear after your next message.</p></div>`; } })();
+
     }catch(e){
-      err("fatal boot error"); console.error(e);
+      status("fatal boot error", false); console.error(e);
       try{ const s=document.createElement("section"); s.className="cw-fallback"; s.innerHTML=`<div class="cw-messages"><div class="row"><div class="bubble assistant">Widget boot error. Check console.</div></div></div>`; document.body.appendChild(s);}catch{}
     }
+
+    // --- helpers: banner ---
+    function mkBanner(){ const d=document.createElement("div"); d.id="cw-selfcheck"; d.style.cssText="position:fixed;bottom:8px;right:8px;z-index:2147483647;background:#111;color:#fff;padding:6px 8px;border-radius:8px;font:12px system-ui;opacity:.92"; document.body.appendChild(d); return d; }
+    function status(t, ok){ const b=document.getElementById("cw-selfcheck"); if(!b) return; b.textContent=`Widget: ${t}`; b.style.background= ok===undefined ? "#111" : ok ? "#0a4" : "#b32"; }
   }
 })();
