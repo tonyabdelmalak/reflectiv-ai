@@ -67,7 +67,6 @@
         system:  x.system  || x.systemPrompt || ""
       });
     }
-    // minimal fallbacks if nothing parsed
     if(!out.length){
       [
         {disease:"HIV",profile:"Internal Medicine MD",title:"Assess PrEP candidate",goal:"Eligibility + adherence support"},
@@ -117,17 +116,14 @@
 
   function fillControls(){
     const ds=qs("#ds"), mode=qs("#mode"), prof=qs("#prof");
-    // modes
     const modes=(cfg?.modes||["sales-simulation","product-knowledge"]).filter(m=>["sales-simulation","product-knowledge","emotional-assessment"].includes(m));
     mode.innerHTML=""; modes.forEach(m=>mode.appendChild(el("option",{value:m,selected:m===(cfg?.defaultMode||"sales-simulation")},m.replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase()))));
 
-    // diseases
     const diseases=[...new Set(SC.map(s=>s.disease))];
     ds.innerHTML="";
     ds.appendChild(el("option",{value:"",disabled:"",selected:""},"Disease State"));
     diseases.forEach(d=>ds.appendChild(el("option",{value:d}, d.toUpperCase()==="HIV"?"HIV":d)));
 
-    // profiles
     prof.innerHTML="";
     prof.appendChild(el("option",{value:"",disabled:"",selected:""},"HCP Profile"));
   }
@@ -156,7 +152,6 @@
       b.classList.remove("show");
       txt.textContent="";
     }
-    // reset convo
     S.convo=[]; qs("#t").innerHTML="";
   }
 
@@ -227,10 +222,8 @@
       const raw=await fetchJSON(url);
       SC=normalize(raw);
     }catch{ SC=normalize([]); }
-    // controls
     fillControls();
 
-    // events
     qs("#ds").addEventListener("change",e=>{ S.disease=e.target.value; refreshProfiles(); setScenario(""); });
     qs("#mode").addEventListener("change",e=>{ S.mode=e.target.value; S.convo=[]; qs("#t").innerHTML=""; });
     qs("#prof").addEventListener("change",e=>setScenario(e.target.value));
