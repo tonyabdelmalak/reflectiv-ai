@@ -1,16 +1,22 @@
-/* widget.css — ReflectivAI chat/coach (drop-in) */
-/* Scope under .cw to avoid site collisions */
+/* widget.css — ReflectivAI chat/coach (drop-in, scoped) */
 
-.cw { --cw-accent:#2f3a4f; --cw-radius:14px; --cw-bg:#fff; --cw-muted:#6b7280; --cw-line:#e5e7eb; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
+.cw {
+  --cw-accent:#2f3a4f;
+  --cw-radius:14px;
+  --cw-bg:#fff;
+  --cw-muted:#6b7280;
+  --cw-line:#e5e7eb;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+}
 
-.cw * { box-sizing: border-box; }
-.cw .hidden { display:none !important; }
+.cw *{ box-sizing:border-box; }
+.cw .hidden{ display:none !important; }
 
 .cw .cw-shell{
   border:1px solid rgba(0,0,0,.12);
-  border-radius: var(--cw-radius);
-  background: var(--cw-bg);
-  overflow: hidden;
+  border-radius:var(--cw-radius);
+  background:var(--cw-bg);
+  overflow:hidden;
 }
 
 /* Controls */
@@ -47,7 +53,7 @@
   word-break:break-word;
 }
 .cw .msg.user .bubble{ background:#e8f0ff; margin-left:auto; }
-.cw .msg.ai .bubble{ background:#fff; border:1px solid rgba(0,0,0,.1); }
+.cw .msg.ai   .bubble{ background:#fff; border:1px solid rgba(0,0,0,.1); }
 
 /* Composer with inline Coach toggle */
 .cw .cw-composer{
@@ -89,13 +95,13 @@
   cursor:pointer;
 }
 
-/* Coach panel opens directly below composer, inside flow */
+/* Coach panel opens below composer, inside flow */
 .cw .coach-panel{
   display:none;
   position:relative;
   margin:8px 12px 12px 12px;
   border:1px solid rgba(0,0,0,.12);
-  border-radius: var(--cw-radius);
+  border-radius:var(--cw-radius);
   padding:14px;
   background:#fff;
   max-height:260px;
@@ -107,5 +113,5 @@
 .cw .coach-tip{ font-size:14px; color:#111; }
 .cw .coach-muted{ font-size:13px; color:var(--cw-muted); }
 
-/* Guard against external card styles */
+/* Guard against external styles */
 .cw .card,.cw .coach-card{ max-width:100%; border:0; box-shadow:none; }
