@@ -1,8 +1,4 @@
 
-
-
-WIDGET.JS:
-
 /*
  * ReflectivAI Chat/Coach — drop-in
  * Modes: emotional-assessment | hiv-product-knowledge | sales-simulation
