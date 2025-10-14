@@ -18,7 +18,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"/>
 
     <!-- Chat widget styles come before site styles so they can be overridden -->
-    <link rel="stylesheet" href="widget.css?v=10" />
+    <link rel="stylesheet" href="widget.css?v=9" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -76,6 +76,7 @@
               and emotional calibration through adaptive diagnostics.
             </p>
           </div>
+
           <div class="step reveal">
             <div class="step-num">02</div>
             <h3>Simulate Real HCP Conversations</h3>
@@ -84,6 +85,7 @@
               confidence, and data accuracy — not scripts.
             </p>
           </div>
+
           <div class="step reveal">
             <div class="step-num">03</div>
             <h3>Coach with Precision</h3>
@@ -92,6 +94,7 @@
               and compliance helps reps course-correct fast.
             </p>
           </div>
+
           <div class="step reveal">
             <div class="step-num">04</div>
             <h3>Measure Impact, Not Activity</h3>
@@ -163,7 +166,7 @@
         </div>
       </div>
     </section>
-
+    
     <!-- Disease States Section -->
     <section id="disease-states" class="section disease">
       <div class="section-inner">
@@ -313,6 +316,7 @@
           <li><strong>Spaced-repetition:</strong> reinforce key concepts at optimal intervals to ensure retention.</li>
         </ul>
         <p class="note">Need last-minute advice before a call? Use the in-product chat widget to ask our AI.</p>
+        <!-- Embed ReflectivAI chat widget container -->
         <div id="reflectiv-widget" class="reflectiv-widget">
           <noscript>You need JavaScript to use the ReflectivAI Coach.</noscript>
         </div>
@@ -488,11 +492,85 @@
         <ul class="evidence-list">
           <li><strong>Emotional Intelligence Engine.</strong> Models tone, empathy, and pacing to coach relational skills as well as content.</li>
           <li><strong>Adaptive Simulation.</strong> Personas react dynamically to both message and mood.</li>
-          <li><strong>Predictive Analytics.</strong> Correlates performance metrics with coaching impact.</li>
+          <li><strong>Predictive Analytics.</strong> Correlates skill growth with revenue, territory retention, and NBRx acceleration.</li>
+          <li><strong>Compliance First Design.</strong> Everything verifiable, version-controlled, and MLR-ready.</li>
         </ul>
       </div>
     </section>
 
-    <script src="widget.js?v=10" defer></script>
+    <!-- FAQ Section -->
+    <section id="faq" class="section faq">
+      <div class="section-inner">
+        <h2>Frequently Asked Questions</h2>
+        <div class="faq-item">
+          <h3>What sets ReflectivAI apart?</h3>
+          <p>ReflectivAI combines AI simulations and analytics with subtle, emotionally intelligent coaching cues — all within strict life-sciences compliance guardrails.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Does it replace human coaching?</h3>
+          <p>No. ReflectivAI scales practice, insights, and certification; managers and trainers remain essential to interpret data and personalize development.</p>
+        </div>
+        <div class="faq-item">
+          <h3>How do you handle PHI?</h3>
+          <p>PHI is off by default. When enabled, we operate under HIPAA controls (minimum-necessary scope, encryption in transit/at rest, audit logging) and a signed BAA<span class="footnote-ref">[1]</span>.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Is it customizable by disease state and region?</h3>
+          <p>Yes. Modules, objections, and labeling align to your therapeutic areas and local regulations.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Can it integrate with LMS/CRM?</h3>
+          <p>Absolutely. Export packs and APIs are available for Salesforce, Veeva, and leading LMS platforms.</p>
+        </div>
+        <div class="faq-item">
+          <h3>How do you mitigate bias?</h3>
+          <p>We test for bias pre- and post-deployment, monitor disparate performance, and document remediation within our governance program.</p>
+        </div>
+        <div class="faq-item">
+          <h3>What about explainability?</h3>
+          <p>In-product reason codes, model cards, and versioned change logs provide transparency for learners, managers, and MLR reviewers.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="section contact">
+      <div class="section-inner">
+        <h2>Let’s Redefine Your Sales Training</h2>
+        <form class="contact-form" onsubmit="return false;">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" placeholder="Your name" required />
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="you@example.com" required />
+          </div>
+          <div class="form-group">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" rows="4" placeholder="Tell us about your team and goals"></textarea>
+          </div>
+          <button type="submit" class="btn primary">Request Demo</button>
+        </form>
+      </div>
+    </section>
+
+      <!-- Footnotes -->
+    <section class="footnotes">
+      <!-- keep your <ol>…</ol> here -->
+    </section>
+
+    <!-- Widget debug + load -->
+    <script>
+      console.log("probe: before widget");
+      window.onerror = (m, s, l, c, e) => {
+        const n = document.createElement('pre');
+        n.style.cssText =
+          'position:fixed;bottom:8px;left:8px;z-index:99999;max-width:90vw;max-height:40vh;overflow:auto;border:1px solid #b00020;padding:8px;border-radius:8px;background:#fff;color:#b00020;font:12px/1.4 monospace';
+        n.textContent = "Widget error: " + (e && e.stack ? e.stack : m);
+        document.body.appendChild(n);
+      };
+    </script>
+    <script defer src="widget.js?v=11"></script>
   </body>
 </html>
