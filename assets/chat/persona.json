@@ -1,52 +1,126 @@
 {
-  "im_decile3": {
-    "displayName": "Dr. Harper — Internal Medicine",
-    "role": "Physician",
-    "style": "direct, time-constrained, prefers concise data and office-workflow solutions"
-  },
-  "np_decile10": {
-    "displayName": "Alex Nguyen, NP",
-    "role": "Nurse Practitioner",
-    "style": "busy, pragmatic, needs PA/coverage shortcuts to scale prescribing"
-  },
-  "pa_hiv_top": {
-    "displayName": "Samantha Lee, PA",
-    "role": "Physician Associate",
-    "style": "evidence-driven, cautious to change stable regimens without clear upside"
-  },
-  "np_hiv_newer": {
-    "displayName": "Jamie Ortiz, NP",
-    "role": "Nurse Practitioner",
-    "style": "patient-request responsive, values convenience and adherence framing"
-  },
-  "md_hosp_remdesivir_consistent": {
-    "displayName": "Dr. Underwood",
-    "role": "Hospitalist",
-    "style": "protocol-aligned, sensitive to order-set rules and stewardship"
-  },
-  "md_remdesivir_waitsee": {
-    "displayName": "Dr. Fabiano",
-    "role": "Hospitalist",
-    "style": "risk-benefit deliberative, prefers clear thresholds to initiate therapy"
-  },
-  "hbv_md_denials": {
-    "displayName": "Dr. Smith",
-    "role": "Hepatology",
-    "style": "patient-first, seeks efficient payer navigation to avoid delays"
-  },
-  "hbv_md_tdf_high": {
-    "displayName": "Dr. Jones",
-    "role": "Gastroenterology",
-    "style": "agreeable verbally, benefits from concrete action plans and tracking"
-  },
-  "idn_exec_flu": {
-    "displayName": "IDN Clinical Leadership",
-    "role": "System Population Health",
-    "style": "strategic, budget-minded, wants outcomes and campaign toolkits"
-  },
-  "peds_office_mgr": {
-    "displayName": "Pediatrics Practice Manager",
-    "role": "Office/Practice Lead",
-    "style": "relationship-oriented, values reliability and support beyond product"
-  }
+  "personas": [
+    {
+      "id": "hiv_fp_md_timepressed",
+      "displayName": "Dr. Maya Patel — Family Practice MD",
+      "role": "Physician",
+      "specialty": "Family Medicine",
+      "setting": "Urban clinic with mixed payer base",
+      "payer_mix": {"Medicare": 15, "Medicaid": 35, "Commercial": 50},
+      "decision_style": "Pragmatic, time-constrained, prefers clear algorithms",
+      "style": "Direct; wants concise workflows",
+      "clinical_priorities": ["Adherence", "Safety", "Workload impact"],
+      "historical_objections": ["Prior auth burden for PrEP", "Baseline labs and follow-up cadence"],
+      "therapeuticAreas": ["HIV"]
+    },
+    {
+      "id": "hiv_id_md_guideline_strict",
+      "displayName": "Dr. Evelyn Harper — Infectious Diseases",
+      "role": "Physician",
+      "specialty": "Infectious Diseases",
+      "setting": "Academic ID clinic",
+      "payer_mix": {"Medicare": 20, "Medicaid": 40, "Commercial": 40},
+      "decision_style": "Analytical, guideline-aligned",
+      "style": "Evidence-demanding; skeptical of marketing",
+      "clinical_priorities": ["Evidence strength", "Resistance", "Safety"],
+      "historical_objections": ["We prefer generics", "No head-to-head outcomes"],
+      "therapeuticAreas": ["HIV"]
+    },
+    {
+      "id": "onco_hemonc_md_costtox",
+      "displayName": "Dr. Chen — Hematology/Oncology",
+      "role": "Physician",
+      "specialty": "Hem/Onc",
+      "setting": "Community oncology practice",
+      "payer_mix": {"Medicare": 55, "Commercial": 45},
+      "decision_style": "Risk–benefit deliberative",
+      "style": "Wants clear ΔOS/ΔPFS with AE context",
+      "clinical_priorities": ["Overall survival", "PFS", "Grade ≥3 AEs", "Financial toxicity"],
+      "therapeuticAreas": ["Oncology"]
+    },
+    {
+      "id": "vax_peds_np_hesitancy",
+      "displayName": "Alex Nguyen, NP — Pediatrics",
+      "role": "Nurse Practitioner",
+      "specialty": "Pediatrics",
+      "setting": "Suburban pediatrics office",
+      "payer_mix": {"Medicaid": 50, "Commercial": 50},
+      "decision_style": "Pragmatic, workflow-focused",
+      "style": "Brief, template-driven",
+      "clinical_priorities": ["Series completion", "Safety communication", "Throughput"],
+      "therapeuticAreas": ["Vaccines"]
+    },
+    {
+      "id": "covid_hosp_hospitalist_threshold",
+      "displayName": "Dr. Fabiano — Hospitalist",
+      "role": "Physician",
+      "specialty": "Internal Medicine",
+      "setting": "Community hospital",
+      "payer_mix": {"Medicare": 60, "Commercial": 40},
+      "decision_style": "Threshold-based, protocol-driven",
+      "style": "Order-set focused",
+      "clinical_priorities": ["Oxygen needs", "Length of stay", "DDIs"],
+      "therapeuticAreas": ["COVID-19"]
+    },
+    {
+      "id": "hbv_hepatology_md_access",
+      "displayName": "Dr. Smith — Hepatology",
+      "role": "Physician",
+      "specialty": "Hepatology",
+      "setting": "Academic liver clinic",
+      "payer_mix": {"Medicare": 30, "Medicaid": 20, "Commercial": 50},
+      "decision_style": "Patient-first, access-aware",
+      "style": "Wants PA-ready documentation",
+      "clinical_priorities": ["HBV DNA suppression", "Renal/bone safety", "Coverage"],
+      "therapeuticAreas": ["Hepatitis B"]
+    },
+    {
+      "id": "cardio_fm_md_ascvd_risk",
+      "displayName": "Dr. Lewis — Primary Care Cardiology Focus",
+      "role": "Physician",
+      "specialty": "Family Medicine",
+      "setting": "Large IPA",
+      "payer_mix": {"Medicare": 35, "Commercial": 65},
+      "decision_style": "Guideline-based with risk calculators",
+      "style": "Targets measurable KPI gains",
+      "clinical_priorities": ["ASCVD risk reduction", "Statin intolerance", "Adherence"],
+      "therapeuticAreas": ["Cardiovascular"]
+    },
+    {
+      "id": "pulm_md_copd_exac",
+      "displayName": "Dr. Ramos — Pulmonology",
+      "role": "Physician",
+      "specialty": "Pulmonology",
+      "setting": "Pulmonary clinic",
+      "payer_mix": {"Medicare": 45, "Commercial": 55},
+      "decision_style": "Phenotype-driven, GOLD aligned",
+      "style": "Brief; focuses on exacerbation risk",
+      "clinical_priorities": ["Exacerbation reduction", "Inhaler technique", "Eosinophils"],
+      "therapeuticAreas": ["Pulmonology"]
+    },
+    {
+      "id": "endo_md_t2d_ckd",
+      "displayName": "Dr. Nasser — Endocrinology",
+      "role": "Physician",
+      "specialty": "Endocrinology",
+      "setting": "Multispecialty group",
+      "payer_mix": {"Medicare": 40, "Commercial": 60},
+      "decision_style": "Outcome-driven",
+      "style": "Wants ADA/KDIGO alignment",
+      "clinical_priorities": ["A1c", "CKD progression", "Hypoglycemia risk", "Weight"],
+      "therapeuticAreas": ["Diabetes"]
+    },
+    {
+      "id": "asthma_peds_md_controller",
+      "displayName": "Dr. Ortega — Pediatrics",
+      "role": "Physician",
+      "specialty": "Pediatrics",
+      "setting": "Community clinic",
+      "payer_mix": {"Medicaid": 60, "Commercial": 40},
+      "decision_style": "Algorithmic",
+      "style": "Uses step charts and action plans",
+      "clinical_priorities": ["ICS adherence", "SABA overuse", "Action plans"],
+      "therapeuticAreas": ["Asthma"]
+    }
+  ]
 }
