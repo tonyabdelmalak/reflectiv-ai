@@ -1,548 +1,503 @@
-/*
- * ReflectivAI Chat/Coach — drop-in
- * Paths for this setup:
- *   - ./widget.css
- *   - ./widget.js
- *   - ./assets/chat/config.json
- *   - scenarios via config.scenariosUrl (e.g., "assets/chat/data/scenarios.merged.json")
- */
-
+/* widget.js v4c — deterministic coach, EI badges, mobile-safe; keep layout unchanged */
 (function () {
-  // ---------- safe bootstrapping ----------
-  let mount = null;
-  function onReady(fn){ if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn, { once:true }); else fn(); }
-  function waitForMount(cb){
-    const tryGet = () => {
-      mount = document.getElementById("reflectiv-widget");
-      if (mount) return cb();
-      const obs = new MutationObserver(() => {
-        mount = document.getElementById("reflectiv-widget");
-        if (mount) { obs.disconnect(); cb(); }
-      });
-      obs.observe(document.documentElement, { childList:true, subtree:true });
-      setTimeout(() => obs.disconnect(), 15000);
-    };
-    onReady(tryGet);
-  }
+  // ---------- constants ----------
+  const STORE_KEY = "reflectivai:coach:v4c";
+  const DEFAULT_MODE = "sales-simulation"; // other: "product-knowledge"
+  const COACH_VALUES = ["Coach On", "Coach Off"];
+  const MODEL_NAME = "llama-3.1-8b-instant";
+  const TEMP = 0.2;
 
-  // ---------- config/state ----------
-  let cfg = null;
-  let systemPrompt = "";
-  let scenarios = [];
-  let scenariosById = new Map();
-
-  let currentMode = "sales-simulation";
-  let currentScenarioId = null;
-  let conversation = [];
-  let coachOn = true;
-
-  // Disease registry for dependent dropdowns
-  const DISEASE_STATES = {
-    "HIV": {
-      productKnowledgeMode: "hiv-product-knowledge",
-      hcpRoles: ["Internal Medicine MD","Infectious Disease Specialist","Nurse Practitioner","Physician Assistant"]
-    },
-    "Oncology": {
-      productKnowledgeMode: "oncology-product-knowledge",
-      hcpRoles: ["Medical Oncologist","Hematologist-Oncologist","Nurse Practitioner","Physician Assistant"]
-    },
-    "Vaccines": {
-      productKnowledgeMode: "vaccines-product-knowledge",
-      hcpRoles: ["Infectious Disease Specialist","Pediatrician","Family Medicine MD","Nurse Practitioner"]
-    },
-    "Hepatitis B": {
-      productKnowledgeMode: "hbv-product-knowledge",
-      hcpRoles: ["Hepatologist","Gastroenterologist","Infectious Disease Specialist","Nurse Practitioner"]
-    },
-    "COVID": {
-      productKnowledgeMode: "covid-product-knowledge",
-      hcpRoles: ["Pulmonologist","Infectious Disease Specialist","Hospitalist","Nurse Practitioner"]
-    },
-    "Cardiology": {
-      productKnowledgeMode: "cardiology-product-knowledge",
-      hcpRoles: ["Cardiologist","Internal Medicine MD","Nurse Practitioner","Physician Assistant"]
-    },
-    "Pulmonology": {
-      productKnowledgeMode: "pulmonology-product-knowledge",
-      hcpRoles: ["Pulmonologist","Internal Medicine MD","Nurse Practitioner","Physician Assistant"]
-    }
+  // Disease → HCP catalog
+  const CATALOG = {
+    "HIV": [
+      { id: "im_md", label: "Internal Medicine MD", brief: "Primary care physician managing prevention and chronic care. Goal: assess PrEP suitability and adherence support." },
+      { id: "np", label: "Nurse Practitioner", brief: "NP balances prevention counseling with workflow realities. Goal: clarify risk screening and follow-up cadence." },
+      { id: "pa", label: "Physician Assistant", brief: "PA focuses on practical initiation steps. Goal: reduce process friction for starts and refills." },
+      { id: "id", label: "Infectious Disease Specialist", brief: "Specialist prioritizes risk stratification and resistance. Goal: remain squarely on-label, cite guideline-aligned data." }
+    ],
+    "Cancer": [
+      { id: "onco", label: "Oncologist", brief: "Treats solid and hematologic tumors. Goal: concise, on-label efficacy and safety balanced for tumor type." },
+      { id: "np_onc", label: "Nurse Practitioner", brief: "Coordinates adverse event management. Goal: practical monitoring and dose-mod guidance per label." },
+      { id: "pa_onc", label: "Physician Assistant", brief: "Executes protocols and logistics. Goal: ensure prior-auth and infusion flow are clear." }
+    ],
+    "Vaccines": [
+      { id: "im_doc", label: "Internal Medicine Doctor", brief: "Manages adult immunization catch-up. Goal: eligibility, timing, and co-admin clarity." },
+      { id: "np_vax", label: "Nurse Practitioner", brief: "Addresses hesitancy and access. Goal: concise risk/benefit aligned to ACIP." },
+      { id: "pa_vax", label: "Physician Assistant", brief: "Focus on screening and contraindications. Goal: quick green-light criteria." }
+    ],
+    "COVID": [
+      { id: "pulm", label: "Pulmonologist", brief: "Manages post-acute respiratory impacts. Goal: on-label data for indicated populations." },
+      { id: "pa_covid", label: "Physician Assistant", brief: "Coordinates testing and triage. Goal: eligibility decision tree clarity." },
+      { id: "np_covid", label: "Nurse Practitioner", brief: "Covers counseling and follow-up. Goal: clear adverse event guidance per label." }
+    ],
+    "Cardiovascular": [
+      { id: "np_cv", label: "Nurse Practitioner", brief: "Manages risk factors and titration. Goal: crisp benefit-risk framed by guidelines." },
+      { id: "im_cv", label: "Internal Medicine MD", brief: "Balances comorbidities and polypharmacy. Goal: indication fit and drug-drug awareness." }
+    ]
   };
 
-  // ---------- utils ----------
-  async function fetchLocal(path) {
-    const r = await fetch(path, { cache: "no-store" });
-    if (!r.ok) throw new Error(`Failed to load ${path} (${r.status})`);
-    const ct = r.headers.get("content-type") || "";
-    return ct.includes("application/json") ? r.json() : r.text();
-  }
-  const esc = (s) =>
-    String(s || "")
-      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-  function sanitizeLLM(raw) {
-    let s = String(raw || "");
-    s = s.replace(/```[\s\S]*?```/g, "");
-    s = s.replace(/<pre[\s\S]*?<\/pre>/gi, "");
-    s = s.replace(/^\s*#{1,6}\s+/gm, "");
-    s = s.replace(/^\s*i['’]m\s+tony[^\n]*\n?/i, "");
-    s = s.replace(/^\s*(hi|hello|hey)[^\n]*\n+/i, "");
-    s = s.replace(/\n{3,}/g, "\n\n").trim();
-    return s;
-  }
-  function md(text) {
-    if (!text) return "";
-    let s = esc(text).replace(/\r\n?/g, "\n");
-    s = s.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
-    s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
-    s = s.replace(/^(?:-\s+|\*\s+).+(?:\n(?:-\s+|\*\s+).+)*/gm, (blk) => {
-      const items = blk.split("\n").map((l) => l.replace(/^(?:-\s+|\*\s+)(.+)$/, "<li>$1</li>")).join("");
-      return `<ul>${items}</ul>`;
-    });
-    return s.split(/\n{2,}/).map((p) => (p.startsWith("<ul>") ? p : `<p>${p.replace(/\n/g, "<br>")}</p>`)).join("\n");
-  }
-  function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
-  function extractCoach(raw) {
-    const m = String(raw || "").match(/<coach>([\s\S]*?)<\/coach>/i);
-    if (!m) return { coach: null, clean: sanitizeLLM(raw) };
-    let coach = null;
-    try { coach = JSON.parse(m[1]); } catch {}
-    const clean = sanitizeLLM(String(raw).replace(m[0], "").trim());
-    return { coach, clean };
-  }
-  function normalizeMode(mode) {
-    if (/product-knowledge$/i.test(mode)) return "product_knowledge";
-    if (/sales-simulation/i.test(mode)) return "sales-simulation";
-    return mode;
-  }
-
-  // ---------- MODE-SPECIFIC scoring fallback ----------
-  function scoreReply(userText, replyText, mode) {
-    const norm = normalizeMode(mode);
-    const t = (replyText || "").toLowerCase();
-    const words = (replyText || "").split(/\s+/).filter(Boolean).length;
-    const endsWithQuestion = /\?\s*$/.test(replyText || "");
-    const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
-
-    if (norm === "emotional-assessment") {
-      const empathyCue = /(i understand|it makes sense|given your|acknowledge|appreciate|valid|thanks for|i hear)/i.test(replyText || "");
-      const activeListenCue = /(reflect|notice|it sounds like|what i’m hearing|you’re saying|let’s pause|check[- ]?in)/i.test(replyText || "");
-      const behaviorCue = /(try|practice|use|choose|focus|set|ask yourself|next time)/i.test(replyText || "");
-      const nonJudgmentCue = /(non[- ]?judgmental|curious|open|neutral)/i.test(replyText || "");
-
-      const question_quality = clamp(endsWithQuestion ? 3 + (activeListenCue ? 1 : 0) : 2, 1, 4);
-      const empathy = clamp((empathyCue ? 3 : 2) + (nonJudgmentCue ? 1 : 0), 1, 4);
-      const objection_handling = clamp((behaviorCue ? 3 : 2) + (activeListenCue ? 1 : 0), 1, 4);
-      const compliance = 4;
-      const brevityBonus = words >= 40 && words <= 140 ? 6 : words < 40 ? 2 : 0;
-      const askBonus = endsWithQuestion ? 6 : 0;
-
-      const score = clamp(Math.round(55 + question_quality*6 + empathy*6 + objection_handling*5 + compliance*5 + brevityBonus + askBonus),55,98);
-      const worked = [empathyCue?"Validated emotions":null,activeListenCue?"Active listening":null,endsWithQuestion?"Closed with a reflective question":null].filter(Boolean);
-      const improve = [behaviorCue?null:"Offer one concrete, low-effort behavior",words>140?"Tighten to 3–5 sentences":null].filter(Boolean);
-      if(!improve.length) improve.push("Summarize in one sentence before your question");
-      return {score,subscores:{question_quality,objection_handling,empathy,compliance},worked,improve,phrasing:"Given what you’re managing, what small action this week would help you feel more in control for your next HCP conversation?"};
-    }
-
-    if (norm === "product_knowledge") {
-      const labelCue = /(label|indication|contraindication|boxed warning|approved|per label)/i.test(t);
-      const efficacyCue = /(efficacy|trial|study|hazard ratio|non[- ]inferior|endpoint|ci\b|p-?value)/i.test(t);
-      const safetyCue = /(safety|adverse|ae\b|renal|bone|egfr|creatinine|bmd|interaction|ddis?)/i.test(t);
-      const accessCue = /(coverage|prior auth|formulary|step[- ]?edit|access)/i.test(t);
-      const citations = /(doi\.org|pubmed|nejm|thelancet|jama|idsa|who|cdc|fda|ema)/i.test(t);
-
-      const question_quality = clamp(endsWithQuestion ? 3 : 2, 1, 4);
-      const empathy = 2;
-      const objection_handling = clamp((safetyCue?1:0)+(accessCue?1:0)+(efficacyCue?1:0),1,4);
-      const compliance = clamp(2 + (labelCue?2:0),1,4);
-      const brevityBonus = words > 60 && words < 180 ? 6 : words <= 60 ? 2 : 0;
-      const citeBonus = citations ? 6 : 0;
-
-      const score = clamp(Math.round(52 + question_quality*5 + objection_handling*5 + compliance*7 + brevityBonus + citeBonus),55,98);
-      const worked = [labelCue?"Label-aligned":"",efficacyCue?"Included efficacy context":"",safetyCue?"Covered safety/risks":"",accessCue?"Noted access":"",citations?"Cited reputable sources":""].filter(Boolean);
-      const improve = [citations?null:"Add one credible citation",endsWithQuestion?null:"Offer one prompt for next-step learning"].filter(Boolean);
-      return {score,subscores:{question_quality,objection_handling,empathy,compliance},worked,improve,phrasing:"Would you like a brief summary of indications, key safety points, and a primary-source citation to review with your team?"};
-    }
-
-    // sales-simulation
-    const cues=[/renal|kidney|egfr|creatinine|crcl/,/bone|bmd|osteopor/,/label|indication|contraindication|boxed warning|guideline/,/adherence|missed[- ]dose|workflow|injection/,/resistance|drug[- ]drug|interaction|ddis?/,/coverage|prior auth|access|formulary|step[- ]?edit/,/prep|ta(f|v)|tdf|emtricitabine|bictegravir|rilpivirine|cabotegravir|biktarvy|descovy|cabenuva/];
-    const hits=cues.reduce((n,re)=>n+(re.test(t)?1:0),0);
-    const accuracy=Math.max(1,Math.min(4,Math.floor(hits/2)));
-    const objection=Math.max(1,Math.min(4, /concern|barrier|risk|coverage|auth|denied|cost|workflow|adherence/i.test(t)?3+(hits>3?1:0):(hits>2?2:1)));
-    const empathy=Math.max(1,Math.min(4, /understand|appreciate|given your time|brief|thanks for|let’s/i.test(t)?3:2));
-    const compliance=Math.max(1,Math.min(4, /label|guideline|per label|approved/i.test(t)?3+(hits>3?1:0):2));
-    const brevityBonus=words>40&&words<160?6:words<=40?2:0;
-    const askBonus=endsWithQuestion?6:0;
-    const score=Math.max(55,Math.min(98,Math.round(52+accuracy*6+objection*5+empathy*4+compliance*6+brevityBonus+askBonus)));
-    return {score,subscores:{question_quality:Math.max(1,Math.min(4,endsWithQuestion?3+(hits>3?1:0):2)),objection_handling:objection,empathy,compliance},worked:[hits>=3?"Grounded in relevant clinical cues":"Kept it concise",endsWithQuestion?"Ended with an engagement question":null].filter(Boolean),improve:[hits<3?"Reference renal/bone, resistance, or DDI where relevant":null,endsWithQuestion?null:"Close with a single, clear next-step ask"].filter(Boolean),phrasing:"Would aligning on criteria for eligible patients and a quick follow-up next week be helpful?"};
-  }
-
-  // ---------- system prefaces ----------
-  function buildPreface(mode, sc) {
-    const norm = normalizeMode(mode);
-    const COMMON = `
-# ReflectivAI — Output Contract
-Return two parts only. No code blocks. No markdown headings.
-1) Sales Guidance: short, actionable, accurate guidance.
-2) <coach>{ "worked":[…], "improve":[…], "phrasing":"…", "score":int, "subscores":{"question_quality":0-4,"objection_handling":0-4,"empathy":0-4,"compliance":0-4} }</coach>
-`.trim();
-
-    if (norm === "sales-simulation") {
-      return `
-# Role
-You are a virtual pharma coach prepping a sales rep for a 30-second interaction with an HCP. Be direct, safe, label-aligned.
-
-# Scenario
-${sc ? [
-  `Therapeutic Area: ${sc.therapeuticArea || "—"}`,
-  `HCP Role: ${sc.hcpRole || "—"}`,
-  `Background: ${sc.background || "—"}`,
-  `Today’s Goal: ${sc.goal || "—"}`
-].join("\n") : ""}
-
-# Style
-- 3–6 sentences max, plus one closing question.
-- Mention only appropriate, publicly known, label-aligned facts.
-- No pricing advice or PHI. No off-label.
-
-${COMMON}`.trim();
-    }
-
-    if (norm === "product_knowledge") {
-      return `
-Return a concise educational overview with reputable citations. Structure: key takeaways; mechanism/indications; safety/contraindications; efficacy; access notes; references. End with one clarifying question.
-${COMMON}`.trim();
-    }
-
-    return `
-Provide brief, practical self-reflection tips tied to communication with HCPs. No clinical or drug guidance.
-- 3–5 sentences, then one reflective question.
-
-${COMMON}`.trim();
-  }
-
-  // ---------- UI ----------
-  function buildUI() {
-    mount.innerHTML = "";
-    if (!mount.classList.contains("cw")) mount.classList.add("cw");
-
-    const shell = el("div", "reflectiv-chat");
-
-    // toolbar
-    const bar = el("div", "chat-toolbar");
-    const simControls = el("div","sim-controls");
-
-    // Mode
-    const lcLabel = el("label", "", "Learning Center"); lcLabel.htmlFor = "cw-mode";
-    const modeSel = el("select","select"); modeSel.id = "cw-mode";
-    (cfg?.modes || []).forEach((m) => {
-      const o = el("option"); o.value = m;
-      o.textContent = m.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-      modeSel.appendChild(o);
-    });
-    if (cfg?.defaultMode && (cfg.modes||[]).includes(cfg.defaultMode)) currentMode = cfg.defaultMode;
-    modeSel.value = currentMode;
-
-    // Coach toggle
-    const coachLabel = el("label", "", "Coach"); coachLabel.htmlFor = "cw-coach";
-    const coachSel = el("select","select"); coachSel.id = "cw-coach";
-    [{v:"on",t:"Coach On"},{v:"off",t:"Coach Off"}].forEach(({v,t})=>{
-      const o = el("option"); o.value=v; o.textContent=t; coachSel.appendChild(o);
-    });
-    coachSel.value = coachOn ? "on" : "off";
-
-    // Disease / Product Knowledge combined select
-    const diseaseLabel = el("label", "", "Disease / Product Knowledge"); diseaseLabel.htmlFor = "cw-disease";
-    const diseaseSelect = el("select","select"); diseaseSelect.id = "cw-disease";
-    const defaultOpt = el("option", "", "Select…");
-    defaultOpt.value = ""; defaultOpt.selected = true; defaultOpt.disabled = true;
-    diseaseSelect.appendChild(defaultOpt);
-    const og1 = document.createElement("optgroup"); og1.label = "Disease State";
-    Object.keys(DISEASE_STATES).forEach(ds=>{
-      const o=el("option","",ds); o.value=`disease::${ds}`; og1.appendChild(o);
-    });
-    const og2 = document.createElement("optgroup"); og2.label = "Product Knowledge";
-    Object.keys(DISEASE_STATES).forEach(ds=>{
-      const pkMode = DISEASE_STATES[ds].productKnowledgeMode;
-      if ((cfg?.modes||[]).includes(pkMode)) {
-        const o=el("option","",`${ds}: Product Knowledge`); o.value=`pk::${ds}`; og2.appendChild(o);
-      }
-    });
-    diseaseSelect.appendChild(og1); diseaseSelect.appendChild(og2);
-
-    // HCP Profile
-    const hcpLabel = el("label","","HCP Profile"); hcpLabel.htmlFor="cw-hcp";
-    const hcpSelect = el("select","select"); hcpSelect.id="cw-hcp";
-    const hcpDef = el("option","","Select HCP…"); hcpDef.value=""; hcpDef.selected=true; hcpDef.disabled=true;
-    hcpSelect.appendChild(hcpDef); hcpSelect.disabled = true;
-
-    // Assemble controls
-    simControls.appendChild(lcLabel);    simControls.appendChild(modeSel);
-    simControls.appendChild(coachLabel); simControls.appendChild(coachSel);
-    simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
-    simControls.appendChild(hcpLabel);     simControls.appendChild(hcpSelect);
-    bar.appendChild(simControls);
-    shell.appendChild(bar);
-
-    // meta + messages + input
-    const meta = el("div", "scenario-meta"); shell.appendChild(meta);
-    const msgs = el("div", "chat-messages"); shell.appendChild(msgs);
-
-    const inp = el("div", "chat-input");
-    const ta = el("textarea"); ta.placeholder = "Type your message…";
-    ta.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send.click(); } });
-    const send = el("button", "btn", "Send");
-    send.onclick = () => { const t = ta.value.trim(); if (!t) return; sendMessage(t); ta.value = ""; };
-    inp.appendChild(ta); inp.appendChild(send);
-    shell.appendChild(inp);
-
-    mount.appendChild(shell);
-
-    // coach section (outside shell to avoid overlap)
-    const coach = el("div", "coach-section");
-    coach.innerHTML = `<h3>Coach Feedback</h3><div class="coach-body muted">Awaiting the first assistant reply…</div>`;
-    mount.appendChild(coach);
-
-    // helpers
-    function updateVisibility() {
-      const norm = normalizeMode(currentMode);
-      const isSim = norm === "sales-simulation";
-      const isPK  = norm === "product_knowledge";
-
-      diseaseLabel.style.display = isSim ? "" : "none";
-      diseaseSelect.style.display = isSim ? "" : "none";
-      hcpLabel.style.display = isSim ? "" : "none";
-      hcpSelect.style.display = isSim ? "" : "none";
-
-      const showCoach = !isPK;
-      coachLabel.style.display = showCoach ? "" : "none";
-      coachSel.style.display   = showCoach ? "" : "none";
-      coachOn = showCoach ? (coachSel.value === "on") : false;
-
-      const coachPanel = mount.querySelector(".coach-section");
-      coachPanel.style.display = coachOn ? "" : "none";
-    }
-
-    function populateHcpForDisease(ds){
-      hcpSelect.innerHTML = "";
-      const def = el("option","","Select HCP…"); def.value=""; def.selected=true; def.disabled=true;
-      hcpSelect.appendChild(def);
-      const roles = DISEASE_STATES[ds]?.hcpRoles || [];
-      roles.forEach(role=>{ const o=el("option","",role); o.value=role; hcpSelect.appendChild(o); });
-      hcpSelect.disabled = roles.length===0;
-    }
-
-    // events
-    modeSel.onchange = () => {
-      currentMode = modeSel.value;
-      currentScenarioId = null;
-      conversation = [];
-      renderMessages(); renderCoach(); renderMeta();
-      updateVisibility();
-    };
-
-    coachSel.onchange = () => { coachOn = coachSel.value === "on"; renderCoach(); updateVisibility(); };
-
-    diseaseSelect.addEventListener("change", ()=>{
-      const val = diseaseSelect.value; if(!val) return;
-      const [kind, ds] = val.split("::");
-      if(kind === "pk"){
-        const pkMode = DISEASE_STATES[ds]?.productKnowledgeMode;
-        if(pkMode && (cfg?.modes||[]).includes(pkMode)){ currentMode = pkMode; }
-        modeSel.value = currentMode;
-        hcpSelect.disabled = true; hcpSelect.value="";
-      } else {
-        currentMode = "sales-simulation"; modeSel.value = currentMode;
-        populateHcpForDisease(ds);
-      }
-      conversation=[]; renderMessages(); renderCoach(); renderMeta(); updateVisibility();
-    });
-
-    hcpSelect.addEventListener("change", ()=>{
-      const dsv = diseaseSelect.value.startsWith("disease::") ? diseaseSelect.value.split("::")[1] : null;
-      const role = hcpSelect.value || null; if(!dsv || !role) return;
-      const filtered = scenarios.filter(s => {
-        const ta = (s.therapeuticArea||"").trim().toLowerCase();
-        return (ta === dsv.trim().toLowerCase()) && (s.hcpRole === role);
-      });
-      if(filtered.length >= 1){ currentScenarioId = filtered[0].id; }
-      conversation=[]; renderMessages(); renderCoach(); renderMeta();
-    });
-
-    function renderMeta() {
-      const sc = scenariosById.get(currentScenarioId);
-      const norm = normalizeMode(currentMode);
-      if (!sc || !currentScenarioId || norm !== "sales-simulation") { meta.innerHTML = ""; return; }
-      meta.innerHTML = `
-        <div class="meta-card">
-          <div><strong>Therapeutic Area:</strong> ${esc(sc.therapeuticArea || "—")}</div>
-          <div><strong>HCP Role:</strong> ${esc(sc.hcpRole || "—")}</div>
-          <div><strong>Background:</strong> ${esc(sc.background || "—")}</div>
-          <div><strong>Today’s Goal:</strong> ${esc(sc.goal || "—")}</div>
-        </div>`;
-    }
-
-    function renderMessages() {
-      msgs.innerHTML = "";
-      for (const m of conversation) {
-        const row = el("div", `message ${m.role}`);
-        const c = el("div", "content");
-        c.innerHTML = md(m.content);
-        row.appendChild(c);
-        msgs.appendChild(row);
-      }
-      msgs.scrollTop = msgs.scrollHeight;
-    }
-
-    function renderCoach() {
-      const body = coach.querySelector(".coach-body");
-      if (!coachOn) { coach.style.display = "none"; return; }
-      coach.style.display = "";
-      const last = conversation[conversation.length - 1];
-      if (!(last && last.role === "assistant" && last._coach)) {
-        body.innerHTML = `<span class="muted">Awaiting the first assistant reply…</span>`;
+  // ---------- minimal config loader ----------
+  let CFG = {
+    apiBase: "",
+    workerEndpoint: "",
+    model: MODEL_NAME,
+    stream: false,
+  };
+  (async function loadCfg() {
+    try {
+      if (window.REFLECTIV_CFG) {
+        CFG = { ...CFG, ...window.REFLECTIV_CFG };
         return;
       }
-      const fb = last._coach, subs = fb.subscores || {};
-      body.innerHTML = `
-        <div class="coach-score">Score: <strong>${fb.score ?? "—"}</strong>/100</div>
-        <div class="coach-subs">${Object.entries(subs).map(([k,v])=>`<span class="pill">${esc(k)}: ${v}</span>`).join(" ")}</div>
-        <ul class="coach-list">
-          <li><strong>What worked:</strong> ${esc((fb.worked||[]).join(" ")||"—")}</li>
-          <li><strong>What to improve:</strong> ${esc((fb.improve||[]).join(" ")||"—")}</li>
-          <li><strong>Suggested phrasing:</strong> ${esc(fb.phrasing||"—")}</li>
-        </ul>`;
+      const r = await fetch("./config.json", { cache: "no-store" });
+      if (r.ok) {
+        const j = await r.json();
+        CFG = { ...CFG, ...j, apiBase: j.apiBase || j.workerEndpoint || "" };
+      }
+    } catch (_) { /* silent */ }
+  })();
+
+  // ---------- DOM helpers ----------
+  function byLabel(prefixes) {
+    const all = Array.from(document.querySelectorAll("label, h2, h3, h4, p, span, strong"));
+    const match = all.find(el => {
+      const t = (el.textContent || "").trim().toLowerCase();
+      return prefixes.some(p => t.startsWith(p));
+    });
+    if (!match) return null;
+    // try for label->control
+    if (match.tagName === "LABEL") {
+      const forId = match.getAttribute("for");
+      if (forId) {
+        const sel = document.getElementById(forId);
+        if (sel && sel.tagName === "SELECT") return sel;
+      }
+      // next sibling select
+      const nextSel = match.parentElement && match.parentElement.querySelector("select");
+      if (nextSel) return nextSel;
     }
-
-    // expose for sendMessage
-    shell._renderMessages = renderMessages;
-    shell._renderCoach = renderCoach;
-    shell._renderMeta = renderMeta;
-
-    renderMeta(); renderMessages(); renderCoach();
-    updateVisibility();
+    // look around for a select in the same section
+    let scope = match.closest("section, form, .container, .field, .row") || document;
+    const s = scope.querySelector("select");
+    return s || null;
   }
 
-  // ---------- transport ----------
-  async function callModel(messages) {
-    const endpoint = (cfg?.apiBase || cfg?.workerUrl || "").trim();
-    if (!endpoint) throw new Error("No apiBase/workerUrl configured");
-    const r = await fetch(endpoint, {
+  function ensureMessagesContainer() {
+    let box = document.querySelector(".cw-messages") || document.getElementById("chat-log");
+    if (box) return box;
+    // safe fallback section
+    const sec = document.createElement("section");
+    sec.className = "cw-fallback";
+    sec.innerHTML = `
+      <div class="scenario-brief" aria-live="polite"></div>
+      <div class="cw-messages" role="log" aria-live="polite"></div>
+      <div class="coach-panel" data-hidden="true">
+        <div class="coach-head">
+          <strong>Coach</strong>
+          <div class="ei-badges"></div>
+        </div>
+        <div class="coach-body"></div>
+        <div class="coach-score"></div>
+      </div>
+    `;
+    document.body.appendChild(sec);
+    return sec.querySelector(".cw-messages");
+  }
+
+  function getInputElements() {
+    const ta = document.querySelector(".chat-input textarea") ||
+               document.getElementById("message") ||
+               document.querySelector("textarea");
+    let btn = document.querySelector('button[type="submit"]') ||
+              document.querySelector(".chat-send");
+    if (!btn) {
+      btn = document.createElement("button");
+      btn.className = "chat-send";
+      btn.type = "button";
+      btn.textContent = "Send";
+      (ta && ta.parentElement ? ta.parentElement : document.body).appendChild(btn);
+    }
+    return { ta, btn };
+  }
+
+  function coachPanel() {
+    const host = document.querySelector(".coach-panel");
+    if (host) return host;
+    // if fallback container created earlier, it exists; else create minimal
+    const panel = document.createElement("div");
+    panel.className = "coach-panel";
+    panel.innerHTML = `
+      <div class="coach-head">
+        <strong>Coach</strong>
+        <div class="ei-badges"></div>
+      </div>
+      <div class="coach-body"></div>
+      <div class="coach-score"></div>
+    `;
+    (messagesEl.parentElement || document.body).appendChild(panel);
+    return panel;
+  }
+
+  // ---------- state ----------
+  const persisted = safeParse(localStorage.getItem(STORE_KEY)) || {};
+  let mode = persisted.mode || DEFAULT_MODE;
+  let coachOn = persisted.coachOn !== undefined ? persisted.coachOn : true;
+  let disease = persisted.disease || "HIV";
+  let hcpId = persisted.hcp || (CATALOG[disease] ? CATALOG[disease][0].id : "");
+  let conversation = []; // {role:'user'|'assistant', content:string}
+  let scores = { turns: [], avg: 0 };
+
+  function persist() {
+    localStorage.setItem(STORE_KEY, JSON.stringify({ mode, coachOn, disease, hcp: hcpId }));
+  }
+
+  function resetContext(keepBrief = true) {
+    conversation = [];
+    scores = { turns: [], avg: 0 };
+    // clear coach body + score only
+    const panel = coachPanel();
+    const body = panel.querySelector(".coach-body");
+    const badges = panel.querySelector(".ei-badges");
+    const score = panel.querySelector(".coach-score");
+    if (body) body.innerHTML = "";
+    if (badges) badges.innerHTML = "";
+    if (score) score.textContent = "";
+    if (!keepBrief) {
+      const brief = document.querySelector(".scenario-brief");
+      if (brief) brief.innerHTML = "";
+    }
+  }
+
+  // ---------- UI wiring ----------
+  const messagesEl = ensureMessagesContainer();
+  const { ta: inputEl, btn: sendBtn } = getInputElements();
+
+  const modeSel = byLabel(["learning center", "mode"]);
+  const coachSel = byLabel(["coach"]);
+  const diseaseSel = byLabel(["disease / product knowledge", "disease state", "disease"]);
+  const hcpSel = byLabel(["hcp profile", "hcp profiles / scenarios"]);
+
+  // Populate Mode and Coach if present
+  if (modeSel) {
+    // enforce exactly two items
+    setOptions(modeSel, [
+      { v: "sales-simulation", t: "Sales Simulation" },
+      { v: "product-knowledge", t: "Product Knowledge" }
+    ]);
+    modeSel.value = mode;
+    modeSel.addEventListener("change", () => {
+      mode = modeSel.value;
+      persist();
+      handleCoachVisibility();
+      resetContext();
+      updateScenarioBrief();
+    });
+  }
+
+  if (coachSel) {
+    setOptions(coachSel, COACH_VALUES.map(v => ({ v, t: v })));
+    coachSel.value = coachOn ? "Coach On" : "Coach Off";
+    coachSel.addEventListener("change", () => {
+      coachOn = coachSel.value === "Coach On";
+      persist();
+      resetContext();
+    });
+  }
+
+  // Populate Disease and HCP
+  if (diseaseSel) {
+    setOptions(diseaseSel, Object.keys(CATALOG).map(k => ({ v: k, t: k })));
+    diseaseSel.value = disease;
+    diseaseSel.addEventListener("change", () => {
+      disease = diseaseSel.value;
+      rehydrateHCP();
+      persist();
+      resetContext(false);
+      updateScenarioBrief();
+    });
+  }
+
+  function rehydrateHCP() {
+    if (!hcpSel) return;
+    const list = CATALOG[disease] || [];
+    setOptions(hcpSel, list.map(item => ({ v: item.id, t: item.label })));
+    // ensure valid selection
+    const exists = list.some(x => x.id === hcpId);
+    if (!exists) hcpId = list.length ? list[0].id : "";
+    hcpSel.value = hcpId;
+  }
+
+  if (hcpSel) {
+    rehydrateHCP();
+    hcpSel.addEventListener("change", () => {
+      hcpId = hcpSel.value;
+      persist();
+      resetContext(false);
+      updateScenarioBrief();
+    });
+  }
+
+  function handleCoachVisibility() {
+    const panel = coachPanel();
+    const hide = mode !== "sales-simulation";
+    if (coachSel) coachSel.parentElement.style.display = hide ? "none" : "";
+    panel.setAttribute("data-hidden", hide || !coachOn ? "true" : "false");
+  }
+  handleCoachVisibility();
+
+  // ---------- scenario brief ----------
+  function currentBrief() {
+    const list = CATALOG[disease] || [];
+    const found = list.find(x => x.id === hcpId) || list[0];
+    return found ? found.brief : "";
+  }
+
+  function updateScenarioBrief() {
+    const host = document.querySelector(".scenario-brief");
+    if (!host) return;
+    const list = CATALOG[disease] || [];
+    const found = list.find(x => x.id === hcpId);
+    const name = found ? found.label : "";
+    const brief = found ? found.brief : "";
+    host.innerHTML = `
+      <div class="card">
+        <div class="row">
+          <div class="col">
+            <strong>${escapeHtml(disease)}</strong> · <span>${escapeHtml(name || "HCP")}</span>
+          </div>
+        </div>
+        <p>${escapeHtml(brief)}</p>
+      </div>`;
+  }
+  updateScenarioBrief();
+
+  // ---------- message rendering ----------
+  function addBubble(role, text) {
+    const row = document.createElement("div");
+    row.className = "row";
+    const b = document.createElement("div");
+    b.className = "bubble " + (role === "user" ? "user" : "assistant");
+    b.innerHTML = linkify(escapeHtml(text));
+    row.appendChild(b);
+    messagesEl.appendChild(row);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  // ---------- chat flow ----------
+  sendBtn?.addEventListener("click", onSend);
+  inputEl?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      onSend();
+    }
+  });
+
+  async function onSend() {
+    const txt = (inputEl?.value || "").trim();
+    if (!txt) return;
+    addBubble("user", txt);
+    inputEl.value = "";
+    conversation.push({ role: "user", content: txt });
+
+    const sys = await loadSystemPrimer();
+    const preface = mode === "sales-simulation"
+      ? `You are role-playing as an HCP in ${disease}. Use only on-label language. Keep replies concise. Scenario: ${currentBrief()}`
+      : `You are answering Product Knowledge questions in ${disease}. Use only on-label language. Provide concise, source-named support when relevant.`;
+
+    const msgs = [
+      { role: "system", content: sys },
+      { role: "system", content: preface },
+      ...conversation
+    ];
+
+    const typing = addTyping();
+    let assistant = "Upstream error. Try again.";
+    try {
+      assistant = await chatCall(msgs);
+    } catch (_) { /* handled */ }
+    removeTyping(typing);
+    addBubble("assistant", assistant);
+    conversation.push({ role: "assistant", content: assistant });
+
+    if (mode === "sales-simulation" && coachOn) {
+      await runCoach(txt);
+    }
+  }
+
+  function addTyping() {
+    const row = document.createElement("div");
+    row.className = "row";
+    row.innerHTML = `<div class="bubble assistant"><span class="dots"><i></i><i></i><i></i></span></div>`;
+    messagesEl.appendChild(row);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return row;
+  }
+  function removeTyping(node) { if (node && node.parentNode) node.parentNode.removeChild(node); }
+
+  // ---------- coach evaluator ----------
+  async function runCoach(latestUserMsg) {
+    const panel = coachPanel();
+    const body = panel.querySelector(".coach-body");
+    const badges = panel.querySelector(".ei-badges");
+    const scoreEl = panel.querySelector(".coach-score");
+    panel.setAttribute("data-hidden", "false");
+
+    const sys = `You are a strict coaching evaluator for compliant pharma sales role-plays.
+Score ONLY the user's latest message relative to the active scenario.
+Rubric 0–5: accuracy, compliance, discovery, objection, value, empathy, clarity.
+If any compliance or accuracy risk exists, set that dimension to 0.
+Return pure JSON (no preface):
+{
+  "feedback_html": "<p>...</p>",
+  "rubric": {"accuracy":0-5,"compliance":0-5,"discovery":0-5,"objection":0-5,"value":0-5,"empathy":0-5,"clarity":0-5},
+  "ei": {"empathy_score":0-5,"tone_label":"supportive|neutral|transactional","evidence_quote":"4–18 word excerpt"}
+}
+feedback_html must include sections Tone, What worked, Tighten, Suggested rewrite, tailored to THIS message and scenario.`;
+
+    const scenarioCtx = `Disease: ${disease}. HCP: ${(CATALOG[disease]||[]).find(x=>x.id===hcpId)?.label||"HCP"}.
+Brief: ${currentBrief()}
+User message: """${latestUserMsg}"""`;
+
+    const evalMsgs = [
+      { role: "system", content: sys },
+      { role: "user", content: scenarioCtx }
+    ];
+
+    let out = null;
+    try {
+      const raw = await chatCall(evalMsgs);
+      out = looseJson(raw);
+      if (!out) {
+        // retry once
+        const raw2 = await chatCall(evalMsgs);
+        out = looseJson(raw2);
+      }
+    } catch (_) { /* handled */ }
+
+    if (!out || !out.rubric || !out.ei) {
+      body.innerHTML = `<div class="coach-card"><p>Coach unavailable. Using neutral fallback.</p><ul><li>Lead with on-label, fair-balance language.</li><li>Ask one clarifying question.</li><li>Close with clear next step.</li></ul></div>`;
+      badges.innerHTML = "";
+      scoreEl.textContent = "";
+      return;
+    }
+
+    // hard-fail notice
+    const fail = (out.rubric.accuracy === 0 || out.rubric.compliance === 0);
+    const weights = { accuracy:3, compliance:3, discovery:2, objection:2, value:2, empathy:1, clarity:1 };
+    const sum = Object.entries(out.rubric).reduce((a,[k,v]) => a + (v * (weights[k]||0)), 0);
+    const turnScore = Math.round(((sum / 70) * 10) * 10) / 10;
+    scores.turns.push(turnScore);
+    const avg = Math.round((scores.turns.reduce((a,b)=>a+b,0) / scores.turns.length) * 10) / 10;
+    scores.avg = isFinite(avg) ? avg : 0;
+
+    const alertHtml = fail ? `<div class="coach-alert">Compliance/Accuracy risk detected — lead with on-label, fair-balance language.</div>` : "";
+
+    body.innerHTML = `
+      <div class="coach-card">
+        ${alertHtml}
+        ${sanitizeHtml(out.feedback_html)}
+      </div>
+    `;
+
+    badges.innerHTML = `
+      <span class="chip tone-${escapeHtml(out.ei.tone_label||'neutral')}">${escapeHtml(cap(out.ei.tone_label||'neutral'))}</span>
+      <span class="chip emp">Empathy ${num(out.ei.empathy_score)}/5</span>
+      <span class="snippet">“${escapeHtml(out.ei.evidence_quote||"") }”</span>
+    `;
+    scoreEl.textContent = `Score — Turn: ${turnScore.toFixed(1)} | Avg: ${scores.avg.toFixed(1)}`;
+  }
+
+  // ---------- API calls ----------
+  async function chatCall(messages) {
+    const url = CFG.apiBase || CFG.workerEndpoint;
+    if (!url) throw new Error("No API endpoint configured.");
+    const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        model: (cfg && cfg.model) || "llama-3.1-8b-instant",
-        temperature: 0.2,
-        stream: false,
+        model: CFG.model || MODEL_NAME,
+        temperature: TEMP,
         messages
       })
     });
-    if (!r.ok) {
-      const txt = await r.text().catch(() => "");
-      throw new Error(`HTTP ${r.status}: ${txt || "no body"}`);
-    }
-    const data = await r.json().catch(() => ({}));
-    return data?.content || data?.reply || data?.choices?.[0]?.message?.content || "";
+    if (!res.ok) throw new Error("Upstream error");
+    const data = await res.json().catch(()=>null);
+    // expect { content } or OpenAI-like { choices[0].message.content }
+    const content = data?.content ||
+                    data?.choices?.[0]?.message?.content ||
+                    data?.output_text ||
+                    "";
+    if (!content) throw new Error("Empty response");
+    return String(content);
   }
 
-  // ---------- send ----------
-  async function sendMessage(userText) {
-    const shell = mount.querySelector(".reflectiv-chat");
-    const renderMessages = shell._renderMessages;
-    const renderCoach = shell._renderCoach;
-
-    conversation.push({ role: "user", content: userText });
-    renderMessages(); renderCoach();
-
-    const sc = scenariosById.get(currentScenarioId);
-    const preface = buildPreface(currentMode, sc);
-
-    const messages = [];
-    if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
-    messages.push({ role: "system", content: preface });
-    messages.push({ role: "user", content: userText });
-
+  // ---------- system primer loader ----------
+  async function loadSystemPrimer() {
     try {
-      const raw = await callModel(messages);
-      const { coach, clean } = extractCoach(raw);
-      const computed = scoreReply(userText, clean, currentMode);
-      const finalCoach = (coach && coach.score && coach.subscores) ? coach : computed;
-
-      conversation.push({ role: "assistant", content: clean, _coach: finalCoach });
-      renderMessages(); renderCoach();
-
-      if (cfg && cfg.analyticsEndpoint) {
-        fetch(cfg.analyticsEndpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ts: Date.now(),
-            mode: currentMode,
-            scenarioId: currentScenarioId,
-            turn: conversation.length,
-            score: finalCoach.score,
-            subscores: finalCoach.subscores
-          })
-        }).catch(() => {});
-      }
-    } catch (e) {
-      conversation.push({ role: "assistant", content: `Model error: ${String(e.message || e)}` });
-      renderMessages();
-    }
+      const r = await fetch("assets/chat/system.md", { cache: "no-store" });
+      if (r.ok) return await r.text();
+    } catch(_) { /* ignore */ }
+    return "You are a compliant, on-label pharma conversational agent. Avoid PHI. Provide concise, balanced information.";
   }
 
-  // ---------- scenarios loader ----------
-  async function loadScenarios() {
-    if (cfg && cfg.scenariosUrl) {
-      const payload = await fetchLocal(cfg.scenariosUrl);
-      const arr = Array.isArray(payload) ? payload : (payload.scenarios || []);
-      scenarios = arr.map((s)=>({
-        id: s.id,
-        label: s.label || s.id,
-        therapeuticArea: s.therapeuticArea,
-        hcpRole: s.hcpRole || "",
-        background: s.background || "",
-        goal: s.goal || ""
-      }));
-    } else if (Array.isArray(cfg?.scenarios)) {
-      scenarios = cfg.scenarios.map((s)=>({
-        id: s.id,
-        label: s.label || s.id,
-        therapeuticArea: (s.therapeuticArea||"").split(" - ")[0],
-        hcpRole: s.hcpRole || "",
-        background: s.background || "",
-        goal: s.goal || ""
-      }));
-    } else {
-      scenarios = [];
-    }
-    scenariosById = new Map(scenarios.map((s)=>[s.id,s]));
+  // ---------- utilities ----------
+  function setOptions(sel, items) {
+    if (!sel) return;
+    const v = sel.value;
+    sel.innerHTML = items.map(o => `<option value="${escapeAttr(o.v)}">${escapeHtml(o.t)}</option>`).join("");
+    if (items.some(o => o.v === v)) sel.value = v;
   }
-
-  // ---------- init ----------
-  async function init() {
-    try {
-      // root → assets/chat/config.json
-      cfg = await fetchLocal("./assets/chat/config.json");
-    } catch (e) {
-      console.error("config.json load failed:", e);
-      cfg = { modes:["emotional-assessment","hiv-product-knowledge","sales-simulation"], defaultMode:"sales-simulation" };
-    }
-
-    try {
-      systemPrompt = await fetchLocal("./assets/chat/system.md");
-    } catch (_) {
-      systemPrompt = "";
-    }
-
-    await loadScenarios();
-
-    if (cfg.modes && cfg.defaultMode && cfg.modes.includes(cfg.defaultMode)) {
-      currentMode = cfg.defaultMode;
-    }
-
-    buildUI();
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+  function escapeAttr(s){ return escapeHtml(s).replace(/"/g, "&quot;"); }
+  function cap(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : ""; }
+  function num(x){ return Math.max(0, Math.min(5, Number(x)||0)).toFixed(1).replace(/\.0$/,""); }
+  function linkify(t){
+    return t.replace(/(https?:\/\/[^\s)]+)|(www\.[^\s)]+)/g, m => `<a href="${m.startsWith('http')?m:'https://'+m}" target="_blank" rel="noopener">${m}</a>`);
   }
+  function looseJson(text) {
+    if (!text) return null;
+    // try direct parse
+    try { return JSON.parse(text); } catch {}
+    // try to extract first {...}
+    const i = text.indexOf("{");
+    const j = text.lastIndexOf("}");
+    if (i>=0 && j>i) {
+      try { return JSON.parse(text.slice(i, j+1)); } catch {}
+    }
+    return null;
+  }
+  function sanitizeHtml(s) {
+    // allow basic tags used in feedback_html
+    const div = document.createElement("div");
+    div.innerHTML = s || "";
+    // strip scripts and styles
+    div.querySelectorAll("script,style,iframe,object").forEach(n=>n.remove());
+    // remove event handlers
+    div.querySelectorAll("*").forEach(el=>{
+      [...el.attributes].forEach(a=>{ if (a.name.startsWith("on")) el.removeAttribute(a.name); });
+    });
+    return div.innerHTML;
+  }
+  function safeParse(s){ try { return JSON.parse(s); } catch { return null; } }
 
-  // ---------- start ----------
-  waitForMount(init);
+  // ---------- messaging & EI microcopy hooks ----------
+  // Subtle copy to set relational framing on load (no layout change)
+  (function seedEIIntro() {
+    const panel = coachPanel();
+    const body = panel.querySelector(".coach-body");
+    if (!body.innerHTML) {
+      body.innerHTML = `<div class="coach-card muted">
+        <p><strong>Coach is listening for tone.</strong> You’ll see tips on empathy, clarity, and objection handling as you practice.</p>
+        <ul><li>Ask one clarifying question before recommending.</li><li>Mirror the HCP’s concern in your own words.</li><li>Close with a next step agreed by both.</li></ul>
+      </div>`;
+    }
+    const badges = panel.querySelector(".ei-badges");
+    if (badges && !badges.innerHTML) {
+      badges.innerHTML = `<span class="chip">Empathy 0/5</span><span class="chip tone-neutral">Neutral</span>`;
+    }
+    handleCoachVisibility();
+  })();
+
+  // expose minimal for debugging without logs
+  window.__ReflectivWidgetV4c = { resetContext, persist };
 })();
