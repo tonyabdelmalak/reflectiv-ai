@@ -1,273 +1,203 @@
 /*
- * ReflectivAI Chat/Coach v10x (robust, scenario-rich version)
- * Mode, Disease, HCP wiring; meta-card always shown; persona/scenario rich context support
- * Structured JSON feedback; session/persistence; mobile safe
+ * ReflectivAI Chat/Coach v10x — scenario-rich meta-card, persona.json support
+ * Scenario meta always rendered; persona/scenario pulled from persona.json and config; robust dropdown wiring
  */
 
 (function () {
   let mount = null;
   let cfg = null, systemPrompt = "";
-  let scenarios = [], scenariosById = new Map();
+  let personas = {}, scenarios = [], scenariosByKey = {};
   let currentMode = "sales-simulation";
-  let currentScenarioId = null;
+  let disease = "", hcpPersona = "";
   let conversation = [];
   let coachOn = true;
 
-  // -- Disease mapping and persona config fallbacks (overridden by loaded files)
-  const DISEASE_STATES = {
-    HIV: ["Internal Medicine MD", "Nurse Practitioner", "Physician Assistant", "Infectious Disease Specialist"],
-    Cancer: ["Oncologist", "Nurse Practitioner", "Physician Assistant"],
-    Vaccines: ["Internal Medicine Doctor", "Nurse Practitioner", "Physician Assistant"],
-    COVID: ["Pulmonologist", "Physician Assistant", "Nurse Practitioner"],
-    Cardiovascular: ["Nurse Practitioner", "Internal Medicine MD", "Cardiologist"]
-  };
-
-  // ----
+  // -- Utility helpers --
+  function esc(s) {
+    return String(s || "").replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  function md(text) {
+    if (!text) return "";
+    let s = esc(text).replace(/\r\n?/g, "\n");
+    s = s.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
+    s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+    return s.split(/\n{2,}/).map(p => `<p>${p.replace(/\n/g, "<br>")}</p>`).join("\n");
+  }
   async function fetchLocal(path) {
     const r = await fetch(path, { cache: "no-store" });
     if (!r.ok) throw new Error(`Failed to load ${path} (${r.status})`);
     const ct = r.headers.get("content-type") || "";
     return ct.includes("application/json") ? r.json() : r.text();
   }
-  const esc = (s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
-  function md(text) {
-    if (!text) return "";
-    let s = esc(text).replace(/\r\n?/g, "\n");
-    s = s.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
-    s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
-    s = s.replace(/^(?:-\s+|\*\s+).+(?:\n(?:-\s+|\*\s+).+)*/gm, (blk) => {
-      const items = blk.split("\n").map((l) => l.replace(/^(?:-\s+|\*\s+)(.+)$/, "<li>$1</li>")).join("");
-      return `<ul>${items}</ul>`;
+  // -- Meta-card scenario lookup --
+  function findScenario(disease, persona) {
+    // First try scenarios merged file, then persona.json
+    let key = (disease || "") + "::" + (persona || "");
+    if (scenarios && scenariosByKey[key]) return scenariosByKey[key];
+    // persona.json fallback
+    const personaKey = Object.keys(personas).find(k => {
+      let entry = personas[k] || {};
+      return (entry.displayName && persona && entry.displayName.toLowerCase().includes(persona.toLowerCase()))
+        || (entry.role && persona && entry.role.toLowerCase().includes(persona.toLowerCase()));
     });
-    return s.split(/\n{2,}/).map((p) => (p.startsWith("<ul>") ? p : `<p>${p.replace(/\n/g, "<br>")}</p>`)).join("\n");
-  }
-  function el(tag, cls, text) {
-    const e = document.createElement(tag);
-    if (cls) e.className = cls;
-    if (text != null) e.textContent = text;
-    return e;
-  }
-  function extractCoach(raw) {
-    const m = String(raw || "").match(/<coach>([\s\S]*?)<\/coach>/i);
-    if (!m) return { coach: null, clean: sanitizeLLM(raw) };
-    let coach = null;
-    try { coach = JSON.parse(m[1]); } catch {}
-    const clean = sanitizeLLM(String(raw).replace(m[0], "").trim());
-    return { coach, clean };
-  }
-  function sanitizeLLM(raw) {
-    let s = String(raw || "");
-    s = s.replace(/``````/g, "");
-    s = s.replace(/<pre[\s\S]*?<\/pre>/gi, "");
-    s = s.replace(/^\s*#{1,6}\s+/gm, "");
-    return s.replace(/\n{3,}/g, "\n\n").trim();
+    return personaKey ? { 
+      therapeuticArea: disease, 
+      hcpRole: persona, 
+      background: personas[personaKey].background || "", 
+      goal: personas[personaKey].goal || "", 
+      displayName: personas[personaKey].displayName || "",
+      style: personas[personaKey].style || ""
+    } : null;
   }
 
-  // --- meta card: show active context (always if available)
-  function renderMeta(meta, sc, mode) {
-    if (!sc) { meta.innerHTML = ""; return; }
-    meta.innerHTML = `
+  // -- UI rendering logic --
+  function renderMetaCard(metaDiv, disease, persona) {
+    if (!disease && !persona) { metaDiv.innerHTML = ""; return; }
+    let sc = findScenario(disease, persona);
+    if (!sc) {
+      metaDiv.innerHTML = `
+        <div class="meta-card">
+          <div><strong>Therapeutic Area:</strong> ${esc(disease || "—")}</div>
+          <div><strong>HCP Persona:</strong> ${esc(persona || "—")}</div>
+          <div><strong>Background:</strong> —</div>
+          <div><strong>Today's Goal:</strong> —</div>
+        </div>`;
+      return;
+    }
+    metaDiv.innerHTML = `
       <div class="meta-card">
-        <div><strong>Therapeutic Area:</strong> ${esc(sc.therapeuticArea || "—")}</div>
-        <div><strong>HCP Persona:</strong> ${esc(sc.hcpRole || "—")}</div>
-        <div><strong>Background:</strong> ${esc(sc.background || "—") || "—"}</div>
-        <div><strong>Today’s Goal:</strong> ${esc(sc.goal || "—") || "—"}</div>
+        <div><strong>Therapeutic Area:</strong> ${esc(sc.therapeuticArea || disease || "—")}</div>
+        <div><strong>HCP Persona:</strong> ${esc(sc.hcpRole || sc.displayName || persona || "—")}</div>
+        <div><strong>Background:</strong> ${esc(sc.background || sc.style || "—")}</div>
+        <div><strong>Today's Goal:</strong> ${esc(sc.goal || "—")}</div>
       </div>
     `;
   }
 
-  function populateHcpForDisease(ds) {
-    const roles = DISEASE_STATES[ds] || [];
-    return roles;
-  }
-
-  // --- UI/Session core ---
   function buildUI() {
     mount.innerHTML = "";
     if (!mount.classList.contains("cw")) mount.classList.add("cw");
-    const shell = el("div", "reflectiv-chat");
+    const shell = document.createElement("div");
+    shell.className = "reflectiv-chat";
 
-    // Toolbar/dropdowns
-    const toolbar = el("div", "chat-toolbar");
+    // DROPDOWNS
+    const toolbar = document.createElement("div");
+    toolbar.className = "chat-toolbar";
 
-    // Mode dropdown—only Sales Simulation and Product Knowledge
-    const modeLabel = el("label", "", "Mode");
-    modeLabel.htmlFor = "cw-mode";
-    const modeSel = el("select", "select");
-    modeSel.id = "cw-mode";
+    // Mode selection
+    const modeLabel = document.createElement("label");
+    modeLabel.textContent = "Mode";
+    const modeSelect = document.createElement("select");
     [["sales-simulation", "Sales Simulation"], ["product-knowledge", "Product Knowledge"]].forEach(([v, t]) => {
-      const o = el("option");
-      o.value = v;
-      o.textContent = t;
-      modeSel.appendChild(o);
+      const o = document.createElement("option"); o.value = v; o.textContent = t; modeSelect.appendChild(o);
     });
-    modeSel.value = currentMode;
+    modeSelect.value = currentMode;
 
     // Disease dropdown
-    const diseaseLabel = el("label", "", "Disease");
-    diseaseLabel.htmlFor = "cw-disease";
-    const diseaseSelect = el("select", "select");
-    diseaseSelect.id = "cw-disease";
-    const diseaseOpt = el("option", "", "Select Disease…");
-    diseaseOpt.value = ""; diseaseOpt.selected = true; diseaseOpt.disabled = true;
-    diseaseSelect.appendChild(diseaseOpt);
-    Object.keys(DISEASE_STATES).forEach(ds => {
-      const o = el("option", "", ds);
-      o.value = ds;
-      o.textContent = ds;
-      diseaseSelect.appendChild(o);
+    const diseaseLabel = document.createElement("label");
+    diseaseLabel.textContent = "Disease";
+    const diseaseSelect = document.createElement("select");
+    diseaseSelect.appendChild(new Option("Select Disease…", ""));
+    const diseases = ["HIV", "Cancer", "Vaccines", "COVID", "Cardiovascular"];
+    diseases.forEach(ds => {
+      diseaseSelect.appendChild(new Option(ds, ds));
     });
 
     // HCP persona dropdown
-    const hcpLabel = el("label", "", "HCP Persona");
-    hcpLabel.htmlFor = "cw-hcp";
-    const hcpSelect = el("select", "select");
-    hcpSelect.id = "cw-hcp";
-    const hcpDef = el("option", "", "Select HCP…");
-    hcpDef.value = ""; hcpDef.selected = true; hcpDef.disabled = true;
-    hcpSelect.appendChild(hcpDef); hcpSelect.disabled = true;
+    const hcpLabel = document.createElement("label");
+    hcpLabel.textContent = "HCP Persona";
+    const hcpSelect = document.createElement("select");
+    hcpSelect.appendChild(new Option("Select HCP…", ""));
+    hcpSelect.disabled = true;
 
     // Coach toggle
-    const coachLabel = el("label", "", "Coach");
-    coachLabel.htmlFor = "cw-coach";
-    const coachSel = el("select", "select");
-    coachSel.id = "cw-coach";
-    [["on", "Coach On"], ["off", "Coach Off"]].forEach(([v, t]) => {
-      const o = el("option");
-      o.value = v;
-      o.textContent = t;
-      coachSel.appendChild(o);
-    });
-    coachSel.value = coachOn ? "on" : "off";
+    const coachLabel = document.createElement("label");
+    coachLabel.textContent = "Coach";
+    const coachSelect = document.createElement("select");
+    coachSelect.appendChild(new Option("Coach On", "on"));
+    coachSelect.appendChild(new Option("Coach Off", "off"));
+    coachSelect.value = coachOn ? "on" : "off";
 
-    // Arrange controls based on mode
-    function arrangeControls() {
-      // Show/hide coach and hcp only in simulation
-      coachLabel.style.display = coachSel.style.display = (currentMode === "sales-simulation") ? "" : "none";
-      hcpLabel.style.display = hcpSelect.style.display = (currentMode === "sales-simulation") ? "" : "none";
-      // Coach ON by default for simulation
-      coachOn = currentMode === "sales-simulation";
-      coachSel.value = coachOn ? "on" : "off";
-      hcpSelect.disabled = !(currentMode === "sales-simulation" && diseaseSelect.value);
-    }
-
-    toolbar.appendChild(modeLabel); toolbar.appendChild(modeSel);
+    toolbar.appendChild(modeLabel); toolbar.appendChild(modeSelect);
     toolbar.appendChild(diseaseLabel); toolbar.appendChild(diseaseSelect);
     toolbar.appendChild(hcpLabel); toolbar.appendChild(hcpSelect);
-    toolbar.appendChild(coachLabel); toolbar.appendChild(coachSel);
-
+    toolbar.appendChild(coachLabel); toolbar.appendChild(coachSelect);
     shell.appendChild(toolbar);
 
-    // Meta card area (shown above chat always, updates with selection)
-    const meta = el("div", "scenario-meta");
-    shell.appendChild(meta);
+    // META CARD
+    const metaDiv = document.createElement("div");
+    metaDiv.className = "scenario-meta";
+    shell.appendChild(metaDiv);
 
-    // Chat/messaging area
-    const msgs = el("div", "chat-messages");
+    // CHAT AREA
+    const msgs = document.createElement("div");
+    msgs.className = "chat-messages";
     shell.appendChild(msgs);
 
-    // Chat input
-    const inputArea = el("div", "chat-input");
-    const textarea = el("textarea");
-    textarea.placeholder = "Type your message…";
-    const sendBtn = el("button", "btn", "Send");
-    inputArea.appendChild(textarea); inputArea.appendChild(sendBtn);
-    shell.appendChild(inputArea);
+    // INPUT
+    const input = document.createElement("div");
+    input.className = "chat-input";
+    const ta = document.createElement("textarea");
+    ta.placeholder = "Type your message…";
+    const send = document.createElement("button");
+    send.className = "btn";
+    send.textContent = "Send";
+    input.appendChild(ta); input.appendChild(send);
+    shell.appendChild(input);
 
-    // Coach feedback panel
-    const coachPanel = el("div", "coach-section");
+    // COACH PANEL
+    const coachPanel = document.createElement("div");
+    coachPanel.className = "coach-section";
     coachPanel.innerHTML = `<h3>Coach Feedback</h3><div class="coach-body muted">Awaiting assistant reply…</div>`;
     shell.appendChild(coachPanel);
 
-    mount.appendChild(shell);
-
-    // Load scenarios JSON if present and prep scenario map
-    async function loadScenarios() {
-      try {
-        const sc = await fetchLocal("./assets/chat/data/scenarios.merged.json");
-        scenarios = Array.isArray(sc) ? sc : (sc.scenarios || []);
-        scenariosById = new Map(scenarios.map(s => [s.id, s]));
-      } catch { scenarios = []; scenariosById = new Map(); }
-    }
-
-    // Session stateful triggers
-    modeSel.onchange = () => {
-      currentMode = modeSel.value;
-      diseaseSelect.value = "";
-      hcpSelect.innerHTML = ""; hcpSelect.appendChild(hcpDef); hcpSelect.disabled = true;
-      conversation = [];
-      arrangeControls();
-      displayMeta();
-      renderMessages();
-      renderCoach();
-    };
-    diseaseSelect.onchange = () => {
-      // For simulation, force enable and populate HCP from disease
-      hcpSelect.innerHTML = ""; hcpSelect.appendChild(hcpDef); hcpSelect.disabled = true;
-      if (currentMode === "sales-simulation" && diseaseSelect.value) {
-        const roles = populateHcpForDisease(diseaseSelect.value);
-        roles.forEach(p => {
-          const o = el("option", "", p);
-          o.value = p; hcpSelect.appendChild(o);
+    // -- RENDER LOGIC --
+    function updateHcpOptions() {
+      hcpSelect.innerHTML = ""; hcpSelect.appendChild(new Option("Select HCP…", ""));
+      if (diseaseSelect.value && personas) {
+        let personaPool = Object.values(personas).filter(p =>
+          p.areas && p.areas.map(String).includes(diseaseSelect.value)
+        );
+        if (!personaPool.length) {
+          // fallback to list by disease dictionary
+          switch (diseaseSelect.value) {
+            case "HIV": personaPool = [{ displayName: "Internal Medicine MD" }, { displayName: "Nurse Practitioner" }, { displayName: "Physician Assistant" }, { displayName: "Infectious Disease Specialist" }]; break;
+            case "Cancer": personaPool = [{ displayName: "Oncologist" }, { displayName: "Nurse Practitioner" }, { displayName: "Physician Assistant" }]; break;
+            case "Vaccines": personaPool = [{ displayName: "Internal Medicine Doctor" }, { displayName: "Nurse Practitioner" }, { displayName: "Physician Assistant" }]; break;
+            case "COVID": personaPool = [{ displayName: "Pulmonologist" }, { displayName: "Physician Assistant" }, { displayName: "Nurse Practitioner" }]; break;
+            case "Cardiovascular": personaPool = [{ displayName: "Nurse Practitioner" }, { displayName: "Internal Medicine MD" }, { displayName: "Cardiologist" }]; break;
+            default: break;
+          }
+        }
+        personaPool.forEach(p => {
+          hcpSelect.appendChild(new Option(p.displayName || p.role, p.displayName || p.role));
         });
         hcpSelect.disabled = false;
+      } else {
+        hcpSelect.disabled = true;
       }
-      conversation = [];
-      displayMeta();
-      renderMessages();
-      renderCoach();
-    };
-    hcpSelect.onchange = () => {
-      conversation = [];
-      displayMeta();
-      renderMessages();
-      renderCoach();
-    };
-    coachSel.onchange = () => {
-      coachOn = coachSel.value === "on";
-      renderCoach();
-    };
-
-    // Input send
-    sendBtn.onclick = () => {
-      const t = textarea.value.trim();
-      if (!t) return;
-      if (!diseaseSelect.value || (currentMode === "sales-simulation" && !hcpSelect.value)) return;
-      textarea.value = "";
-      sendMessage(t);
-    };
-    textarea.addEventListener("keydown", function (e) {
-      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendBtn.click(); }
-    });
-
-    // Pre-first-chat meta display logic
-    function displayMeta() {
-      let sc = null;
-      if (currentMode === "sales-simulation" && diseaseSelect.value && hcpSelect.value) {
-        // Find scenario with these selections if present
-        sc = scenarios.find(s => String(s.therapeuticArea).toLowerCase() === diseaseSelect.value.toLowerCase()
-          && String(s.hcpRole).toLowerCase() === hcpSelect.value.toLowerCase());
-      }
-      if (!sc && diseaseSelect.value) {
-        sc = { therapeuticArea: diseaseSelect.value, hcpRole: hcpSelect.value || "—", background: "", goal: "" };
-      }
-      renderMeta(meta, sc, currentMode);
     }
 
-    // Chat rendering
+    function renderMetaScenario() {
+      renderMetaCard(metaDiv, diseaseSelect.value, hcpSelect.value);
+    }
+
     function renderMessages() {
       msgs.innerHTML = "";
       conversation.forEach(m => {
-        const row = el("div", `message ${m.role}`);
-        const c = el("div", "content");
+        const row = document.createElement("div");
+        row.className = "message " + m.role;
+        const c = document.createElement("div");
+        c.className = "content";
         c.innerHTML = md(m.content);
         row.appendChild(c); msgs.appendChild(row);
       });
       msgs.scrollTop = msgs.scrollHeight;
     }
-    // Coach feedback rendering
+
     function renderCoach() {
       const body = coachPanel.querySelector(".coach-body");
       if (!coachOn || currentMode !== "sales-simulation") { coachPanel.style.display = "none"; return; }
@@ -286,56 +216,55 @@
           <li><strong>Suggested phrasing:</strong> ${esc(fb.phrasing || "—")}</li>
         </ul>
       `;
-      if (fb.ei) {
-        const eiHtml = document.createElement("div");
-        eiHtml.className = "ei-badges";
-        eiHtml.innerHTML = `
-          <span class="ei-badge">Empathy ${esc(fb.ei.empathy_score.toFixed(1))} / 5</span>
-          <span class="ei-badge">Tone: ${esc(fb.ei.tone_label)}</span>
-          <span class="ei-badge">Quote: "${esc(fb.ei.evidence_quote)}"</span>
-        `;
-        if (!body.querySelector(".ei-badges")) {
-          body.appendChild(eiHtml);
-        }
-      }
     }
 
-    // Main message handler: system prompt, scenario, persona, evidence...
+    // -- UI event handlers --
+    modeSelect.onchange = () => {
+      currentMode = modeSelect.value;
+      diseaseSelect.value = ""; hcpSelect.value = "";
+      hcpSelect.disabled = true;
+      conversation = [];
+      renderMetaScenario();
+      renderMessages();
+      renderCoach();
+    };
+    diseaseSelect.onchange = () => {
+      hcpSelect.value = ""; updateHcpOptions();
+      conversation = [];
+      renderMetaScenario();
+      renderMessages();
+      renderCoach();
+    };
+    hcpSelect.onchange = () => {
+      conversation = [];
+      renderMetaScenario();
+      renderMessages();
+      renderCoach();
+    };
+    coachSelect.onchange = () => {
+      coachOn = coachSelect.value === "on";
+      renderCoach();
+    };
+    send.onclick = () => {
+      const t = ta.value.trim();
+      if (!t) return;
+      if (!diseaseSelect.value || (currentMode === "sales-simulation" && !hcpSelect.value)) return;
+      ta.value = "";
+      sendMessage(t);
+    };
+    ta.addEventListener("keydown", function (e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send.click(); } });
+
+    // --- MESSAGE HANDLER (LLM backend and coach parsing) ---
     async function sendMessage(userText) {
-      await loadScenarios(); // make sure scenarios loaded up to date
       try {
         let sysBlocks = [{ role: "system", content: systemPrompt }];
-        // Attach scenario meta (disease/HCP/persona)
-        let sc = null;
-        if (currentMode === "sales-simulation") {
-          sc = scenarios.find(s => String(s.therapeuticArea).toLowerCase() === diseaseSelect.value.toLowerCase()
-            && String(s.hcpRole).toLowerCase() === hcpSelect.value.toLowerCase());
-        }
-        // Evidence context (minimal for demo—extend as needed)
-        let evidenceContext = [];
-        if (userText && diseaseSelect.value) {
-          evidenceContext = [{
-            cite: "CDC MMWR 2023", summary: "Relevant CDC summary...", url: "https://cdc.gov/"
-          }];
-        }
-        if (evidenceContext.length) {
-          sysBlocks.push({ role: "system", content: "EvidenceContext:\n" + evidenceContext.map((e, i) => `${i + 1}. ${e.cite}: ${e.summary}`).join("\n") });
-        }
-        // Compose prompt per mode
-        sysBlocks.push({ role: "system", content: currentMode === "product-knowledge" ?
-          "Product Knowledge mode. Provide concise, evidence-based educational overview of selected disease. Cite reputable guideline sources. No <coach> feedback." :
-          "Sales Simulation mode. Simulate realistic HCP-Rep interaction. Use persona and scenario context in dialogue. End with required <coach> JSON block."
-        });
-
+        let sc = findScenario(diseaseSelect.value, hcpSelect.value);
+        if (sc) sysBlocks.push({ role: "system", content: `Persona: ${sc.hcpRole || sc.displayName} | Disease: ${sc.therapeuticArea} | Background: ${sc.background} | Goal: ${sc.goal}` });
         // Compose payload
         let payload = {
-          model: "llama-3.1-8b-instant",
-          temperature: 0.2,
-          messages: [...sysBlocks,
-          ...(sc ? [{ role: "system", content: `Persona: ${sc.hcpRole} | Disease: ${sc.therapeuticArea} | Background: ${sc.background} | Goal: ${sc.goal}` }] : []),
-          ...conversation, { role: "user", content: userText }]
+          model: "llama-3.1-8b-instant", temperature: 0.2,
+          messages: [...sysBlocks, ...conversation, { role: "user", content: userText }]
         };
-
         let reply = "", coach = null;
         let r = await fetch("https://my-chat-agent.tonyabdelmalak.workers.dev/chat", {
           method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
@@ -343,7 +272,6 @@
         let j = await r.json(); reply = j.content || j.reply || "";
         let m = reply.match(/<coach>([\s\S]*?)<\/coach>/i);
         if (m) { try { coach = JSON.parse(m[1]); } catch { } reply = reply.replace(m[0], "").trim(); }
-
         conversation.push({ role: "user", content: userText });
         conversation.push({ role: "assistant", content: reply, _coach: coach });
         renderMessages();
@@ -353,23 +281,27 @@
       }
     }
 
-    // Initial render chain
-    arrangeControls();
-    displayMeta();
+    // -- Final assembly & render --
+    mount.appendChild(shell);
+    updateHcpOptions();
+    renderMetaScenario();
     renderMessages();
     renderCoach();
   }
 
-  // Main init: load config, prompt, then run buildUI()
+  // INIT load persona/scenario/system/context files and run buildUI
   async function init() {
     mount = document.getElementById("reflectiv-widget");
-    if (!mount) {
-      document.addEventListener("DOMContentLoaded", () => { mount = document.getElementById("reflectiv-widget"); buildUI(); });
-    } else {
-      buildUI();
-    }
-    try { cfg = await fetchLocal("./assets/chat/config.json"); } catch { }
+    if (!mount) { document.addEventListener("DOMContentLoaded", init); return; }
+    try { personas = await fetchLocal("./assets/chat/persona.json"); } catch { personas = {}; }
+    try {
+      scenarios = await fetchLocal("./assets/chat/data/scenarios.merged.json");
+      scenarios = Array.isArray(scenarios) ? scenarios : (scenarios.scenarios || []);
+      scenariosByKey = {};
+      scenarios.forEach(s => { scenariosByKey[(s.therapeuticArea || "") + "::" + (s.hcpRole || "")] = s; });
+    } catch { scenarios = []; scenariosByKey = {}; }
     try { systemPrompt = await fetchLocal("./assets/chat/system.md"); } catch { systemPrompt = ""; }
+    buildUI();
   }
   init();
 })();
