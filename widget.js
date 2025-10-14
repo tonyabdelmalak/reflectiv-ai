@@ -3,7 +3,7 @@
  * Modes: Product Knowledge | Sales Simulation
  * Controls: Mode, Therapeutic Area, HCP Profile/Scenario, Coach (static)
  * Sources:
- *   - config.json: { apiBase, scenariosUrl, areasUrl? }
+ *   - config.json: { apiBase, workerUrl?, model?, scenariosUrl, areasUrl? }
  *   - scenariosUrl: array or {items|scenarios}[]
  *   - areasUrl (optional): ["HIV","Oncology",...]
  */
@@ -38,7 +38,7 @@
   const scenariosById = new Map();
   let areas = []; // TA list
   const current = { mode: "Sales Simulation", area: "", scenarioId: "" };
-  let conversation = [];
+  let conversation = []; // [{role:"user"|"assistant", content}]
   let coachVisible = false;
 
   // -------- utils --------
@@ -80,7 +80,6 @@
       "General";
     a = String(a).trim();
 
-    // normalize common canonical forms
     if (/^hiv$/i.test(a)) a = "HIV";
     else if (/^(hbv|hepatitis\s*b)$/i.test(a)) a = "Hepatitis B";
     else if (/^cvd|cardio/i.test(a)) a = "Cardiology";
@@ -124,17 +123,10 @@
     if (areasUrl) {
       try {
         const a = await loadJSON(areasUrl);
-        if (Array.isArray(a) && a.length) {
-          return a.map(String);
-        }
-      } catch (_e) {
-        // ignore and fall back
-      }
+        if (Array.isArray(a) && a.length) return a.map(String);
+      } catch (_) {}
     }
-    // fallback: infer from scenarios
-    return uniq(scenarios.map((s) => s.area)).sort((a, b) =>
-      a.localeCompare(b)
-    );
+    return uniq(scenarios.map((s) => s.area)).sort((a, b) => a.localeCompare(b));
   }
 
   function filterScenariosByArea(area) {
@@ -260,10 +252,8 @@ Task: Role-play the HCP for a sales simulation consistent with the persona. Keep
         o.textContent = a;
         selTA.appendChild(o);
       });
-      // do not auto-select; user must choose
       current.area = "";
       selTA.value = "";
-      // reset HCP list
       populateHCP(true);
     }
     function populateHCP(clearOnly) {
@@ -309,11 +299,10 @@ Task: Role-play the HCP for a sales simulation consistent with the persona. Keep
 
     function applyVisibility() {
       const pk = current.mode === "Product Knowledge";
-      fHCP.classList.toggle("hidden", pk); // hidden in PK
-      fCoach.classList.toggle("hidden", pk); // static coach hidden in PK
-      coachVisible = !pk; // coach panel visible only in Sales Sim
+      fHCP.classList.toggle("hidden", pk);
+      fCoach.classList.toggle("hidden", pk);
+      coachVisible = !pk;
       coach.classList.toggle("hidden", pk);
-      // force placeholders until user selects
       if (!pk) {
         selTA.value = current.area || "";
         selHCP.value = current.scenarioId || "";
@@ -340,9 +329,10 @@ Task: Role-play the HCP for a sales simulation consistent with the persona. Keep
     }
   }
 
-  // -------- messaging --------
+  // -------- messaging (API-compatible) --------
   async function callApi(payload) {
-    const r = await fetch(cfg.apiBase, {
+    const url = cfg.apiBase || cfg.workerUrl;
+    const r = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -350,12 +340,28 @@ Task: Role-play the HCP for a sales simulation consistent with the persona. Keep
     if (!r.ok) throw new Error(`API ${r.status}`);
     return r.json();
   }
+
+  function extractReply(data) {
+    return (
+      data.reply ||
+      data.text ||
+      data.message ||
+      (data.choices && data.choices[0] && data.choices[0].message?.content) ||
+      data.data?.reply ||
+      ""
+    );
+  }
+  function extractCoach(data) {
+    return data.coach || data.meta?.coach || null;
+  }
+
   function renderMsg(log, role, text) {
     const m = el("div", "msg " + (role === "user" ? "me" : ""));
     m.innerHTML = `<span>${text}</span>`;
     log.appendChild(m);
     log.scrollTop = log.scrollHeight;
   }
+
   function renderCoach(coachEl, fb) {
     if (!fb) return;
     const text = coachEl.querySelector("#coach-text");
@@ -376,34 +382,56 @@ Task: Role-play the HCP for a sales simulation consistent with the persona. Keep
       }
     });
   }
+
   async function send(ta, log, coachEl) {
     const content = ta.value.trim();
     if (!content) return;
     ta.value = "";
     renderMsg(log, "user", content);
-    const mode = current.mode,
-      area = current.area;
+
+    const mode = current.mode;
+    const area = current.area;
     const scenario = current.scenarioId
       ? scenariosById.get(current.scenarioId)
       : null;
-    const sys = complianceSystemPrompt(mode, area, scenario);
+
+    const system = complianceSystemPrompt(mode, area, scenario);
+
+    // Build OpenAI-like "messages" while also passing our explicit fields.
+    const messages = [
+      { role: "system", content: system },
+      ...conversation,
+      { role: "user", content },
+    ];
+
     const payload = {
+      model: cfg.model || "gpt-4o-mini",
+      system,
+      messages,
       mode,
       area,
+      scenario: scenario || null,
       scenarioId: scenario?.id || null,
-      system: sys,
-      conversation: [...conversation, { role: "user", content }],
       request_citations: true,
       request_coach: mode === "Sales Simulation",
+      stream: false,
     };
+
     try {
       const data = await callApi(payload);
-      const reply = data.reply || "[no response]";
+      const reply = extractReply(data) || "[no response]";
       conversation.push({ role: "user", content }, { role: "assistant", content: reply });
       renderMsg(log, "assistant", reply);
-      if (coachVisible && data.coach) renderCoach(coachEl, data.coach);
+      if (coachVisible) {
+        const fb = extractCoach(data);
+        if (fb) renderCoach(coachEl, fb);
+      }
     } catch (e) {
-      renderMsg(log, "assistant", `Error: ${e.message}`);
+      renderMsg(
+        log,
+        "assistant",
+        `Error contacting model API. ${e.message}. Check config.json apiBase/workerUrl and CORS.`
+      );
     }
   }
 
