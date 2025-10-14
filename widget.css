@@ -1,241 +1,123 @@
-/* widget.css v4c3 — additive styles only; no layout changes */
+/* widget.css — ReflectivAI chat/coach (drop-in) */
+/* Scopes all styles under .cw to avoid site conflicts */
 
-/* fallback container if page lacks one */
-.cw-fallback { margin: 1rem auto; max-width: 960px; padding: 0 1rem; }
+.cw { --cw-accent:#2f3a4f; --cw-radius:14px; --cw-bg:#ffffff; --cw-muted:#6b7280; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"; }
 
-/* scenario brief card */
-.scenario-brief .card {
-  border: 1px solid rgba(47,58,79,0.25);
-  border-radius: 12px;
-  padding: 12px 14px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-  margin: 8px 0 12px;
-}
-.scenario-brief .card .row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-.scenario-brief .card p { margin: 0; font-size: 0.95rem; line-height: 1.35; }
+.cw * { box-sizing: border-box; }
+.cw .hidden { display:none !important; }
 
-/* chat messages */
-.cw-messages { border: 1px solid rgba(47,58,79,0.25); border-radius: 12px; padding: 10px; background: #fff; max-height: 42vh; overflow:auto; }
-.cw-messages .row { display:flex; margin: 8px 0; }
-.cw-messages .bubble { padding: 10px 12px; border-radius: 12px; max-width: 82%; line-height: 1.35; }
-.cw-messages .bubble.user { margin-left:auto; background:#eef3ff; border:1px solid rgba(62,84,148,0.25); }
-.cw-messages .bubble.assistant { margin-right:auto; background:#f8f9fb; border:1px solid rgba(47,58,79,0.18); }
-
-/* typing dots */
-.bubble .dots { display:inline-flex; gap:4px; vertical-align:middle; }
-.bubble .dots i { display:block; width:6px; height:6px; border-radius:50%; background:#999; animation:bd 1s infinite ease-in-out; }
-.bubble .dots i:nth-child(2){ animation-delay:.15s; } .bubble .dots i:nth-child(3){ animation-delay:.3s; }
-@keyframes bd { 0%,80%,100%{opacity:.2; transform:translateY(0)} 40%{opacity:1; transform:translateY(-3px)} }
-
-/* coach panel */
-.coach-panel { border: 1px solid rgba(47,58,79,0.25); border-radius: 12px; margin-top: 10px; background: #fff; }
-.coach-panel[data-hidden="true"] { display: none; }
-.coach-panel .coach-head { display:flex; justify-content: space-between; align-items:center; padding: 8px 12px; border-bottom:1px solid rgba(47,58,79,0.15); }
-.coach-panel .coach-body { padding: 8px 12px; max-height: 32vh; overflow:auto; }
-.coach-panel .coach-score { padding: 8px 12px; border-top:1px solid rgba(47,58,79,0.15); font-weight: 600; }
-.coach-card { border:1px solid rgba(47,58,79,0.15); border-radius:10px; padding:10px; background:#fafbff; }
-.coach-card.muted { background:#fbfbfb; }
-.coach-alert { background:#fff7e6; border:1px solid #f0c36d; color:#7a4d00; border-radius:8px; padding:8px 10px; margin-bottom:8px; font-weight:600; }
-
-/* EI badges */
-.ei-badges { display:flex; gap:6px; flex-wrap:wrap; }
-.chip { display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border:1px solid rgba(47,58,79,0.2); border-radius:999px; font-size:.85rem; background:#fff; }
-.chip.emp { border-color: rgba(0,0,0,0.2); }
-.chip.tone-supportive { background:#e8fff0; border-color:#86d7a5; }
-.chip.tone-neutral { background:#f4f6f8; border-color:#c6cbd1; }
-.chip.tone-transactional { background:#fff0f0; border-color:#e0a3a3; }
-.snippet { font-style: italic; color:#444; }
-
-/* inputs and buttons minimum touch targets */
-select, textarea, button, .chat-send {
-  min-height: 44px;
-}
-textarea { width: 100%; }
-
-/* fallback row/bubble if site lacks styles */
-.row { display: flex; }
-.bubble { border:1px solid rgba(47,58,79,0.2); border-radius:12px; padding:8px 10px; }
-
-/* mobile safety */
-@media (max-width: 640px) {
-  .cw-messages { max-height: 38vh; }
-  .coach-panel .coach-body { max-height: 32vh; }
-  .chip { font-size: .8rem; }
+.cw .cw-shell {
+  border:1px solid rgba(0,0,0,.12);
+  border-radius: var(--cw-radius);
+  background: var(--cw-bg);
+  overflow: hidden;
 }
 
-/* links inside bubbles */
-.cw-messages .bubble a { text-decoration: underline; }
-/* =====================================================
-   ReflectivAI Chat Widget Styles — FULL DROP-IN
-   Scope: .cw .reflectiv-chat
-   ===================================================== */
-
-/* Base scope */
-.cw, .reflectiv-chat { font-family: "Poppins", sans-serif; color: #0f1522; }
-.cw .reflectiv-chat, .reflectiv-chat * { box-sizing: border-box; }
-
-/* ---------- Widget Shell ---------- */
-.reflectiv-chat{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  border:2px solid #cfd6df;            /* thicker border */
-  border-radius:12px;
-  overflow:hidden;
-  background:#fff;
+/* Top controls */
+.cw .cw-controls {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  padding: 12px;
+  border-bottom:1px solid rgba(0,0,0,.08);
 }
-.reflectiv-chat > * { position:relative; }
-
-/* ---------- Toolbar ---------- */
-.chat-toolbar{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-  align-items:end;
-  padding:10px;
-  background:#f7f9fc;
-  border-bottom:1px solid #e5e9f0;
+@media (min-width: 720px){
+  .cw .cw-controls { grid-template-columns: repeat(3,1fr); }
 }
-
-/* ---------- Scenario / Dropdown Controls ---------- */
-.sim-controls{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px 12px;
-  align-items:end;
-}
-.sim-controls label{
-  font-size:12px;
-  font-weight:600;
-  color:#2f3a4f;
-}
-.sim-controls select,
-.sim-controls .select{
+.cw .cw-select {
   width:100%;
-  height:36px;
-  padding:6px 8px;
-  border-radius:8px;
-  border:1px solid #cfd6df;
+  padding:10px 12px;
+  border:1px solid rgba(0,0,0,.15);
+  border-radius:12px;
   background:#fff;
   font-size:14px;
-  color:#0f1522;
 }
 
-/* ---------- Chat Area ---------- */
-.chat-messages{
-  flex:1;
-  min-height:220px;
-  max-height:50vh;
+/* Transcript */
+.cw .cw-transcript {
+  max-height: 48vh;
   overflow:auto;
-  padding:12px;
-  background:#fafbfd;
+  padding: 12px;
+  background:#fafafa;
 }
-
-/* ---------- Message Bubbles ---------- */
-.message{ margin:8px 0; display:flex; }
-.message.user{ justify-content:flex-end; }
-.message.assistant{ justify-content:flex-start; }
-.message .content{
-  max-width:85%;
-  border-radius:14px;
-  padding:10px 12px;
-  border:1px solid #d6dbe3;
-  line-height:1.45;
-  font-size:14px;
-  background:#e9edf3;
-  color:#0f1522;
-}
-.message.user .content{ background:#e0e0e0; color:#000; }
-
-/* ---------- Input Area ---------- */
-.chat-input{
+.cw .msg {
   display:flex;
-  gap:8px;
-  padding:10px;
-  border-top:1px solid #e5e9f0;
-  background:#fff;
+  gap:10px;
+  margin:10px 0;
 }
-.chat-input textarea{
-  flex:1;
-  resize:none;
-  min-height:44px;
-  max-height:120px;
+.cw .msg .bubble {
   padding:10px 12px;
-  border:1px solid #cfd6df;
-  border-radius:10px;
-  outline:none;
-  font-family:"Poppins", sans-serif;
-  font-size:14px;
+  border-radius:12px;
+  max-width: 92%;
+  line-height:1.35;
+  word-wrap: break-word;
+  word-break: break-word;
 }
-.chat-input .btn{
-  min-width:84px;
+.cw .msg.user .bubble { background:#e8f0ff; align-self:flex-end; margin-left:auto; }
+.cw .msg.ai .bubble   { background:#fff; border:1px solid rgba(0,0,0,.1); }
+
+/* Composer */
+.cw .cw-composer {
+  display:flex;
+  gap:10px;
+  padding:12px;
+  border-top:1px solid rgba(0,0,0,.08);
+  align-items:flex-end;
+}
+.cw textarea.cw-input {
+  flex:1;
+  min-height:44px;
+  max-height:160px;
+  padding:10px 12px;
+  border:1px solid rgba(0,0,0,.15);
+  border-radius:12px;
+  resize:vertical;
+  font-size:14px;
+  line-height:1.35;
+}
+.cw .cw-send {
+  padding:10px 14px;
   border:0;
-  border-radius:999px;
-  background:#2f3a4f;
+  border-radius:12px;
+  background: var(--cw-accent);
   color:#fff;
   font-weight:600;
   cursor:pointer;
 }
-.chat-input .btn:hover{ background:#394768; }
-.chat-input .btn:disabled{ opacity:.5; cursor:not-allowed; }
+.cw .cw-send[disabled]{ opacity:.6; cursor:not-allowed; }
 
-/* ---------- Meta (Scenario Background) ---------- */
-.scenario-meta .meta-card{
-  padding:10px 12px;
-  background:#f7f9fc;
-  border:1px solid #e5e9f0;
-  border-radius:10px;
-  font-size:13px;
-  line-height:1.4;
+/* Coach toggle + panel */
+.cw .cw-toggle-row {
+  display:flex;
+  justify-content:flex-end;
+  padding: 8px 12px 0 12px;
 }
-
-/* ---------- Coach Feedback (below input) ---------- */
-/* Render order expected: chat-toolbar → (scenario-meta) → chat-messages → chat-input → coach-section */
-.coach-section{
-  margin:10px;                           /* space from widget edges */
-  margin-top:0;                          /* sits directly under input’s bottom gap */
-  padding:14px 16px;
-  border:1px solid #e5e9f0;
-  border-radius:12px;
-  background:#fffbe8;
-  width:calc(100% - 20px);
-}
-.coach-section h3{
-  font-size:15px;
-  margin:0 0 6px 0;
-  color:#2f3a4f;
-}
-.coach-score{ margin-bottom:8px; font-weight:600; }
-.coach-subs .pill{
-  display:inline-block;
-  background:#f1f3f7;
-  border:1px solid #d6dbe3;
+.cw [data-coach-toggle]{
+  position: relative;
+  border:0;
   border-radius:999px;
-  padding:2px 8px;
-  margin-right:6px;
-  font-size:12px;
+  padding:10px 14px;
+  background: var(--cw-accent);
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
 }
-.coach-list{
-  padding-left:16px;
-  font-size:13px;
-  color:#0f1522;
+.cw .coach-panel{
+  display:none;
+  position:relative;
+  margin:8px 12px 12px 12px;
+  border:1px solid rgba(0,0,0,.12);
+  border-radius: var(--cw-radius);
+  padding:14px;
+  background:#fff;
+  max-height: 260px;
+  overflow:auto;
+  z-index:0; /* stays inside widget */
 }
-.coach-list li{ margin-bottom:4px; }
-.coach-section.hidden{ display:none; }
+.cw .coach-panel.is-open{ display:block; }
+.cw .coach-title{ font-weight:700; margin:0 0 6px 0; }
+.cw .coach-tip   { font-size:14px; color:#111; }
+.cw .coach-muted { font-size:13px; color: var(--cw-muted); }
 
-/* ---------- Responsive ---------- */
-@media (max-width: 720px){
-  .chat-toolbar{ grid-template-columns:1fr; }
-}
-@media (max-width: 520px){
-  .sim-controls{ grid-template-columns:1fr; }
-  .chat-messages{ height:46vh; max-height:unset; }
-}
-/* launcher + safety (v4c4 append) */
-#cw-launch{
-  position:fixed; bottom:72px; right:12px; z-index:2147483647;
-  padding:10px 14px; border-radius:999px; border:1px solid rgba(47,58,79,.25);
-  background:#fff; font:600 14px/1 system-ui; box-shadow:0 2px 8px rgba(0,0,0,.12);
-}
-@media (max-width:640px){ #cw-launch{ bottom:16px; right:12px; } }
+/* Guard against external card styles bleeding in */
+.cw .card, .cw .coach-card { max-width:100%; border:0; box-shadow:none; }
