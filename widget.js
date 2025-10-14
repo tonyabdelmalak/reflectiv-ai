@@ -1,107 +1,174 @@
-/* widget.js — ReflectivAI chat/coach (drop-in, self-contained) */
+/* widget.js — ReflectivAI chat/coach (drop-in, robust loader) */
 (function () {
-  // boot
+  // mount
   let mount=null;
   function onReady(fn){ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",fn,{once:true}); else fn(); }
   function waitForMount(cb){
-    const tryGet=()=>{ mount=document.getElementById("reflectiv-widget"); if(mount)return cb();
+    const tryGet=()=>{ mount=document.getElementById("reflectiv-widget"); if(mount) return cb();
       const obs=new MutationObserver(()=>{ mount=document.getElementById("reflectiv-widget"); if(mount){obs.disconnect(); cb();} });
       obs.observe(document.documentElement,{childList:true,subtree:true}); setTimeout(()=>obs.disconnect(),15000);
     }; onReady(tryGet);
   }
 
   // helpers
-  const qs  = s=>mount.querySelector(s);
-  const qsa = s=>mount.querySelectorAll(s);
-  function focusMsg(){ const el=qs('textarea.cw-input,textarea[data-role="cw-input"]'); if(el) el.focus({preventScroll:true}); }
-  function el(tag,attrs={},kids=[]){ const n=document.createElement(tag);
-    for(const [k,v] of Object.entries(attrs)){
-      if(k==="class") n.className=v;
-      else if(k==="dataset") Object.entries(v).forEach(([dk,dv])=>n.dataset[dk]=dv);
-      else if(k.startsWith("on") && typeof v==="function") n.addEventListener(k.slice(2),v);
-      else if(v!==null && v!==undefined) n.setAttribute(k,v);
+  const qs=s=>mount.querySelector(s), qsa=s=>mount.querySelectorAll(s);
+  const el=(t,a={},k=[])=>{ const n=document.createElement(t);
+    for(const [k1,v] of Object.entries(a)){
+      if(k1==="class") n.className=v;
+      else if(k1==="dataset") Object.entries(v).forEach(([dk,dv])=>n.dataset[dk]=dv);
+      else if(k1.startsWith("on") && typeof v==="function") n.addEventListener(k1.slice(2),v);
+      else if(v!==null && v!==undefined) n.setAttribute(k1,v);
     }
-    (Array.isArray(kids)?kids:[kids]).forEach(c=>n.appendChild(typeof c==="string"?document.createTextNode(c):c));
+    (Array.isArray(k)?k:[k]).forEach(c=>n.appendChild(typeof c==="string"?document.createTextNode(c):c));
     return n;
-  }
-  async function fetchJSON(path){ const r=await fetch(path,{cache:"no-store"}); if(!r.ok) throw new Error(`${path} ${r.status}`); return r.json(); }
+  };
+  async function fetchJSON(p){ const r=await fetch(p,{cache:"no-store"}); if(!r.ok) throw new Error(`${p} ${r.status}`); return r.json(); }
+  function focusMsg(){ const t=qs('textarea.cw-input,textarea[data-role="cw-input"]'); if(t) t.focus({preventScroll:true}); }
 
   // state
-  let cfg=null, scenarios=[];
-  const state={ disease:"", mode:"sales-simulation", profile:"", conversation:[] };
+  let cfg=null;
+  /** normalized scenarios: {id,disease,profile,title,goal,intro,system} */
+  let SC=[];
+
+  const S={ disease:"", mode:"sales-simulation", profileId:"", convo:[], activeScenario:null };
+
+  // normalize various JSON shapes into SC[]
+  function normalize(raw){
+    const out=[];
+    if(Array.isArray(raw)){ raw.forEach(x=>pushOne(x)); }
+    else if(raw && Array.isArray(raw.scenarios)){ raw.scenarios.forEach(x=>pushOne(x)); }
+    else if(raw && Array.isArray(raw.diseaseStates)){
+      raw.diseaseStates.forEach(ds=>{
+        const d=ds.name||ds.title||"General";
+        (ds.profiles||[]).forEach(p=>{
+          const prof=p.name||p.title||"Generalist";
+          (p.scenarios||[{}]).forEach(sc=>{
+            pushOne({ ...sc, disease:d, profile:prof });
+          });
+        });
+      });
+    } else if(raw && raw.byDisease){
+      Object.entries(raw.byDisease).forEach(([d,blk])=>{
+        const profiles=blk.profiles||blk;
+        Object.entries(profiles).forEach(([prof,list])=>{
+          (list||[{}]).forEach(sc=>pushOne({ ...sc, disease:d, profile:prof }));
+        });
+      });
+    }
+    function pushOne(x){
+      const id = x.id || [x.disease||x.therapy||x.area||"General", x.profile||x.hcpTitle||x.title||"Generalist", x.slug||"default"].join("::");
+      out.push({
+        id,
+        disease: x.disease || x.therapy || x.area || "General",
+        profile: x.profile || x.hcpTitle || x.title || "Generalist",
+        title:   x.title   || x.name || `${(x.profile||"HCP")} — ${(x.disease||"General")}`,
+        goal:    x.goal    || x.objective || "",
+        intro:   x.intro   || x.opening || "",
+        system:  x.system  || x.systemPrompt || ""
+      });
+    }
+    // minimal fallbacks if nothing parsed
+    if(!out.length){
+      [
+        {disease:"HIV",profile:"Internal Medicine MD",title:"Assess PrEP candidate",goal:"Eligibility + adherence support"},
+        {disease:"Vaccines",profile:"Pediatrics MD",title:"Address schedule concerns",goal:"ACIP-aligned answers"}
+      ].forEach((x,i)=>out.push({id:`fallback::${i}`,...x,intro:"",system:""}));
+    }
+    return out;
+  }
 
   // UI
   function render(){
     mount.classList.add("cw"); mount.innerHTML="";
     const shell=el("div",{class:"cw-shell"});
+
     const controls=el("div",{class:"cw-controls"},[
-      el("select",{class:"cw-select",id:"dsSelect","aria-label":"Disease State"}),
-      el("select",{class:"cw-select",id:"modeSelect","aria-label":"Mode"}),
-      el("select",{class:"cw-select",id:"profileSelect","aria-label":"HCP Profile"})
+      el("select",{class:"cw-select",id:"ds","aria-label":"Disease State"}),
+      el("select",{class:"cw-select",id:"mode","aria-label":"Mode"}),
+      el("select",{class:"cw-select",id:"prof","aria-label":"HCP Profile"})
     ]);
-    const transcript=el("div",{class:"cw-transcript",id:"transcript"});
+
+    const scen=el("div",{class:"cw-scenario",id:"scenarioBanner"},[
+      el("h4",{}, "Scenario"),
+      el("p",{id:"scenarioText"},"")
+    ]);
+
+    const transcript=el("div",{class:"cw-transcript",id:"t"});
+
     const composer=el("div",{class:"cw-composer"},[
-      el("textarea",{class:"cw-input",id:"msgInput",placeholder:"Type your message…"}),
-      el("button",{class:"cw-send",id:"sendBtn",type:"button"},"Send"),
-      el("button",{class:"cw-coach-toggle",id:"coachToggle","data-coach-toggle":"",type:"button","aria-expanded":"false"},"Open Coach")
+      el("textarea",{class:"cw-input",id:"msg",placeholder:"Type your message…"}),
+      el("button",{class:"cw-btn cw-send",id:"send",type:"button"},"Send"),
+      el("button",{class:"cw-btn cw-coach-toggle",id:"coachToggle",type:"button","aria-expanded":"false"},"Open Coach")
     ]);
-    const coachPanel=el("div",{class:"coach-panel",id:"coachPanel"},[
+
+    const coach=el("div",{class:"coach-panel",id:"coach"},[
       el("div",{class:"coach-title"},"Coach"),
-      el("div",{class:"coach-tip",id:"coachTip"},"Coach is listening for tone. Tips will appear after your next message."),
+      el("div",{class:"coach-tip",id:"tip"},"Coach is listening for tone. Tips will appear after your next message."),
       el("div",{class:"coach-muted"},"Feedback is scenario-aware.")
     ]);
+
     shell.appendChild(controls);
+    shell.appendChild(scen);
     shell.appendChild(transcript);
     shell.appendChild(composer);
-    shell.appendChild(coachPanel);
+    shell.appendChild(coach);
     mount.appendChild(shell);
   }
 
-  function populateControls(){
-    const ds=qs("#dsSelect"), mode=qs("#modeSelect"), prof=qs("#profileSelect");
-    const modes=["sales-simulation","product-knowledge"];
-    mode.innerHTML="";
-    modes.forEach(m=>mode.appendChild(el("option",{value:m,selected:m===(cfg?.defaultMode||"sales-simulation")},m.replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase()))));
-    const derived=Array.from(new Set(scenarios.map(s=>s.disease||s.therapy||s.area).filter(Boolean)));
-    const diseases=derived.length?derived:["HIV","Oncology","Vaccines","Hepatitis B","Cardiology","Pulmonology"];
+  function fillControls(){
+    const ds=qs("#ds"), mode=qs("#mode"), prof=qs("#prof");
+    // modes
+    const modes=(cfg?.modes||["sales-simulation","product-knowledge"]).filter(m=>["sales-simulation","product-knowledge","emotional-assessment"].includes(m));
+    mode.innerHTML=""; modes.forEach(m=>mode.appendChild(el("option",{value:m,selected:m===(cfg?.defaultMode||"sales-simulation")},m.replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase()))));
+
+    // diseases
+    const diseases=[...new Set(SC.map(s=>s.disease))];
     ds.innerHTML="";
     ds.appendChild(el("option",{value:"",disabled:"",selected:""},"Disease State"));
-    diseases.forEach(name=>ds.appendChild(el("option",{value:name},name.toUpperCase()==="HIV"?"HIV":name)));
+    diseases.forEach(d=>ds.appendChild(el("option",{value:d}, d.toUpperCase()==="HIV"?"HIV":d)));
+
+    // profiles
     prof.innerHTML="";
     prof.appendChild(el("option",{value:"",disabled:"",selected:""},"HCP Profile"));
   }
 
   function refreshProfiles(){
-    const prof=qs("#profileSelect");
-    const chosen=state.disease;
-    let list=scenarios.filter(s=>(s.disease||s.therapy||s.area)===chosen);
-    if(!list.length){
-      const fb={
-        "HIV":[{id:"im-md",label:"Internal Medicine MD"},{id:"fp-md",label:"Family Practice MD"}],
-        "Oncology":[{id:"hemonc",label:"Hematology/Oncology MD"}],
-        "Vaccines":[{id:"peds",label:"Pediatrics MD"}],
-        "Hepatitis B":[{id:"gi",label:"Gastroenterology MD"}],
-        "Cardiology":[{id:"cards",label:"Cardiology MD"}],
-        "Pulmonology":[{id:"pulm",label:"Pulmonology MD"}]
-      };
-      list=(fb[chosen]||[]).map(x=>({id:x.id,profile:x.label,disease:chosen}));
-    }
+    const prof=qs("#prof");
+    const list=SC.filter(s=>s.disease===S.disease);
     const unique=new Map();
-    list.forEach(s=>{ const label=s.profile||s.hcpTitle||s.title||"Generalist"; const id=s.id||label; if(!unique.has(label)) unique.set(label,id); });
+    list.forEach(s=>{ if(!unique.has(s.profile)) unique.set(s.profile, s.id); });
     prof.innerHTML="";
     prof.appendChild(el("option",{value:"",disabled:"",selected:""},"HCP Profile"));
     unique.forEach((id,label)=>prof.appendChild(el("option",{value:id},label)));
   }
 
+  function setScenario(id){
+    S.profileId=id;
+    S.activeScenario=SC.find(s=>s.id===id)||null;
+    const b=qs("#scenarioBanner"), txt=qs("#scenarioText");
+    if(S.activeScenario){
+      const s=S.activeScenario;
+      const parts=[`${s.disease} · ${s.profile} — ${s.title}`];
+      if(s.goal) parts.push(`Goal: ${s.goal}`);
+      txt.textContent=parts.join(" | ");
+      b.classList.add("show");
+    } else {
+      b.classList.remove("show");
+      txt.textContent="";
+    }
+    // reset convo
+    S.convo=[]; qs("#t").innerHTML="";
+  }
+
   // transcript
-  function addMsg(role,text){
+  function addMsg(role, text){
     const row=el("div",{class:`msg ${role}`},[ el("div",{class:"bubble"},text) ]);
-    const t=qs("#transcript"); t.appendChild(row); t.scrollTop=t.scrollHeight;
+    const t=qs("#t"); t.appendChild(row); t.scrollTop=t.scrollHeight;
   }
 
   // coach
-  function bindCoachToggle(){
-    const btn=qs("#coachToggle"), panel=qs("#coachPanel");
+  function bindCoach(){
+    const btn=qs("#coachToggle"), panel=qs("#coach");
     btn.addEventListener("click",e=>{
       e.preventDefault(); e.stopPropagation();
       const open=panel.classList.toggle("is-open");
@@ -110,71 +177,66 @@
       focusMsg();
     });
   }
-
-  function coachFeedback(userText, aiText){
-    const tips=[]; const t=(userText||"").toLowerCase();
-    if (/\b(cure|guarantee|100%|no side effects)\b/.test(t)) tips.push("Avoid absolutes. Use labeled indications and evidence levels.");
-    if (/(you should|you need to|must)\b/.test(t)) tips.push("Use collaborative phrasing and ask permission.");
-    if ((state.disease||"").toUpperCase()==="HIV" && !/\b(adherence|prep|sti|screen|creatinine|renal|risk)\b/.test(t)) tips.push("Include adherence support, baseline labs, and risk counseling for PrEP.");
-    if (/cost|price|coverage|expensive/.test(t)) tips.push("Offer payer resources and benefits investigation.");
-    if (!/sorry|understand|appreciate|thanks|thank you/.test(t)) tips.push("Acknowledge the HCP perspective before providing data.");
+  function coachFeedback(user, ai){
+    const tips=[], u=(user||"").toLowerCase(), disease=(S.disease||"").toUpperCase();
+    if (/\b(cure|guarantee|100%|no side effects)\b/.test(u)) tips.push("Avoid absolutes. Use labeled indications and evidence levels.");
+    if (/(you should|you need to|must)\b/.test(u)) tips.push("Use collaborative phrasing and ask permission.");
+    if (disease==="HIV" && !/\b(adherence|prep|sti|screen|creatinine|renal|risk)\b/.test(u)) tips.push("Include adherence support, baseline labs, and risk counseling for PrEP.");
+    if (/cost|price|coverage|expensive/.test(u)) tips.push("Offer payer resources and benefits investigation.");
+    if (!/sorry|understand|appreciate|thanks|thank you/.test(u)) tips.push("Brief empathy statement before data.");
     if(!tips.length) tips.push("Good structure. Keep questions open-ended and cite labeled data.");
-    qs("#coachTip").textContent="• "+tips.join(" • ");
+    qs("#tip").textContent="• "+tips.join(" • ");
   }
 
   // chat
-  async function sendToModel(prompt){
+  async function callModel(prompt){
     const api=cfg?.apiBase||cfg?.workerUrl;
     if(!api) return "API endpoint missing in config.json.";
+    const systemBase = `Mode=${S.mode}; Disease=${S.disease}; Profile=${S.activeScenario?.profile||"General"}; Respond concisely and compliantly.`;
+    const system = S.activeScenario?.system ? `${systemBase}\n${S.activeScenario.system}` : systemBase;
     try{
-      const body={
-        model:cfg?.model||"llama-3.1-8b-instant",
-        stream:false,
-        messages:[
-          {role:"system",content:`Mode=${state.mode}; Disease=${state.disease}; Profile=${state.profile||"General"}; Respond concisely and compliantly.`},
-          ...state.conversation,
-          {role:"user",content:prompt}
-        ]
-      };
+      const body={ model:cfg?.model||"llama-3.1-8b-instant", stream:false,
+        messages:[ {role:"system",content:system}, ...S.convo, {role:"user",content:prompt} ] };
       const r=await fetch(api,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
       if(!r.ok) return `Upstream error ${r.status}`;
       const data=await r.json();
       return data?.choices?.[0]?.message?.content ?? data?.content ?? "(no content)";
-    }catch(err){ return String(err.message||err); }
+    }catch(e){ return String(e.message||e); }
   }
-
   function bindSend(){
-    const btn=qs("#sendBtn"), ta=qs("#msgInput"), panel=qs("#coachPanel"), toggle=qs("#coachToggle");
+    const btn=qs("#send"), ta=qs("#msg"), coach=qs("#coach"), toggle=qs("#coachToggle");
     async function act(){
-      const val=ta.value.trim(); if(!val) return;
-      addMsg("user",val); state.conversation.push({role:"user",content:val});
+      const v=ta.value.trim(); if(!v) return;
+      addMsg("user",v); S.convo.push({role:"user",content:v});
       ta.value=""; btn.disabled=true;
-      const reply=await sendToModel(val);
-      addMsg("ai",reply); state.conversation.push({role:"assistant",content:reply});
-      coachFeedback(val,reply); panel.classList.add("is-open"); toggle.setAttribute("aria-expanded","true"); toggle.textContent="Close Coach";
+      const reply=await callModel(v);
+      addMsg("ai",reply); S.convo.push({role:"assistant",content:reply});
+      coachFeedback(v,reply); coach.classList.add("is-open"); toggle.setAttribute("aria-expanded","true"); toggle.textContent="Close Coach";
       btn.disabled=false; focusMsg();
     }
     btn.addEventListener("click",act);
-    ta.addEventListener("keydown",e=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); act(); }});
+    ta.addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); act(); }});
   }
 
   // init
   async function init(){
     render();
-    try{ cfg=await fetchJSON("./config.json"); }catch{ cfg={ defaultMode:"sales-simulation" }; }
+    try{ cfg=await fetchJSON("./config.json"); }catch{ cfg={defaultMode:"sales-simulation"}; }
     try{
-      const url=cfg?.scenariosUrl||"./assets/chat/data/scenarios.merged.json";
-      const data=await fetchJSON(url);
-      scenarios=Array.isArray(data)?data:[];
-    }catch{ scenarios=[]; }
-    populateControls();
+      const url=cfg?.scenariosUrl || "./assets/chat/data/scenarios.merged.json";
+      const raw=await fetchJSON(url);
+      SC=normalize(raw);
+    }catch{ SC=normalize([]); }
+    // controls
+    fillControls();
 
-    qs("#dsSelect").addEventListener("change",e=>{ state.disease=e.target.value; refreshProfiles(); state.conversation=[]; qs("#transcript").innerHTML=""; });
-    qs("#modeSelect").addEventListener("change",e=>{ state.mode=e.target.value; state.conversation=[]; qs("#transcript").innerHTML=""; });
-    qs("#profileSelect").addEventListener("change",e=>{ state.profile=e.target.value; state.conversation=[]; qs("#transcript").innerHTML=""; });
+    // events
+    qs("#ds").addEventListener("change",e=>{ S.disease=e.target.value; refreshProfiles(); setScenario(""); });
+    qs("#mode").addEventListener("change",e=>{ S.mode=e.target.value; S.convo=[]; qs("#t").innerHTML=""; });
+    qs("#prof").addEventListener("change",e=>setScenario(e.target.value));
 
     bindSend();
-    bindCoachToggle();
+    bindCoach();
     focusMsg();
   }
 
