@@ -1,30 +1,28 @@
 /* widget.css — ReflectivAI chat/coach (drop-in) */
-/* Scopes all styles under .cw to avoid site conflicts */
+/* Scope under .cw to avoid site collisions */
 
-.cw { --cw-accent:#2f3a4f; --cw-radius:14px; --cw-bg:#ffffff; --cw-muted:#6b7280; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"; }
+.cw { --cw-accent:#2f3a4f; --cw-radius:14px; --cw-bg:#fff; --cw-muted:#6b7280; --cw-line:#e5e7eb; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
 
 .cw * { box-sizing: border-box; }
 .cw .hidden { display:none !important; }
 
-.cw .cw-shell {
+.cw .cw-shell{
   border:1px solid rgba(0,0,0,.12);
   border-radius: var(--cw-radius);
   background: var(--cw-bg);
   overflow: hidden;
 }
 
-/* Top controls */
-.cw .cw-controls {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-  padding: 12px;
-  border-bottom:1px solid rgba(0,0,0,.08);
+/* Controls */
+.cw .cw-controls{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+  padding:12px;
+  border-bottom:1px solid var(--cw-line);
 }
-@media (min-width: 720px){
-  .cw .cw-controls { grid-template-columns: repeat(3,1fr); }
-}
-.cw .cw-select {
+@media(min-width:720px){ .cw .cw-controls{ grid-template-columns:repeat(3,1fr); } }
+.cw .cw-select{
   width:100%;
   padding:10px 12px;
   border:1px solid rgba(0,0,0,.15);
@@ -34,38 +32,34 @@
 }
 
 /* Transcript */
-.cw .cw-transcript {
-  max-height: 48vh;
+.cw .cw-transcript{
+  max-height:48vh;
   overflow:auto;
-  padding: 12px;
+  padding:12px;
   background:#fafafa;
 }
-.cw .msg {
-  display:flex;
-  gap:10px;
-  margin:10px 0;
-}
-.cw .msg .bubble {
+.cw .msg{ display:flex; gap:10px; margin:10px 0; }
+.cw .bubble{
   padding:10px 12px;
   border-radius:12px;
-  max-width: 92%;
+  max-width:92%;
   line-height:1.35;
-  word-wrap: break-word;
-  word-break: break-word;
+  word-break:break-word;
 }
-.cw .msg.user .bubble { background:#e8f0ff; align-self:flex-end; margin-left:auto; }
-.cw .msg.ai .bubble   { background:#fff; border:1px solid rgba(0,0,0,.1); }
+.cw .msg.user .bubble{ background:#e8f0ff; margin-left:auto; }
+.cw .msg.ai .bubble{ background:#fff; border:1px solid rgba(0,0,0,.1); }
 
-/* Composer */
-.cw .cw-composer {
+/* Composer with inline Coach toggle */
+.cw .cw-composer{
   display:flex;
   gap:10px;
   padding:12px;
-  border-top:1px solid rgba(0,0,0,.08);
+  border-top:1px solid var(--cw-line);
   align-items:flex-end;
+  flex-wrap:wrap;
 }
-.cw textarea.cw-input {
-  flex:1;
+.cw textarea.cw-input{
+  flex:1 1 220px;
   min-height:44px;
   max-height:160px;
   padding:10px 12px;
@@ -75,33 +69,27 @@
   font-size:14px;
   line-height:1.35;
 }
-.cw .cw-send {
+.cw .cw-send{
   padding:10px 14px;
   border:0;
   border-radius:12px;
-  background: var(--cw-accent);
+  background:var(--cw-accent);
   color:#fff;
   font-weight:600;
   cursor:pointer;
 }
 .cw .cw-send[disabled]{ opacity:.6; cursor:not-allowed; }
-
-/* Coach toggle + panel */
-.cw .cw-toggle-row {
-  display:flex;
-  justify-content:flex-end;
-  padding: 8px 12px 0 12px;
-}
-.cw [data-coach-toggle]{
-  position: relative;
+.cw .cw-coach-toggle{
+  padding:10px 14px;
   border:0;
   border-radius:999px;
-  padding:10px 14px;
-  background: var(--cw-accent);
+  background:#253044;
   color:#fff;
   font-weight:600;
   cursor:pointer;
 }
+
+/* Coach panel opens directly below composer, inside flow */
 .cw .coach-panel{
   display:none;
   position:relative;
@@ -110,14 +98,14 @@
   border-radius: var(--cw-radius);
   padding:14px;
   background:#fff;
-  max-height: 260px;
+  max-height:260px;
   overflow:auto;
-  z-index:0; /* stays inside widget */
+  z-index:0;
 }
 .cw .coach-panel.is-open{ display:block; }
 .cw .coach-title{ font-weight:700; margin:0 0 6px 0; }
-.cw .coach-tip   { font-size:14px; color:#111; }
-.cw .coach-muted { font-size:13px; color: var(--cw-muted); }
+.cw .coach-tip{ font-size:14px; color:#111; }
+.cw .coach-muted{ font-size:13px; color:var(--cw-muted); }
 
-/* Guard against external card styles bleeding in */
-.cw .card, .cw .coach-card { max-width:100%; border:0; box-shadow:none; }
+/* Guard against external card styles */
+.cw .card,.cw .coach-card{ max-width:100%; border:0; box-shadow:none; }
