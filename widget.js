@@ -2,76 +2,58 @@
  * ReflectivAI Chat/Coach — drop-in
  * Modes: Product Knowledge | Sales Simulation
  * Controls: Mode, Therapeutic Area, HCP Profile/Scenario, Coach (static)
- * Data: loads scenarios from cfg.scenariosUrl, infers Therapeutic Areas and HCP items
- * API: posts to cfg.apiBase with strict compliance guardrails
+ * Sources:
+ *   - config.json: { apiBase, scenariosUrl, areasUrl? }
+ *   - scenariosUrl: array or {items|scenarios}[]
+ *   - areasUrl (optional): ["HIV","Oncology",...]
  */
 
 (function () {
-  // ---------- boot ----------
+  // -------- boot --------
   let mount = null;
-  const onReady = (fn) => {
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", fn, { once: true });
-    } else fn();
-  };
+  const onReady = (fn)=>document.readyState==="loading"
+    ? document.addEventListener("DOMContentLoaded", fn, {once:true})
+    : fn();
   function waitForMount(cb){
-    const go = () => {
-      mount = document.getElementById("reflectiv-widget");
-      if (mount) return cb();
-      const obs = new MutationObserver(() => {
-        mount = document.getElementById("reflectiv-widget");
-        if (mount){ obs.disconnect(); cb(); }
-      });
+    const run=()=>{ mount=document.getElementById("reflectiv-widget");
+      if(mount) return cb();
+      const obs=new MutationObserver(()=>{ mount=document.getElementById("reflectiv-widget");
+        if(mount){obs.disconnect();cb();}});
       obs.observe(document.documentElement,{childList:true,subtree:true});
       setTimeout(()=>obs.disconnect(),15000);
     };
-    onReady(go);
+    onReady(run);
   }
 
-  // ---------- state ----------
-  let cfg = null;
-  let scenarios = [];             // as loaded
-  let scenariosById = new Map();  // id -> scenario
-  let areas = [];                 // unique therapeutic areas
-  let current = {
-    mode: "Sales Simulation",     // default
-    area: "",
-    scenarioId: "",
-  };
-  let conversation = [];
-  let coachVisible = false;
+  // -------- state --------
+  let cfg=null;
+  let scenarios=[];             // normalized
+  const scenariosById=new Map();
+  let areas=[];                 // TA list
+  const current={ mode:"Sales Simulation", area:"", scenarioId:"" };
+  let conversation=[];
+  let coachVisible=false;
 
-  // ---------- utils ----------
-  const el = (tag, cls, html) => {
-    const n = document.createElement(tag);
-    if (cls) n.className = cls;
-    if (html != null) n.innerHTML = html;
-    return n;
-  };
-  const uniq = (arr) => [...new Set(arr.filter(Boolean))];
+  // -------- utils --------
+  const el=(t,c,h)=>{ const n=document.createElement(t); if(c) n.className=c; if(h!=null) n.innerHTML=h; return n; };
+  const uniq=(a)=>[...new Set(a.filter(Boolean))];
 
-  async function loadConfig() {
-    // default path works with your repo root
-    const path = "./config.json";
-    const r = await fetch(path, { cache: "no-store" });
-    if (!r.ok) throw new Error(`Failed to load ${path} (${r.status})`);
+  async function loadJSON(path){
+    const r=await fetch(path,{cache:"no-store"});
+    if(!r.ok) throw new Error(`Failed to load ${path} (${r.status})`);
     return r.json();
   }
+  async function loadConfig(){ return loadJSON("./config.json"); }
 
-  async function loadScenarios(url) {
-    const r = await fetch(url, { cache: "no-store" });
-    if (!r.ok) throw new Error(`Failed to load scenarios (${r.status})`);
-    const data = await r.json();
-
-    // normalize to a flat array "items"
-    const items = Array.isArray(data) ? data :
-      Array.isArray(data.items) ? data.items :
-      Array.isArray(data.scenarios) ? data.scenarios : [];
-
-    // infer fields with fallbacks
-    items.forEach(s => {
-      const id =
-        s.id || s.scenario_id || `${(s.area||s.therapeutic_area||"GEN")}:${(s.title||s.name||"untitled")}`;
+  async function loadScenarios(url){
+    const raw=await loadJSON(url);
+    const arr = Array.isArray(raw) ? raw
+      : Array.isArray(raw.items) ? raw.items
+      : Array.isArray(raw.scenarios) ? raw.scenarios : [];
+    scenariosById.clear();
+    arr.forEach(s=>{
+      const id = s.id || s.scenario_id ||
+        `${(s.area||s.therapeutic_area||"General")}:${(s.title||s.name||"untitled")}`;
       const area = s.area || s.therapeutic_area || s.ta || "General";
       const title = s.title || s.name || `${area} scenario`;
       const hcp = s.hcp || s.profile || s.persona || "HCP";
@@ -79,284 +61,230 @@
       const goal = s.goal || s.objective || "";
       const rep = s.rep || s.approach || s.rep_approach || "";
       const rubric = s.rubric || s.scoring || {};
-      const meta = { ...s, id, area, title, hcp, objection, goal, rep, rubric };
-      scenariosById.set(id, meta);
+      const norm={...s,id,area,title,hcp,objection,goal,rep,rubric};
+      scenariosById.set(id,norm);
     });
-
     return [...scenariosById.values()];
   }
 
-  function buildAreas() {
-    areas = uniq(scenarios.map(s => s.area)).sort((a,b)=>a.localeCompare(b));
+  async function loadAreas(areasUrl){
+    if(areasUrl){
+      try{
+        const a=await loadJSON(areasUrl);
+        if(Array.isArray(a) && a.length) return a;
+      }catch(_){}
+    }
+    // fallback: infer from scenarios
+    return uniq(scenarios.map(s=>s.area)).sort((a,b)=>a.localeCompare(b));
   }
 
-  function filterScenariosByArea(area) {
-    return scenarios.filter(s => s.area === area);
-  }
+  function filterScenariosByArea(area){ return scenarios.filter(s=>s.area===area); }
 
-  // ---------- compliance guardrails ----------
-  function complianceSystemPrompt(mode, area, s) {
-    const cites = [
-      "NEJM","JAMA","The Lancet","BMJ","Nature Medicine","Annals of Internal Medicine",
-      "CDC","NIH","FDA label","EMA","WHO","IDSA","ASCO","AHA","GOLD","ADA"
-    ].join(", ");
-    const shared =
-`You are an AI assistant for life-sciences field training. Respond with strict medical accuracy and regulatory compliance.
+  // -------- compliance prompt --------
+  function complianceSystemPrompt(mode, area, s){
+    const cites="NEJM, JAMA, The Lancet, BMJ, Nature Medicine, Annals of Internal Medicine, CDC, NIH, FDA label, EMA, WHO, IDSA, ASCO, AHA, GOLD, ADA";
+    const base=`You are an AI assistant for life-sciences field training. Follow strict medical accuracy and regulatory compliance.
 Rules:
 - Cite primary sources with inline numeric markers and full references at the end of each answer.
 - Prefer peer-reviewed journals, guidelines, and regulator labels: ${cites}.
-- No promotion, no off-label claims, fair-balance required: include efficacy limits, safety, contraindications.
-- If uncertain, say so and state what data would be required.
-- Use plain language and avoid sensational adjectives.
-- Include dates of trials or guidelines when cited.`;
-
-    if (mode === "Product Knowledge") {
-      return `${shared}
-Task: Answer product/disease questions for Therapeutic Area: ${area}. Provide concise, referenced, evidence-based responses with citations.`;
+- No promotion, no off-label claims, ensure fair-balance with efficacy limits, safety, contraindications.
+- If uncertain, state uncertainty and what data is required.
+- Use precise language. Include dates of trials/guidelines.`;
+    if(mode==="Product Knowledge"){
+      return `${base}
+Task: Answer evidence-based questions for Therapeutic Area: ${area}. Provide concise referenced responses.`;
     }
-
-    // Sales Simulation
-    const banner = s ? `TA: ${s.area} | HCP: ${s.hcp} | Scenario: ${s.title} | Goal: ${s.goal} | Objection: ${s.objection}` : "";
-    return `${shared}
-Task: Role-play the HCP in a sales simulation. Keep answers consistent with the persona and objection. Do not invent data. Provide short HCP replies. After each user turn, emit a machine-readable "coach" object with rubric scores (0-5) for: Needs Assessment, Clinical Accuracy, Compliance/Fair-Balance, Objection Handling, Close/Next Step. Also emit two bullet coaching tips. Context: ${banner}`;
+    const banner=s?`TA: ${s.area} | HCP: ${s.hcp} | Scenario: ${s.title} | Goal: ${s.goal} | Objection: ${s.objection}`:"";
+    return `${base}
+Task: Role-play the HCP for a sales simulation consistent with the persona. Keep replies short. After each user turn, emit a machine-readable "coach" object with rubric scores (0-5) for: Needs Assessment, Clinical Accuracy, Compliance/Fair-Balance, Objection Handling, Close/Next Step, plus two bullet tips. Context: ${banner}`;
   }
 
-  // ---------- UI ----------
-  function render() {
-    mount.classList.add("cw");
-    mount.innerHTML = "";
+  // -------- UI --------
+  function render(){
+    mount.classList.add("cw"); mount.innerHTML="";
+    const shell=el("div","cw-shell");
 
-    const shell = el("div","cw-shell");
-
-    // persona banner
-    const banner = el("div","cw-banner hidden");
-    banner.innerHTML = `<h4 id="bn-title"></h4>
-      <p id="bn-objection"></p>
-      <p id="bn-goal"></p>
-      <p id="bn-rep"></p>`;
+    // persona banner (hidden until full selection)
+    const banner=el("div","cw-banner hidden");
+    banner.innerHTML=`<h4 id="bn-title"></h4>
+      <p id="bn-objection"></p><p id="bn-goal"></p><p id="bn-rep"></p>`;
     shell.appendChild(banner);
 
     // controls
-    const controls = el("div","cw-controls");
-    const grid = el("div","grid");
+    const controls=el("div","cw-controls");
+    const grid=el("div","grid");
 
     // Mode
-    const fMode = el("div","field");
-    const lbMode = el("label",null,"Mode");
-    const selMode = el("select");
+    const fMode=el("div","field");
+    const lbMode=el("label",null,"Mode");
+    const selMode=el("select");
     ["Product Knowledge","Sales Simulation"].forEach(v=>{
-      const o = el("option"); o.value=v; o.textContent=v; selMode.appendChild(o);
+      const o=el("option"); o.value=v; o.textContent=v; selMode.appendChild(o);
     });
-    selMode.value = current.mode;
-    fMode.append(lbMode, selMode);
+    selMode.value=current.mode;
+    fMode.append(lbMode,selMode);
 
     // Therapeutic Area
-    const fTA = el("div","field");
-    const lbTA = el("label",null,"Therapeutic Area");
-    const selTA = el("select");
-    fTA.append(lbTA, selTA);
+    const fTA=el("div","field");
+    const lbTA=el("label",null,"Therapeutic Area");
+    const selTA=el("select");
+    // placeholder
+    const taPh=el("option"); taPh.value=""; taPh.textContent="Select Therapeutic Area"; taPh.disabled=true; taPh.selected=true;
+    selTA.appendChild(taPh);
+    fTA.append(lbTA,selTA);
 
     // HCP Profile/Scenario
-    const fHCP = el("div","field");
-    const lbHCP = el("label",null,"HCP Profile/Scenario");
-    const selHCP = el("select");
-    fHCP.append(lbHCP, selHCP);
+    const fHCP=el("div","field");
+    const lbHCP=el("label",null,"HCP Profile/Scenario");
+    const selHCP=el("select");
+    const hcpPh=el("option"); hcpPh.value=""; hcpPh.textContent="Select HCP Profile/Scenario"; hcpPh.disabled=true; hcpPh.selected=true;
+    selHCP.appendChild(hcpPh);
+    fHCP.append(lbHCP,selHCP);
 
-    // Coach (static)
-    const fCoach = el("div","field");
-    const lbCoach = el("label",null,"Coach");
-    const coachStatic = el("div","static",
-      "I’ll provide feedback as we work through the HCP profile/scenario. Ready when you are!");
-    fCoach.append(lbCoach, coachStatic);
+    // Coach (static look-alike)
+    const fCoach=el("div","field");
+    const lbCoach=el("label",null,"Coach");
+    const coachStatic=el("div","static","Hi! I'm here to provide feedback during your simulated conversation. Ready?");
+    fCoach.append(lbCoach,coachStatic);
 
     grid.append(fMode,fTA,fHCP,fCoach);
     controls.appendChild(grid);
     shell.appendChild(controls);
 
-    // chat log + input
-    const chat = el("div","cw-chat");
-    const log = el("div","cw-log");
-    const inputRow = el("div","cw-input");
-    const ta = el("textarea"); ta.placeholder="Type your message…";
-    const btnSend = el("button","btn","Send");
-    inputRow.append(ta, btnSend);
-    chat.append(log, inputRow);
+    // chat + input
+    const chat=el("div","cw-chat");
+    const log=el("div","cw-log");
+    const input=el("div","cw-input");
+    const ta=el("textarea"); ta.placeholder="Type your message…";
+    const btn=el("button","btn","Send");
+    input.append(ta,btn);
+    chat.append(log,input);
     shell.appendChild(chat);
 
     // coach panel
-    const coach = el("div","coach hidden");
-    coach.innerHTML = `<div class="coach-h">Coach Feedback</div>
-      <div class="coach-b">
-        <div id="coach-text">Active. I will score each turn.</div>
-        <div class="score" id="coach-score"></div>
-      </div>`;
+    const coach=el("div","coach hidden");
+    coach.innerHTML=`<div class="coach-h">Coach Feedback</div>
+      <div class="coach-b"><div id="coach-text">Active. I will score each turn.</div>
+      <div class="score" id="coach-score"></div></div>`;
     shell.appendChild(coach);
 
     mount.appendChild(shell);
 
     // populate controls
-    function populateAreas() {
-      selTA.innerHTML = "";
-      areas.forEach(a=>{
-        const o = el("option"); o.value=a; o.textContent=a; selTA.appendChild(o);
-      });
-      if (!current.area) current.area = areas[0] || "";
-      selTA.value = current.area;
+    function populateAreas(){
+      selTA.innerHTML=""; selTA.appendChild(taPh.cloneNode(true));
+      areas.forEach(a=>{ const o=el("option"); o.value=a; o.textContent=a; selTA.appendChild(o); });
+      // do not auto-select; user must choose
+      current.area="";
+      selTA.value="";
+      // reset HCP list
+      populateHCP(true);
     }
-    function populateHCP() {
-      selHCP.innerHTML = "";
-      const list = filterScenariosByArea(current.area);
-      list.forEach(s=>{
-        const o = el("option");
-        o.value = s.id;
-        o.textContent = `${s.hcp}: ${s.title}`;
-        selHCP.appendChild(o);
+    function populateHCP(clearOnly){
+      selHCP.innerHTML=""; selHCP.appendChild(hcpPh.cloneNode(true));
+      current.scenarioId="";
+      selHCP.value="";
+      if(clearOnly || !current.area) return;
+      filterScenariosByArea(current.area).forEach(s=>{
+        const o=el("option"); o.value=s.id; o.textContent=`${s.hcp}: ${s.title}`; selHCP.appendChild(o);
       });
-      current.scenarioId = list[0]?.id || "";
-      selHCP.value = current.scenarioId;
     }
 
     populateAreas();
-    populateHCP();
     applyVisibility();
     updateBanner();
 
     // events
-    selMode.addEventListener("change", ()=>{
-      current.mode = selMode.value;
+    selMode.addEventListener("change",()=>{
+      current.mode=selMode.value;
       applyVisibility();
       updateBanner();
     });
-    selTA.addEventListener("change", ()=>{
-      current.area = selTA.value;
-      populateHCP();
+    selTA.addEventListener("change",()=>{
+      current.area=selTA.value;
+      populateHCP(false);
       updateBanner();
     });
-    selHCP.addEventListener("change", ()=>{
-      current.scenarioId = selHCP.value;
+    selHCP.addEventListener("change",()=>{
+      current.scenarioId=selHCP.value;
       updateBanner();
     });
-    btnSend.addEventListener("click", ()=> send(ta, log, coach));
-    ta.addEventListener("keydown",(e)=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); btnSend.click(); }});
+    btn.addEventListener("click",()=>send(ta,log,coach));
+    ta.addEventListener("keydown",(e)=>{ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); btn.click(); }});
 
-    // helpers
     function applyVisibility(){
-      const pk = current.mode === "Product Knowledge";
-      // PK: show Mode + TA, hide HCP, hide Coach block
-      fHCP.classList.toggle("hidden", pk);
-      fCoach.classList.toggle("hidden", pk); // static coach hidden in PK
-      // Sales Sim: show all, coach panel visible
-      coachVisible = !pk;
+      const pk=current.mode==="Product Knowledge";
+      fHCP.classList.toggle("hidden", pk);       // hidden in PK
+      fCoach.classList.toggle("hidden", pk);     // static coach hidden in PK
+      coachVisible=!pk;                          // coach panel visible only in Sales Sim
       coach.classList.toggle("hidden", pk);
+      // in Sales Sim require explicit selections
+      if(!pk){
+        // force placeholders until user selects
+        selTA.value = current.area || "";
+        selHCP.value = current.scenarioId || "";
+      }
     }
 
     function updateBanner(){
-      const pk = current.mode === "Product Knowledge";
-      const s = scenariosById.get(current.scenarioId);
-      banner.classList.toggle("hidden", pk || !s);
-      if (!pk && s){
-        banner.querySelector("#bn-title").textContent = `${s.hcp} — ${s.title}`;
-        banner.querySelector("#bn-objection").textContent = `Objection: ${s.objection || "—"}`;
-        banner.querySelector("#bn-goal").textContent = `Today’s Goal: ${s.goal || "—"}`;
-        banner.querySelector("#bn-rep").textContent = `Rep Approach: ${s.rep || "—"}`;
-      }
+      const pk=current.mode==="Product Knowledge";
+      const ready = !pk && current.area && current.scenarioId;
+      banner.classList.toggle("hidden", !ready);
+      if(!ready) return;
+      const s=scenariosById.get(current.scenarioId);
+      if(!s) return;
+      banner.querySelector("#bn-title").textContent=`${s.hcp} — ${s.title}`;
+      banner.querySelector("#bn-objection").textContent=`Objection: ${s.objection||"—"}`;
+      banner.querySelector("#bn-goal").textContent=`Today’s Goal: ${s.goal||"—"}`;
+      banner.querySelector("#bn-rep").textContent=`Rep Approach: ${s.rep||"—"}`;
     }
   }
 
-  // ---------- messaging ----------
+  // -------- messaging --------
   async function callApi(payload){
-    const r = await fetch(cfg.apiBase, {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify(payload)
-    });
-    if (!r.ok) throw new Error(`API ${r.status}`);
+    const r=await fetch(cfg.apiBase,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    if(!r.ok) throw new Error(`API ${r.status}`);
     return r.json();
   }
-
-  function renderMsg(log, role, text){
-    const m = el("div","msg "+(role==="user"?"me":""));
-    m.innerHTML = `<span>${text}</span>`;
-    log.appendChild(m);
-    log.scrollTop = log.scrollHeight;
+  function renderMsg(log,role,text){
+    const m=el("div","msg "+(role==="user"?"me":"")); m.innerHTML=`<span>${text}</span>`;
+    log.appendChild(m); log.scrollTop=log.scrollHeight;
   }
-
-  function renderCoach(coachEl, feedback){
-    if (!feedback) return;
-    const text = coachEl.querySelector("#coach-text");
-    const scoreWrap = coachEl.querySelector("#coach-score");
-    text.textContent = feedback.tips?.join(" • ") || "—";
-    scoreWrap.innerHTML = "";
-    const parts = [
-      ["Needs","needs_assessment"],
-      ["Accuracy","clinical_accuracy"],
-      ["Compliance","compliance"],
-      ["Objection","objection_handling"],
-      ["Close","close_next_step"]
-    ];
-    parts.forEach(([label,key])=>{
-      const v = feedback[key];
-      if (typeof v === "number") {
-        scoreWrap.appendChild(el("div","pill",`${label}: ${v}/5`));
-      }
-    });
+  function renderCoach(coachEl,fb){
+    if(!fb) return;
+    const text=coachEl.querySelector("#coach-text");
+    const score=coachEl.querySelector("#coach-score");
+    text.textContent=(fb.tips&&fb.tips.join(" • "))||"—";
+    score.innerHTML="";
+    const parts=[["Needs","needs_assessment"],["Accuracy","clinical_accuracy"],["Compliance","compliance"],["Objection","objection_handling"],["Close","close_next_step"]];
+    parts.forEach(([lbl,key])=>{ const v=fb[key]; if(typeof v==="number"){ score.appendChild(el("div","pill",`${lbl}: ${v}/5`)); }});
   }
-
-  async function send(ta, log, coachEl){
-    const content = ta.value.trim();
-    if (!content) return;
-    ta.value = "";
+  async function send(ta,log,coachEl){
+    const content=ta.value.trim(); if(!content) return; ta.value="";
     renderMsg(log,"user",content);
-
-    const mode = current.mode;
-    const area = current.area;
-    const scenario = scenariosById.get(current.scenarioId) || null;
-
-    // build guardrailed system
-    const sys = complianceSystemPrompt(mode, area, scenario);
-
-    const payload = {
-      mode,
-      area,
-      scenarioId: scenario?.id || null,
-      system: sys,
-      conversation: [
-        ...conversation,
-        { role:"user", content }
-      ],
-      request_citations: true,
-      request_coach: mode === "Sales Simulation"
-    };
-
+    const mode=current.mode, area=current.area;
+    const scenario = current.scenarioId ? scenariosById.get(current.scenarioId) : null;
+    const sys=complianceSystemPrompt(mode,area,scenario);
+    const payload={ mode, area, scenarioId: scenario?.id||null, system:sys,
+      conversation:[...conversation,{role:"user",content}], request_citations:true, request_coach: mode==="Sales Simulation" };
     try{
-      const data = await callApi(payload);
-      // expected: { reply: "...", citations:[...], coach:{...} }
-      const reply = data.reply || "[no response]";
-      conversation.push({ role:"user", content }, { role:"assistant", content: reply });
-      renderMsg(log,"assistant", reply);
-
-      if (coachVisible && data.coach) renderCoach(coachEl, data.coach);
-    }catch(e){
-      renderMsg(log,"assistant", `Error: ${e.message}`);
-    }
+      const data=await callApi(payload);
+      const reply=data.reply||"[no response]";
+      conversation.push({role:"user",content},{role:"assistant",content:reply});
+      renderMsg(log,"assistant",reply);
+      if(coachVisible && data.coach) renderCoach(coachEl,data.coach);
+    }catch(e){ renderMsg(log,"assistant",`Error: ${e.message}`); }
   }
 
-  // ---------- init ----------
-  waitForMount(async ()=>{
+  // -------- init --------
+  waitForMount(async()=>{
     try{
-      cfg = await loadConfig();
-      scenarios = await loadScenarios(cfg.scenariosUrl || "./assets/chat/data/scenarios.merged.json");
-      buildAreas();
-      // default selections
-      if (areas.length) {
-        // prefer HIV capitalization “HIV” if present
-        current.area = areas.includes("HIV") ? "HIV" : areas[0];
-      }
+      cfg=await loadConfig();
+      scenarios=await loadScenarios(cfg.scenariosUrl||"./assets/chat/data/scenarios.merged.json");
+      areas=await loadAreas(cfg.areasUrl);                // uses areasUrl if present
       render();
     }catch(e){
-      const err = el("div","cw");
-      err.textContent = `Widget failed to load: ${e.message}`;
-      mount.replaceWith(err);
+      const err=el("div","cw"); err.textContent=`Widget failed to load: ${e.message}`; mount.replaceWith(err);
     }
   });
 })();
