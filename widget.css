@@ -232,3 +232,10 @@ textarea { width: 100%; }
   .sim-controls{ grid-template-columns:1fr; }
   .chat-messages{ height:46vh; max-height:unset; }
 }
+/* launcher + safety (v4c4 append) */
+#cw-launch{
+  position:fixed; bottom:72px; right:12px; z-index:2147483647;
+  padding:10px 14px; border-radius:999px; border:1px solid rgba(47,58,79,.25);
+  background:#fff; font:600 14px/1 system-ui; box-shadow:0 2px 8px rgba(0,0,0,.12);
+}
+@media (max-width:640px){ #cw-launch{ bottom:16px; right:12px; } }
