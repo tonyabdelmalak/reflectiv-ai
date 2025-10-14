@@ -1,3 +1,71 @@
+/* widget.css v4c — additive styles only; no layout changes */
+
+/* fallback container if page lacks one */
+.cw-fallback { margin: 1rem auto; max-width: 960px; padding: 0 1rem; }
+
+/* scenario brief card */
+.scenario-brief .card {
+  border: 1px solid rgba(47,58,79,0.25);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  margin: 8px 0 12px;
+}
+.scenario-brief .card .row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.scenario-brief .card p { margin: 0; font-size: 0.95rem; line-height: 1.35; }
+
+/* chat messages */
+.cw-messages { border: 1px solid rgba(47,58,79,0.25); border-radius: 12px; padding: 10px; background: #fff; max-height: 42vh; overflow:auto; }
+.cw-messages .row { display:flex; margin: 8px 0; }
+.cw-messages .bubble { padding: 10px 12px; border-radius: 12px; max-width: 82%; line-height: 1.35; }
+.cw-messages .bubble.user { margin-left:auto; background:#eef3ff; border:1px solid rgba(62,84,148,0.25); }
+.cw-messages .bubble.assistant { margin-right:auto; background:#f8f9fb; border:1px solid rgba(47,58,79,0.18); }
+
+/* typing dots */
+.bubble .dots { display:inline-flex; gap:4px; vertical-align:middle; }
+.bubble .dots i { display:block; width:6px; height:6px; border-radius:50%; background:#999; animation:bd 1s infinite ease-in-out; }
+.bubble .dots i:nth-child(2){ animation-delay:.15s; } .bubble .dots i:nth-child(3){ animation-delay:.3s; }
+@keyframes bd { 0%,80%,100%{opacity:.2; transform:translateY(0)} 40%{opacity:1; transform:translateY(-3px)} }
+
+/* coach panel */
+.coach-panel { border: 1px solid rgba(47,58,79,0.25); border-radius: 12px; margin-top: 10px; background: #fff; }
+.coach-panel[data-hidden="true"] { display: none; }
+.coach-panel .coach-head { display:flex; justify-content: space-between; align-items:center; padding: 8px 12px; border-bottom:1px solid rgba(47,58,79,0.15); }
+.coach-panel .coach-body { padding: 8px 12px; max-height: 32vh; overflow:auto; }
+.coach-panel .coach-score { padding: 8px 12px; border-top:1px solid rgba(47,58,79,0.15); font-weight: 600; }
+.coach-card { border:1px solid rgba(47,58,79,0.15); border-radius:10px; padding:10px; background:#fafbff; }
+.coach-card.muted { background:#fbfbfb; }
+.coach-alert { background:#fff7e6; border:1px solid #f0c36d; color:#7a4d00; border-radius:8px; padding:8px 10px; margin-bottom:8px; font-weight:600; }
+
+/* EI badges */
+.ei-badges { display:flex; gap:6px; flex-wrap:wrap; }
+.chip { display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border:1px solid rgba(47,58,79,0.2); border-radius:999px; font-size:.85rem; background:#fff; }
+.chip.emp { border-color: rgba(0,0,0,0.2); }
+.chip.tone-supportive { background:#e8fff0; border-color:#86d7a5; }
+.chip.tone-neutral { background:#f4f6f8; border-color:#c6cbd1; }
+.chip.tone-transactional { background:#fff0f0; border-color:#e0a3a3; }
+.snippet { font-style: italic; color:#444; }
+
+/* inputs and buttons minimum touch targets */
+select, textarea, button, .chat-send {
+  min-height: 44px;
+}
+textarea { width: 100%; }
+
+/* fallback row/bubble if site lacks styles */
+.row { display: flex; }
+.bubble { border:1px solid rgba(47,58,79,0.2); border-radius:12px; padding:8px 10px; }
+
+/* mobile safety */
+@media (max-width: 640px) {
+  .cw-messages { max-height: 38vh; }
+  .coach-panel .coach-body { max-height: 32vh; }
+  .chip { font-size: .8rem; }
+}
+
+/* links inside bubbles */
+.cw-messages .bubble a { text-decoration: underline; }
 /* =====================================================
    ReflectivAI Chat Widget Styles — FULL DROP-IN
    Scope: .cw .reflectiv-chat
