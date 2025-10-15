@@ -1,7 +1,6 @@
 {
   "version": "2025-10-14",
   "model": "llama-3.1-8b-instant",
-  "apiBase": "https://my-chat-agent.tonyabdelmalak.workers.dev/chat",
   "workerUrl": "https://my-chat-agent.tonyabdelmalak.workers.dev/chat",
   "stream": false,
 
@@ -19,7 +18,7 @@
     "radius": "14px"
   },
 
-  "scenariosUrl": "assets/chat/data/scenarios.merged.json",
+  "scenariosUrl": "/assets/chat/data/scenarios.merged.json",
 
   "ui": {
     "showCoach": true,
