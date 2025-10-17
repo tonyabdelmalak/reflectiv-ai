@@ -623,5 +623,20 @@
     <!-- Include chat widget styles -->
 <link rel="stylesheet" href="widget.css?v=9">
 <script defer src="widget.js?v=9"></script>
-</body>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const navToggle = document.getElementById("navToggle");
+    const navMenu = document.getElementById("navMenu");
+
+    if (navToggle && navMenu) {
+      navToggle.addEventListener("click", () => {
+        navMenu.classList.toggle("active");
+      });
+    }
+
+    // Ensure page always loads from top
+    window.scrollTo(0, 0);
+  });
+</script>
+  </body>
 </html>
