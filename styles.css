@@ -1,11 +1,7 @@
 /*
  * ReflectivAI Site Stylesheet
  *
- * This stylesheet defines the color palette, typography and layout for the
- * ReflectivAI single‑page application. It keeps the existing palette (navy,
- * teal, slate and white) and uses Poppins for body text. Layouts are
- * responsive and leverage flexbox for simple grids. Minor tweaks to accent
- * colors can be made by adjusting the CSS variables below.
+ * Color palette, typography, layout, and mobile nav (hamburger).
  */
 
 :root {
@@ -27,13 +23,13 @@ body {
   background-color: var(--white);
 }
 
-/* Navigation */
+/* ---------- Navigation ---------- */
 .site-header {
   background-color: var(--navy);
   color: var(--white);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 1000;
   width: 100%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -45,6 +41,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1rem;
+  position: relative; /* anchor for absolute mobile menu */
 }
 
 .nav-logo {
@@ -73,7 +70,34 @@ body {
   color: var(--teal);
 }
 
-/* Sections */
+/* ---------- Hamburger button ---------- */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 26px;
+  height: 20px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.hamburger span {
+  display: block;
+  height: 3px;
+  width: 100%;
+  background-color: var(--white);
+  border-radius: 2px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* optional "X" animation when JS toggles .active on the button */
+.hamburger.active span:nth-child(1) { transform: translateY(8.5px) rotate(45deg); }
+.hamburger.active span:nth-child(2) { opacity: 0; }
+.hamburger.active span:nth-child(3) { transform: translateY(-8.5px) rotate(-45deg); }
+
+/* ---------- Sections ---------- */
 .section {
   padding: 3rem 1rem;
 }
@@ -95,7 +119,7 @@ h3 {
   color: var(--navy);
 }
 
-/* Hero */
+/* ---------- Hero ---------- */
 .hero {
   display: flex;
   flex-wrap: wrap;
@@ -160,7 +184,7 @@ h3 {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Steps */
+/* ---------- Steps ---------- */
 .steps {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -193,7 +217,7 @@ h3 {
   color: var(--navy);
 }
 
-/* Card grid */
+/* ---------- Card grid ---------- */
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -233,7 +257,7 @@ h3 {
   font-style: italic;
 }
 
-/* Feature list */
+/* ---------- Feature list ---------- */
 .feature-list {
   list-style-type: disc;
   padding-left: 1rem;
@@ -245,7 +269,7 @@ h3 {
   font-size: 0.95rem;
 }
 
-/* Analytics */
+/* ---------- Analytics ---------- */
 .analytics-content {
   display: flex;
   flex-wrap: wrap;
@@ -257,7 +281,6 @@ h3 {
   flex: 1 1 40%;
 }
 
-/* Ensure the analytics illustration scales responsively within its container */
 .analytics-image img {
   max-width: 100%;
   height: auto;
@@ -288,7 +311,7 @@ th {
   color: var(--navy);
 }
 
-/* Ethics section */
+/* ---------- Ethics section ---------- */
 .ethics h3 {
   margin-top: 2rem;
   font-size: 1.25rem;
@@ -321,7 +344,7 @@ th {
   text-decoration: none;
 }
 
-/* Evidence */
+/* ---------- Evidence ---------- */
 .evidence-list {
   list-style-type: disc;
   padding-left: 1rem;
@@ -333,7 +356,7 @@ th {
   font-size: 0.95rem;
 }
 
-/* FAQ */
+/* ---------- FAQ ---------- */
 .faq-item {
   margin-bottom: 1.25rem;
 }
@@ -350,7 +373,7 @@ th {
   color: var(--navy);
 }
 
-/* Contact */
+/* ---------- Contact ---------- */
 .contact-form {
   display: grid;
   gap: 1rem;
@@ -385,7 +408,7 @@ th {
   width: fit-content;
 }
 
-/* Footnotes */
+/* ---------- Footnotes ---------- */
 .footnotes {
   background-color: #f0f4f8;
   padding: 2rem 1rem;
@@ -413,7 +436,7 @@ th {
   margin-left: 2px;
 }
 
-/* Responsive adjustments */
+/* ---------- Responsive ---------- */
 @media (max-width: 768px) {
   .hero {
     flex-direction: column;
@@ -426,15 +449,35 @@ th {
   .analytics-content {
     flex-direction: column;
   }
+
+  /* mobile nav: show hamburger, turn menu into dropdown */
+  .hamburger { display: flex; }
+
   .nav-links {
-    gap: 0.75rem;
+    display: none;                 /* hidden until toggled by JS */
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--navy);
+    flex-direction: column;
+    gap: 0;
+    padding: 0.5rem 1rem 0.75rem;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .nav-links.active { display: flex; }
+
+  .nav-links a {
+    padding: 0.75rem 0;
+    border-top: 1px solid rgba(255,255,255,0.08);
   }
 }
+
 /* ===== Compact spacing for Platform Modules ===== */
 .section.platform.compact .grid-3.tight {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem; /* reduced vertical spacing between cards */
+  gap: 0.5rem;
 }
 
 .section.platform.compact .card {
