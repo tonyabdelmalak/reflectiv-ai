@@ -9,23 +9,22 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ReflectivAI – AI Sales Enablement for Life Sciences</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ReflectivAI – AI Sales Enablement for Life Sciences</title>
 
-    <!-- Poppins font to match the existing brand typography -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
-      rel="stylesheet"
-    />
+  <!-- Poppins font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
 
-    <!-- Chat widget styles come before site styles so they can be overridden -->
-    <link rel="stylesheet" href="./assets/chat/widget.css?v=4c4" />
-    <link rel="stylesheet" href="./styles.css" />
-    <script src="./assets/chat/widget.js?v=4c4" defer></script>
-  </head>
+  <!-- Chat widget styles come before site styles -->
+  <link rel="stylesheet" href="./widget.css?v=4c4" />
+  <link rel="stylesheet" href="./styles.css" />
+
+  <!-- Widget script (load once) -->
+  <script src="./widget.js?v=4c4" defer></script>
+</head>
 
   <body>
     <!-- Widget mount -->
@@ -329,8 +328,8 @@
           <li><strong>Spaced-repetition:</strong> reinforce key concepts at optimal intervals to ensure retention.</li>
         </ul>
         <p class="note">Need last-minute advice before a call? Use the in-product chat widget to ask our AI.</p>
-        <!-- Embed ReflectivAI chat widget container (interactive mount) -->
-        <div id="reflectiv-widget" class="cw"></div>
+       <!-- Embed ReflectivAI chat widget container (interactive mount) -->
+       <div id="reflectiv-widget" class="cw" data-config="./assets/chat/config.json"></div>
       </div>
     </section>
 
@@ -582,6 +581,5 @@
         document.body.appendChild(n);
       };
     </script>
-    <script defer src="widget.js?v=4c4"></script>
   </body>
 </html>
