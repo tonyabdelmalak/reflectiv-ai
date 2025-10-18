@@ -6,8 +6,12 @@
 (function () {
   // ---------- safe bootstrapping ----------
   let mount = null;
-  function onReady(fn){ if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn, { once:true }); else fn(); }
-  function waitForMount(cb){
+  function onReady(fn) {
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn, { once: true });
+    else fn();
+  }
+
+  function waitForMount(cb) {
     const tryGet = () => {
       mount = document.getElementById("reflectiv-widget");
       if (mount) return cb();
@@ -15,14 +19,14 @@
         mount = document.getElementById("reflectiv-widget");
         if (mount) { obs.disconnect(); cb(); }
       });
-      obs.observe(document.documentElement, { childList:true, subtree:true });
+      obs.observe(document.documentElement, { childList: true, subtree: true });
       setTimeout(() => obs.disconnect(), 15000);
     };
     onReady(tryGet);
   }
 
   // ---------- config/state ----------
-  const LC_OPTIONS = ["Emotional Intelligence","Product Knowledge","Sales Simulation"];
+  const LC_OPTIONS = ["Emotional Intelligence", "Product Knowledge", "Sales Simulation"];
   const LC_TO_INTERNAL = {
     "Emotional Intelligence": "emotional-assessment",
     "Product Knowledge": "product-knowledge",
@@ -87,7 +91,7 @@
     });
 
     // Add event listeners to the dropdowns
-    personaSelect.addEventListener("change", function() {
+    personaSelect.addEventListener("change", function () {
       const selectedPersona = personaSelect.value;
       const selectedEI = eiSelect.value;
       const empathyScore = calculateEmpathyRating(selectedPersona);  // Define this function to calculate empathy
@@ -95,7 +99,7 @@
       shell.querySelector(".coach-body").innerHTML = feedback;  // Update feedback on the widget UI
     });
 
-    eiSelect.addEventListener("change", function() {
+    eiSelect.addEventListener("change", function () {
       const selectedPersona = personaSelect.value;
       const selectedEI = eiSelect.value;
       const empathyScore = calculateEmpathyRating(selectedPersona);
@@ -185,23 +189,23 @@
       idealLen: inRange(words, 45, 120)
     };
 
-    const accuracy  = sig.accuracyCue ? (sig.label ? 5 : 4) : 3;
-    const compliance= sig.label ? 5 : 3;
+    const accuracy = sig.accuracyCue ? (sig.label ? 5 : 4) : 3;
+    const compliance = sig.label ? 5 : 3;
     const discovery = sig.discovery ? 4 : 2;
     const objection_handling = sig.objection ? (sig.accuracyCue ? 4 : 3) : 2;
-    const empathy   = sig.empathy ? 3 : 2;
-    const clarity   = sig.tooLong ? 2 : (sig.idealLen ? 4 : 3);
+    const empathy = sig.empathy ? 3 : 2;
+    const clarity = sig.tooLong ? 2 : (sig.idealLen ? 4 : 3);
 
-    const W = { accuracy:.26, compliance:.22, discovery:.16, objection_handling:.14, clarity:.12, empathy:.10 };
+    const W = { accuracy: .26, compliance: .22, discovery: .16, objection_handling: .14, clarity: .12, empathy: .10 };
     const toPct = v => v * 20;
 
     let overall = (
-      toPct(accuracy)  * W.accuracy +
-      toPct(compliance)* W.compliance +
+      toPct(accuracy) * W.accuracy +
+      toPct(compliance) * W.compliance +
       toPct(discovery) * W.discovery +
-      toPct(objection_handling)*W.objection_handling +
-      toPct(clarity)   * W.clarity +
-      toPct(empathy)   * W.empathy
+      toPct(objection_handling) * W.objection_handling +
+      toPct(clarity) * W.clarity +
+      toPct(empathy) * W.empathy
     );
     if (sig.idealLen) overall += 3;
     if (endsWithQ) overall += 3;
@@ -300,12 +304,12 @@ ${COMMON}`.trim();
   }
 
   // ---------- UI ----------
-function buildUI() {
-  mount.innerHTML = "";
-  if (!mount.classList.contains("cw")) mount.classList.add("cw");
+  function buildUI() {
+    mount.innerHTML = "";
+    if (!mount.classList.contains("cw")) mount.classList.add("cw");
 
-  const style = document.createElement("style");
-  style.textContent = `
+    const style = document.createElement("style");
+    style.textContent = `
     #reflectiv-widget .reflectiv-chat{ display:flex; flex-direction:column; gap:12px; border:3px solid #bfc7d4; border-radius:14px; background:#fff; overflow:hidden; }
     #reflectiv-widget .chat-toolbar{ display:block; padding:14px 16px; background:#f6f8fb; border-bottom:1px solid #e1e6ef; }
     #reflectiv-widget .sim-controls{ display:grid; grid-template-columns:220px 1fr 200px 1fr; gap:12px 16px; align-items:center; }
@@ -327,333 +331,97 @@ function buildUI() {
     @media (max-width:520px){ #reflectiv-widget .chat-messages{ height:46vh; } }
     #reflectiv-widget .hidden{ display:none !important; }
   `;
-  document.head.appendChild(style);
+    document.head.appendChild(style);
 
-  const shell = el("div", "reflectiv-chat");
+    const shell = el("div", "reflectiv-chat");
 
-  const bar = el("div", "chat-toolbar");
-  const simControls = el("div","sim-controls");
+    const bar = el("div", "chat-toolbar");
+    const simControls = el("div","sim-controls");
 
-  const lcLabel = el("label", "", "Learning Center");
-  lcLabel.htmlFor = "cw-mode";
-  const modeSel = el("select"); modeSel.id = "cw-mode";
-  LC_OPTIONS.forEach((name) => {
-    const o = el("option"); o.value = name; o.textContent = name;
-    modeSel.appendChild(o);
-  });
-  const initialLc = Object.keys(LC_TO_INTERNAL).find(k => LC_TO_INTERNAL[k] === (cfg?.defaultMode || "sales-simulation")) || "Sales Simulation";
-  modeSel.value = initialLc;
-  currentMode = LC_TO_INTERNAL[modeSel.value];
-
-  const coachLabel = el("label", "", "Coach");
-  coachLabel.htmlFor = "cw-coach";
-  const coachSel = el("select"); coachSel.id = "cw-coach";
-  [{v:"on",t:"Coach On"},{v:"off",t:"Coach Off"}].forEach(({v,t})=>{
-    const o = el("option"); o.value=v; o.textContent=t; coachSel.appendChild(o);
-  });
-  coachSel.value = coachOn ? "on" : "off";
-  coachSel.onchange = () => { coachOn = coachSel.value === "on"; renderCoach(); };
-
-  const diseaseLabel = el("label", "", "Disease State");
-  diseaseLabel.htmlFor = "cw-disease";
-  const diseaseSelect = el("select"); diseaseSelect.id = "cw-disease";
-
-  const hcpLabel = el("label","","HCP Profiles");
-  hcpLabel.htmlFor="cw-hcp";
-  const hcpSelect = el("select"); hcpSelect.id="cw-hcp";
-
-  simControls.appendChild(lcLabel);    simControls.appendChild(modeSel);
-  simControls.appendChild(coachLabel); simControls.appendChild(coachSel);
-  simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
-  simControls.appendChild(hcpLabel);     simControls.appendChild(hcpSelect);
-
-  bar.appendChild(simControls);
-  shell.appendChild(bar);
-
-  const meta = el("div", "scenario-meta");
-  shell.appendChild(meta);
-
-  const msgs = el("div", "chat-messages");
-  shell.appendChild(msgs);
-
-  const inp = el("div", "chat-input");
-  const ta = el("textarea"); ta.placeholder = "Type your message…";
-  ta.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send.click(); } });
-  const send = el("button", "btn", "Send");
-  send.onclick = () => { const t = ta.value.trim(); if (!t) return; sendMessage(t); ta.value = ""; };
-  inp.appendChild(ta); inp.appendChild(send);
-  shell.appendChild(inp);
-
-  mount.appendChild(shell);
-
-  const coach = el("div", "coach-section");
-  coach.innerHTML = `<h3>Coach Feedback</h3><div class="coach-body muted">Awaiting the first assistant reply…</div>`;
-  mount.appendChild(coach);
-
-  // Call the new function to add persona and EI dropdowns
-  buildEIUI();
-}
-
-    function getDiseaseStates() {
-      let ds = Array.isArray(cfg?.diseaseStates) ? cfg.diseaseStates.slice() : [];
-      if (!ds.length && Array.isArray(scenarios) && scenarios.length){
-        ds = Array.from(new Set(scenarios.map(s => (s.therapeuticArea || s.diseaseState || "").trim()))).filter(Boolean);
-      }
-      ds = ds.map(x => x.replace(/\bHiv\b/gi,"HIV"));
-      return ds;
-    }
-
-    function setSelectOptions(select, values, withPlaceholder) {
-      select.innerHTML = "";
-      if (withPlaceholder) {
-        const p = el("option","", "Select…");
-        p.value = ""; p.selected = true; p.disabled = true;
-        select.appendChild(p);
-      }
-      values.forEach(v => {
-        if (!v) return;
-        const o = el("option","", typeof v === "string" ? v : (v.label || v.value));
-        o.value = typeof v === "string" ? v : (v.value || v.id || v.label);
-        select.appendChild(o);
-      });
-    }
-
-    function populateDiseases() {
-      const ds = getDiseaseStates();
-      setSelectOptions(diseaseSelect, ds, true);
-    }
-
-    function populateHcpForDisease(ds) {
-      const dsKey = (ds || "").trim();
-      const scen = scenarios.filter(s => {
-        const area = (s.therapeuticArea || s.diseaseState || "").trim();
-        return area.toLowerCase() === dsKey.toLowerCase();
-      });
-
-      if (scen.length) {
-        const opts = scen.map(s => ({ value: s.id, label: s.label || s.id }));
-        setSelectOptions(hcpSelect, opts, true);
-        hcpSelect.disabled = false;
-      } else {
-        setSelectOptions(hcpSelect, [], true);
-        hcpSelect.disabled = true;
-      }
-    }
-
-    function applyModeVisibility() {
-      const lc = modeSel.value;
-      currentMode = LC_TO_INTERNAL[lc];
-
-      const pk = currentMode === "product-knowledge";
-      coachLabel.classList.toggle("hidden", pk);
-      coachSel.classList.toggle("hidden", pk);
-
-      if (currentMode === "sales-simulation") {
-        diseaseLabel.classList.remove("hidden");
-        diseaseSelect.classList.remove("hidden");
-        hcpLabel.classList.remove("hidden");
-        hcpSelect.classList.remove("hidden");
-        populateDiseases();
-      } else if (currentMode === "product-knowledge") {
-        diseaseLabel.classList.remove("hidden");
-        diseaseSelect.classList.remove("hidden");
-        hcpLabel.classList.add("hidden");
-        hcpSelect.classList.add("hidden");
-        populateDiseases();
-      } else {
-        diseaseLabel.classList.add("hidden");
-        diseaseSelect.classList.add("hidden");
-        hcpLabel.classList.add("hidden");
-        hcpSelect.classList.add("hidden");
-      }
-
-      currentScenarioId = null;
-      conversation = [];
-      renderMessages(); renderCoach(); renderMeta();
-    }
-
-    modeSel.addEventListener("change", applyModeVisibility);
-
-    diseaseSelect.addEventListener("change", ()=>{
-      const ds = diseaseSelect.value || "";
-      if (!ds) return;
-      if (currentMode === "sales-simulation") {
-        populateHcpForDisease(ds);
-      } else if (currentMode === "product-knowledge") {
-        currentScenarioId = null;
-      }
-      conversation=[]; renderMessages(); renderCoach(); renderMeta();
+    const lcLabel = el("label", "", "Learning Center");
+    lcLabel.htmlFor = "cw-mode";
+    const modeSel = el("select"); modeSel.id = "cw-mode";
+    LC_OPTIONS.forEach((name) => {
+      const o = el("option"); o.value = name; o.textContent = name;
+      modeSel.appendChild(o);
     });
+    const initialLc = Object.keys(LC_TO_INTERNAL).find(k => LC_TO_INTERNAL[k] === (cfg?.defaultMode || "sales-simulation")) || "Sales Simulation";
+    modeSel.value = initialLc;
+    currentMode = LC_TO_INTERNAL[modeSel.value];
 
-    hcpSelect.addEventListener("change", ()=>{
-      const sel = hcpSelect.value || "";
-      if (!sel) return;
-      const sc = scenariosById.get(sel);
-      currentScenarioId = sc ? sc.id : null;
-      conversation=[]; renderMessages(); renderCoach(); renderMeta();
+    const coachLabel = el("label", "", "Coach");
+    coachLabel.htmlFor = "cw-coach";
+    const coachSel = el("select"); coachSel.id = "cw-coach";
+    [{v:"on",t:"Coach On"},{v:"off",t:"Coach Off"}].forEach(({v,t})=>{
+      const o = el("option"); o.value=v; o.textContent=t; coachSel.appendChild(o);
     });
+    coachSel.value = coachOn ? "on" : "off";
+    coachSel.onchange = () => { coachOn = coachSel.value === "on"; renderCoach(); };
 
-    function renderMeta() {
-      const sc = scenariosById.get(currentScenarioId);
-      if (!sc || !currentScenarioId || currentMode !== "sales-simulation") { meta.innerHTML = ""; return; }
-      meta.innerHTML = `
-        <div class="meta-card">
-          <div><strong>Therapeutic Area:</strong> ${esc(sc.therapeuticArea || sc.diseaseState || "—")}</div>
-          <div><strong>HCP Role:</strong> ${esc(sc.hcpRole || "—")}</div>
-          <div><strong>Background:</strong> ${esc(sc.background || "—")}</div>
-          <div><strong>Today’s Goal:</strong> ${esc(sc.goal || "—")}</div>
-        </div>`;
+    const diseaseLabel = el("label", "", "Disease State");
+    diseaseLabel.htmlFor = "cw-disease";
+    const diseaseSelect = el("select"); diseaseSelect.id = "cw-disease";
+
+    const hcpLabel = el("label","","HCP Profiles");
+    hcpLabel.htmlFor="cw-hcp";
+    const hcpSelect = el("select"); hcpSelect.id="cw-hcp";
+
+    simControls.appendChild(lcLabel);    simControls.appendChild(modeSel);
+    simControls.appendChild(coachLabel); simControls.appendChild(coachSel);
+    simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
+    simControls.appendChild(hcpLabel);     simControls.appendChild(hcpSelect);
+
+    bar.appendChild(simControls);
+    shell.appendChild(bar);
+
+    const meta = el("div", "scenario-meta");
+    shell.appendChild(meta);
+
+    const msgs = el("div", "chat-messages");
+    shell.appendChild(msgs);
+
+    const inp = el("div", "chat-input");
+    const ta = el("textarea"); ta.placeholder = "Type your message…";
+    ta.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send.click(); } });
+    const send = el("button", "btn", "Send");
+    send.onclick = () => { const t = ta.value.trim(); if (!t) return; sendMessage(t); ta.value = ""; };
+    inp.appendChild(ta); inp.appendChild(send);
+    shell.appendChild(inp);
+
+    mount.appendChild(shell);
+
+    const coach = el("div", "coach-section");
+    coach.innerHTML = `<h3>Coach Feedback</h3><div class="coach-body muted">Awaiting the first assistant reply…</div>`;
+    mount.appendChild(coach);
+
+    // Call the new function to add persona and EI dropdowns
+    buildEIUI();
+  }
+
+  async function getDiseaseStates() {
+    let ds = Array.isArray(cfg?.diseaseStates) ? cfg.diseaseStates.slice() : [];
+    if (!ds.length && Array.isArray(scenarios) && scenarios.length){
+      ds = Array.from(new Set(scenarios.map(s => (s.therapeuticArea || s.diseaseState || "").trim()))).filter(Boolean);
     }
-
-function renderMessages() {
-   msgs.innerHTML = "";
-   for (const m of conversation) {
-     const row = el("div", `message ${m.role}`);
-     const c = el("div", "content");
-     c.innerHTML = md(m.content);
-     row.appendChild(c);
-     msgs.appendChild(row);
-  }
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-function orderedPills(scores) {
-  const order = ["accuracy","empathy","clarity","compliance","discovery","objection_handling"];
-  return order
-    .filter(k => k in (scores || {}))
-    .map(k => `<span class="pill">${esc(k)}: ${scores[k]}</span>`)
-    .join(" ");
-}
-
-function renderCoach() {
-  const body = coach.querySelector(".coach-body");
-  if (!coachOn || currentMode === "product-knowledge") {
-    coach.style.display = "none";
-    return;
-  }
-  coach.style.display = "";
-
-  const last = conversation[conversation.length - 1];
-  if (!(last && last.role === "assistant" && last._coach)) {
-    body.innerHTML = `<span class="muted">Awaiting the first assistant reply…</span>`;
-    return;
+    ds = ds.map(x => x.replace(/\bHiv\b/gi,"HIV"));
+    return ds;
   }
 
-  const fb = last._coach;
-  const scores = fb.scores || fb.subscores || {};
-
-  // Format feedback with proper punctuation
-  const workedStr = (fb.worked && fb.worked.length)
-    ? fb.worked.join(". ") + "."
-    : "—";
-  const improveStr = (fb.improve && fb.improve.length)
-    ? fb.improve.join(". ") + "."
-    : (fb.feedback || "—");
-
-  body.innerHTML = `
-    <div class="coach-score">Score: <strong>${fb.overall ?? fb.score ?? "—"}</strong>/100</div>
-    <div class="coach-subs">${orderedPills(scores)}</div>
-    <ul class="coach-list">
-      <li><strong>What worked:</strong> ${esc(workedStr)}</li>
-      <li><strong>What to improve:</strong> ${esc(improveStr)}</li>
-      <li><strong>Suggested phrasing:</strong> ${esc(fb.phrasing || "—")}</li>
-    </ul>`;
-}
-
-    shell._renderMessages = renderMessages;
-    shell._renderCoach = renderCoach;
-    shell._renderMeta = renderMeta;
-
-    applyModeVisibility();
-  }
-
-  // ---------- transport ----------
-  async function callModel(messages) {
-    const r = await fetch((cfg?.apiBase || cfg?.workerUrl || "").trim(), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: (cfg && cfg.model) || "llama-3.1-8b-instant",
-        temperature: 0.2,
-        stream: !!cfg?.stream,
-        messages
-      })
+  function setSelectOptions(select, values, withPlaceholder) {
+    select.innerHTML = "";
+    if (withPlaceholder) {
+      const p = el("option","", "Select…");
+      p.value = ""; p.selected = true; p.disabled = true;
+      select.appendChild(p);
+    }
+    values.forEach(v => {
+      if (!v) return;
+      const o = el("option","", typeof v === "string" ? v : (v.label || v.value));
+      o.value = typeof v === "string" ? v : (v.value || v.id || v.label);
+      select.appendChild(o);
     });
-    if (!r.ok) {
-      const txt = await r.text().catch(() => "");
-      throw new Error(`HTTP ${r.status}: ${txt || "no body"}`);
-    }
-    const data = await r.json().catch(() => ({}));
-    return data?.content || data?.reply || data?.choices?.[0]?.message?.content || "";
   }
 
-  // ---------- send ----------
-  async function sendMessage(userText) {
-    const shell = mount.querySelector(".reflectiv-chat");
-    const renderMessages = shell._renderMessages;
-    const renderCoach = shell._renderCoach;
-
-    conversation.push({ role: "user", content: userText });
-    renderMessages(); renderCoach();
-
-    const sc = scenariosById.get(currentScenarioId);
-    const preface = buildPreface(currentMode, sc);
-
-    const messages = [];
-    if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
-    messages.push({ role: "system", content: preface });
-    messages.push({ role: "user", content: userText });
-
-    try {
-      const raw = await callModel(messages);
-      const { coach, clean } = extractCoach(raw);
-
-      const computed = scoreReply(userText, clean, currentMode);
-      const finalCoach = (() => {
-        if (coach && (coach.scores || coach.subscores)) {
-          const scores = coach.scores || coach.subscores;
-          const overall = typeof coach.overall === "number" ? coach.overall : (typeof coach.score === "number" ? coach.score : undefined);
-          return {
-            overall: overall ?? computed.overall,
-            scores,
-            feedback: coach.feedback || computed.feedback,
-            worked: coach.worked && coach.worked.length ? coach.worked : computed.worked,
-            improve: coach.improve && coach.improve.length ? coach.improve : computed.improve,
-            phrasing: typeof coach.phrasing === "string" && coach.phrasing ? coach.phrasing : computed.phrasing,
-            context: coach.context || { rep_question: userText, hcp_reply: clean },
-            score: overall ?? computed.overall,
-            subscores: scores
-          };
-        }
-        return computed;
-      })();
-
-      conversation.push({ role: "assistant", content: clean, _coach: finalCoach });
-      renderMessages(); renderCoach();
-
-      if (cfg && cfg.analyticsEndpoint) {
-        fetch(cfg.analyticsEndpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ts: Date.now(),
-            schema: (cfg.schemaVersion || "coach-v2"),
-            mode: currentMode,
-            scenarioId: currentScenarioId,
-            turn: conversation.length,
-            context: finalCoach.context || { rep_question: userText, hcp_reply: clean },
-            overall: finalCoach.overall,
-            scores: finalCoach.scores
-          })
-        }).catch(() => {});
-      }
-    } catch (e) {
-      conversation.push({ role: "assistant", content: `Model error: ${String(e.message || e)}` });
-      renderMessages();
-    }
-  }
-
-  // ---------- scenarios loader ----------
   async function loadScenarios() {
     if (cfg && cfg.scenariosUrl) {
       const payload = await fetchLocal(cfg.scenariosUrl);
