@@ -1,9 +1,10 @@
 {
-  "version": "2025-10-14",
-  "model": "llama-3.1-8b-instant",
-  "apiBase": "https://my-chat-agent.tonyabdelmalak.workers.dev/chat",
+  "version": "2025-10-17",
+
   "workerUrl": "https://my-chat-agent.tonyabdelmalak.workers.dev/chat",
-  "stream": false,
+  "model": "llama-3.1-8b-instant",
+  "temperature": 0.5,
+  "stream": true,
 
   "modes": [
     "emotional-assessment",
@@ -14,10 +15,7 @@
 
   "analyticsEndpoint": "https://my-chat-agent.tonyabdelmalak.workers.dev/coach-metrics",
 
-  "brand": {
-    "accent": "#2f3a4f",
-    "radius": "14px"
-  },
+  "brand": { "accent": "#2f3a4f", "radius": "14px" },
 
   "scenariosUrl": "./assets/chat/data/scenarios.merged.json",
 
