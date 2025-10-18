@@ -1,6 +1,6 @@
 /* assets/chat/widget.js
  * ReflectivAI Chat/Coach — drop-in (coach-v2, deterministic scoring v3)
- * Adds right-aligned Scoring Guide link and modal.
+ * Right-aligned Scoring Guide link toggles inline panel (#scoring-guide).
  * Modes: emotional-assessment | product-knowledge | sales-simulation
  */
 
@@ -296,13 +296,10 @@ ${COMMON}`.trim();
     coach.innerHTML = `<h3>Coach Feedback</h3><div class="coach-body muted">Awaiting the first assistant reply…</div>`;
     mount.appendChild(coach);
 
-    // Modal
-    const modal = el("div","cw-modal");
-    modal.innerHTML = `
-      <div class="cw-backdrop"></div>
-      <div class="cw-dialog" role="dialog" aria-modal="true" aria-label="Scoring Guide">
-        <button class="cw-close" aria-label="Close">×</button>
-        <h4>Scoring Guide</h4>
+    // Inline accordion for scoring guide
+    const acc = el("div","cw-accordion"); acc.id = "scoring-guide";
+    acc.innerHTML = `
+      <div class="cw-acc-body" role="region" aria-label="Scoring Guide">
         <p class="muted">Deterministic scoring v3. Subscores 0–5. Overall 0–100 weighted by accuracy, compliance, discovery, objection handling, clarity, empathy.</p>
         <ul>
           <li><strong>Accuracy</strong>: clinical correctness and specific cues.</li>
@@ -313,12 +310,16 @@ ${COMMON}`.trim();
           <li><strong>Empathy</strong>: acknowledges HCP context and constraints.</li>
         </ul>
       </div>`;
-    mount.appendChild(modal);
+    mount.appendChild(acc);
 
-    function openModal(){ modal.classList.add("open"); }
-    function closeModal(){ modal.classList.remove("open"); }
-    modal.querySelector(".cw-backdrop").addEventListener("click", closeModal);
-    modal.querySelector(".cw-close").addEventListener("click", closeModal);
+    function toggleAccordion(open){
+      const isOpen = acc.classList.contains("open");
+      const next = open == null ? !isOpen : !!open;
+      acc.classList.toggle("open", next);
+      const link = document.querySelector("#reflectiv-widget .score-link");
+      if (link) link.setAttribute("aria-expanded", String(next));
+      if (next) acc.scrollIntoView({ behavior:"smooth", block:"nearest" });
+    }
 
     function getDiseaseStates() {
       let ds = Array.isArray(cfg?.diseaseStates) ? cfg.diseaseStates.slice() : [];
@@ -395,6 +396,7 @@ ${COMMON}`.trim();
 
       currentScenarioId = null;
       conversation = [];
+      toggleAccordion(false);
       renderMessages(); renderCoach(); renderMeta();
     }
 
@@ -408,7 +410,7 @@ ${COMMON}`.trim();
       } else if (currentMode === "product-knowledge") {
         currentScenarioId = null;
       }
-      conversation=[]; renderMessages(); renderCoach(); renderMeta();
+      conversation=[]; toggleAccordion(false); renderMessages(); renderCoach(); renderMeta();
     });
 
     hcpSelect.addEventListener("change", ()=>{
@@ -416,7 +418,7 @@ ${COMMON}`.trim();
       if (!sel) return;
       const sc = scenariosById.get(sel);
       currentScenarioId = sc ? sc.id : null;
-      conversation=[]; renderMessages(); renderCoach(); renderMeta();
+      conversation=[]; toggleAccordion(false); renderMessages(); renderCoach(); renderMeta();
     });
 
     function renderMeta() {
@@ -471,12 +473,12 @@ ${COMMON}`.trim();
       const workedStr = (fb.worked && fb.worked.length) ? fb.worked.join(". ") + "." : "—";
       const improveStr = (fb.improve && fb.improve.length) ? fb.improve.join(". ") + "." : (fb.feedback || "—");
 
-      const guideHref = (cfg && cfg.scoringGuideUrl) ? cfg.scoringGuideUrl : "#scoring-guide";
+      const guideHref = "#scoring-guide";
 
       body.innerHTML = `
         <div class="coach-meta">
           <div class="coach-score">Score: <strong>${fb.overall ?? fb.score ?? "—"}</strong>/100</div>
-          <a class="score-link" href="${esc(guideHref)}" target="${guideHref.startsWith('#')?'_self':'_blank'}" rel="noopener">Scoring&nbsp;Guide</a>
+          <a class="score-link" href="${guideHref}" aria-expanded="false">Scoring&nbsp;Guide</a>
         </div>
         <div class="coach-subs">${orderedPills(scores)}</div>
         <ul class="coach-list">
@@ -485,11 +487,8 @@ ${COMMON}`.trim();
           <li><strong>Suggested phrasing:</strong> ${esc(fb.phrasing || "—")}</li>
         </ul>`;
 
-      // If using in-widget modal
       const link = body.querySelector(".score-link");
-      if (guideHref === "#scoring-guide") {
-        link.addEventListener("click", (e)=>{ e.preventDefault(); openModal(); }, { once:false });
-      }
+      link.addEventListener("click", (e)=>{ e.preventDefault(); toggleAccordion(); }, { once:false });
     }
 
     shell._renderMessages = renderMessages;
@@ -523,7 +522,7 @@ ${COMMON}`.trim();
   async function sendMessage(userText) {
     const shell = mount.querySelector(".reflectiv-chat");
     const renderMessages = shell._renderMessages;
-    const renderCoach = shell._renderCoach;
+       const renderCoach = shell._renderCoach;
 
     conversation.push({ role: "user", content: userText });
     renderMessages(); renderCoach();
@@ -540,7 +539,7 @@ ${COMMON}`.trim();
       const raw = await callModel(messages);
       const { coach, clean } = extractCoach(raw);
 
-      const computed = scoreReply(userText, clean, currentMode);
+      const computed = scoreReply(userText, clean);
       const finalCoach = (() => {
         if (coach && (coach.scores || coach.subscores)) {
           const scores = coach.scores || coach.subscores;
