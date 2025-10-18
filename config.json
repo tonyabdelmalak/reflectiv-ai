@@ -1,18 +1,43 @@
+
 {
-  "version": "2025-10-14",
+  "version": "2025-10-18",
   "schemaVersion": "coach-v2",
   "model": "llama-3.1-8b-instant",
   "apiBase": "https://my-chat-agent-v2.tonyabdelmalak.workers.dev/chat",
   "workerUrl": "https://my-chat-agent-v2.tonyabdelmalak.workers.dev/chat",
   "stream": false,
+
   "modes": [
     "emotional-assessment",
     "product-knowledge",
     "sales-simulation"
   ],
   "defaultMode": "sales-simulation",
+
   "analyticsEndpoint": "https://my-chat-agent-v2.tonyabdelmalak.workers.dev/coach-metrics",
-  "brand": { "accent": "#2f3a4f", "radius": "14px" },
+
+  "brand": {
+    "accent": "#2f3a4f",
+    "radius": "14px"
+  },
+
   "scenariosUrl": "assets/chat/data/scenarios.merged.json",
-  "ui": { "showCoach": true, "showMeta": true, "allowModeSwitch": true }
+
+  "ui": {
+    "showCoach": true,
+    "showMeta": true,
+    "allowModeSwitch": true
+  },
+
+  "metrics": {
+    "scale": "0-5 integers",
+    "keys": [
+      "accuracy",
+      "empathy",
+      "clarity",
+      "compliance",
+      "discovery",
+      "objection_handling"
+    ]
+  }
 }
