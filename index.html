@@ -1,20 +1,24 @@
+
+
 <!--
   ReflectivAI Rebrand Website
-  Full drop-in replacement with working mobile hamburger menu and start-at-top behavior.
-  Includes all sections from the current site.
+  This single‑page site introduces ReflectivAI, an AI‑powered sales enablement
+  platform for life‑sciences organizations. The content emphasizes disease
+  state modules, realistic HCP personas, interactive simulations, analytics
+  dashboards and a comprehensive ethics/governance program. Footnotes at
+  the bottom reference authoritative sources and guidelines.
 -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ReflectivAI – AI Sales Enablement for Life Sciences</title>
-
-    <!-- Poppins font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <!-- Poppins font to match the existing brand typography -->
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
     <link
       rel="preconnect"
       href="https://fonts.gstatic.com"
@@ -24,34 +28,21 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
-
     <!-- Chat widget styles come before site styles so they can be overridden -->
     <link rel="stylesheet" href="widget.css?v=2" />
     <link rel="stylesheet" href="styles.css" />
   </head>
-
   <body>
-    <!-- =========================================================
-         Navigation
-    ========================================================== -->
+    <!-- Navigation -->
     <header class="site-header">
       <nav class="nav">
         <a href="#home" class="nav-logo">ReflectivAI</a>
-
-        <!-- Hamburger toggle -->
-        <button
-          id="navToggle"
-          class="hamburger"
-          aria-label="Toggle navigation"
-          aria-expanded="false"
-        >
-          <span></span>
-          <span></span>
-          <span></span>
+        <button id="navToggle" class="hamburger" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
         </button>
-
-        <!-- Menu links (toggled on mobile) -->
-        <div id="navMenu" class="nav-links">
+        <div class="nav-links">
           <a href="#platform">Platform</a>
           <a href="#disease-states">Disease&nbsp;States</a>
           <a href="#hcp-profiles">HCP&nbsp;Profiles</a>
@@ -64,18 +55,13 @@
       </nav>
     </header>
 
-    <!-- =========================================================
-         Hero
-    ========================================================== -->
+    <!-- Hero Section -->
     <section id="home" class="hero">
       <div class="hero-content">
-        <h1>
-          Empowering Life Sciences Sales Teams to Connect — and Convert — with
-          Intelligence
-        </h1>
+        <h1>Empowering Life Sciences Sales Teams to Connect — and Convert — with Intelligence</h1>
         <p>
-          ReflectivAI blends clinical accuracy, emotional intelligence, and
-          adaptive AI coaching so every conversation with a healthcare
+          ReflectivAI blends clinical accuracy, emotional intelligence, 
+          and adaptive AI coaching so every conversation with a healthcare 
           professional feels authentic, confident, and compliant.
         </p>
         <div class="cta-buttons">
@@ -85,354 +71,285 @@
       </div>
       <div class="hero-image">
         <img
-          src="assets/hero-image.png?v=2025-10-13-0045"
-          alt="Doctor interacting with holographic brain and human body in a digital analytics interface"
-        />
+       src="assets/hero-image.png?v=2025-10-13-0045"
+       alt="Doctor interacting with holographic brain and human body in a digital analytics interface"
+      />
       </div>
     </section>
+    
+    <!-- HOW IT WORKS -->
+<section id="how" class="section">
+  <div class="container">
+    <h2 class="reveal">How ReflectivAI Works</h2>
+    <p class="muted reveal">A simple four-step framework that connects knowledge, empathy, and performance.</p>
 
-    <!-- =========================================================
-         HOW IT WORKS
-    ========================================================== -->
-    <section id="how" class="section">
-      <div class="container">
-        <h2 class="reveal">How ReflectivAI Works</h2>
-        <p class="muted reveal">
-          A simple four-step framework that connects knowledge, empathy, and
-          performance.
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-num">01</div>
+        <h3>Assess Human &amp; Tech Readiness</h3>
+        <p>
+          Benchmark your team’s product fluency, communication style,
+          and emotional calibration through adaptive diagnostics.
         </p>
-
-        <div class="steps">
-          <div class="step reveal">
-            <div class="step-num">01</div>
-            <h3>Assess Human &amp; Tech Readiness</h3>
-            <p>
-              Benchmark your team’s product fluency, communication style, and
-              emotional calibration through adaptive diagnostics.
-            </p>
-          </div>
-
-          <div class="step reveal">
-            <div class="step-num">02</div>
-            <h3>Simulate Real HCP Conversations</h3>
-            <p>
-              Reps engage lifelike physician personas that react to tone,
-              confidence, and data accuracy — not scripts.
-            </p>
-          </div>
-
-          <div class="step reveal">
-            <div class="step-num">03</div>
-            <h3>Coach with Precision</h3>
-            <p>
-              Instant, behavior-specific feedback on empathy, message clarity,
-              and compliance helps reps course-correct fast.
-            </p>
-          </div>
-
-          <div class="step reveal">
-            <div class="step-num">04</div>
-            <h3>Measure Impact, Not Activity</h3>
-            <p>
-              Dashboards visualize skill growth, time-to-readiness, and
-              territory performance so leaders can coach strategically.
-            </p>
-          </div>
-        </div>
       </div>
-    </section>
 
-    <!-- =========================================================
-         Why it Matters
-    ========================================================== -->
+      <div class="step reveal">
+        <div class="step-num">02</div>
+        <h3>Simulate Real HCP Conversations</h3>
+        <p>
+          Reps engage lifelike physician personas that react to tone,
+          confidence, and data accuracy — not scripts.
+        </p>
+      </div>
+
+      <div class="step reveal">
+        <div class="step-num">03</div>
+        <h3>Coach with Precision</h3>
+        <p>
+          Instant, behavior-specific feedback on empathy, message clarity,
+          and compliance helps reps course-correct fast.
+        </p>
+      </div>
+
+      <div class="step reveal">
+        <div class="step-num">04</div>
+        <h3>Measure Impact, Not Activity</h3>
+        <p>
+          Dashboards visualize skill growth, time-to-readiness, and
+          territory performance so leaders can coach strategically.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+    <!-- Why it Matters Section -->
     <section id="platform" class="section platform">
       <div class="section-inner">
         <h2>Why it Matters</h2>
         <div class="steps">
           <div class="step">
-            <div class="step-num">01</div>
+            <div class="step-num">01</div
             <p>
-              Traditional training builds recall. ReflectivAI builds resonance.
+              Traditional training builds recall.
+              ReflectivAI builds resonance.
             </p>
           </div>
-
           <div class="step">
             <div class="step-num">02</div>
             <p>
-              Sales success in pharma isn’t about who talks fastest — it’s about
-              who connects best.
+              Sales success in pharma isn’t about who talks 
+              fastest — it’s about who connects best.
             </p>
           </div>
-
           <div class="step">
             <div class="step-num">03</div>
             <p>
-              By weaving emotional-intelligence modeling into AI simulations,
-              ReflectivAI helps teams adapt to every conversation — building
+              By weaving emotional-intelligence modeling 
+              into AI simulations, ReflectivAI helps teams 
+              adapt to every conversation — building 
               trust that drives outcomes.
             </p>
           </div>
-
           <div class="step">
             <div class="step-num">04</div>
             <p>
-              HCP’s communication profile, elevating trust, outcomes, and brand
-              equity.
+              HCP’s communication profile, elevating trust, 
+              outcomes, and brand equity.
             </p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- =========================================================
-         Platform Modules
-    ========================================================== -->
-    <section id="platform" class="section platform compact">
-      <div class="section-inner">
-        <h2>Platform Modules</h2>
-        <div class="grid-3 tight" role="list">
-          <article class="card" role="listitem">
-            <h3>Product Knowledge</h3>
-            <p>
-              Train on complex data and regulatory messaging with confidence and
-              compliance built in.
-            </p>
-          </article>
-          <article class="card" role="listitem">
-            <h3>Sales Simulation</h3>
-            <p>
-              Practice high-stakes calls in oncology, vaccines, and other
-              therapeutic areas — anytime, anywhere.
-            </p>
-          </article>
-          <article class="card" role="listitem">
-            <h3>Relationship Intelligence</h3>
-            <p>
-              Understand behavioral blind spots. Track empathy, tone, and
-              conversational agility.
-            </p>
-          </article>
-        </div>
+<!-- Platform Modules Section -->
+<section id="platform" class="section platform compact">
+  <div class="section-inner">
+    <h2>Platform Modules</h2>
+    <div class="grid-3 tight" role="list">
+      <article class="card" role="listitem">
+        <h3>Product Knowledge</h3>
+        <p>Train on complex data and regulatory messaging with confidence and compliance built in.</p>
+      </article>
+      <article class="card" role="listitem">
+        <h3>Sales Simulation</h3>
+        <p>Practice high-stakes calls in oncology, vaccines, and other therapeutic areas — anytime, anywhere.</p>
+      </article>
+      <article class="card" role="listitem">
+        <h3>Relationship Intelligence</h3>
+        <p>Understand behavioral blind spots. Track empathy, tone, and conversational agility.</p>
+      </article>
+    </div>
+  </div>
+</section>
+    
+    <!-- Disease States Section -->
+<section id="disease-states" class="section disease">
+  <div class="section-inner">
+    <h2>Train by Therapeutic Area</h2>
+    <div class="card-grid">
+      <div class="card">
+        <h3>HIV&nbsp;PrEP</h3>
+        <ul>
+          <li>Urgency framing and prevention benefits</li>
+          <li>Stigma sensitivity and inclusive language</li>
+          <li>Addressing adherence and risk reduction</li>
+        </ul>
       </div>
-    </section>
-
-    <!-- =========================================================
-         Disease States
-    ========================================================== -->
-    <section id="disease-states" class="section disease">
-      <div class="section-inner">
-        <h2>Train by Therapeutic Area</h2>
-        <div class="card-grid">
-          <div class="card">
-            <h3>HIV&nbsp;PrEP</h3>
-            <ul>
-              <li>Urgency framing and prevention benefits</li>
-              <li>Stigma sensitivity and inclusive language</li>
-              <li>Addressing adherence and risk reduction</li>
-            </ul>
-          </div>
-
-          <div class="card">
-            <h3>Vaccines</h3>
-            <ul>
-              <li>Overcome hesitancy with evidence-based translation</li>
-              <li>Highlight population and community impact</li>
-              <li>Clarify schedules, safety and eligibility</li>
-            </ul>
-          </div>
-
-          <div class="card">
-            <h3>Hepatitis&nbsp;B</h3>
-            <ul>
-              <li>Access and affordability considerations</li>
-              <li>Step edits, resistance and safety framing</li>
-              <li>Navigating screening and vaccination guidelines</li>
-            </ul>
-          </div>
-
-          <div class="card">
-            <h3>Oncology</h3>
-            <ul>
-              <li>Complex data interpretation and compassionate dialogue</li>
-              <li>Payer concerns and value-based conversations</li>
-              <li>Empathy for patients and caregivers</li>
-            </ul>
-          </div>
-
-          <div class="card">
-            <h3>Cardiology</h3>
-            <ul>
-              <li>Clinical evidence framing for new therapies</li>
-              <li>Empathy for patient complexity and comorbidities</li>
-              <li>Data-driven conversations around outcomes and guidelines</li>
-            </ul>
-          </div>
-
-          <div class="card">
-            <h3>Pulmonology</h3>
-            <ul>
-              <li>
-                Translate advances in respiratory care into practical HCP
-                dialogue
-              </li>
-              <li>Address adherence, inhaler technique, and patient education</li>
-              <li>
-                Tackle access barriers and advocate for chronic disease
-                management
-              </li>
-            </ul>
-          </div>
-        </div>
-        <p class="note">
-          Our scenario library grows continually — new therapeutic areas and
-          objections are added with each launch.
-        </p>
+      <div class="card">
+        <h3>Vaccines</h3>
+        <ul>
+          <li>Overcome hesitancy with evidence-based translation</li>
+          <li>Highlight population and community impact</li>
+          <li>Clarify schedules, safety and eligibility</li>
+        </ul>
       </div>
-    </section>
-
-    <!-- =========================================================
-         HCP Profiles
-    ========================================================== -->
-    <section id="hcp-profiles" class="section hcp-profiles">
-      <div class="section-inner">
-        <h2>Practice with Realistic Personas</h2>
-        <div class="card-grid">
-          <div class="card">
-            <h3>Internal Medicine&nbsp;MD</h3>
-            <ul>
-              <li>
-                Objectives: preventative care, chronic disease management
-              </li>
-              <li>Objections: time constraints, formulary limitations</li>
-              <li>
-                Questions: safety data, comparative efficacy, guidelines
-              </li>
-            </ul>
-          </div>
-
-          <div class="card">
-            <h3>Nurse Practitioner (NP)</h3>
-            <ul>
-              <li>Objectives: holistic patient education, adherence support</li>
-              <li>Objections: workload, reimbursement clarity</li>
-              <li>Questions: dosing, side-effects, patient resources</li>
-            </ul>
-          </div>
-
-          <div class="card">
-            <h3>Physician Assistant (PA)</h3>
-            <ul>
-              <li>Objectives: collaborative care, acute case triage</li>
-              <li>Objections: scope of practice, administrative burden</li>
-              <li>
-                Questions: prescribing authority, sample access
-              </li>
-            </ul>
-          </div>
-
-          <div class="card">
-            <h3>Infectious Disease Specialist</h3>
-            <ul>
-              <li>Objectives: evidence translation, antimicrobial stewardship</li>
-              <li>Objections: resistance, drug–drug interactions</li>
-              <li>Questions: real-world data, emerging therapies</li>
-            </ul>
-          </div>
-
-          <div class="card">
-            <h3>Oncologist</h3>
-            <ul>
-              <li>Objectives: research advancements, precision medicine</li>
-              <li>Objections: cost, quality-of-life considerations</li>
-              <li>Questions: trial eligibility, biomarkers, survivorship</li>
-            </ul>
-          </div>
-
-          <div class="card">
-            <h3>Pulmonologist</h3>
-            <ul>
-              <li>
-                Objectives: optimize respiratory function, reduce readmissions
-              </li>
-              <li>Objections: workflow burden, outpatient access logistics</li>
-              <li>
-                Questions: eligibility criteria, DDI, timing of initiation
-              </li>
-            </ul>
-          </div>
-
-          <div class="card">
-            <h3>Cardiologist</h3>
-            <ul>
-              <li>Objectives: CV outcomes, GDMT adherence, risk reduction</li>
-              <li>Objections: polypharmacy, renal thresholds, prior auths</li>
-              <li>
-                Questions: endpoints, safety in CKD/HF, clinic workflows
-              </li>
-            </ul>
-          </div>
-        </div>
+      <div class="card">
+        <h3>Hepatitis&nbsp;B</h3>
+        <ul>
+          <li>Access and affordability considerations</li>
+          <li>Step edits, resistance and safety framing</li>
+          <li>Navigating screening and vaccination guidelines</li>
+        </ul>
       </div>
-    </section>
+      <div class="card">
+        <h3>Oncology</h3>
+        <ul>
+          <li>Complex data interpretation and compassionate dialogue</li>
+          <li>Payer concerns and value-based conversations</li>
+          <li>Empathy for patients and caregivers</li>
+        </ul>
+      </div>
 
-    <!-- =========================================================
-         Simulations
-    ========================================================== -->
+      <!-- NEW: Cardiology -->
+      <div class="card">
+        <h3>Cardiology</h3>
+        <ul>
+          <li>Clinical evidence framing for new therapies</li>
+          <li>Empathy for patient complexity and comorbidities</li>
+          <li>Data-driven conversations around outcomes and guidelines</li>
+        </ul>
+      </div>
+
+      <!-- NEW: Pulmonology -->
+      <div class="card">
+        <h3>Pulmonology</h3>
+        <ul>
+          <li>Translate advances in respiratory care into practical HCP dialogue</li>
+          <li>Address adherence, inhaler technique, and patient education</li>
+          <li>Tackle access barriers and advocate for chronic disease management</li>
+        </ul>
+      </div>
+    </div>
+    <p class="note">
+      Our scenario library grows continually — new therapeutic areas and
+      objections are added with each launch.
+    </p>
+  </div>
+</section>
+
+    <!-- HCP Profiles Section -->
+<section id="hcp-profiles" class="section hcp-profiles">
+  <div class="section-inner">
+    <h2>Practice with Realistic Personas</h2>
+    <div class="card-grid">
+      <div class="card">
+        <h3>Internal Medicine&nbsp;MD</h3>
+        <ul>
+          <li>Objectives: preventative care, chronic disease management</li>
+          <li>Objections: time constraints, formulary limitations</li>
+          <li>Questions: safety data, comparative efficacy, guidelines</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Nurse Practitioner (NP)</h3>
+        <ul>
+          <li>Objectives: holistic patient education, adherence support</li>
+          <li>Objections: workload, reimbursement clarity</li>
+          <li>Questions: dosing, side-effects, patient resources</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Physician Assistant (PA)</h3>
+        <ul>
+          <li>Objectives: collaborative care, acute case triage</li>
+          <li>Objections: scope of practice, administrative burden</li>
+          <li>Questions: prescribing authority, sample access</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Infectious Disease Specialist</h3>
+        <ul>
+          <li>Objectives: evidence translation, antimicrobial stewardship</li>
+          <li>Objections: resistance, drug–drug interactions</li>
+          <li>Questions: real-world data, emerging therapies</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Oncologist</h3>
+        <ul>
+          <li>Objectives: research advancements, precision medicine</li>
+          <li>Objections: cost, quality-of-life considerations</li>
+          <li>Questions: trial eligibility, biomarkers, survivorship</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Pulmonologist</h3>
+        <ul>
+          <li>Objectives: optimize respiratory function, reduce readmissions</li>
+          <li>Objections: workflow burden, outpatient access logistics</li>
+          <li>Questions: eligibility criteria, DDI, timing of initiation</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Cardiologist</h3>
+        <ul>
+          <li>Objectives: CV outcomes, GDMT adherence, risk reduction</li>
+          <li>Objections: polypharmacy, renal thresholds, prior auths</li>
+          <li>Questions: endpoints, safety in CKD/HF, clinic workflows</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+    <!-- Simulations Section -->
     <section id="simulations" class="section simulations">
       <div class="section-inner">
         <h2>Interactive Sales Simulations</h2>
         <ul class="feature-list">
-          <li>
-            <strong>AI role-play coach:</strong> responsive personas that adapts
-            to your messaging, tone, and questions.
-          </li>
-          <li>
-            <strong>Scenario library:</strong> hundreds of practice calls mapped
-            to disease states, objections, and profiles.
-          </li>
-          <li>
-            <strong>Territory scoring:</strong> benchmark performance by
-            geography, team and rep; track certification status.
-          </li>
-          <li>
-            <strong>Compliance guardrails:</strong> real-time checks for fair
-            balance and regulated language.
-          </li>
-          <li>
-            <strong>Multilingual prompts:</strong> practice in the languages
-            your HCPs speak.
-          </li>
-          <li>
-            <strong>Spaced-repetition:</strong> reinforce key concepts at
-            optimal intervals to ensure retention.
-          </li>
+          <li><strong>AI role‑play coach:</strong> responsive personas that adapts to your messaging, tone, and questions.</li>
+          <li><strong>Scenario library:</strong> hundreds of practice calls mapped to disease states, objections, and profiles.</li>
+          <li><strong>Territory scoring:</strong> benchmark performance by geography, team and rep; track certification status.</li>
+          <li><strong>Compliance guardrails:</strong> real‑time checks for fair balance and regulated language.</li>
+          <li><strong>Multilingual prompts:</strong> practice in the languages your HCPs speak.</li>
+          <li><strong>Spaced‑repetition:</strong> reinforce key concepts at optimal intervals to ensure retention.</li>
         </ul>
-        <p class="note">
-          Need last-minute advice before a call? Use the in-product chat widget
-          to ask our AI.
-        </p>
-
-        <!-- ReflectivAI chat widget container -->
+        <p class="note">Need last‑minute advice before a call? Use the in‑product chat widget to ask our AI.</p>
+        <!-- Embed ReflectivAI chat widget container -->
         <div id="reflectiv-widget" class="reflectiv-widget">
           <noscript>You need JavaScript to use the ReflectivAI Coach.</noscript>
         </div>
       </div>
     </section>
 
-    <!-- =========================================================
-         Analytics
-    ========================================================== -->
+    <!-- Analytics Section -->
     <section id="analytics" class="section analytics">
       <div class="section-inner">
         <h2>Performance Analytics &amp; Coaching Intelligence</h2>
         <div class="analytics-content">
           <div class="analytics-image">
-            <img
-              src="assets/analytics.png"
-              alt="Team collaborating around digital dashboards and analytics"
-            />
+        <img
+          src="assets/analytics.png"
+          alt="Team collaborating around digital dashboards and analytics"
+        />
           </div>
-
           <div class="analytics-table">
             <table>
               <thead>
@@ -444,10 +361,7 @@
               <tbody>
                 <tr>
                   <td>Empathy&nbsp;Index</td>
-                  <td>
-                    Measures emotional attunement and conversational trust with
-                    HCPs.
-                  </td>
+                  <td>Measures emotional attunement and conversational trust with HCPs.</td>
                 </tr>
                 <tr>
                   <td>Accuracy&nbsp;Index</td>
@@ -459,137 +373,88 @@
                 </tr>
                 <tr>
                   <td>Compliance&nbsp;Guard</td>
-                  <td>
-                    Flags deviations from approved messaging and detects
-                    off-label or risky phrasing.
-                  </td>
+                  <td>Flags deviations from approved messaging and detects off‑label or risky phrasing.</td>
                 </tr>
                 <tr>
                   <td>Readiness&nbsp;Velocity</td>
-                  <td>
-                    Quantifies ramp-up speed by rep, team, or territory.
-                  </td>
+                  <td>Quantifies ramp-up speed by rep, team, or territory.</td>
                 </tr>
               </tbody>
             </table>
             <p>
-              Track progress by rep, team, territory and therapeutic area.
-              Export summaries for MLR reviewers and leadership.
+              Track progress by rep, team, territory and therapeutic area. Export
+              summaries for MLR reviewers and leadership.
             </p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- =========================================================
-         Ethics, Privacy & Governance
-    ========================================================== -->
+    <!-- Ethics, Privacy & Governance Section -->
     <section id="ethics" class="section ethics">
       <div class="section-inner">
         <h2>Ethics, Privacy &amp; Governance</h2>
         <p class="lead">
-          ReflectivAI is built for life-sciences training. We avoid Protected
+          ReflectivAI is built for life‑sciences training. We avoid Protected
           Health Information (PHI) by default and apply strict safeguards when
           customers choose to integrate real data.
         </p>
-
         <h3>Data privacy &amp; security</h3>
         <ul>
-          <li>
-            PHI is off by default; training uses synthetic or de-identified
-            data.
+          <li>PHI is off by default; training uses synthetic or de‑identified data.</li>
+          <li>When a customer enables PHI, we require a signed data‑processing
+            agreement and a HIPAA business associate agreement. Data is encrypted
+            in transit and at rest, access is role‑based, audit logs are
+            retained and data is purged on expiration<span class="footnote-ref">[1]</span>.
           </li>
-          <li>
-            When a customer enables PHI, we require a signed data-processing
-            agreement and a HIPAA business associate agreement. Data is
-            encrypted in transit and at rest, access is role-based, audit logs
-            are retained and data is purged on expiration<span
-              class="footnote-ref"
-              >[1]</span
-            >.
-          </li>
-          <li>
-            Vendor risk management: we vet sub-processors for equivalent
-            safeguards and conduct annual security reviews with a right-to-audit
-            clause.
-          </li>
+          <li>Vendor risk management: we vet sub‑processors for equivalent
+            safeguards and conduct annual security reviews with a right‑to‑audit
+            clause.</li>
         </ul>
-
         <h3>Informed consent</h3>
         <ul>
-          <li>
-            If real patient data is used to power enablement, customers must
-            obtain explicit, documented consent distinct from clinical consent
-            and provide a clear opt-out option.
-          </li>
+          <li>If real patient data is used to power enablement, customers must
+            obtain explicit, documented consent distinct from clinical consent and
+            provide a clear opt‑out option.</li>
         </ul>
-
         <h3>Algorithmic bias &amp; fairness</h3>
         <ul>
-          <li>
-            We conduct pre-deployment bias testing on representative datasets and
-            repeat tests periodically.
-          </li>
-          <li>
-            We monitor for disparate performance across specialties, geographies
-            and demographic contexts and publish remediation steps.
-          </li>
-          <li>
-            Sales targeting guardrails prohibit using non-clinical demographic
-            proxies that could drive inequity.
-          </li>
+          <li>We conduct pre‑deployment bias testing on representative datasets and
+            repeat tests periodically.</li>
+          <li>We monitor for disparate performance across specialties, geographies
+            and demographic contexts and publish remediation steps.</li>
+          <li>Sales targeting guardrails prohibit using non‑clinical demographic
+            proxies that could drive inequity.</li>
         </ul>
-
         <h3>Transparency &amp; explainability</h3>
         <ul>
-          <li>In-product recommendations include reason codes.</li>
-          <li>
-            We publish model cards detailing data sources, limitations and
-            update cadence.
-          </li>
-          <li>
-            AI-generated content is clearly labeled throughout training
-            materials.
-          </li>
+          <li>In‑product recommendations include reason codes.</li>
+          <li>We publish model cards detailing data sources, limitations and
+            update cadence.</li>
+          <li>AI‑generated content is clearly labeled throughout training materials.</li>
         </ul>
-
         <h3>Human oversight &amp; accountability</h3>
         <ul>
           <li>Human reviewers curate scenario content and feedback rubrics.</li>
-          <li>
-            Escalation paths exist for model errors; responsibilities are
-            defined between client, platform and vendors.
-          </li>
-          <li>
-            All scenario versions and message libraries are versioned for MLR
-            traceability.
-          </li>
+          <li>Escalation paths exist for model errors; responsibilities are
+            defined between client, platform and vendors.</li>
+          <li>All scenario versions and message libraries are versioned for MLR
+            traceability.</li>
         </ul>
-
-        <h3>Doctor-patient relationship</h3>
+        <h3>Doctor‑patient relationship</h3>
         <ul>
           <li>Training is designed to support, not manipulate, HCP judgement.</li>
-          <li>Off-label promotion is prohibited and risky language is flagged.</li>
+          <li>Off‑label promotion is prohibited and risky language is flagged.</li>
         </ul>
-
         <h3>Compliance anchors</h3>
         <p>
           We align our program with recognized standards and guidelines:
-          <a
-            href="https://www.hhs.gov/hipaa/for-professionals/privacy/index.html"
-            >HIPAA Privacy Rule</a
-          >,
+          <a href="https://www.hhs.gov/hipaa/for-professionals/privacy/index.html">HIPAA Privacy Rule</a>,
           <a href="https://www.pharma.org/" target="_blank">PhRMA Code</a>,
-          <a
-            href="https://www.fda.gov/about-fda/cder-offices-and-divisions/office-prescription-drug-promotion-opdp"
-            >FDA promotional guidance</a
-          >,
-          <a href="https://www.nist.gov/itl/ai-risk-management-framework"
-            >NIST AI RMF</a
-          >,
+          <a href="https://www.fda.gov/about-fda/cder-offices-and-divisions/office-prescription-drug-promotion-opdp">FDA promotional guidance</a>,
+          <a href="https://www.nist.gov/itl/ai-risk-management-framework">NIST AI RMF</a>,
           <a href="https://www.iso.org/standard/27001">ISO/IEC&nbsp;27001</a>,
-          <a href="https://www.iso.org/standard/42001">ISO/IEC&nbsp;42001</a>
-          and
+          <a href="https://www.iso.org/standard/42001">ISO/IEC&nbsp;42001</a> and
           <a href="https://oecd.ai/en/ai-principles">OECD AI Principles</a>.
           These links open in new tabs and point to authoritative sources on
           privacy, security and responsible AI.
@@ -597,321 +462,181 @@
       </div>
     </section>
 
-    <!-- =========================================================
-         Evidence & Insights
-    ========================================================== -->
+    <!-- Evidence & Insights Section -->
     <section id="evidence" class="section evidence">
       <div class="section-inner">
         <h2>Why AI Sales Enablement Works</h2>
         <ul class="evidence-list">
           <li>
-            <strong>AI adoption is accelerating:</strong> A May&nbsp;2025 survey
-            of 107 life-sciences commercial leaders found that over 80% of
-            organizations have moved beyond pilots, more than one-third are “AI
-            Advanced,” and nearly half dedicate more than 20% of their
-            commercial budgets to AI. Leaders report 58% achieving 2× ROI and 7%
-            seeing 3× or more<span class="footnote-ref">[8]</span>.
+            <strong>AI adoption is accelerating:</strong> A May&nbsp;2025 survey of
+            107 life‑sciences commercial leaders found that over 80% of
+            organizations have moved beyond pilots, more than one‑third are
+            “AI Advanced,” and nearly half dedicate more than 20% of their
+            commercial budgets to AI. Leaders report 58% achieving 2× ROI and
+            7% seeing 3× or more<span class="footnote-ref">[8]</span>.
           </li>
           <li>
-            <strong>Value creation is substantial:</strong> McKinsey &amp;
-            Company estimates that AI innovations could unlock US$8–16 billion
-            in annual commercial value and generate a projected 10–15% gain in
-            field team productivity across life-sciences organizations<span
-              class="footnote-ref"
-              >[9]</span
-            >.
+            <strong>Value creation is substantial:</strong> McKinsey &amp; Company
+            estimates that AI innovations could unlock US$8–16 billion in annual
+            commercial value and generate a projected 10–15% gain in field team
+            productivity across life‑sciences organizations<span class="footnote-ref">[9]</span>.
           </li>
           <li>
-            <strong>Meeting HCP needs:</strong> A 2024 pan-European survey of
-            HCPs revealed that 52% seek more clinical data, 67% expect more
-            disease awareness content and 42% cite lack of contact with medical
-            science liaisons as a barrier to value-based engagement<span
-              class="footnote-ref"
-              >[10]</span
-            >. AI-powered enablement allows reps to deliver tailored, data-rich
-            conversations that address these needs.
+            <strong>Meeting HCP needs:</strong> A 2024 pan‑European survey of HCPs
+            revealed that 52% seek more clinical data, 67% expect more disease
+            awareness content and 42% cite lack of contact with medical science
+            liaisons as a barrier to value‑based engagement<span class="footnote-ref">[10]</span>. AI‑powered
+            enablement allows reps to deliver tailored, data‑rich conversations
+            that address these needs.
           </li>
           <li>
             <strong>Fixing inefficiencies:</strong> Pharmaceutical companies
             collectively invest over US$137 billion annually in sales and
             marketing but still face major inefficiencies due to high costs,
-            access challenges and poor CRM utilization<span class="footnote-ref"
-              >[11]</span
-            >. AI and advanced analytics help teams allocate resources more
-            effectively and focus on the right opportunities.
+            access challenges and poor CRM utilization<span class="footnote-ref">[11]</span>. AI and advanced
+            analytics help teams allocate resources more effectively and focus on
+            the right opportunities.
           </li>
         </ul>
       </div>
     </section>
 
-    <!-- =========================================================
-         Differentiators
-    ========================================================== -->
+
+    <!-- Differentiators Section -->
     <section id="evidence" class="section evidence">
       <div class="section-inner">
         <h2>Why Choose ReflectivAI?</h2>
         <ul class="evidence-list">
           <li>
-            <strong>Emotional Intelligence Engine.</strong> Models tone,
-            empathy, and pacing to coach relational skills as well as content.
+            <strong>Emotional Intelligence Engine.</strong> Models tone, empathy, and pacing to coach relational skills as well as content.
           </li>
           <li>
-            <strong>Adaptive Simulation.</strong> Personas react dynamically to
-            both message and mood.
+            <strong>Adaptive Simulation.</strong> Personas react dynamically to both message and mood.
           </li>
           <li>
-            <strong>Predictive Analytics.</strong> Correlates skill growth with
-            revenue, territory retention, and NBRx acceleration.
+            <strong>Predictive Analytics.</strong> Correlates skill growth with revenue, territory retention, and NBRx acceleration.
           </li>
           <li>
-            <strong>Compliance First Design.</strong> Everything verifiable,
-            version-controlled, and MLR-ready.
+            <strong>Compliance First Design.</strong> Everything verifiable, version-controlled, and MLR-ready.
           </li>
         </ul>
       </div>
     </section>
 
-    <!-- =========================================================
-         FAQ
-    ========================================================== -->
+    <!-- FAQ Section -->
     <section id="faq" class="section faq">
       <div class="section-inner">
         <h2>Frequently Asked Questions</h2>
-
         <div class="faq-item">
           <h3>What sets ReflectivAI apart?</h3>
           <p>
-            ReflectivAI combines AI simulations and analytics with subtle,
-            emotionally intelligent coaching cues — all within strict
-            life-sciences compliance guardrails.
+            ReflectivAI combines AI simulations and analytics 
+            with subtle, emotionally intelligent coaching cues — 
+            all within strict life-sciences compliance guardrails.
           </p>
         </div>
-
         <div class="faq-item">
           <h3>Does it replace human coaching?</h3>
           <p>
-            No. ReflectivAI scales practice, insights, and certification;
-            managers and trainers remain essential to interpret data and
-            personalize development.
+            No. ReflectivAI scales practice, insights, and certification; 
+            managers and trainers remain essential to interpret data 
+            and personalize development.
           </p>
         </div>
-
         <div class="faq-item">
           <h3>How do you handle PHI?</h3>
           <p>
-            PHI is off by default. When enabled, we operate under HIPAA controls
-            (minimum-necessary scope, encryption in transit/at rest, audit
-            logging) and a signed BAA<span class="footnote-ref">[1]</span>.
+            PHI is off by default. When enabled, we operate under HIPAA 
+            controls (minimum-necessary scope, encryption in transit/at 
+            rest, audit logging) and a signed BAA<span class="footnote-ref">[1]</span>.
           </p>
         </div>
-
         <div class="faq-item">
           <h3>Is it customizable by disease state and region?</h3>
           <p>
-            Yes. Modules, objections, and labeling align to your therapeutic
-            areas and local regulations.
+            Yes. Modules, objections, and labeling align to your 
+            therapeutic areas and local regulations.
           </p>
         </div>
-
         <div class="faq-item">
           <h3>Can it integrate with LMS/CRM?</h3>
           <p>
-            Absolutely. Export packs and APIs are available for Salesforce,
+            Absolutely. Export packs and APIs are available for Salesforce, 
             Veeva, and leading LMS platforms.
           </p>
         </div>
-
         <div class="faq-item">
           <h3>How do you mitigate bias?</h3>
           <p>
-            We test for bias pre- and post-deployment, monitor disparate
+            We test for bias pre- and post-deployment, monitor disparate 
             performance, and document remediation within our governance program.
           </p>
         </div>
-
         <div class="faq-item">
           <h3>What about explainability?</h3>
           <p>
-            In-product reason codes, model cards, and versioned change logs
+            In-product reason codes, model cards, and versioned change logs 
             provide transparency for learners, managers, and MLR reviewers.
           </p>
         </div>
       </div>
     </section>
 
-    <!-- =========================================================
-         Contact
-    ========================================================== -->
+    <!-- Contact Section -->
     <section id="contact" class="section contact">
       <div class="section-inner">
-        <h2>Let’s Redefine Your Sales Training</h2>
-        <form class="contact-form" onsubmit="return false;">
-          <div class="form-group">
-            <label for="name">Name</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              placeholder="Your name"
-              required
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              placeholder="you@example.com"
-              required
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="message">Message</label>
-            <textarea
-              id="message"
-              name="message"
-              rows="4"
-              placeholder="Tell us about your team and goals"
-            ></textarea>
-          </div>
-
-          <button type="submit" class="btn primary">Request Demo</button>
-        </form>
+          <h2>Let’s Redefine Your Sales Training</h2>
+          <form class="contact-form" onsubmit="return false;">
+            <div class="form-group">
+              <label for="name">Name</label>
+              <input type="text" id="name" name="name" placeholder="Your name" required />
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" placeholder="you@example.com" required />
+            </div>
+            <div class="form-group">
+              <label for="message">Message</label>
+              <textarea id="message" name="message" rows="4" placeholder="Tell us about your team and goals"></textarea>
+            </div>
+            <button type="submit" class="btn primary">Request Demo</button>
+          </form>
       </div>
     </section>
 
-    <!-- =========================================================
-         Footnotes
-    ========================================================== -->
+    <!-- Footnotes -->
     <section class="footnotes">
       <ol>
-        <li id="fn1">
-          <span class="citation">HIPAA Privacy Rule</span> — The U.S. Department
-          of Health &amp; Human Services notes that the HIPAA Privacy Rule
-          establishes national standards to protect individuals’ medical records
-          and other personally identifiable health information. It requires
-          appropriate safeguards and gives individuals rights over their health
-          data.
-        </li>
-        <li id="fn2">
-          <span class="citation">NIST AI Risk Management Framework</span> —
-          NIST’s AI Risk Management Framework is a voluntary framework designed
-          to help organizations manage risks associated with AI and incorporate
-          trustworthiness into design, development and use.
-        </li>
-        <li id="fn3">
-          <span class="citation">ISO/IEC&nbsp;27001</span> — The International
-          Organization for Standardization describes ISO/IEC 27001 as the
-          world’s best-known standard for information security management
-          systems (ISMS). It provides guidance for establishing, implementing,
-          maintaining and continually improving an ISMS.
-        </li>
-        <li id="fn4">
-          <span class="citation">ISO/IEC&nbsp;42001</span> — ISO/IEC 42001 is
-          the first AI management system standard. It specifies requirements for
-          establishing, implementing, maintaining and improving an AI management
-          system and addresses ethical considerations, transparency and risk
-          management.
-        </li>
-        <li id="fn5">
-          <span class="citation">OECD AI Principles</span> — The OECD AI
-          Principles promote use of AI that is innovative and trustworthy,
-          respects human rights and democratic values, and provide
-          recommendations for policymakers. The Principles were first adopted in
-          2019 and updated in 2024.
-        </li>
-        <li id="fn6">
-          <span class="citation"
-            >PhRMA Code on Interactions with Healthcare Professionals</span
-          >
-          — The PhRMA Code underscores ethical relationships with healthcare
-          professionals, stating that interactions should benefit patients,
-          provide scientific information and support medical
-          research.
-        </li>
-        <li id="fn7">
-          <span class="citation">FDA OPDP</span> — The FDA’s Office of
-          Prescription Drug Promotion protects public health by ensuring that
-          prescription drug promotion is truthful, balanced and accurately
-          communicated through surveillance, compliance and education
-          programs.
-        </li>
-        <li id="fn8">
-          <span class="citation">AI Adoption Survey</span> — A 2025 IQVIA survey
-          of 107 life-sciences commercial leaders reports that over 80% of
-          organizations have moved beyond AI pilots, more than one-third are “AI
-          Advanced,” nearly half invest &gt;20% of their commercial budgets in
-          AI, and 58% of leaders see 2× ROI while 7% achieve 3×
-          ROI.
-        </li>
-        <li id="fn9">
-          <span class="citation">AI Value &amp; Productivity</span> — McKinsey
-          &amp; Company estimates that AI innovations could unlock $8–16 billion
-          in annual commercial value for life-sciences companies and produce a
-          10–15% gain in field team productivity.
-        </li>
-        <li id="fn10">
-          <span class="citation">HCP Engagement Survey</span> — A 2024
-          pan-European survey reported that 52% of healthcare professionals seek
-          more clinical data, 67% expect more disease awareness content and 42%
-          identify lack of contact with medical science liaisons as a barrier to
-          engagement.
-        </li>
-        <li id="fn11">
-          <span class="citation">Commercial Inefficiencies</span> — The same
-          study notes that pharmaceutical companies invest over US$137 billion
-          annually in sales and marketing yet still face major inefficiencies
-          due to high costs, access challenges and poor CRM
-          utilization.
-        </li>
+        <li id="fn1"><span class="citation">HIPAA Privacy Rule</span> — The U.S. Department of Health &amp; Human Services notes that the HIPAA Privacy Rule establishes national standards to protect individuals’ medical records and other personally identifiable health information. It requires appropriate safeguards and gives individuals rights over their health data【643714545742846†L114-L125】.</li>
+        <li id="fn2"><span class="citation">NIST AI Risk Management Framework</span> — NIST’s AI Risk Management Framework is a voluntary framework designed to help organizations manage risks associated with AI and incorporate trustworthiness into design, development and use【154664526172006†L174-L181】.</li>
+        <li id="fn3"><span class="citation">ISO/IEC&nbsp;27001</span> — The International Organization for Standardization describes ISO/IEC 27001 as the world’s best‑known standard for information security management systems (ISMS). It provides guidance for establishing, implementing, maintaining and continually improving an ISMS【76354395616205†L140-L152】.</li>
+        <li id="fn4"><span class="citation">ISO/IEC&nbsp;42001</span> — ISO/IEC 42001 is the first AI management system standard. It specifies requirements for establishing, implementing, maintaining and improving an AI management system and addresses ethical considerations, transparency and risk management【435931407231619†L129-L144】.</li>
+        <li id="fn5"><span class="citation">OECD AI Principles</span> — The OECD AI Principles promote use of AI that is innovative and trustworthy, respects human rights and democratic values, and provide recommendations for policymakers. The Principles were first adopted in 2019 and updated in 2024【25463486849228†L88-L103】.</li>
+        <li id="fn6"><span class="citation">PhRMA Code on Interactions with Healthcare Professionals</span> — The PhRMA Code underscores ethical relationships with healthcare professionals, stating that interactions should benefit patients, provide scientific information and support medical research【652100143911058†L34-L47】.</li>
+        <li id="fn7"><span class="citation">FDA OPDP</span> — The FDA’s Office of Prescription Drug Promotion protects public health by ensuring that prescription drug promotion is truthful, balanced and accurately communicated through surveillance, compliance and education programs【391169293782306†L118-L124】.</li>
+        <li id="fn8"><span class="citation">AI Adoption Survey</span> — A 2025 IQVIA survey of 107 life‑sciences commercial leaders reports that over 80% of organizations have moved beyond AI pilots, more than one‑third are “AI Advanced,” nearly half invest >20% of their commercial budgets in AI, and 58% of leaders see 2× ROI while 7% achieve 3× ROI【857649263890263†L48-L63】.</li>
+        <li id="fn9"><span class="citation">AI Value &amp; Productivity</span> — McKinsey &amp; Company estimates that AI innovations could unlock $8–16 billion in annual commercial value for life‑sciences companies and produce a 10–15% gain in field team productivity【93008223825873†L77-L81】.</li>
+        <li id="fn10"><span class="citation">HCP Engagement Survey</span> — A 2024 pan‑European survey reported that 52% of healthcare professionals seek more clinical data, 67% expect more disease awareness content and 42% identify lack of contact with medical science liaisons as a barrier to engagement【93008223825873†L114-L119】.</li>
+        <li id="fn11"><span class="citation">Commercial Inefficiencies</span> — The same study notes that pharmaceutical companies invest over US$137 billion annually in sales and marketing yet still face major inefficiencies due to high costs, access challenges and poor CRM utilization【93008223825873†L61-L64】.</li>
       </ol>
     </section>
+    <!-- Include chat widget styles -->
+<link rel="stylesheet" href="widget.css?v=9">
+<script defer src="widget.js?v=9"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const navToggle = document.getElementById("navToggle");
+    const navMenu = document.getElementById("navMenu");
 
-    <!-- =========================================================
-         Widget assets (keep at end so page renders fast)
-    ========================================================== -->
-    <link rel="stylesheet" href="widget.css?v=9" />
-    <script defer src="widget.js?v=9"></script>
-
-    <!-- =========================================================
-         Mobile nav + load-at-top behavior
-    ========================================================== -->
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const navToggle = document.getElementById("navToggle");
-        const navMenu = document.getElementById("navMenu");
-
-        if (navToggle && navMenu) {
-          // Toggle open/close on tap
-          navToggle.addEventListener("click", () => {
-            navToggle.classList.toggle("active");
-            navMenu.classList.toggle("active");
-            const open = navMenu.classList.contains("active");
-            navToggle.setAttribute("aria-expanded", open ? "true" : "false");
-          });
-
-          // Close menu after clicking a link (mobile UX)
-          navMenu.querySelectorAll("a").forEach((a) => {
-            a.addEventListener("click", () => {
-              navMenu.classList.remove("active");
-              navToggle.classList.remove("active");
-              navToggle.setAttribute("aria-expanded", "false");
-            });
-          });
-        }
-
-        // Always start at top
-        if ("scrollRestoration" in history) {
-          history.scrollRestoration = "manual";
-        }
-        window.scrollTo(0, 0);
-        window.addEventListener("pageshow", (e) => {
-          if (e.persisted) window.scrollTo(0, 0);
-        });
+    if (navToggle && navMenu) {
+      navToggle.addEventListener("click", () => {
+        navMenu.classList.toggle("active");
       });
-    </script>
+    }
+
+    // Ensure page always loads from top
+    window.scrollTo(0, 0);
+  });
+</script>
   </body>
 </html>
