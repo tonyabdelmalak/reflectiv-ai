@@ -1,3 +1,4 @@
+
 /* assets/chat/widget.js
  * ReflectivAI Chat/Coach — drop-in (coach-v2, deterministic scoring v3, EI enhanced)
  * Modes: emotional-assessment | product-knowledge | sales-simulation
@@ -6,11 +7,8 @@
 (function () {
   // ---------- safe bootstrapping ----------
   let mount = null;
-  function onReady(fn) { 
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn, { once: true }); 
-    else fn(); 
-  }
-  function waitForMount(cb) {
+  function onReady(fn){ if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn, { once:true }); else fn(); }
+  function waitForMount(cb){
     const tryGet = () => {
       mount = document.getElementById("reflectiv-widget");
       if (mount) return cb();
@@ -18,7 +16,7 @@
         mount = document.getElementById("reflectiv-widget");
         if (mount) { obs.disconnect(); cb(); }
       });
-      obs.observe(document.documentElement, { childList: true, subtree: true });
+      obs.observe(document.documentElement, { childList:true, subtree:true });
       setTimeout(() => obs.disconnect(), 15000);
     };
     onReady(tryGet);
@@ -224,6 +222,7 @@ Return a concise educational overview with reputable citations. Structure: key t
     }
 
     if (mode === "emotional-assessment") {
+      // EI mode specifics
       return `
 Provide brief, practical self-reflection tips tied to communication with HCPs. No clinical or drug guidance.
 - 3–5 sentences, then one reflective question.
@@ -302,7 +301,7 @@ ${COMMON}`.trim();
     hcpLabel.htmlFor = "cw-hcp";
     const hcpSelect = el("select"); hcpSelect.id = "cw-hcp";
 
-    const eiLabel = el("label", "", "EI Features");
+    const eiLabel = el("label", "", "EI Profiles");
     eiLabel.htmlFor = "cw-ei";
     const eiSelect = el("select"); eiSelect.id = "cw-ei";
 
@@ -329,357 +328,358 @@ ${COMMON}`.trim();
     inp.appendChild(ta); inp.appendChild(send);
     shell.appendChild(inp);
 
-   mount.appendChild(shell);
+    mount.appendChild(shell);
 
     const coach = el("div", "coach-section");
-coach.innerHTML = `<h3>Coach Feedback</h3><div class="coach-body muted">Awaiting the first assistant reply…</div>`;
-mount.appendChild(coach);
+    coach.innerHTML = `<h3>Coach Feedback</h3><div class="coach-body muted">Awaiting the first assistant reply…</div>`;
+    mount.appendChild(coach);
 
-// ---------- EI options ----------
-const EI_FEATURES = [
-  "Empathy Cues",
-  "Clarity",
-  "Confidence",
-  "Self-Awareness",
-  "Listening Skills"
-];
-function populateEI() {
-  setSelectOptions(eiSelect, EI_FEATURES, true);
-}
-populateEI();
-
-// ---------- utility functions ----------
-function getDiseaseStates() {
-  let ds = Array.isArray(cfg?.diseaseStates) ? cfg.diseaseStates.slice() : [];
-  if (!ds.length && Array.isArray(scenarios) && scenarios.length) {
-    ds = Array.from(new Set(scenarios.map(s => (s.therapeuticArea || s.diseaseState || "").trim()))).filter(Boolean);
-  }
-  ds = ds.map(x => x.replace(/\bHiv\b/gi, "HIV"));
-  return ds;
-}
-
-function setSelectOptions(select, values, withPlaceholder) {
-  select.innerHTML = "";
-  if (withPlaceholder) {
-    const p = el("option", "", "Select…");
-    p.value = ""; p.selected = true; p.disabled = true;
-    select.appendChild(p);
-  }
-  values.forEach(v => {
-    if (!v) return;
-    const o = el("option", "", typeof v === "string" ? v : (v.label || v.value));
-    o.value = typeof v === "string" ? v : (v.value || v.id || v.label);
-    select.appendChild(o);
-  });
-}
-
-function populateDiseases() {
-  const ds = getDiseaseStates();
-  setSelectOptions(diseaseSelect, ds, true);
-}
-
-function populateHcpForDisease(ds) {
-  const dsKey = (ds || "").trim();
-  const scen = scenarios.filter(s => {
-    const area = (s.therapeuticArea || s.diseaseState || "").trim();
-    return area.toLowerCase() === dsKey.toLowerCase();
-  });
-
-  if (scen.length) {
-    const opts = scen.map(s => ({ value: s.id, label: s.label || s.id }));
-    setSelectOptions(hcpSelect, opts, true);
-    hcpSelect.disabled = false;
-  } else {
-    setSelectOptions(hcpSelect, [], true);
-    hcpSelect.disabled = true;
-  }
-}
-
-function applyModeVisibility() {
-  const lc = modeSel.value;
-  currentMode = LC_TO_INTERNAL[lc];
-
-  const pk = currentMode === "product-knowledge";
-  coachLabel.classList.toggle("hidden", pk);
-  coachSel.classList.toggle("hidden", pk);
-
-  if (currentMode === "sales-simulation") {
-    diseaseLabel.classList.remove("hidden");
-    diseaseSelect.classList.remove("hidden");
-    hcpLabel.classList.remove("hidden");
-    hcpSelect.classList.remove("hidden");
-    eiLabel.classList.remove("hidden");
-    eiSelect.classList.remove("hidden");
-    populateDiseases();
-  } else if (currentMode === "product-knowledge") {
-    diseaseLabel.classList.remove("hidden");
-    diseaseSelect.classList.remove("hidden");
-    hcpLabel.classList.add("hidden");
-    hcpSelect.classList.add("hidden");
-    eiLabel.classList.add("hidden");
-    eiSelect.classList.add("hidden");
-    populateDiseases();
-  } else if (currentMode === "emotional-assessment") {
-    diseaseLabel.classList.add("hidden");
-    diseaseSelect.classList.add("hidden");
-    hcpLabel.classList.add("hidden");
-    hcpSelect.classList.add("hidden");
-    eiLabel.classList.remove("hidden");
-    eiSelect.classList.remove("hidden");
-  } else {
-    diseaseLabel.classList.add("hidden");
-    diseaseSelect.classList.add("hidden");
-    hcpLabel.classList.add("hidden");
-    hcpSelect.classList.add("hidden");
-    eiLabel.classList.add("hidden");
-    eiSelect.classList.add("hidden");
-  }
-
-  currentScenarioId = null;
-  conversation = [];
-  renderMessages();
-  renderCoach();
-  renderMeta();
-}
-
-modeSel.addEventListener("change", applyModeVisibility);
-
-diseaseSelect.addEventListener("change", () => {
-  const ds = diseaseSelect.value || "";
-  if (!ds) return;
-  if (currentMode === "sales-simulation") {
-    populateHcpForDisease(ds);
-  } else if (currentMode === "product-knowledge") {
-    currentScenarioId = null;
-  }
-  conversation = [];
-  renderMessages();
-  renderCoach();
-  renderMeta();
-});
-
-hcpSelect.addEventListener("change", () => {
-  const sel = hcpSelect.value || "";
-  if (!sel) return;
-  const sc = scenariosById.get(sel);
-  currentScenarioId = sc ? sc.id : null;
-  conversation = [];
-  renderMessages();
-  renderCoach();
-  renderMeta();
-});
-
-// ---------- render helpers ----------
-function renderMeta() {
-  const sc = scenariosById.get(currentScenarioId);
-  if (!sc || !currentScenarioId || currentMode !== "sales-simulation") { meta.innerHTML = ""; return; }
-  meta.innerHTML = `
-    <div class="meta-card">
-      <div><strong>Therapeutic Area:</strong> ${esc(sc.therapeuticArea || sc.diseaseState || "—")}</div>
-      <div><strong>HCP Role:</strong> ${esc(sc.hcpRole || "—")}</div>
-      <div><strong>Background:</strong> ${esc(sc.background || "—")}</div>
-      <div><strong>Today’s Goal:</strong> ${esc(sc.goal || "—")}</div>
-    </div>`;
-}
-
-function renderMessages() {
-  msgs.innerHTML = "";
-  for (const m of conversation) {
-    const row = el("div", `message ${m.role}`);
-    const c = el("div", "content");
-    c.innerHTML = md(m.content);
-    row.appendChild(c);
-    msgs.appendChild(row);
-  }
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-function orderedPills(scores) {
-  const order = ["accuracy", "empathy", "clarity", "compliance", "discovery", "objection_handling"];
-  return order
-    .filter(k => k in (scores || {}))
-    .map(k => `<span class="pill">${esc(k)}: ${scores[k]}</span>`)
-    .join(" ");
-}
-
-function renderCoach() {
-  const body = coach.querySelector(".coach-body");
-  if (!coachOn || currentMode === "product-knowledge") {
-    coach.style.display = "none";
-    return;
-  }
-  coach.style.display = "";
-
-  const last = conversation[conversation.length - 1];
-  if (!(last && last.role === "assistant" && last._coach)) {
-    body.innerHTML = `<span class="muted">Awaiting the first assistant reply…</span>`;
-    return;
-  }
-
-  const fb = last._coach;
-  const scores = fb.scores || fb.subscores || {};
-
-  const workedStr = (fb.worked && fb.worked.length)
-    ? fb.worked.join(". ") + "."
-    : "—";
-  const improveStr = (fb.improve && fb.improve.length)
-    ? fb.improve.join(". ") + "."
-    : (fb.feedback || "—");
-
-  body.innerHTML = `
-    <div class="coach-score">Score: <strong>${fb.overall ?? fb.score ?? "—"}</strong>/100</div>
-    <div class="coach-subs">${orderedPills(scores)}</div>
-    <ul class="coach-list">
-      <li><strong>What worked:</strong> ${esc(workedStr)}</li>
-      <li><strong>What to improve:</strong> ${esc(improveStr)}</li>
-      <li><strong>Suggested phrasing:</strong> ${esc(fb.phrasing || "—")}</li>
-    </ul>`;
-}
-
-shell._renderMessages = renderMessages;
-shell._renderCoach = renderCoach;
-shell._renderMeta = renderMeta;
-
-applyModeVisibility();
-}
-
-// ---------- transport ----------
-async function callModel(messages) {
-const r = await fetch((cfg?.apiBase || cfg?.workerUrl || "").trim(), {
-method: "POST",
-headers: { "Content-Type": "application/json" },
-body: JSON.stringify({
-model: (cfg && cfg.model) || "llama-3.1-8b-instant",
-temperature: 0.2,
-stream: !!cfg?.stream,
-messages
-})
-});
-if (!r.ok) {
-const txt = await r.text().catch(() => "");
-throw new Error(HTTP ${r.status}: ${txt || "no body"});
-}
-const data = await r.json().catch(() => ({}));
-return data?.content || data?.reply || data?.choices?.[0]?.message?.content || "";
-}
-
-// ---------- send ----------
-async function sendMessage(userText) {
-const shell = mount.querySelector(".reflectiv-chat");
-const renderMessages = shell._renderMessages;
-const renderCoach = shell._renderCoach;
-
-conversation.push({ role: "user", content: userText });
-renderMessages();
-renderCoach();
-
-const sc = scenariosById.get(currentScenarioId);
-const preface = buildPreface(currentMode, sc);
-
-const messages = [];
-if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
-messages.push({ role: "system", content: preface });
-messages.push({ role: "user", content: userText });
-
-try {
-  const raw = await callModel(messages);
-  const { coach, clean } = extractCoach(raw);
-
-  const computed = scoreReply(userText, clean, currentMode);
-  const finalCoach = (() => {
-    if (coach && (coach.scores || coach.subscores)) {
-      const scores = coach.scores || coach.subscores;
-      const overall = typeof coach.overall === "number" ? coach.overall : (typeof coach.score === "number" ? coach.score : undefined);
-      return {
-        overall: overall ?? computed.overall,
-        scores,
-        feedback: coach.feedback || computed.feedback,
-        worked: coach.worked && coach.worked.length ? coach.worked : computed.worked,
-        improve: coach.improve && coach.improve.length ? coach.improve : computed.improve,
-        phrasing: typeof coach.phrasing === "string" && coach.phrasing ? coach.phrasing : computed.phrasing,
-        context: coach.context || { rep_question: userText, hcp_reply: clean },
-        score: overall ?? computed.overall,
-        subscores: scores
-      };
+    // ---------- EI options ----------
+    const EI_FEATURES = [
+      "Empathy Cues",
+      "Clarity",
+      "Confidence",
+      "Self-Awareness",
+      "Listening Skills"
+    ];
+    function populateEI() {
+      setSelectOptions(eiSelect, EI_FEATURES, true);
     }
-    return computed;
-  })();
+    populateEI();
 
-  conversation.push({ role: "assistant", content: clean, _coach: finalCoach });
-  renderMessages();
-  renderCoach();
+    // ---------- utility functions ----------
+    function getDiseaseStates() {
+      let ds = Array.isArray(cfg?.diseaseStates) ? cfg.diseaseStates.slice() : [];
+      if (!ds.length && Array.isArray(scenarios) && scenarios.length) {
+        ds = Array.from(new Set(scenarios.map(s => (s.therapeuticArea || s.diseaseState || "").trim()))).filter(Boolean);
+      }
+      ds = ds.map(x => x.replace(/\bHiv\b/gi, "HIV"));
+      return ds;
+    }
 
-  if (cfg && cfg.analyticsEndpoint) {
-    fetch(cfg.analyticsEndpoint, {
+    function setSelectOptions(select, values, withPlaceholder) {
+      select.innerHTML = "";
+      if (withPlaceholder) {
+        const p = el("option", "", "Select…");
+        p.value = ""; p.selected = true; p.disabled = true;
+        select.appendChild(p);
+      }
+      values.forEach(v => {
+        if (!v) return;
+        const o = el("option", "", typeof v === "string" ? v : (v.label || v.value));
+        o.value = typeof v === "string" ? v : (v.value || v.id || v.label);
+        select.appendChild(o);
+      });
+    }
+
+    function populateDiseases() {
+      const ds = getDiseaseStates();
+      setSelectOptions(diseaseSelect, ds, true);
+    }
+
+    function populateHcpForDisease(ds) {
+      const dsKey = (ds || "").trim();
+      const scen = scenarios.filter(s => {
+        const area = (s.therapeuticArea || s.diseaseState || "").trim();
+        return area.toLowerCase() === dsKey.toLowerCase();
+      });
+
+      if (scen.length) {
+        const opts = scen.map(s => ({ value: s.id, label: s.label || s.id }));
+        setSelectOptions(hcpSelect, opts, true);
+        hcpSelect.disabled = false;
+      } else {
+        setSelectOptions(hcpSelect, [], true);
+        hcpSelect.disabled = true;
+      }
+    }
+
+    function applyModeVisibility() {
+      const lc = modeSel.value;
+      currentMode = LC_TO_INTERNAL[lc];
+
+      const pk = currentMode === "product-knowledge";
+      coachLabel.classList.toggle("hidden", pk);
+      coachSel.classList.toggle("hidden", pk);
+
+      if (currentMode === "sales-simulation") {
+        diseaseLabel.classList.remove("hidden");
+        diseaseSelect.classList.remove("hidden");
+        hcpLabel.classList.remove("hidden");
+        hcpSelect.classList.remove("hidden");
+        eiLabel.classList.add("hidden");
+        eiSelect.classList.add("hidden");
+        populateDiseases();
+      } else if (currentMode === "product-knowledge") {
+        diseaseLabel.classList.remove("hidden");
+        diseaseSelect.classList.remove("hidden");
+        hcpLabel.classList.add("hidden");
+        hcpSelect.classList.add("hidden");
+        eiLabel.classList.add("hidden");
+        eiSelect.classList.add("hidden");
+        populateDiseases();
+      } else if (currentMode === "emotional-assessment") {
+        diseaseLabel.classList.add("hidden");
+        diseaseSelect.classList.add("hidden");
+        hcpLabel.classList.add("hidden");
+        hcpSelect.classList.add("hidden");
+        eiLabel.classList.remove("hidden");
+        eiSelect.classList.remove("hidden");
+      } else {
+        diseaseLabel.classList.add("hidden");
+        diseaseSelect.classList.add("hidden");
+        hcpLabel.classList.add("hidden");
+        hcpSelect.classList.add("hidden");
+        eiLabel.classList.add("hidden");
+        eiSelect.classList.add("hidden");
+      }
+
+      currentScenarioId = null;
+      conversation = [];
+      renderMessages();
+      renderCoach();
+      renderMeta();
+    }
+
+    modeSel.addEventListener("change", applyModeVisibility);
+
+    diseaseSelect.addEventListener("change", () => {
+      const ds = diseaseSelect.value || "";
+      if (!ds) return;
+      if (currentMode === "sales-simulation") {
+        populateHcpForDisease(ds);
+      } else if (currentMode === "product-knowledge") {
+        currentScenarioId = null;
+      }
+      conversation = [];
+      renderMessages();
+      renderCoach();
+      renderMeta();
+    });
+
+    hcpSelect.addEventListener("change", () => {
+      const sel = hcpSelect.value || "";
+      if (!sel) return;
+      const sc = scenariosById.get(sel);
+      currentScenarioId = sc ? sc.id : null;
+      conversation = [];
+      renderMessages();
+      renderCoach();
+      renderMeta();
+    });
+
+    // Optional extra listener for EI select could be added here if you want special behavior
+
+    // ---------- render helpers ----------
+    function renderMeta() {
+      const sc = scenariosById.get(currentScenarioId);
+      if (!sc || !currentScenarioId || currentMode !== "sales-simulation") { meta.innerHTML = ""; return; }
+      meta.innerHTML = `
+        <div class="meta-card">
+          <div><strong>Therapeutic Area:</strong> ${esc(sc.therapeuticArea || sc.diseaseState || "—")}</div>
+          <div><strong>HCP Role:</strong> ${esc(sc.hcpRole || "—")}</div>
+          <div><strong>Background:</strong> ${esc(sc.background || "—")}</div>
+          <div><strong>Today’s Goal:</strong> ${esc(sc.goal || "—")}</div>
+        </div>`;
+    }
+
+    function renderMessages() {
+      msgs.innerHTML = "";
+      for (const m of conversation) {
+        const row = el("div", `message ${m.role}`);
+        const c = el("div", "content");
+        c.innerHTML = md(m.content);
+        row.appendChild(c);
+        msgs.appendChild(row);
+      }
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function orderedPills(scores) {
+      const order = ["accuracy","empathy","clarity","compliance","discovery","objection_handling"];
+      return order
+        .filter(k => k in (scores || {}))
+        .map(k => `<span class="pill">${esc(k)}: ${scores[k]}</span>`)
+        .join(" ");
+    }
+
+    function renderCoach() {
+      const body = coach.querySelector(".coach-body");
+      if (!coachOn || currentMode === "product-knowledge") {
+        coach.style.display = "none";
+        return;
+      }
+      coach.style.display = "";
+
+      const last = conversation[conversation.length - 1];
+      if (!(last && last.role === "assistant" && last._coach)) {
+        body.innerHTML = `<span class="muted">Awaiting the first assistant reply…</span>`;
+        return;
+      }
+
+      const fb = last._coach;
+      const scores = fb.scores || fb.subscores || {};
+
+      const workedStr = (fb.worked && fb.worked.length)
+        ? fb.worked.join(". ") + "."
+        : "—";
+      const improveStr = (fb.improve && fb.improve.length)
+        ? fb.improve.join(". ") + "."
+        : (fb.feedback || "—");
+
+      body.innerHTML = `
+        <div class="coach-score">Score: <strong>${fb.overall ?? fb.score ?? "—"}</strong>/100</div>
+        <div class="coach-subs">${orderedPills(scores)}</div>
+        <ul class="coach-list">
+          <li><strong>What worked:</strong> ${esc(workedStr)}</li>
+          <li><strong>What to improve:</strong> ${esc(improveStr)}</li>
+          <li><strong>Suggested phrasing:</strong> ${esc(fb.phrasing || "—")}</li>
+        </ul>`;
+    }
+
+    shell._renderMessages = renderMessages;
+    shell._renderCoach = renderCoach;
+    shell._renderMeta = renderMeta;
+
+    applyModeVisibility();
+  }
+
+  // ---------- transport ----------
+  async function callModel(messages) {
+    const r = await fetch((cfg?.apiBase || cfg?.workerUrl || "").trim(), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        ts: Date.now(),
-        schema: (cfg.schemaVersion || "coach-v2"),
-        mode: currentMode,
-        scenarioId: currentScenarioId,
-        turn: conversation.length,
-        context: finalCoach.context || { rep_question: userText, hcp_reply: clean },
-        overall: finalCoach.overall,
-        scores: finalCoach.scores
+        model: (cfg && cfg.model) || "llama-3.1-8b-instant",
+        temperature: 0.2,
+        stream: !!cfg?.stream,
+        messages
       })
-    }).catch(() => {});
+    });
+    if (!r.ok) {
+      const txt = await r.text().catch(() => "");
+      throw new Error(`HTTP ${r.status}: ${txt || "no body"}`);
+    }
+    const data = await r.json().catch(() => ({}));
+    return data?.content || data?.reply || data?.choices?.[0]?.message?.content || "";
   }
-} catch (e) {
-  conversation.push({ role: "assistant", content: `Model error: ${String(e.message || e)}` });
-  renderMessages();
-}
 
+  // ---------- send ----------
+  async function sendMessage(userText) {
+    const shell = mount.querySelector(".reflectiv-chat");
+    const renderMessages = shell._renderMessages;
+    const renderCoach = shell._renderCoach;
 
-}
+    conversation.push({ role: "user", content: userText });
+    renderMessages();
+    renderCoach();
 
-// ---------- scenarios loader ----------
-async function loadScenarios() {
-if (cfg && cfg.scenariosUrl) {
-const payload = await fetchLocal(cfg.scenariosUrl);
-const arr = Array.isArray(payload) ? payload : (payload.scenarios || []);
-scenarios = arr.map((s) => ({
-id: s.id,
-label: s.label || s.id,
-therapeuticArea: s.therapeuticArea || s.diseaseState || "",
-hcpRole: s.hcpRole || "",
-background: s.background || "",
-goal: s.goal || ""
-}));
-} else if (Array.isArray(cfg?.scenarios)) {
-scenarios = cfg.scenarios.map((s) => ({
-id: s.id,
-label: s.label || s.id,
-therapeuticArea: (s.therapeuticArea || s.diseaseState || ""),
-hcpRole: s.hcpRole || "",
-background: s.background || "",
-goal: s.goal || ""
-}));
-} else {
-scenarios = [];
-}
-scenarios.forEach(s => { if (/^hiv\b/i.test(s.therapeuticArea)) s.therapeuticArea = "HIV"; });
-scenariosById = new Map(scenarios.map((s) => [s.id, s]));
-}
+    const sc = scenariosById.get(currentScenarioId);
+    const preface = buildPreface(currentMode, sc);
 
-// ---------- init ----------
-async function init() {
-try {
-cfg = await fetchLocal("./assets/chat/config.json");
-} catch (e) {
-console.error("config.json load failed:", e);
-cfg = { defaultMode: "sales-simulation" };
-}
-  try {
-  systemPrompt = await fetchLocal("./assets/chat/system.md");
-} catch (_) {
-  systemPrompt = "";
-}
+    const messages = [];
+    if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
+    messages.push({ role: "system", content: preface });
+    messages.push({ role: "user", content: userText });
 
-await loadScenarios();
-buildUI();
-}
+    try {
+      const raw = await callModel(messages);
+      const { coach, clean } = extractCoach(raw);
 
-// ---------- start ----------
-waitForMount(init);
+      const computed = scoreReply(userText, clean, currentMode);
+      const finalCoach = (() => {
+        if (coach && (coach.scores || coach.subscores)) {
+          const scores = coach.scores || coach.subscores;
+          const overall = typeof coach.overall === "number" ? coach.overall : (typeof coach.score === "number" ? coach.score : undefined);
+          return {
+            overall: overall ?? computed.overall,
+            scores,
+            feedback: coach.feedback || computed.feedback,
+            worked: coach.worked && coach.worked.length ? coach.worked : computed.worked,
+            improve: coach.improve && coach.improve.length ? coach.improve : computed.improve,
+            phrasing: typeof coach.phrasing === "string" && coach.phrasing ? coach.phrasing : computed.phrasing,
+            context: coach.context || { rep_question: userText, hcp_reply: clean },
+            score: overall ?? computed.overall,
+            subscores: scores
+          };
+        }
+        return computed;
+      })();
+
+      conversation.push({ role: "assistant", content: clean, _coach: finalCoach });
+      renderMessages();
+      renderCoach();
+
+      if (cfg && cfg.analyticsEndpoint) {
+        fetch(cfg.analyticsEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ts: Date.now(),
+            schema: (cfg.schemaVersion || "coach-v2"),
+            mode: currentMode,
+            scenarioId: currentScenarioId,
+            turn: conversation.length,
+            context: finalCoach.context || { rep_question: userText, hcp_reply: clean },
+            overall: finalCoach.overall,
+            scores: finalCoach.scores
+          })
+        }).catch(() => {});
+      }
+    } catch (e) {
+      conversation.push({ role: "assistant", content: `Model error: ${String(e.message || e)}` });
+      renderMessages();
+    }
+  }
+
+  // ---------- scenarios loader ----------
+  async function loadScenarios() {
+    if (cfg && cfg.scenariosUrl) {
+      const payload = await fetchLocal(cfg.scenariosUrl);
+      const arr = Array.isArray(payload) ? payload : (payload.scenarios || []);
+      scenarios = arr.map((s) => ({
+        id: s.id,
+        label: s.label || s.id,
+        therapeuticArea: s.therapeuticArea || s.diseaseState || "",
+        hcpRole: s.hcpRole || "",
+        background: s.background || "",
+        goal: s.goal || ""
+      }));
+    } else if (Array.isArray(cfg?.scenarios)) {
+      scenarios = cfg.scenarios.map((s) => ({
+        id: s.id,
+        label: s.label || s.id,
+        therapeuticArea: (s.therapeuticArea || s.diseaseState || ""),
+        hcpRole: s.hcpRole || "",
+        background: s.background || "",
+        goal: s.goal || ""
+      }));
+    } else {
+      scenarios = [];
+    }
+    scenarios.forEach(s => { if (/^hiv\b/i.test(s.therapeuticArea)) s.therapeuticArea = "HIV"; });
+    scenariosById = new Map(scenarios.map((s) => [s.id, s]));
+  }
+
+  // ---------- init ----------
+  async function init() {
+    try {
+      cfg = await fetchLocal("./assets/chat/config.json");
+    } catch (e) {
+      console.error("config.json load failed:", e);
+      cfg = { defaultMode: "sales-simulation" };
+    }
+
+    try {
+      systemPrompt = await fetchLocal("./assets/chat/system.md");
+    } catch (_) {
+      systemPrompt = "";
+    }
+
+    await loadScenarios();
+    buildUI();
+  }
+
+  // ---------- start ----------
+  waitForMount(init);
 })();
