@@ -1,5 +1,5 @@
-/*
- * ReflectivAI Chat/Coach — drop-in (coach-v2 schema)
+/* assets/chat/widget.js
+ * ReflectivAI Chat/Coach — drop-in (coach-v2, deterministic scoring v3)
  * Modes: emotional-assessment | product-knowledge | sales-simulation
  */
 
@@ -96,36 +96,75 @@
     return { coach, clean };
   }
 
-  // ---------- local scoring fallback (coach-v2) ----------
+  // ---------- local scoring fallback (coach-v3 deterministic) ----------
   function scoreReply(userText, replyText, mode) {
-    const t = (replyText || "").toLowerCase();
-    const words = (replyText || "").split(/\s+/).filter(Boolean).length;
-    const endsWithQuestion = /\?\s*$/.test(replyText || "");
-    const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+    const text = String(replyText || "");
+    const t = text.toLowerCase();
+    const words = text.split(/\s+/).filter(Boolean).length;
+    const endsWithQ = /\?\s*$/.test(text);
+    const inRange = (n, a, b) => n >= a && n <= b;
 
-    const hasLabel = /(per label|label|indication|contraindication|boxed warning|guideline)/i.test(replyText || "");
-    const hasDiscovery = /(how|what|could you|can you|help me understand|walk me|clarify)/i.test(replyText || "") || endsWithQuestion;
-    const hasObjection = /(concern|barrier|risk|coverage|auth|denied|cost|workflow|adherence|side effect)/i.test(replyText || "");
-    const hasEmpathy = /(i understand|appreciate|given your time|thanks for|i hear|it sounds like)/i.test(replyText || "");
-    const hasAccuracyCue = /(renal|egfr|creatinine|bmd|resistance|ddi|interaction|efficacy|safety|adherence|formulary|access|prior auth|prep|tdf|taf|bictegravir|cabotegravir|rilpivirine|descovy|biktarvy|cabenuva)/i.test(replyText || "");
+    const sig = {
+      label: /(per label|fda\s*label|indication|contraindication|boxed warning|guideline|fda)/i.test(text),
+      discovery: endsWithQ || /(how|what|could you|can you|help me understand|walk me|clarify)\b/i.test(t),
+      objection: /(concern|barrier|risk|coverage|auth|denied|cost|workflow|adherence|side effect|safety)/i.test(t),
+      empathy: /(i understand|appreciate|given your time|thanks for|i hear|it sounds like)/i.test(t),
+      accuracyCue: /(renal|egfr|creatinine|bmd|resistance|ddi|interaction|efficacy|safety|adherence|formulary|access|prior auth|prep|tdf|taf|bictegravir|cabotegravir|rilpivirine|descovy|biktarvy|cabenuva)/i.test(t),
+      tooLong: words > 180,
+      idealLen: inRange(words, 45, 120)
+    };
 
-    const accuracy  = clamp(hasAccuracyCue ? 3 + (hasLabel?1:0) : 2, 1, 5);
-    const empathy   = clamp(hasEmpathy ? 3 : 2, 1, 5);
-    const clarity   = clamp(words <= 160 ? (words >= 40 ? 4 : 3) : 2, 1, 5);
-    const compliance= clamp(hasLabel ? 4 : 3, 1, 5);
-    const discovery = clamp(hasDiscovery ? 4 : 2, 1, 5);
-    const objection_handling = clamp(hasObjection ? 3 + (hasAccuracyCue?1:0) : 2, 1, 5);
+    const accuracy  = sig.accuracyCue ? (sig.label ? 5 : 4) : 3;
+    const compliance= sig.label ? 5 : 3;
+    const discovery = sig.discovery ? 4 : 2;
+    const objection_handling = sig.objection ? (sig.accuracyCue ? 4 : 3) : 2;
+    const empathy   = sig.empathy ? 3 : 2;
+    const clarity   = sig.tooLong ? 2 : (sig.idealLen ? 4 : 3);
 
-    const brevityBonus = words >= 40 && words <= 140 ? 6 : words < 40 ? 2 : 0;
-    const askBonus = endsWithQuestion ? 6 : 0;
-    const base = mode==="sales-simulation" ? 52 : 50;
-    const overall = clamp(Math.round(base + accuracy*6 + objection_handling*5 + empathy*4 + compliance*6 + clarity*4 + discovery*5 + brevityBonus + askBonus), 55, 98);
+    const W = { accuracy:.26, compliance:.22, discovery:.16, objection_handling:.14, clarity:.12, empathy:.10 };
+    const toPct = v => v * 20;
+
+    let overall = (
+      toPct(accuracy)  * W.accuracy +
+      toPct(compliance)* W.compliance +
+      toPct(discovery) * W.discovery +
+      toPct(objection_handling)*W.objection_handling +
+      toPct(clarity)   * W.clarity +
+      toPct(empathy)   * W.empathy
+    );
+    if (sig.idealLen) overall += 3;
+    if (endsWithQ) overall += 3;
+    if (sig.tooLong) overall -= 6;
+    overall = Math.max(0, Math.min(100, Math.round(overall)));
+
+    const worked = [
+      sig.empathy ? "Acknowledged HCP context" : null,
+      sig.discovery ? "Closed with a clear discovery question" : null,
+      sig.label ? "Referenced label/guidelines" : null,
+      sig.accuracyCue ? "Tied points to clinical cues" : null
+    ].filter(Boolean);
+
+    const improve = [
+      sig.tooLong ? "Tighten to 3–5 sentences" : null,
+      sig.discovery ? null : "End with one specific question",
+      sig.label ? null : "Anchor claims to label or guideline",
+      clarity < 4 ? "Use one idea per sentence" : null
+    ].filter(Boolean);
+
+    const phrasing =
+      sig.discovery
+        ? "Given your criteria, which patients would be the best fit to start, and what would help you try one this month?"
+        : "Would it help to align on eligibility criteria and agree on one next step for your earliest appropriate patient?";
 
     return {
       overall,
       scores: { accuracy, empathy, clarity, compliance, discovery, objection_handling },
-      feedback: "Be concise, cite label/guidelines when making clinical points, ask one clear discovery question, and close with a next step.",
-      context: { rep_question: String(userText||""), hcp_reply: String(replyText||"") },
+      feedback: "Be concise, cite label or guidelines for clinical points, ask one focused discovery question, and propose a concrete next step.",
+      worked,
+      improve,
+      phrasing,
+      context: { rep_question: String(userText || ""), hcp_reply: String(replyText || "") },
+      // backward-compat properties used by UI
       score: overall,
       subscores: { accuracy, empathy, clarity, compliance, discovery, objection_handling }
     };
@@ -147,6 +186,9 @@ Return exactly two parts. No code blocks. No markdown headings.
        "discovery": 0-5,
        "objection_handling": 0-5
      },
+     "worked": ["…"],
+     "improve": ["…"],
+     "phrasing": "…",
      "feedback": "one concise paragraph",
      "context": { "rep_question":"...", "hcp_reply":"..." }
    }</coach>
@@ -155,7 +197,7 @@ Return exactly two parts. No code blocks. No markdown headings.
     if (mode === "sales-simulation") {
       return `
 # Role
-You are a virtual pharma coach responding to a sales rep’s last message and preparing them for a 30-second HCP interaction. Be direct, label-aligned, and safe.
+You are a virtual pharma coach responding to the sales rep’s last message and preparing them for a 30-second HCP interaction. Be direct, label-aligned, and safe.
 
 # Scenario
 ${sc ? [
@@ -166,7 +208,7 @@ ${sc ? [
 ].join("\n") : ""}
 
 # Style
-- 3–6 sentences max and one closing question.
+- 3–6 sentences and one closing question.
 - Mention only appropriate, publicly known, label-aligned facts.
 - No pricing advice or PHI. No off-label.
 
@@ -208,7 +250,7 @@ ${COMMON}`.trim();
       #reflectiv-widget .chat-input textarea{ flex:1; resize:none; min-height:44px; max-height:120px; padding:10px 12px; border:1px solid #cfd6df; border-radius:10px; outline:none; }
       #reflectiv-widget .chat-input .btn{ min-width:86px; border:0; border-radius:999px; background:#2f3a4f; color:#fff; font-weight:600; }
       #reflectiv-widget .coach-section{ margin-top:0; padding:12px 14px; border:1px solid #e1e6ef; border-radius:12px; background:#fffbe8; }
-      #reflectiv-widget .coach-subs .pill{ display:inline-block; padding:2px 8px; margin-right:6px; font-size:12px; background:#f1f3f7; border:1px solid #d6dbe3; border-radius:999px; }
+      #reflectiv-widget .coach-subs .pill{ display:inline-block; padding:2px 8px; margin-right:6px; font-size:12px; background:#f1f3f7; border:1px solid #d6dbe3; border-radius:999px; text-transform:unset; }
       #reflectiv-widget .scenario-meta .meta-card{ padding:10px 12px; background:#f7f9fc; border:1px solid #e1e6ef; border-radius:10px; }
       @media (max-width:900px){ #reflectiv-widget .sim-controls{ grid-template-columns:1fr; gap:8px; } #reflectiv-widget .sim-controls label{ justify-self:start; } }
       @media (max-width:520px){ #reflectiv-widget .chat-messages{ height:46vh; } }
@@ -360,13 +402,11 @@ ${COMMON}`.trim();
     diseaseSelect.addEventListener("change", ()=>{
       const ds = diseaseSelect.value || "";
       if (!ds) return;
-
       if (currentMode === "sales-simulation") {
         populateHcpForDisease(ds);
       } else if (currentMode === "product-knowledge") {
         currentScenarioId = null;
       }
-
       conversation=[]; renderMessages(); renderCoach(); renderMeta();
     });
 
@@ -436,23 +476,14 @@ ${COMMON}`.trim();
   }
 
   // ---------- transport ----------
-  function inferSite() {
-    const h = (location && location.hostname || "").toLowerCase();
-    if (h.includes("reflectivei") || h.includes("reflectivai")) return "reflectivai";
-    if (h.includes("tonyabdelmalak")) return "tony";
-    return "tony";
-  }
-
   async function callModel(messages) {
-    const site = inferSite();
     const r = await fetch((cfg?.apiBase || cfg?.workerUrl || "").trim(), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: (cfg && cfg.model) || "llama-3.1-8b-instant",
         temperature: 0.2,
-        stream: false,
-        site,             // explicit for localhost and mirrors
+        stream: !!cfg?.stream,
         messages
       })
     });
@@ -494,11 +525,12 @@ ${COMMON}`.trim();
             overall: overall ?? computed.overall,
             scores,
             feedback: coach.feedback || computed.feedback,
+            worked: coach.worked && coach.worked.length ? coach.worked : computed.worked,
+            improve: coach.improve && coach.improve.length ? coach.improve : computed.improve,
+            phrasing: typeof coach.phrasing === "string" && coach.phrasing ? coach.phrasing : computed.phrasing,
             context: coach.context || { rep_question: userText, hcp_reply: clean },
             score: overall ?? computed.overall,
-            subscores: scores,
-            worked: coach.worked || computed.worked || [],
-            improve: coach.improve || []
+            subscores: scores
           };
         }
         return computed;
