@@ -1,22 +1,26 @@
 /* =====================================================
-   ReflectivAI Chat Widget — Updated 2x2 Controls + Expand/Collapse Guide
+   ReflectivAI Chat Widget Styles — v3.1 (Oct 2025)
    ===================================================== */
 
 :root {
   --ri-font: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --ri-text: #0f1522;
+  --ri-muted: #5b667a;
   --ri-line: #e5e9f0;
   --ri-panel: #f7f9fc;
-  --ri-bg: #fff;
+  --ri-bg: #ffffff;
   --ri-bubble: #e9edf3;
   --ri-user: #e0e0e0;
   --ri-accent: #2f3a4f;
   --ri-radius: 12px;
   --ri-radius-lg: 14px;
+  --ri-shadow: 0 2px 6px rgba(0,0,0,0.06);
 }
 
-/* ---------- Base ---------- */
-.cw, .reflectiv-chat { font-family: var(--ri-font); color: var(--ri-text); }
+.cw, .reflectiv-chat {
+  font-family: var(--ri-font);
+  color: var(--ri-text);
+}
 .cw *, .reflectiv-chat * { box-sizing: border-box; }
 .hidden { display: none !important; }
 
@@ -24,10 +28,11 @@
 .reflectiv-chat {
   display: flex;
   flex-direction: column;
+  gap: 8px;
   border: 1px solid #d6dbe3;
   border-radius: var(--ri-radius-lg);
-  overflow: hidden;
   background: var(--ri-bg);
+  overflow: hidden;
 }
 
 /* ---------- Toolbar ---------- */
@@ -41,7 +46,7 @@
   border-bottom: 1px solid var(--ri-line);
 }
 
-/* ---------- Controls (2x2 layout) ---------- */
+/* ---------- Controls (2×2 layout desktop, 1×2 mobile) ---------- */
 .sim-controls {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -55,7 +60,8 @@
   color: var(--ri-accent);
 }
 
-.sim-controls select {
+.sim-controls select,
+.sim-controls input {
   height: 36px;
   padding: 6px 10px;
   border-radius: 8px;
@@ -65,13 +71,14 @@
   color: var(--ri-text);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 680px) {
   .sim-controls {
     grid-template-columns: repeat(2, 1fr);
     gap: 8px;
   }
 }
-@media (max-width: 420px) {
+
+@media (max-width: 480px) {
   .sim-controls {
     grid-template-columns: 1fr;
   }
@@ -80,16 +87,17 @@
 /* ---------- Chat Area ---------- */
 .chat-messages {
   height: 320px;
+  max-height: 50vh;
   overflow: auto;
   padding: 12px;
   background: #fafbfd;
+  scroll-behavior: smooth;
 }
+.chat-messages::-webkit-scrollbar { width: 8px; }
+.chat-messages::-webkit-scrollbar-thumb { background: #cfd6df; border-radius: 8px; }
 
 /* ---------- Message Bubbles ---------- */
-.message {
-  margin: 8px 0;
-  display: flex;
-}
+.message { margin: 8px 0; display: flex; }
 .message.user { justify-content: flex-end; }
 .message.assistant { justify-content: flex-start; }
 
@@ -98,16 +106,18 @@
   border-radius: 14px;
   padding: 10px 12px;
   border: 1px solid #d6dbe3;
-  font-size: 14px;
   line-height: 1.45;
+  font-size: 14px;
   background: var(--ri-bubble);
+  color: var(--ri-text);
+  box-shadow: var(--ri-shadow);
 }
 .message.user .content {
   background: var(--ri-user);
   color: #000;
 }
 
-/* ---------- Input ---------- */
+/* ---------- Input Area ---------- */
 .chat-input {
   display: flex;
   gap: 8px;
@@ -115,46 +125,68 @@
   border-top: 1px solid var(--ri-line);
   background: #fff;
 }
+
 .chat-input textarea {
   flex: 1;
   resize: none;
   min-height: 44px;
+  max-height: 160px;
   padding: 10px 12px;
   border: 1px solid #cfd6df;
   border-radius: 10px;
+  outline: none;
+  font-family: var(--ri-font);
   font-size: 14px;
 }
+.chat-input textarea:focus {
+  border-color: var(--ri-accent);
+  box-shadow: 0 0 0 3px rgba(47,58,79,0.15);
+}
+
 .chat-input .btn {
-  min-width: 84px;
+  min-width: 96px;
   border: 0;
   border-radius: 999px;
   background: var(--ri-accent);
   color: #fff;
   font-weight: 600;
+  font-size: 14px;
   cursor: pointer;
+  transition: background-color .15s ease;
 }
 .chat-input .btn:hover { background: #394768; }
+
+/* ---------- Scenario Meta ---------- */
+.scenario-meta .meta-card {
+  padding: 10px 12px;
+  background: var(--ri-panel);
+  border: 1px solid var(--ri-line);
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.4;
+}
 
 /* ---------- Coach Feedback ---------- */
 .coach-section {
   margin-top: 10px;
   padding: 12px;
-  border: 1px solid #e5e9f0;
-  border-radius: var(--ri-radius);
+  border: 1px solid var(--ri-line);
+  border-radius: var(--ri-radius-lg);
   background: #fffbe8;
 }
 .coach-section h3 {
   font-size: 15px;
-  margin-bottom: 6px;
+  margin: 0 0 6px 0;
   color: var(--ri-accent);
 }
 .coach-list { font-size: 13px; }
 
-/* ---------- Scoring Guide ---------- */
+/* ---------- Scoring Guide Panel ---------- */
 .scoring-guide-wrapper {
   text-align: right;
   margin-top: 8px;
 }
+
 .guide-btn {
   background: none;
   border: none;
@@ -162,11 +194,13 @@
   font-weight: 600;
   cursor: pointer;
   font-size: 13px;
+  padding: 4px 6px;
 }
 .guide-btn:hover { text-decoration: underline; }
 
 #scoring-guide {
   display: none;
+  text-align: left;
   border: 1px solid #e1e6ef;
   background: #f7f9fc;
   border-radius: 10px;
@@ -183,4 +217,5 @@
 /* ---------- Responsive ---------- */
 @media (max-width: 520px) {
   .chat-messages { height: 46vh; }
+  .chat-toolbar { grid-template-columns: 1fr; }
 }
