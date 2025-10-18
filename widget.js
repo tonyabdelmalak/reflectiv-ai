@@ -436,7 +436,15 @@ ${COMMON}`.trim();
   }
 
   // ---------- transport ----------
+  function inferSite() {
+    const h = (location && location.hostname || "").toLowerCase();
+    if (h.includes("reflectivei") || h.includes("reflectivai")) return "reflectivai";
+    if (h.includes("tonyabdelmalak")) return "tony";
+    return "tony";
+  }
+
   async function callModel(messages) {
+    const site = inferSite();
     const r = await fetch((cfg?.apiBase || cfg?.workerUrl || "").trim(), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -444,6 +452,7 @@ ${COMMON}`.trim();
         model: (cfg && cfg.model) || "llama-3.1-8b-instant",
         temperature: 0.2,
         stream: false,
+        site,             // explicit for localhost and mirrors
         messages
       })
     });
@@ -459,7 +468,7 @@ ${COMMON}`.trim();
   async function sendMessage(userText) {
     const shell = mount.querySelector(".reflectiv-chat");
     const renderMessages = shell._renderMessages;
-       const renderCoach = shell._renderCoach;
+    const renderCoach = shell._renderCoach;
 
     conversation.push({ role: "user", content: userText });
     renderMessages(); renderCoach();
