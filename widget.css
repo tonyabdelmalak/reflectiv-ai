@@ -1,28 +1,11 @@
 /* =====================================================
-   ReflectivAI Chat Widget Styles — v3.1 (Oct 2025)
+   ReflectivAI Chat Widget Styles
    ===================================================== */
 
-:root {
-  --ri-font: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --ri-text: #0f1522;
-  --ri-muted: #5b667a;
-  --ri-line: #e5e9f0;
-  --ri-panel: #f7f9fc;
-  --ri-bg: #ffffff;
-  --ri-bubble: #e9edf3;
-  --ri-user: #e0e0e0;
-  --ri-accent: #2f3a4f;
-  --ri-radius: 12px;
-  --ri-radius-lg: 14px;
-  --ri-shadow: 0 2px 6px rgba(0,0,0,0.06);
-}
-
 .cw, .reflectiv-chat {
-  font-family: var(--ri-font);
-  color: var(--ri-text);
+  font-family: "Poppins", sans-serif;
+  color: #0f1522;
 }
-.cw *, .reflectiv-chat * { box-sizing: border-box; }
-.hidden { display: none !important; }
 
 /* ---------- Widget Shell ---------- */
 .reflectiv-chat {
@@ -30,9 +13,9 @@
   flex-direction: column;
   gap: 8px;
   border: 1px solid #d6dbe3;
-  border-radius: var(--ri-radius-lg);
-  background: var(--ri-bg);
+  border-radius: 12px;
   overflow: hidden;
+  background: #fff;
 }
 
 /* ---------- Toolbar ---------- */
@@ -42,55 +25,32 @@
   gap: 8px;
   align-items: end;
   padding: 10px;
-  background: var(--ri-panel);
-  border-bottom: 1px solid var(--ri-line);
+  background: #f7f9fc;
+  border-bottom: 1px solid #e5e9f0;
 }
 
-/* ---------- Controls (2×2 layout desktop, 1×2 mobile) ---------- */
+/* ---------- Scenario / Dropdown Controls ---------- */
 .sim-controls {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
   align-items: end;
 }
 
 .sim-controls label {
   font-size: 12px;
   font-weight: 600;
-  color: var(--ri-accent);
+  color: #2f3a4f;
 }
 
-.sim-controls select,
-.sim-controls input {
+.sim-controls .select {
   height: 36px;
-  padding: 6px 10px;
+  padding: 6px 8px;
   border-radius: 8px;
   border: 1px solid #cfd6df;
   background: #fff;
   font-size: 14px;
-  color: var(--ri-text);
-}
-
-/* Adding custom styling for the EI dropdowns */
-.sim-controls select {
-  background: #fff;
-  border: 1px solid #cfd6df;
-  border-radius: 8px;
-  font-size: 14px;
-  color: var(--ri-text);
-}
-
-@media (max-width: 680px) {
-  .sim-controls {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-}
-
-@media (max-width: 480px) {
-  .sim-controls {
-    grid-template-columns: 1fr;
-  }
+  color: #0f1522;
 }
 
 /* ---------- Chat Area ---------- */
@@ -100,13 +60,14 @@
   overflow: auto;
   padding: 12px;
   background: #fafbfd;
-  scroll-behavior: smooth;
 }
-.chat-messages::-webkit-scrollbar { width: 8px; }
-.chat-messages::-webkit-scrollbar-thumb { background: #cfd6df; border-radius: 8px; }
 
 /* ---------- Message Bubbles ---------- */
-.message { margin: 8px 0; display: flex; }
+.message {
+  margin: 8px 0;
+  display: flex;
+}
+
 .message.user { justify-content: flex-end; }
 .message.assistant { justify-content: flex-start; }
 
@@ -117,12 +78,12 @@
   border: 1px solid #d6dbe3;
   line-height: 1.45;
   font-size: 14px;
-  background: var(--ri-bubble);
-  color: var(--ri-text);
-  box-shadow: var(--ri-shadow);
+  background: #e9edf3;
+  color: #0f1522;
 }
+
 .message.user .content {
-  background: var(--ri-user);
+  background: #e0e0e0;
   color: #000;
 }
 
@@ -131,7 +92,7 @@
   display: flex;
   gap: 8px;
   padding: 10px;
-  border-top: 1px solid var(--ri-line);
+  border-top: 1px solid #e5e9f0;
   background: #fff;
 }
 
@@ -139,37 +100,32 @@
   flex: 1;
   resize: none;
   min-height: 44px;
-  max-height: 160px;
+  max-height: 120px;
   padding: 10px 12px;
   border: 1px solid #cfd6df;
   border-radius: 10px;
   outline: none;
-  font-family: var(--ri-font);
+  font-family: "Poppins", sans-serif;
   font-size: 14px;
-}
-.chat-input textarea:focus {
-  border-color: var(--ri-accent);
-  box-shadow: 0 0 0 3px rgba(47,58,79,0.15);
 }
 
 .chat-input .btn {
-  min-width: 96px;
+  min-width: 84px;
   border: 0;
   border-radius: 999px;
-  background: var(--ri-accent);
+  background: #2f3a4f;
   color: #fff;
   font-weight: 600;
-  font-size: 14px;
   cursor: pointer;
-  transition: background-color .15s ease;
 }
+
 .chat-input .btn:hover { background: #394768; }
 
-/* ---------- Scenario Meta ---------- */
+/* ---------- Meta (Scenario Background) ---------- */
 .scenario-meta .meta-card {
   padding: 10px 12px;
-  background: var(--ri-panel);
-  border: 1px solid var(--ri-line);
+  background: #f7f9fc;
+  border: 1px solid #e5e9f0;
   border-radius: 10px;
   font-size: 13px;
   line-height: 1.4;
@@ -179,16 +135,39 @@
 .coach-section {
   margin-top: 10px;
   padding: 12px;
-  border: 1px solid var(--ri-line);
-  border-radius: var(--ri-radius-lg);
+  border: 1px solid #e5e9f0;
+  border-radius: 12px;
   background: #fffbe8;
 }
+
 .coach-section h3 {
   font-size: 15px;
   margin: 0 0 6px 0;
-  color: var(--ri-accent);
+  color: #2f3a4f;
 }
-.coach-list { font-size: 13px; }
+
+.coach-score {
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.coach-subs .pill {
+  display: inline-block;
+  background: #f1f3f7;
+  border: 1px solid #d6dbe3;
+  border-radius: 999px;
+  padding: 2px 8px;
+  margin-right: 6px;
+  font-size: 12px;
+}
+
+.coach-list {
+  padding-left: 16px;
+  font-size: 13px;
+  color: #0f1522;
+}
+
+.coach-list li { margin-bottom: 4px; }
 
 /* ---------- Scoring Guide Panel ---------- */
 .scoring-guide-wrapper {
@@ -199,16 +178,16 @@
 .guide-btn {
   background: none;
   border: none;
-  color: var(--ri-accent);
+  color: #2f3a4f;
   font-weight: 600;
   cursor: pointer;
   font-size: 13px;
   padding: 4px 6px;
 }
+
 .guide-btn:hover { text-decoration: underline; }
 
-#scoring-guide {
-  display: none;
+.guide-content {
   text-align: left;
   border: 1px solid #e1e6ef;
   background: #f7f9fc;
@@ -216,41 +195,30 @@
   padding: 10px 12px;
   font-size: 13px;
   color: #222;
+  width: 310px;
+  float: right;
   margin-top: 6px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.08);
 }
-#scoring-guide.active {
-  display: block;
+
+.guide-content ul {
+  margin: 6px 0 6px 14px;
+  padding: 0;
+  list-style: disc;
 }
+
+.guide-content h4 {
+  margin-top: 0;
+  font-size: 14px;
+  color: #2f3a4f;
+}
+
+.hidden { display: none !important; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 520px) {
   .chat-messages { height: 46vh; }
   .chat-toolbar { grid-template-columns: 1fr; }
-}
-
-/* ---------- New Styles for Persona and EI Feature Dropdowns ---------- */
-.sim-controls select {
-  background: #fff;
-  border: 1px solid #cfd6df;
-  border-radius: 8px;
-  font-size: 14px;
-  color: var(--ri-text);
-}
-
-/* Custom Styles for Feedback Section */
-.coach-body {
-  font-size: 14px;
-  padding: 10px 12px;
-  background: #f7f9fc;
-  border-radius: 8px;
-  color: #333;
-  margin-top: 12px;
-  min-height: 100px;
-  white-space: pre-line;
-}
-
-.coach-body span {
-  font-weight: bold;
-  color: #2f3a4f;
+  .sim-controls { grid-template-columns: 1fr; }
+  .guide-content { width: 100%; float: none; }
 }
