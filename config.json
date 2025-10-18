@@ -3,7 +3,7 @@
   "model": "llama-3.1-8b-instant",
   "apiBase": "https://my-chat-agent-v2.tonyabdelmalak.workers.dev/chat",
   "workerUrl": "https://my-chat-agent-v2.tonyabdelmalak.workers.dev/chat",
-  "stream": false,
+  "stream": true,
 
   "modes": ["emotional-assessment","product-knowledge","sales-simulation"],
   "defaultMode": "sales-simulation",
