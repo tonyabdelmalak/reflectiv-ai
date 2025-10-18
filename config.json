@@ -5,7 +5,7 @@
   "workerUrl": "https://my-chat-agent-v2.tonyabdelmalak.workers.dev/chat",
   "stream": true,
 
-  "modes": ["emotional-assessment","product-knowledge","sales-simulation"],
+  "modes": ["emotional-assessment", "product-knowledge", "sales-simulation"],
   "defaultMode": "sales-simulation",
 
   "analyticsEndpoint": "https://my-chat-agent-v2.tonyabdelmalak.workers.dev/coach-metrics",
