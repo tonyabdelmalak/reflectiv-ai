@@ -14,14 +14,5 @@
   "analyticsEndpoint": "https://my-chat-agent-v2.tonyabdelmalak.workers.dev/coach-metrics",
   "brand": { "accent": "#2f3a4f", "radius": "14px" },
   "scenariosUrl": "assets/chat/data/scenarios.merged.json",
-  "ui": { "showCoach": true, "showMeta": true, "allowModeSwitch": true },
-  "personas": [
-    { "key": "difficult", "label": "Difficult HCP", "description": "Resistant, emotional, argumentative" },
-    { "key": "engaged", "label": "Highly Engaged HCP", "description": "Collaborative, attentive, empathetic" },
-    { "key": "indifferent", "label": "Nice but Doesn’t Prescribe", "description": "Pleasant, but disengaged, no prescriptions" }
-  ],
-  "eiFeatures": [
-    { "key": "empathy", "label": "Empathy Rating" },
-    { "key": "stress", "label": "Stress Level Indicator" }
-  ]
+  "ui": { "showCoach": true, "showMeta": true, "allowModeSwitch": true }
 }
