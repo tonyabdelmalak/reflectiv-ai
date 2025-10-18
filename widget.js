@@ -302,56 +302,75 @@ ${COMMON}`.trim();
 
     const eiLabel = el("label", "", "EI Profiles");
     eiLabel.htmlFor = "cw-ei";
-    const eiSelect = el("select"); 
-    eiSelect.id = "cw-ei";
+    const eiSelect = el("select"); eiSelect.id = "cw-ei";
 
-   simControls.appendChild(eiLabel);
-   simControls.appendChild(eiSelect);
+    simControls.appendChild(lcLabel); simControls.appendChild(modeSel);
+    simControls.appendChild(coachLabel); simControls.appendChild(coachSel);
+    simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
+    simControls.appendChild(hcpLabel); simControls.appendChild(hcpSelect);
+    simControls.appendChild(eiLabel); simControls.appendChild(eiSelect);
 
-// EI dropdown options setup
-const EI_FEATURES = [
-  "Empathy Cues",
-  "Clarity",
-  "Confidence",
-  "Self-Awareness",
-  "Listening Skills"
-];
-function populateEI() {
-  setSelectOptions(eiSelect, EI_FEATURES, true);
-}
-populateEI();
+    bar.appendChild(simControls);
+    shell.appendChild(bar);
 
-// In applyModeVisibility() function, show/hide EI dropdown
-if (currentMode === "emotional-assessment") {
-  diseaseLabel.classList.add("hidden");
-  diseaseSelect.classList.add("hidden");
-  hcpLabel.classList.add("hidden");
-  hcpSelect.classList.add("hidden");
-  eiLabel.classList.remove("hidden");
-  eiSelect.classList.remove("hidden");
-} else {
-  eiLabel.classList.add("hidden");
-  eiSelect.classList.add("hidden");
-}
+    const meta = el("div", "scenario-meta");
+    shell.appendChild(meta);
 
-// Helper function to set options (already present in your code)
-function setSelectOptions(select, values, withPlaceholder) {
-  select.innerHTML = "";
-  if (withPlaceholder) {
-    const p = el("option", "", "Select…");
-    p.value = "";
-    p.selected = true;
-    p.disabled = true;
-    select.appendChild(p);
-  }
-  values.forEach(v => {
-    if (!v) return;
-    const o = el("option", "", typeof v === "string" ? v : (v.label || v.value));
-    o.value = typeof v === "string" ? v : (v.value || v.id || v.label);
-    select.appendChild(o);
-  });
-}
-    
+    const msgs = el("div", "chat-messages");
+    shell.appendChild(msgs);
+
+    const inp = el("div", "chat-input");
+    const ta = el("textarea"); ta.placeholder = "Type your message…";
+    ta.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send.click(); } });
+    const send = el("button", "btn", "Send");
+    send.onclick = () => { const t = ta.value.trim(); if (!t) return; sendMessage(t); ta.value = ""; };
+    inp.appendChild(ta); inp.appendChild(send);
+    shell.appendChild(inp);
+
+    mount.appendChild(shell);
+
+    const coach = el("div", "coach-section");
+    coach.innerHTML = `<h3>Coach Feedback</h3><div class="coach-body muted">Awaiting the first assistant reply…</div>`;
+    mount.appendChild(coach);
+
+    // ---------- EI options ----------
+    const EI_FEATURES = [
+      "Empathy Cues",
+      "Clarity",
+      "Confidence",
+      "Self-Awareness",
+      "Listening Skills"
+    ];
+    function populateEI() {
+      setSelectOptions(eiSelect, EI_FEATURES, true);
+    }
+    populateEI();
+
+    // ---------- utility functions ----------
+    function getDiseaseStates() {
+      let ds = Array.isArray(cfg?.diseaseStates) ? cfg.diseaseStates.slice() : [];
+      if (!ds.length && Array.isArray(scenarios) && scenarios.length) {
+        ds = Array.from(new Set(scenarios.map(s => (s.therapeuticArea || s.diseaseState || "").trim()))).filter(Boolean);
+      }
+      ds = ds.map(x => x.replace(/\bHiv\b/gi, "HIV"));
+      return ds;
+    }
+
+    function setSelectOptions(select, values, withPlaceholder) {
+      select.innerHTML = "";
+      if (withPlaceholder) {
+        const p = el("option", "", "Select…");
+        p.value = ""; p.selected = true; p.disabled = true;
+        select.appendChild(p);
+      }
+      values.forEach(v => {
+        if (!v) return;
+        const o = el("option", "", typeof v === "string" ? v : (v.label || v.value));
+        o.value = typeof v === "string" ? v : (v.value || v.id || v.label);
+        select.appendChild(o);
+      });
+    }
+
     function populateDiseases() {
       const ds = getDiseaseStates();
       setSelectOptions(diseaseSelect, ds, true);
