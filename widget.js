@@ -247,7 +247,7 @@ ${COMMON}`.trim();
     style.textContent = `
       #reflectiv-widget .reflectiv-chat{ display:flex; flex-direction:column; gap:12px; border:3px solid #bfc7d4; border-radius:14px; background:#fff; overflow:hidden; }
       #reflectiv-widget .chat-toolbar{ display:block; padding:14px 16px; background:#f6f8fb; border-bottom:1px solid #e1e6ef; }
-      #reflectiv-widget .sim-controls{ display:grid; grid-template-columns:220px 1fr 200px 1fr 200px 1fr; gap:12px 16px; align-items:center; }
+      #reflectiv-widget .sim-controls{ display:grid; grid-template-columns:220px 1fr 200px 1fr; gap:12px 16px; align-items:center; }
       #reflectiv-widget .sim-controls label{ font-size:13px; font-weight:600; color:#2f3a4f; justify-self:end; white-space:nowrap; }
       #reflectiv-widget .sim-controls select{ width:100%; height:38px; padding:6px 10px; font-size:14px; border:1px solid #cfd6df; border-radius:8px; background:#fff; }
       #reflectiv-widget .chat-messages{ min-height:260px; height:320px; max-height:50vh; overflow:auto; padding:12px 14px; background:#fafbfd; }
@@ -271,7 +271,7 @@ ${COMMON}`.trim();
     const shell = el("div", "reflectiv-chat");
 
     const bar = el("div", "chat-toolbar");
-    const simControls = el("div", "sim-controls");
+    const simControls = el("div","sim-controls");
 
     const lcLabel = el("label", "", "Learning Center");
     lcLabel.htmlFor = "cw-mode";
@@ -287,8 +287,8 @@ ${COMMON}`.trim();
     const coachLabel = el("label", "", "Coach");
     coachLabel.htmlFor = "cw-coach";
     const coachSel = el("select"); coachSel.id = "cw-coach";
-    [{ v: "on", t: "Coach On" }, { v: "off", t: "Coach Off" }].forEach(({ v, t }) => {
-      const o = el("option"); o.value = v; o.textContent = t; coachSel.appendChild(o);
+    [{v:"on",t:"Coach On"},{v:"off",t:"Coach Off"}].forEach(({v,t})=>{
+      const o = el("option"); o.value=v; o.textContent=t; coachSel.appendChild(o);
     });
     coachSel.value = coachOn ? "on" : "off";
     coachSel.onchange = () => { coachOn = coachSel.value === "on"; renderCoach(); };
@@ -297,19 +297,25 @@ ${COMMON}`.trim();
     diseaseLabel.htmlFor = "cw-disease";
     const diseaseSelect = el("select"); diseaseSelect.id = "cw-disease";
 
-    const hcpLabel = el("label", "", "HCP Profiles");
-    hcpLabel.htmlFor = "cw-hcp";
-    const hcpSelect = el("select"); hcpSelect.id = "cw-hcp";
+    const hcpLabel = el("label","","HCP Profiles");
+    hcpLabel.htmlFor="cw-hcp";
+    const hcpSelect = el("select"); hcpSelect.id="cw-hcp";
 
-    const eiLabel = el("label", "", "EI Profiles");
-    eiLabel.htmlFor = "cw-ei";
-    const eiSelect = el("select"); eiSelect.id = "cw-ei";
+    // EI Profile and Feature Dropdowns
+    const eiProfileLabel = el("label", "", "EI Profiles");
+    eiProfileLabel.htmlFor = "cw-ei-profile";
+    const eiProfileSelect = el("select"); eiProfileSelect.id = "cw-ei-profile";
 
-    simControls.appendChild(lcLabel); simControls.appendChild(modeSel);
+    const eiFeatureLabel = el("label", "", "EI Features");
+    eiFeatureLabel.htmlFor = "cw-ei-feature";
+    const eiFeatureSelect = el("select"); eiFeatureSelect.id = "cw-ei-feature";
+
+    simControls.appendChild(lcLabel);    simControls.appendChild(modeSel);
     simControls.appendChild(coachLabel); simControls.appendChild(coachSel);
     simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
-    simControls.appendChild(hcpLabel); simControls.appendChild(hcpSelect);
-    simControls.appendChild(eiLabel); simControls.appendChild(eiSelect);
+    simControls.appendChild(hcpLabel);     simControls.appendChild(hcpSelect);
+    simControls.appendChild(eiProfileLabel); simControls.appendChild(eiProfileSelect);
+    simControls.appendChild(eiFeatureLabel); simControls.appendChild(eiFeatureSelect);
 
     bar.appendChild(simControls);
     shell.appendChild(bar);
@@ -334,42 +340,14 @@ ${COMMON}`.trim();
     coach.innerHTML = `<h3>Coach Feedback</h3><div class="coach-body muted">Awaiting the first assistant reply…</div>`;
     mount.appendChild(coach);
 
-    // ---------- EI options ----------
-    const EI_FEATURES = [
-      "Empathy Cues",
-      "Clarity",
-      "Confidence",
-      "Self-Awareness",
-      "Listening Skills"
-    ];
-    function populateEI() {
-      setSelectOptions(eiSelect, EI_FEATURES, true);
-    }
-    populateEI();
-
-    // ---------- utility functions ----------
-    function getDiseaseStates() {
-      let ds = Array.isArray(cfg?.diseaseStates) ? cfg.diseaseStates.slice() : [];
-      if (!ds.length && Array.isArray(scenarios) && scenarios.length) {
-        ds = Array.from(new Set(scenarios.map(s => (s.therapeuticArea || s.diseaseState || "").trim()))).filter(Boolean);
-      }
-      ds = ds.map(x => x.replace(/\bHiv\b/gi, "HIV"));
-      return ds;
+    function populateEIProfiles() {
+      const profiles = personas.map(p => p.label);
+      setSelectOptions(eiProfileSelect, profiles, true);
     }
 
-    function setSelectOptions(select, values, withPlaceholder) {
-      select.innerHTML = "";
-      if (withPlaceholder) {
-        const p = el("option", "", "Select…");
-        p.value = ""; p.selected = true; p.disabled = true;
-        select.appendChild(p);
-      }
-      values.forEach(v => {
-        if (!v) return;
-        const o = el("option", "", typeof v === "string" ? v : (v.label || v.value));
-        o.value = typeof v === "string" ? v : (v.value || v.id || v.label);
-        select.appendChild(o);
-      });
+    function populateEIFeatures() {
+      const features = eiFeatures.map(f => f.label);
+      setSelectOptions(eiFeatureSelect, features, true);
     }
 
     function populateDiseases() {
