@@ -431,6 +431,7 @@ ${COMMON}`.trim();
     }
 
 function renderMessages() {
+   const msgs = shell.querySelector(".chat-messages");
    msgs.innerHTML = "";
    for (const m of conversation) {
      const row = el("div", `message ${m.role}`);
@@ -467,7 +468,6 @@ function renderCoach() {
   const fb = last._coach;
   const scores = fb.scores || fb.subscores || {};
 
-  // Format feedback with proper punctuation
   const workedStr = (fb.worked && fb.worked.length)
     ? fb.worked.join(". ") + "."
     : "—";
