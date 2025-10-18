@@ -430,43 +430,60 @@ ${COMMON}`.trim();
         </div>`;
     }
 
-    function renderMessages() {
-      msgs.innerHTML = "";
-      for (const m of conversation) {
-        const row = el("div", `message ${m.role}`);
-        const c = el("div", "content");
-        c.innerHTML = md(m.content);
-        row.appendChild(c);
-        msgs.appendChild(row);
-      }
-      msgs.scrollTop = msgs.scrollHeight;
-    }
+function renderMessages() {
+   msgs.innerHTML = "";
+   for (const m of conversation) {
+     const row = el("div", `message ${m.role}`);
+     const c = el("div", "content");
+     c.innerHTML = md(m.content);
+     row.appendChild(c);
+     msgs.appendChild(row);
+  }
+  msgs.scrollTop = msgs.scrollHeight;
+}
 
-    function orderedPills(scores) {
-      const order = ["accuracy","empathy","clarity","compliance","discovery","objection_handling"];
-      return order.filter(k => k in (scores||{})).map(k => `<span class="pill">${esc(k)}: ${scores[k]}</span>`).join(" ");
-    }
+function orderedPills(scores) {
+  const order = ["accuracy","empathy","clarity","compliance","discovery","objection_handling"];
+  return order
+    .filter(k => k in (scores || {}))
+    .map(k => `<span class="pill">${esc(k)}: ${scores[k]}</span>`)
+    .join(" ");
+}
 
-    function renderCoach() {
-      const body = coach.querySelector(".coach-body");
-      if (!coachOn || currentMode === "product-knowledge") { coach.style.display = "none"; return; }
-      coach.style.display = "";
-      const last = conversation[conversation.length - 1];
-      if (!(last && last.role === "assistant" && last._coach)) {
-        body.innerHTML = `<span class="muted">Awaiting the first assistant reply…</span>`;
-        return;
-      }
-      const fb = last._coach;
-      const scores = fb.scores || fb.subscores || {};
-      body.innerHTML = `
-        <div class="coach-score">Score: <strong>${fb.overall ?? fb.score ?? "—"}</strong>/100</div>
-        <div class="coach-subs">${orderedPills(scores)}</div>
-        <ul class="coach-list">
-          <li><strong>What worked:</strong> ${esc((fb.worked||[]).join(" ")||"—")}</li>
-          <li><strong>What to improve:</strong> ${esc((fb.improve||[]).join(" ")||fb.feedback||"—")}</li>
-          <li><strong>Suggested phrasing:</strong> ${esc(fb.phrasing||"—")}</li>
-        </ul>`;
-    }
+function renderCoach() {
+  const body = coach.querySelector(".coach-body");
+  if (!coachOn || currentMode === "product-knowledge") {
+    coach.style.display = "none";
+    return;
+  }
+  coach.style.display = "";
+
+  const last = conversation[conversation.length - 1];
+  if (!(last && last.role === "assistant" && last._coach)) {
+    body.innerHTML = `<span class="muted">Awaiting the first assistant reply…</span>`;
+    return;
+  }
+
+  const fb = last._coach;
+  const scores = fb.scores || fb.subscores || {};
+
+  // Format feedback with proper punctuation
+  const workedStr = (fb.worked && fb.worked.length)
+    ? fb.worked.join(". ") + "."
+    : "—";
+  const improveStr = (fb.improve && fb.improve.length)
+    ? fb.improve.join(". ") + "."
+    : (fb.feedback || "—");
+
+  body.innerHTML = `
+    <div class="coach-score">Score: <strong>${fb.overall ?? fb.score ?? "—"}</strong>/100</div>
+    <div class="coach-subs">${orderedPills(scores)}</div>
+    <ul class="coach-list">
+      <li><strong>What worked:</strong> ${esc(workedStr)}</li>
+      <li><strong>What to improve:</strong> ${esc(improveStr)}</li>
+      <li><strong>Suggested phrasing:</strong> ${esc(fb.phrasing || "—")}</li>
+    </ul>`;
+}
 
     shell._renderMessages = renderMessages;
     shell._renderCoach = renderCoach;
