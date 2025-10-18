@@ -247,7 +247,7 @@ ${COMMON}`.trim();
     style.textContent = `
       #reflectiv-widget .reflectiv-chat{ display:flex; flex-direction:column; gap:12px; border:3px solid #bfc7d4; border-radius:14px; background:#fff; overflow:hidden; }
       #reflectiv-widget .chat-toolbar{ display:block; padding:14px 16px; background:#f6f8fb; border-bottom:1px solid #e1e6ef; }
-      #reflectiv-widget .sim-controls{ display:grid; grid-template-columns:220px 1fr 200px 1fr; gap:12px 16px; align-items:center; }
+      #reflectiv-widget .sim-controls{ display:grid; grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr; gap:12px 16px; align-items:center; }
       #reflectiv-widget .sim-controls label{ font-size:13px; font-weight:600; color:#2f3a4f; justify-self:end; white-space:nowrap; }
       #reflectiv-widget .sim-controls select{ width:100%; height:38px; padding:6px 10px; font-size:14px; border:1px solid #cfd6df; border-radius:8px; background:#fff; }
       #reflectiv-widget .chat-messages{ min-height:260px; height:320px; max-height:50vh; overflow:auto; padding:12px 14px; background:#fafbfd; }
@@ -262,7 +262,7 @@ ${COMMON}`.trim();
       #reflectiv-widget .coach-section{ margin-top:0; padding:12px 14px; border:1px solid #e1e6ef; border-radius:12px; background:#fffbe8; }
       #reflectiv-widget .coach-subs .pill{ display:inline-block; padding:2px 8px; margin-right:6px; font-size:12px; background:#f1f3f7; border:1px solid #d6dbe3; border-radius:999px; text-transform:unset; }
       #reflectiv-widget .scenario-meta .meta-card{ padding:10px 12px; background:#f7f9fc; border:1px solid #e1e6ef; border-radius:10px; }
-      @media (max-width:900px){ #reflectiv-widget .sim-controls{ grid-template-columns:1fr; gap:8px; } #reflectiv-widget .sim-controls label{ justify-self:start; } }
+      @media (max-width:900px){ #reflectiv-widget .sim-controls{ grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; } #reflectiv-widget .sim-controls label{ justify-self:start; } }
       @media (max-width:520px){ #reflectiv-widget .chat-messages{ height:46vh; } }
       #reflectiv-widget .hidden{ display:none !important; }
     `;
@@ -271,7 +271,7 @@ ${COMMON}`.trim();
     const shell = el("div", "reflectiv-chat");
 
     const bar = el("div", "chat-toolbar");
-    const simControls = el("div","sim-controls");
+    const simControls = el("div", "sim-controls");
 
     const lcLabel = el("label", "", "Learning Center");
     lcLabel.htmlFor = "cw-mode";
@@ -287,8 +287,8 @@ ${COMMON}`.trim();
     const coachLabel = el("label", "", "Coach");
     coachLabel.htmlFor = "cw-coach";
     const coachSel = el("select"); coachSel.id = "cw-coach";
-    [{v:"on",t:"Coach On"},{v:"off",t:"Coach Off"}].forEach(({v,t})=>{
-      const o = el("option"); o.value=v; o.textContent=t; coachSel.appendChild(o);
+    [{ v: "on", t: "Coach On" }, { v: "off", t: "Coach Off" }].forEach(({ v, t }) => {
+      const o = el("option"); o.value = v; o.textContent = t; coachSel.appendChild(o);
     });
     coachSel.value = coachOn ? "on" : "off";
     coachSel.onchange = () => { coachOn = coachSel.value === "on"; renderCoach(); };
@@ -297,9 +297,9 @@ ${COMMON}`.trim();
     diseaseLabel.htmlFor = "cw-disease";
     const diseaseSelect = el("select"); diseaseSelect.id = "cw-disease";
 
-    const hcpLabel = el("label","","HCP Profiles");
-    hcpLabel.htmlFor="cw-hcp";
-    const hcpSelect = el("select"); hcpSelect.id="cw-hcp";
+    const hcpLabel = el("label", "", "HCP Profiles");
+    hcpLabel.htmlFor = "cw-hcp";
+    const hcpSelect = el("select"); hcpSelect.id = "cw-hcp";
 
     // EI Profile and Feature Dropdowns
     const eiProfileLabel = el("label", "", "EI Profiles");
@@ -340,14 +340,26 @@ ${COMMON}`.trim();
     coach.innerHTML = `<h3>Coach Feedback</h3><div class="coach-body muted">Awaiting the first assistant reply…</div>`;
     mount.appendChild(coach);
 
+    // ---------- EI options ----------
+    const EI_FEATURES = [
+      "Empathy Cues",
+      "Clarity",
+      "Confidence",
+      "Self-Awareness",
+      "Listening Skills"
+    ];
+    const EI_PROFILES = [
+      "Difficult HCP",
+      "Engaged HCP",
+      "Indifferent HCP"
+    ];
+
     function populateEIProfiles() {
-      const profiles = personas.map(p => p.label);
-      setSelectOptions(eiProfileSelect, profiles, true);
+      setSelectOptions(eiProfileSelect, EI_PROFILES, true);
     }
 
     function populateEIFeatures() {
-      const features = eiFeatures.map(f => f.label);
-      setSelectOptions(eiFeatureSelect, features, true);
+      setSelectOptions(eiFeatureSelect, EI_FEATURES, true);
     }
 
     function populateDiseases() {
@@ -385,31 +397,39 @@ ${COMMON}`.trim();
         diseaseSelect.classList.remove("hidden");
         hcpLabel.classList.remove("hidden");
         hcpSelect.classList.remove("hidden");
-        eiLabel.classList.add("hidden");
-        eiSelect.classList.add("hidden");
+        eiProfileLabel.classList.remove("hidden");
+        eiProfileSelect.classList.remove("hidden");
+        eiFeatureLabel.classList.remove("hidden");
+        eiFeatureSelect.classList.remove("hidden");
         populateDiseases();
       } else if (currentMode === "product-knowledge") {
         diseaseLabel.classList.remove("hidden");
         diseaseSelect.classList.remove("hidden");
         hcpLabel.classList.add("hidden");
         hcpSelect.classList.add("hidden");
-        eiLabel.classList.add("hidden");
-        eiSelect.classList.add("hidden");
+        eiProfileLabel.classList.add("hidden");
+        eiProfileSelect.classList.add("hidden");
+        eiFeatureLabel.classList.add("hidden");
+        eiFeatureSelect.classList.add("hidden");
         populateDiseases();
       } else if (currentMode === "emotional-assessment") {
         diseaseLabel.classList.add("hidden");
         diseaseSelect.classList.add("hidden");
         hcpLabel.classList.add("hidden");
         hcpSelect.classList.add("hidden");
-        eiLabel.classList.remove("hidden");
-        eiSelect.classList.remove("hidden");
+        eiProfileLabel.classList.remove("hidden");
+        eiProfileSelect.classList.remove("hidden");
+        eiFeatureLabel.classList.remove("hidden");
+        eiFeatureSelect.classList.remove("hidden");
       } else {
         diseaseLabel.classList.add("hidden");
         diseaseSelect.classList.add("hidden");
         hcpLabel.classList.add("hidden");
         hcpSelect.classList.add("hidden");
-        eiLabel.classList.add("hidden");
-        eiSelect.classList.add("hidden");
+        eiProfileLabel.classList.add("hidden");
+        eiProfileSelect.classList.add("hidden");
+        eiFeatureLabel.classList.add("hidden");
+        eiFeatureSelect.classList.add("hidden");
       }
 
       currentScenarioId = null;
@@ -445,8 +465,6 @@ ${COMMON}`.trim();
       renderCoach();
       renderMeta();
     });
-
-    // Optional extra listener for EI select could be added here if you want special behavior
 
     // ---------- render helpers ----------
     function renderMeta() {
