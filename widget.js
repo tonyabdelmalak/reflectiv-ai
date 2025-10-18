@@ -1,5 +1,6 @@
 /* assets/chat/widget.js
  * ReflectivAI Chat/Coach — drop-in (coach-v2, deterministic scoring v3)
+ * Adds right-aligned Scoring Guide link and modal.
  * Modes: emotional-assessment | product-knowledge | sales-simulation
  */
 
@@ -97,7 +98,7 @@
   }
 
   // ---------- local scoring fallback (coach-v3 deterministic) ----------
-  function scoreReply(userText, replyText, mode) {
+  function scoreReply(userText, replyText) {
     const text = String(replyText || "");
     const t = text.toLowerCase();
     const words = text.split(/\s+/).filter(Boolean).length;
@@ -164,7 +165,6 @@
       improve,
       phrasing,
       context: { rep_question: String(userText || ""), hcp_reply: String(replyText || "") },
-      // backward-compat properties used by UI
       score: overall,
       subscores: { accuracy, empathy, clarity, compliance, discovery, objection_handling }
     };
@@ -233,31 +233,6 @@ ${COMMON}`.trim();
     mount.innerHTML = "";
     if (!mount.classList.contains("cw")) mount.classList.add("cw");
 
-    const style = document.createElement("style");
-    style.textContent = `
-      #reflectiv-widget .reflectiv-chat{ display:flex; flex-direction:column; gap:12px; border:3px solid #bfc7d4; border-radius:14px; background:#fff; overflow:hidden; }
-      #reflectiv-widget .chat-toolbar{ display:block; padding:14px 16px; background:#f6f8fb; border-bottom:1px solid #e1e6ef; }
-      #reflectiv-widget .sim-controls{ display:grid; grid-template-columns:220px 1fr 200px 1fr; gap:12px 16px; align-items:center; }
-      #reflectiv-widget .sim-controls label{ font-size:13px; font-weight:600; color:#2f3a4f; justify-self:end; white-space:nowrap; }
-      #reflectiv-widget .sim-controls select{ width:100%; height:38px; padding:6px 10px; font-size:14px; border:1px solid #cfd6df; border-radius:8px; background:#fff; }
-      #reflectiv-widget .chat-messages{ min-height:260px; height:320px; max-height:50vh; overflow:auto; padding:12px 14px; background:#fafbfd; }
-      #reflectiv-widget .message{ margin:8px 0; display:flex; }
-      #reflectiv-widget .message.user{ justify-content:flex-end; }
-      #reflectiv-widget .message.assistant{ justify-content:flex-start; }
-      #reflectiv-widget .message .content{ max-width:85%; line-height:1.45; font-size:14px; padding:10px 12px; border-radius:14px; border:1px solid #d6dbe3; color:#0f1522; background:#e9edf3; }
-      #reflectiv-widget .message.user .content{ background:#e0e0e0; color:#000; }
-      #reflectiv-widget .chat-input{ display:flex; gap:8px; padding:10px 12px; border-top:1px solid #e1e6ef; background:#fff; }
-      #reflectiv-widget .chat-input textarea{ flex:1; resize:none; min-height:44px; max-height:120px; padding:10px 12px; border:1px solid #cfd6df; border-radius:10px; outline:none; }
-      #reflectiv-widget .chat-input .btn{ min-width:86px; border:0; border-radius:999px; background:#2f3a4f; color:#fff; font-weight:600; }
-      #reflectiv-widget .coach-section{ margin-top:0; padding:12px 14px; border:1px solid #e1e6ef; border-radius:12px; background:#fffbe8; }
-      #reflectiv-widget .coach-subs .pill{ display:inline-block; padding:2px 8px; margin-right:6px; font-size:12px; background:#f1f3f7; border:1px solid #d6dbe3; border-radius:999px; text-transform:unset; }
-      #reflectiv-widget .scenario-meta .meta-card{ padding:10px 12px; background:#f7f9fc; border:1px solid #e1e6ef; border-radius:10px; }
-      @media (max-width:900px){ #reflectiv-widget .sim-controls{ grid-template-columns:1fr; gap:8px; } #reflectiv-widget .sim-controls label{ justify-self:start; } }
-      @media (max-width:520px){ #reflectiv-widget .chat-messages{ height:46vh; } }
-      #reflectiv-widget .hidden{ display:none !important; }
-    `;
-    document.head.appendChild(style);
-
     const shell = el("div", "reflectiv-chat");
 
     const bar = el("div", "chat-toolbar");
@@ -270,6 +245,7 @@ ${COMMON}`.trim();
       const o = el("option"); o.value = name; o.textContent = name;
       modeSel.appendChild(o);
     });
+
     const initialLc = Object.keys(LC_TO_INTERNAL).find(k => LC_TO_INTERNAL[k] === (cfg?.defaultMode || "sales-simulation")) || "Sales Simulation";
     modeSel.value = initialLc;
     currentMode = LC_TO_INTERNAL[modeSel.value];
@@ -315,9 +291,34 @@ ${COMMON}`.trim();
 
     mount.appendChild(shell);
 
+    // Coach panel
     const coach = el("div", "coach-section");
     coach.innerHTML = `<h3>Coach Feedback</h3><div class="coach-body muted">Awaiting the first assistant reply…</div>`;
     mount.appendChild(coach);
+
+    // Modal
+    const modal = el("div","cw-modal");
+    modal.innerHTML = `
+      <div class="cw-backdrop"></div>
+      <div class="cw-dialog" role="dialog" aria-modal="true" aria-label="Scoring Guide">
+        <button class="cw-close" aria-label="Close">×</button>
+        <h4>Scoring Guide</h4>
+        <p class="muted">Deterministic scoring v3. Subscores 0–5. Overall 0–100 weighted by accuracy, compliance, discovery, objection handling, clarity, empathy.</p>
+        <ul>
+          <li><strong>Accuracy</strong>: clinical correctness and specific cues.</li>
+          <li><strong>Compliance</strong>: label-aligned, no off-label, no PHI.</li>
+          <li><strong>Discovery</strong>: ends with one clear question.</li>
+          <li><strong>Objection handling</strong>: acknowledges and addresses barriers.</li>
+          <li><strong>Clarity</strong>: concise, 3–6 sentences, one idea per sentence.</li>
+          <li><strong>Empathy</strong>: acknowledges HCP context and constraints.</li>
+        </ul>
+      </div>`;
+    mount.appendChild(modal);
+
+    function openModal(){ modal.classList.add("open"); }
+    function closeModal(){ modal.classList.remove("open"); }
+    modal.querySelector(".cw-backdrop").addEventListener("click", closeModal);
+    modal.querySelector(".cw-close").addEventListener("click", closeModal);
 
     function getDiseaseStates() {
       let ds = Array.isArray(cfg?.diseaseStates) ? cfg.diseaseStates.slice() : [];
@@ -430,60 +431,66 @@ ${COMMON}`.trim();
         </div>`;
     }
 
-function renderMessages() {
-   const msgs = shell.querySelector(".chat-messages");
-   msgs.innerHTML = "";
-   for (const m of conversation) {
-     const row = el("div", `message ${m.role}`);
-     const c = el("div", "content");
-     c.innerHTML = md(m.content);
-     row.appendChild(c);
-     msgs.appendChild(row);
-  }
-  msgs.scrollTop = msgs.scrollHeight;
-}
+    function renderMessages() {
+      msgs.innerHTML = "";
+      for (const m of conversation) {
+        const row = el("div", `message ${m.role}`);
+        const c = el("div", "content");
+        c.innerHTML = md(m.content);
+        row.appendChild(c);
+        msgs.appendChild(row);
+      }
+      msgs.scrollTop = msgs.scrollHeight;
+    }
 
-function orderedPills(scores) {
-  const order = ["accuracy","empathy","clarity","compliance","discovery","objection_handling"];
-  return order
-    .filter(k => k in (scores || {}))
-    .map(k => `<span class="pill">${esc(k)}: ${scores[k]}</span>`)
-    .join(" ");
-}
+    function orderedPills(scores) {
+      const order = ["accuracy","empathy","clarity","compliance","discovery","objection_handling"];
+      return order
+        .filter(k => k in (scores || {}))
+        .map(k => `<span class="pill">${esc(k)}: ${scores[k]}</span>`)
+        .join(" ");
+    }
 
-function renderCoach() {
-  const body = coach.querySelector(".coach-body");
-  if (!coachOn || currentMode === "product-knowledge") {
-    coach.style.display = "none";
-    return;
-  }
-  coach.style.display = "";
+    function renderCoach() {
+      const body = coach.querySelector(".coach-body");
+      if (!coachOn || currentMode === "product-knowledge") {
+        coach.style.display = "none";
+        return;
+      }
+      coach.style.display = "";
 
-  const last = conversation[conversation.length - 1];
-  if (!(last && last.role === "assistant" && last._coach)) {
-    body.innerHTML = `<span class="muted">Awaiting the first assistant reply…</span>`;
-    return;
-  }
+      const last = conversation[conversation.length - 1];
+      if (!(last && last.role === "assistant" && last._coach)) {
+        body.innerHTML = `<span class="muted">Awaiting the first assistant reply…</span>`;
+        return;
+      }
 
-  const fb = last._coach;
-  const scores = fb.scores || fb.subscores || {};
+      const fb = last._coach;
+      const scores = fb.scores || fb.subscores || {};
 
-  const workedStr = (fb.worked && fb.worked.length)
-    ? fb.worked.join(". ") + "."
-    : "—";
-  const improveStr = (fb.improve && fb.improve.length)
-    ? fb.improve.join(". ") + "."
-    : (fb.feedback || "—");
+      const workedStr = (fb.worked && fb.worked.length) ? fb.worked.join(". ") + "." : "—";
+      const improveStr = (fb.improve && fb.improve.length) ? fb.improve.join(". ") + "." : (fb.feedback || "—");
 
-  body.innerHTML = `
-    <div class="coach-score">Score: <strong>${fb.overall ?? fb.score ?? "—"}</strong>/100</div>
-    <div class="coach-subs">${orderedPills(scores)}</div>
-    <ul class="coach-list">
-      <li><strong>What worked:</strong> ${esc(workedStr)}</li>
-      <li><strong>What to improve:</strong> ${esc(improveStr)}</li>
-      <li><strong>Suggested phrasing:</strong> ${esc(fb.phrasing || "—")}</li>
-    </ul>`;
-}
+      const guideHref = (cfg && cfg.scoringGuideUrl) ? cfg.scoringGuideUrl : "#scoring-guide";
+
+      body.innerHTML = `
+        <div class="coach-meta">
+          <div class="coach-score">Score: <strong>${fb.overall ?? fb.score ?? "—"}</strong>/100</div>
+          <a class="score-link" href="${esc(guideHref)}" target="${guideHref.startsWith('#')?'_self':'_blank'}" rel="noopener">Scoring&nbsp;Guide</a>
+        </div>
+        <div class="coach-subs">${orderedPills(scores)}</div>
+        <ul class="coach-list">
+          <li><strong>What worked:</strong> ${esc(workedStr)}</li>
+          <li><strong>What to improve:</strong> ${esc(improveStr)}</li>
+          <li><strong>Suggested phrasing:</strong> ${esc(fb.phrasing || "—")}</li>
+        </ul>`;
+
+      // If using in-widget modal
+      const link = body.querySelector(".score-link");
+      if (guideHref === "#scoring-guide") {
+        link.addEventListener("click", (e)=>{ e.preventDefault(); openModal(); }, { once:false });
+      }
+    }
 
     shell._renderMessages = renderMessages;
     shell._renderCoach = renderCoach;
