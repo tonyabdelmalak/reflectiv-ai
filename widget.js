@@ -62,33 +62,54 @@
   };
 
   // ---------- buildEIUI function ----------
-  function buildEIUI() {
-    const shell = document.querySelector('.reflectiv-chat');
+function buildEIUI() {
+  const shell = document.querySelector('.reflectiv-chat');
 
-    // Create labels and dropdown for Persona and EI Features
-    const personaLabel = el("label", "", "HCP Profiles");
-    personaLabel.htmlFor = "cw-hcp";
-    const personaSelect = el("select"); personaSelect.id = "cw-hcp";
+  // Create labels and dropdown for EI Profiles and EI Features
+  const eiProfilesLabel = el("label", "", "EI Profiles"); // Corrected label for EI Profiles
+  eiProfilesLabel.htmlFor = "cw-ei-profiles";
+  const eiProfilesSelect = el("select"); eiProfilesSelect.id = "cw-ei-profiles";
 
-    const eiLabel = el("label", "", "EI Features");
-    eiLabel.htmlFor = "cw-ei";
-    const eiSelect = el("select"); eiSelect.id = "cw-ei";
+  const eiFeaturesLabel = el("label", "", "EI Features"); // Corrected label for EI Features
+  eiFeaturesLabel.htmlFor = "cw-ei-features";
+  const eiFeaturesSelect = el("select"); eiFeaturesSelect.id = "cw-ei-features";
 
-    // Populate Persona dropdown
-    personas.forEach(persona => {
-      const option = el("option");
-      option.value = persona.key;
-      option.textContent = persona.label;
-      personaSelect.appendChild(option);
-    });
+  // Populate EI Profiles dropdown
+  eiProfiles.forEach(profile => {
+    const option = el("option");
+    option.value = profile.key;
+    option.textContent = profile.label;
+    eiProfilesSelect.appendChild(option);
+  });
 
-    // Populate EI Feature dropdown
-    eiFeatures.forEach(feature => {
-      const option = el("option");
-      option.value = feature.key;
-      option.textContent = feature.label;
-      eiSelect.appendChild(option);
-    });
+  // Populate EI Features dropdown
+  eiFeatures.forEach(feature => {
+    const option = el("option");
+    option.value = feature.key;
+    option.textContent = feature.label;
+    eiFeaturesSelect.appendChild(option);
+  });
+
+  // Add event listeners to EI Profiles dropdown
+  eiProfilesSelect.addEventListener("change", function () {
+    const selectedProfile = eiProfilesSelect.value;
+    const feedback = generateFeedback(selectedProfile);  // Adjust feedback generation based on profile
+    shell.querySelector(".coach-body").innerHTML = feedback;  // Update feedback
+  });
+
+  // Add event listeners to EI Features dropdown
+  eiFeaturesSelect.addEventListener("change", function () {
+    const selectedFeature = eiFeaturesSelect.value;
+    const feedback = generateFeedback(selectedFeature);  // Adjust feedback generation based on feature
+    shell.querySelector(".coach-body").innerHTML = feedback;  // Update feedback
+  });
+
+  // Append the dropdowns to the UI
+  shell.querySelector('.sim-controls').appendChild(eiProfilesLabel);
+  shell.querySelector('.sim-controls').appendChild(eiProfilesSelect);
+  shell.querySelector('.sim-controls').appendChild(eiFeaturesLabel);
+  shell.querySelector('.sim-controls').appendChild(eiFeaturesSelect);
+}
 
     // Add event listeners to the dropdowns
     personaSelect.addEventListener("change", function () {
