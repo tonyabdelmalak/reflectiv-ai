@@ -68,8 +68,13 @@
   display: flex;
 }
 
-.message.user { justify-content: flex-end; }
-.message.assistant { justify-content: flex-start; }
+.message.user {
+  justify-content: flex-end;
+}
+
+.message.assistant {
+  justify-content: flex-start;
+}
 
 .message .content {
   max-width: 85%;
@@ -119,7 +124,9 @@
   cursor: pointer;
 }
 
-.chat-input .btn:hover { background: #394768; }
+.chat-input .btn:hover {
+  background: #394768;
+}
 
 /* ---------- Meta (Scenario Background) ---------- */
 .scenario-meta .meta-card {
@@ -167,58 +174,19 @@
   color: #0f1522;
 }
 
-.coach-list li { margin-bottom: 4px; }
-
-/* ---------- Scoring Guide Panel ---------- */
-.scoring-guide-wrapper {
-  text-align: right;
-  margin-top: 8px;
+.coach-list li {
+  margin-bottom: 4px;
 }
-
-.guide-btn {
-  background: none;
-  border: none;
-  color: #2f3a4f;
-  font-weight: 600;
-  cursor: pointer;
-  font-size: 13px;
-  padding: 4px 6px;
-}
-
-.guide-btn:hover { text-decoration: underline; }
-
-.guide-content {
-  text-align: left;
-  border: 1px solid #e1e6ef;
-  background: #f7f9fc;
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-size: 13px;
-  color: #222;
-  width: 310px;
-  float: right;
-  margin-top: 6px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-}
-
-.guide-content ul {
-  margin: 6px 0 6px 14px;
-  padding: 0;
-  list-style: disc;
-}
-
-.guide-content h4 {
-  margin-top: 0;
-  font-size: 14px;
-  color: #2f3a4f;
-}
-
-.hidden { display: none !important; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 520px) {
-  .chat-messages { height: 46vh; }
-  .chat-toolbar { grid-template-columns: 1fr; }
-  .sim-controls { grid-template-columns: 1fr; }
-  .guide-content { width: 100%; float: none; }
+  .chat-messages {
+    height: 46vh;
+  }
+  .chat-toolbar {
+    grid-template-columns: 1fr;
+  }
+  .sim-controls {
+    grid-template-columns: 1fr;
+  }
 }
