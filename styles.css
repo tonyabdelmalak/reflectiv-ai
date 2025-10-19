@@ -128,7 +128,6 @@ h3 {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  /* gradient + white text */
   background: linear-gradient(140deg, #001d3d 0%, #0b3954 42%, #1fa3a8 100%);
   color: var(--white);
   padding: 4rem 1rem;
@@ -171,7 +170,6 @@ h3 {
   transition: all .15s ease;
 }
 
-/* CTAs changed to dark navy */
 .btn.primary {
   background-color: var(--navy);
   color: #ffffff;
@@ -450,74 +448,36 @@ th {
   margin-left: 2px;
 }
 
-/* ---------- Why it matters banner (final version) ---------- */
-.why-banner {
-  background: #0f2747;
-  color: #ffffff;
-  text-align: center;
-  padding: 60px 20px;
+/* ---------- Why it matters banner (final, centered) ---------- */
+.why-banner{
+  background:#0f2747;
+  color:#fff;
+  text-align:center;
+  padding:60px 20px;
 }
-
-.why-title {
-  font-family: "Pacifico", cursive;
-  font-size: 34px;
-  color: #ffffff;
-  margin: 0 0 20px 0;
-  line-height: 1;
+.why-title{
+  font-family:"Pacifico",cursive;
+  font-size:34px;
+  color:#fff;
+  margin:0 0 20px 0;
+  line-height:1;
+  transform:rotate(-2deg);
 }
-
-.why-text {
-  max-width: 900px;
-  margin: 0 auto;
-  font-size: 18px;
-  line-height: 1.6;
-  font-weight: 500;
-  color: #ffffff;
-  text-align: center;
-}
-
-/* Responsive scaling */
-@media (max-width: 768px) {
-  .why-banner {
-    padding: 40px 16px;
-  }
-  .why-title {
-    font-size: 28px;
-    margin-bottom: 16px;
-  }
-  .why-text {
-    font-size: 16px;
-    line-height: 1.5;
-  }
-}
-  
-/* Responsive */
-@media (max-width: 720px) {
-  .why-banner { padding: 36px 16px; }
-  .why-title { font-size: 26px; transform: rotate(-1.5deg); }
-  .why-text { font-size: 16px; line-height: 1.45; }
-}
-.why-text {
-  grid-column: 2 / 3;
-  margin: 0;
-  font-size: 17px;
-  line-height: 1.45;
-  font-weight: 600;
+.why-text{
+  max-width:900px;
+  margin:0 auto;
+  font-size:18px;
+  line-height:1.6;
+  font-weight:500;
+  color:#fff;
+  text-align:center;
 }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 768px) {
-  .hero {
-    flex-direction: column;
-    text-align: center;
-  }
-  .hero-content {
-    padding-right: 0;
-    margin-bottom: 2rem;
-  }
-  .analytics-content {
-    flex-direction: column;
-  }
+  .hero { flex-direction: column; text-align: center; }
+  .hero-content { padding-right: 0; margin-bottom: 2rem; }
+  .analytics-content { flex-direction: column; }
 
   /* mobile nav: show hamburger, turn menu into dropdown */
   .hamburger { display: flex; }
@@ -541,9 +501,9 @@ th {
     border-top: 1px solid rgba(255,255,255,0.08);
   }
 
-  .why-inner { grid-template-columns: 1fr; }
-  .why-title { font-size: 24px; transform: rotate(-2deg); }
-  .why-text { font-size: 16px; }
+  .why-banner { padding: 40px 16px; }
+  .why-title { font-size: 28px; margin-bottom: 16px; transform: rotate(-1.5deg); }
+  .why-text { font-size: 16px; line-height: 1.5; }
 }
 
 /* ===== Compact spacing for Platform Modules ===== */
