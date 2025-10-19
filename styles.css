@@ -450,34 +450,45 @@ th {
   margin-left: 2px;
 }
 
-/* ---------- Why it matters banner (new) ---------- */
-.why-banner {
-  background: #0f2747; /* dark navy */
-  color: #ffffff;
-/* ---------- Why it matters banner (refined layout) ---------- */
+/* ---------- Why it matters banner (final version) ---------- */
 .why-banner {
   background: #0f2747;
   color: #ffffff;
   text-align: center;
-  padding: 50px 20px;
+  padding: 60px 20px;
 }
 
 .why-title {
   font-family: "Pacifico", cursive;
-  font-size: 30px;
-  transform: rotate(-2deg);
-  margin: 0 0 18px 0;
+  font-size: 34px;
+  color: #ffffff;
+  margin: 0 0 20px 0;
   line-height: 1;
 }
 
 .why-text {
   max-width: 900px;
   margin: 0 auto;
-  text-align: left;            /* left-aligned content */
   font-size: 18px;
-  line-height: 1.55;
-  font-weight: 600;
+  line-height: 1.6;
+  font-weight: 500;
   color: #ffffff;
+  text-align: center;
+}
+
+/* Responsive scaling */
+@media (max-width: 768px) {
+  .why-banner {
+    padding: 40px 16px;
+  }
+  .why-title {
+    font-size: 28px;
+    margin-bottom: 16px;
+  }
+  .why-text {
+    font-size: 16px;
+    line-height: 1.5;
+  }
 }
   
 /* Responsive */
