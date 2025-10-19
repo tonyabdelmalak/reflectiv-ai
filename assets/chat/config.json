@@ -1,4 +1,3 @@
-
 {
   "version": "2025-10-14",
   "model": "llama-3.1-8b-instant",
@@ -26,5 +25,41 @@
     "showCoach": true,
     "showMeta": true,
     "allowModeSwitch": true
-  }
+  },
+
+  "hcpPersonas": [
+    {
+      "key": "difficult",
+      "label": "Difficult HCP",
+      "description": "Resistant, emotional, argumentative",
+      "empathyThreshold": 1,
+      "feedback": "Be calm, patient, and acknowledge their concerns before moving forward. Acknowledge the emotional state and avoid confrontation."
+    },
+    {
+      "key": "engaged",
+      "label": "Highly Engaged HCP",
+      "description": "Collaborative, attentive, empathetic",
+      "empathyThreshold": 4,
+      "feedback": "Encourage deeper collaboration by asking insightful questions. Show appreciation for their engagement."
+    },
+    {
+      "key": "indifferent",
+      "label": "Nice but Doesn’t Prescribe",
+      "description": "Pleasant, but disengaged, no prescriptions",
+      "empathyThreshold": 2,
+      "feedback": "Engage by discussing the personal impact of treatment options. Connect emotionally through patient stories or concerns."
+    }
+  ],
+  "eiProfiles": [
+    {
+      "key": "empathy",
+      "label": "Empathy Rating",
+      "description": "Measures the sales rep's ability to empathize with the HCP."
+    },
+    {
+      "key": "stress",
+      "label": "Stress Level Indicator",
+      "description": "Assesses how stressed the HCP may feel during the interaction."
+    }
+  ]
 }
