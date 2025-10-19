@@ -1,4 +1,3 @@
-
 /* assets/chat/widget.js
  * ReflectivAI Chat/Coach — drop-in (coach-v2, deterministic scoring v3)
  * Modes: emotional-assessment | product-knowledge | sales-simulation
@@ -7,8 +6,8 @@
 (function () {
   // ---------- safe bootstrapping ----------
   let mount = null;
-  function onReady(fn){ if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn, { once:true }); else fn(); }
-  function waitForMount(cb){
+  function onReady(fn) { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn, { once: true }); else fn(); }
+  function waitForMount(cb) {
     const tryGet = () => {
       mount = document.getElementById("reflectiv-widget");
       if (mount) return cb();
@@ -16,14 +15,14 @@
         mount = document.getElementById("reflectiv-widget");
         if (mount) { obs.disconnect(); cb(); }
       });
-      obs.observe(document.documentElement, { childList:true, subtree:true });
+      obs.observe(document.documentElement, { childList: true, subtree: true });
       setTimeout(() => obs.disconnect(), 15000);
     };
     onReady(tryGet);
   }
 
   // ---------- config/state ----------
-  const LC_OPTIONS = ["Emotional Intelligence","Product Knowledge","Sales Simulation"];
+  const LC_OPTIONS = ["Emotional Intelligence", "Product Knowledge", "Sales Simulation"];
   const LC_TO_INTERNAL = {
     "Emotional Intelligence": "emotional-assessment",
     "Product Knowledge": "product-knowledge",
@@ -63,170 +62,108 @@
     return s;
   }
 
-  function md(text) {
-    if (!text) return "";
-    let s = esc(text).replace(/\r\n?/g, "\n");
-    s = s.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
-    s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
-    s = s.replace(/^(?:-\s+|\*\s+).+(?:\n(?:-\s+|\*\s+).+)*/gm, (blk) => {
-      const items = blk
-        .split("\n")
-        .map((l) => l.replace(/^(?:-\s+|\*\s+)(.+)$/, "<li>$1</li>"))
-        .join("");
-      return `<ul>${items}</ul>`;
-    });
-    return s
-      .split(/\n{2,}/)
-      .map((p) => (p.startsWith("<ul>") ? p : `<p>${p.replace(/\n/g, "<br>")}</p>`))
-      .join("\n");
-  }
+  // ---------- Real-time EI Feedback Logic ----------
+  const personaSelect = document.getElementById("cw-hcp");
+  const eiSelect = document.getElementById("cw-ei");
+  const eiFeatureSelect = document.getElementById("cw-ei-feature");
+  const feedbackDisplay = document.getElementById("feedback-display");
 
-  function el(tag, cls, text) {
-    const e = document.createElement(tag);
-    if (cls) e.className = cls;
-    if (text != null) e.textContent = text;
-    return e;
-  }
+  // Fetch personas and EI profiles from config.json
+  fetch('https://raw.githubusercontent.com/ReflectivEI/reflectiv-ai/refs/heads/main/assets/chat/config.json')
+    .then(response => response.json())
+    .then(data => {
+      const personas = data.personas;  // Corrected path for personas
+      const eiProfiles = data.eiProfiles || [];
+      const eiFeatures = data.eiFeatures || [];
 
-  function extractCoach(raw) {
-    const m = String(raw || "").match(/<coach>([\s\S]*?)<\/coach>/i);
-    if (!m) return { coach: null, clean: sanitizeLLM(raw) };
-    let coach = null;
-    try { coach = JSON.parse(m[1]); } catch {}
-    const clean = sanitizeLLM(String(raw).replace(m[0], "").trim());
-    return { coach, clean };
-  }
+      // Populate Persona Dropdown
+      personas.forEach(persona => {
+        const option = document.createElement('option');
+        option.value = persona.key;
+        option.textContent = persona.label;
+        personaSelect.appendChild(option);
+      });
 
-  // ---------- local scoring fallback (coach-v3 deterministic) ----------
-  function scoreReply(userText, replyText, mode) {
-    const text = String(replyText || "");
-    const t = text.toLowerCase();
-    const words = text.split(/\s+/).filter(Boolean).length;
-    const endsWithQ = /\?\s*$/.test(text);
-    const inRange = (n, a, b) => n >= a && n <= b;
+      // Populate EI Profile Dropdown
+      eiProfiles.forEach(profile => {
+        const option = document.createElement('option');
+        option.value = profile.key;
+        option.textContent = profile.label;
+        eiSelect.appendChild(option);
+      });
 
-    const sig = {
-      label: /(per label|fda\s*label|indication|contraindication|boxed warning|guideline|fda)/i.test(text),
-      discovery: endsWithQ || /(how|what|could you|can you|help me understand|walk me|clarify)\b/i.test(t),
-      objection: /(concern|barrier|risk|coverage|auth|denied|cost|workflow|adherence|side effect|safety)/i.test(t),
-      empathy: /(i understand|appreciate|given your time|thanks for|i hear|it sounds like)/i.test(t),
-      accuracyCue: /(renal|egfr|creatinine|bmd|resistance|ddi|interaction|efficacy|safety|adherence|formulary|access|prior auth|prep|tdf|taf|bictegravir|cabotegravir|rilpivirine|descovy|biktarvy|cabenuva)/i.test(t),
-      tooLong: words > 180,
-      idealLen: inRange(words, 45, 120)
-    };
+      // Populate EI Feature Dropdown
+      eiFeatures.forEach(feature => {
+        const option = document.createElement('option');
+        option.value = feature.key;
+        option.textContent = feature.label;
+        eiFeatureSelect.appendChild(option);
+      });
 
-    const accuracy  = sig.accuracyCue ? (sig.label ? 5 : 4) : 3;
-    const compliance= sig.label ? 5 : 3;
-    const discovery = sig.discovery ? 4 : 2;
-    const objection_handling = sig.objection ? (sig.accuracyCue ? 4 : 3) : 2;
-    const empathy   = sig.empathy ? 3 : 2;
-    const clarity   = sig.tooLong ? 2 : (sig.idealLen ? 4 : 3);
+      // Add change listener to Persona and EI Feature dropdowns
+      personaSelect.addEventListener("change", generateFeedback);
+      eiSelect.addEventListener("change", generateFeedback);
+      eiFeatureSelect.addEventListener("change", generateFeedback);
+    })
+    .catch(error => console.error('Error loading config:', error));
 
-    const W = { accuracy:.26, compliance:.22, discovery:.16, objection_handling:.14, clarity:.12, empathy:.10 };
-    const toPct = v => v * 20;
+  // Empathy Rating Logic
+  function calculateEmpathy(persona, eiFeature) {
+    let empathyRating = 0;
 
-    let overall = (
-      toPct(accuracy)  * W.accuracy +
-      toPct(compliance)* W.compliance +
-      toPct(discovery) * W.discovery +
-      toPct(objection_handling)*W.objection_handling +
-      toPct(clarity)   * W.clarity +
-      toPct(empathy)   * W.empathy
-    );
-    if (sig.idealLen) overall += 3;
-    if (endsWithQ) overall += 3;
-    if (sig.tooLong) overall -= 6;
-    overall = Math.max(0, Math.min(100, Math.round(overall)));
-
-    const worked = [
-      sig.empathy ? "Acknowledged HCP context" : null,
-      sig.discovery ? "Closed with a clear discovery question" : null,
-      sig.label ? "Referenced label/guidelines" : null,
-      sig.accuracyCue ? "Tied points to clinical cues" : null
-    ].filter(Boolean);
-
-    const improve = [
-      sig.tooLong ? "Tighten to 3–5 sentences" : null,
-      sig.discovery ? null : "End with one specific question",
-      sig.label ? null : "Anchor claims to label or guideline",
-      clarity < 4 ? "Use one idea per sentence" : null
-    ].filter(Boolean);
-
-    const phrasing =
-      sig.discovery
-        ? "Given your criteria, which patients would be the best fit to start, and what would help you try one this month?"
-        : "Would it help to align on eligibility criteria and agree on one next step for your earliest appropriate patient?";
-
-    return {
-      overall,
-      scores: { accuracy, empathy, clarity, compliance, discovery, objection_handling },
-      feedback: "Be concise, cite label or guidelines for clinical points, ask one focused discovery question, and propose a concrete next step.",
-      worked,
-      improve,
-      phrasing,
-      context: { rep_question: String(userText || ""), hcp_reply: String(replyText || "") },
-      // backward-compat properties used by UI
-      score: overall,
-      subscores: { accuracy, empathy, clarity, compliance, discovery, objection_handling }
-    };
-  }
-
-  // ---------- prompt preface ----------
-  function buildPreface(mode, sc) {
-    const COMMON = `
-# ReflectivAI — Output Contract
-Return exactly two parts. No code blocks. No markdown headings.
-1) Sales Guidance: short, actionable, accurate guidance.
-2) <coach>{
-     "overall": 0-100,
-     "scores": {
-       "accuracy": 0-5,
-       "empathy": 0-5,
-       "clarity": 0-5,
-       "compliance": 0-5,
-       "discovery": 0-5,
-       "objection_handling": 0-5
-     },
-     "worked": ["…"],
-     "improve": ["…"],
-     "phrasing": "…",
-     "feedback": "one concise paragraph",
-     "context": { "rep_question":"...", "hcp_reply":"..." }
-   }</coach>
-`.trim();
-
-    if (mode === "sales-simulation") {
-      return `
-# Role
-You are a virtual pharma coach responding to the sales rep’s last message and preparing them for a 30-second HCP interaction. Be direct, label-aligned, and safe.
-
-# Scenario
-${sc ? [
-  `Therapeutic Area: ${sc.therapeuticArea || "—"}`,
-  `HCP Role: ${sc.hcpRole || "—"}`,
-  `Background: ${sc.background || "—"}`,
-  `Today’s Goal: ${sc.goal || "—"}`
-].join("\n") : ""}
-
-# Style
-- 3–6 sentences and one closing question.
-- Mention only appropriate, publicly known, label-aligned facts.
-- No pricing advice or PHI. No off-label.
-
-${COMMON}`.trim();
+    // Empathy calculation based on persona and feature
+    switch (persona.key) {
+      case 'difficult':
+        empathyRating = eiFeature === 'empathy' ? 1 : 0; // Lower empathy threshold for difficult personas
+        break;
+      case 'engaged':
+        empathyRating = eiFeature === 'empathy' ? 4 : 3; // High empathy for engaged personas
+        break;
+      case 'indifferent':
+        empathyRating = eiFeature === 'empathy' ? 2 : 1; // Average empathy for indifferent personas
+        break;
+      default:
+        empathyRating = 3; // Default to a neutral empathy rating
     }
 
-    if (mode === "product-knowledge") {
-      return `
-Return a concise educational overview with reputable citations. Structure: key takeaways; mechanism/indications; safety/contraindications; efficacy; access notes; references.
-`.trim();
+    return empathyRating;
+  }
+
+  // Dynamic Feedback Generation based on Persona and EI Feature
+  function generateFeedback() {
+    const selectedPersonaKey = personaSelect.value;
+    const selectedEIKey = eiSelect.value;
+    const selectedEIFeatureKey = eiFeatureSelect.value;
+
+    fetch('https://raw.githubusercontent.com/ReflectivEI/reflectiv-ai/refs/heads/main/assets/chat/config.json')
+      .then(response => response.json())
+      .then(data => {
+        const personas = data.personas;
+        const selectedPersona = personas.find(p => p.key === selectedPersonaKey);
+
+        const empathyRating = calculateEmpathy(selectedPersona, selectedEIFeatureKey);
+
+        // Display the Empathy Rating and Feedback
+        const feedback = generateContextAwareFeedback(selectedPersona, empathyRating);
+        feedbackDisplay.innerHTML = `
+          <strong>Empathy Rating: ${empathyRating}/5</strong><br />
+          <p>${feedback}</p>
+        `;
+      });
+  }
+
+  // Context-Aware Feedback based on Persona and Empathy Rating
+  function generateContextAwareFeedback(persona, empathyRating) {
+    switch (persona.key) {
+      case 'difficult':
+        return `For Difficult HCPs, try to remain calm and patient. Empathy: ${empathyRating}/5 — Approach with reassurance and acknowledge their concerns before proceeding.`;
+      case 'engaged':
+        return `For Engaged HCPs, maintain a collaborative approach. Empathy: ${empathyRating}/5 — Focus on asking insightful questions and showing appreciation for their engagement.`;
+      case 'indifferent':
+        return `For Indifferent HCPs, focus on discussing the personal impact of treatment options. Empathy: ${empathyRating}/5 — Try to emotionally connect by addressing their concerns with understanding.`;
+      default:
+        return `Empathy Rating: ${empathyRating}/5 — Tailor your approach based on the HCP’s emotional needs to increase engagement.`;
     }
-
-    return `
-Provide brief, practical self-reflection tips tied to communication with HCPs. No clinical or drug guidance.
-- 3–5 sentences, then one reflective question.
-
-${COMMON}`.trim();
   }
 
   // ---------- UI ----------
@@ -262,7 +199,7 @@ ${COMMON}`.trim();
     const shell = el("div", "reflectiv-chat");
 
     const bar = el("div", "chat-toolbar");
-    const simControls = el("div","sim-controls");
+    const simControls = el("div", "sim-controls");
 
     const lcLabel = el("label", "", "Learning Center");
     lcLabel.htmlFor = "cw-mode";
@@ -278,8 +215,8 @@ ${COMMON}`.trim();
     const coachLabel = el("label", "", "Coach");
     coachLabel.htmlFor = "cw-coach";
     const coachSel = el("select"); coachSel.id = "cw-coach";
-    [{v:"on",t:"Coach On"},{v:"off",t:"Coach Off"}].forEach(({v,t})=>{
-      const o = el("option"); o.value=v; o.textContent=t; coachSel.appendChild(o);
+    [{ v: "on", t: "Coach On" }, { v: "off", t: "Coach Off" }].forEach(({ v, t }) => {
+      const o = el("option"); o.value = v; o.textContent = t; coachSel.appendChild(o);
     });
     coachSel.value = coachOn ? "on" : "off";
     coachSel.onchange = () => { coachOn = coachSel.value === "on"; renderCoach(); };
@@ -288,14 +225,27 @@ ${COMMON}`.trim();
     diseaseLabel.htmlFor = "cw-disease";
     const diseaseSelect = el("select"); diseaseSelect.id = "cw-disease";
 
-    const hcpLabel = el("label","","HCP Profiles");
-    hcpLabel.htmlFor="cw-hcp";
-    const hcpSelect = el("select"); hcpSelect.id="cw-hcp";
+    const hcpLabel = el("label", "", "HCP Profiles");
+    hcpLabel.htmlFor = "cw-hcp";
+    const hcpSelect = el("select"); hcpSelect.id = "cw-hcp";
 
-    simControls.appendChild(lcLabel);    simControls.appendChild(modeSel);
+    // New EI Profiles Dropdown
+    const eiLabel = el("label", "", "EI Profiles");
+    eiLabel.htmlFor = "cw-ei";
+    const eiSelect = el("select"); eiSelect.id = "cw-ei";
+
+    // New EI Features Dropdown
+    const eiFeatureLabel = el("label", "", "EI Features");
+    eiFeatureLabel.htmlFor = "cw-ei-feature";
+    const eiFeatureSelect = el("select"); eiFeatureSelect.id = "cw-ei-feature";
+
+    // Add dropdowns to UI layout
+    simControls.appendChild(lcLabel); simControls.appendChild(modeSel);
     simControls.appendChild(coachLabel); simControls.appendChild(coachSel);
     simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
-    simControls.appendChild(hcpLabel);     simControls.appendChild(hcpSelect);
+    simControls.appendChild(hcpLabel); simControls.appendChild(hcpSelect);
+    simControls.appendChild(eiLabel); simControls.appendChild(eiSelect);
+    simControls.appendChild(eiFeatureLabel); simControls.appendChild(eiFeatureSelect);
 
     bar.appendChild(simControls);
     shell.appendChild(bar);
@@ -319,178 +269,123 @@ ${COMMON}`.trim();
     const coach = el("div", "coach-section");
     coach.innerHTML = `<h3>Coach Feedback</h3><div class="coach-body muted">Awaiting the first assistant reply…</div>`;
     mount.appendChild(coach);
+  }
 
-    function getDiseaseStates() {
-      let ds = Array.isArray(cfg?.diseaseStates) ? cfg.diseaseStates.slice() : [];
-      if (!ds.length && Array.isArray(scenarios) && scenarios.length){
-        ds = Array.from(new Set(scenarios.map(s => (s.therapeuticArea || s.diseaseState || "").trim()))).filter(Boolean);
-      }
-      ds = ds.map(x => x.replace(/\bHiv\b/gi,"HIV"));
-      return ds;
+  // Function for setting options for dropdowns
+  function setSelectOptions(select, values, withPlaceholder) {
+    select.innerHTML = "";
+    if (withPlaceholder) {
+      const p = el("option","", "Select…");
+      p.value = ""; p.selected = true; p.disabled = true;
+      select.appendChild(p);
+    }
+    values.forEach(v => {
+      if (!v) return;
+      const o = el("option","", typeof v === "string" ? v : (v.label || v.value));
+      o.value = typeof v === "string" ? v : (v.value || v.id || v.label);
+      select.appendChild(o);
+    });
+  }
+
+  function populateDiseases() {
+    const ds = getDiseaseStates();
+    setSelectOptions(diseaseSelect, ds, true);
+  }
+
+  function populateHcpForDisease(ds) {
+    const dsKey = (ds || "").trim();
+    const scen = scenarios.filter(s => {
+      const area = (s.therapeuticArea || s.diseaseState || "").trim();
+      return area.toLowerCase() === dsKey.toLowerCase();
+    });
+
+    if (scen.length) {
+      const opts = scen.map(s => ({ value: s.id, label: s.label || s.id }));
+      setSelectOptions(hcpSelect, opts, true);
+      hcpSelect.disabled = false;
+    } else {
+      setSelectOptions(hcpSelect, [], true);
+      hcpSelect.disabled = true;
+    }
+  }
+
+  function applyModeVisibility() {
+    const lc = modeSel.value;
+    currentMode = LC_TO_INTERNAL[lc];
+
+    const pk = currentMode === "product-knowledge";
+    coachLabel.classList.toggle("hidden", pk);
+    coachSel.classList.toggle("hidden", pk);
+
+    if (currentMode === "sales-simulation") {
+      diseaseLabel.classList.remove("hidden");
+      diseaseSelect.classList.remove("hidden");
+      hcpLabel.classList.remove("hidden");
+      hcpSelect.classList.remove("hidden");
+      populateDiseases();
+    } else if (currentMode === "product-knowledge") {
+      diseaseLabel.classList.remove("hidden");
+      diseaseSelect.classList.remove("hidden");
+      hcpLabel.classList.add("hidden");
+      hcpSelect.classList.add("hidden");
+      populateDiseases();
+    } else {
+      diseaseLabel.classList.add("hidden");
+      diseaseSelect.classList.add("hidden");
+      hcpLabel.classList.add("hidden");
+      hcpSelect.classList.add("hidden");
     }
 
-    function setSelectOptions(select, values, withPlaceholder) {
-      select.innerHTML = "";
-      if (withPlaceholder) {
-        const p = el("option","", "Select…");
-        p.value = ""; p.selected = true; p.disabled = true;
-        select.appendChild(p);
-      }
-      values.forEach(v => {
-        if (!v) return;
-        const o = el("option","", typeof v === "string" ? v : (v.label || v.value));
-        o.value = typeof v === "string" ? v : (v.value || v.id || v.label);
-        select.appendChild(o);
-      });
-    }
+    currentScenarioId = null;
+    conversation = [];
+    renderMessages(); renderCoach(); renderMeta();
+  }
 
-    function populateDiseases() {
-      const ds = getDiseaseStates();
-      setSelectOptions(diseaseSelect, ds, true);
-    }
+  // Event listeners
+  modeSel.addEventListener("change", applyModeVisibility);
 
-    function populateHcpForDisease(ds) {
-      const dsKey = (ds || "").trim();
-      const scen = scenarios.filter(s => {
-        const area = (s.therapeuticArea || s.diseaseState || "").trim();
-        return area.toLowerCase() === dsKey.toLowerCase();
-      });
-
-      if (scen.length) {
-        const opts = scen.map(s => ({ value: s.id, label: s.label || s.id }));
-        setSelectOptions(hcpSelect, opts, true);
-        hcpSelect.disabled = false;
-      } else {
-        setSelectOptions(hcpSelect, [], true);
-        hcpSelect.disabled = true;
-      }
-    }
-
-    function applyModeVisibility() {
-      const lc = modeSel.value;
-      currentMode = LC_TO_INTERNAL[lc];
-
-      const pk = currentMode === "product-knowledge";
-      coachLabel.classList.toggle("hidden", pk);
-      coachSel.classList.toggle("hidden", pk);
-
-      if (currentMode === "sales-simulation") {
-        diseaseLabel.classList.remove("hidden");
-        diseaseSelect.classList.remove("hidden");
-        hcpLabel.classList.remove("hidden");
-        hcpSelect.classList.remove("hidden");
-        populateDiseases();
-      } else if (currentMode === "product-knowledge") {
-        diseaseLabel.classList.remove("hidden");
-        diseaseSelect.classList.remove("hidden");
-        hcpLabel.classList.add("hidden");
-        hcpSelect.classList.add("hidden");
-        populateDiseases();
-      } else {
-        diseaseLabel.classList.add("hidden");
-        diseaseSelect.classList.add("hidden");
-        hcpLabel.classList.add("hidden");
-        hcpSelect.classList.add("hidden");
-      }
-
+  diseaseSelect.addEventListener("change", ()=>{
+    const ds = diseaseSelect.value || "";
+    if (!ds) return;
+    if (currentMode === "sales-simulation") {
+      populateHcpForDisease(ds);
+    } else if (currentMode === "product-knowledge") {
       currentScenarioId = null;
-      conversation = [];
-      renderMessages(); renderCoach(); renderMeta();
     }
+    conversation=[]; renderMessages(); renderCoach(); renderMeta();
+  });
 
-    modeSel.addEventListener("change", applyModeVisibility);
+  hcpSelect.addEventListener("change", ()=>{
+    const sel = hcpSelect.value || "";
+    if (!sel) return;
+    const sc = scenariosById.get(sel);
+    currentScenarioId = sc ? sc.id : null;
+    conversation=[]; renderMessages(); renderCoach(); renderMeta();
+  });
 
-    diseaseSelect.addEventListener("change", ()=>{
-      const ds = diseaseSelect.value || "";
-      if (!ds) return;
-      if (currentMode === "sales-simulation") {
-        populateHcpForDisease(ds);
-      } else if (currentMode === "product-knowledge") {
-        currentScenarioId = null;
-      }
-      conversation=[]; renderMessages(); renderCoach(); renderMeta();
-    });
+  function renderMeta() {
+    const sc = scenariosById.get(currentScenarioId);
+    if (!sc || !currentScenarioId || currentMode !== "sales-simulation") { meta.innerHTML = ""; return; }
+    meta.innerHTML = `
+      <div class="meta-card">
+        <div><strong>Therapeutic Area:</strong> ${esc(sc.therapeuticArea || sc.diseaseState || "—")}</div>
+        <div><strong>HCP Role:</strong> ${esc(sc.hcpRole || "—")}</div>
+        <div><strong>Background:</strong> ${esc(sc.background || "—")}</div>
+        <div><strong>Today’s Goal:</strong> ${esc(sc.goal || "—")}</div>
+      </div>`;
+  }
 
-    hcpSelect.addEventListener("change", ()=>{
-      const sel = hcpSelect.value || "";
-      if (!sel) return;
-      const sc = scenariosById.get(sel);
-      currentScenarioId = sc ? sc.id : null;
-      conversation=[]; renderMessages(); renderCoach(); renderMeta();
-    });
-
-    function renderMeta() {
-      const sc = scenariosById.get(currentScenarioId);
-      if (!sc || !currentScenarioId || currentMode !== "sales-simulation") { meta.innerHTML = ""; return; }
-      meta.innerHTML = `
-        <div class="meta-card">
-          <div><strong>Therapeutic Area:</strong> ${esc(sc.therapeuticArea || sc.diseaseState || "—")}</div>
-          <div><strong>HCP Role:</strong> ${esc(sc.hcpRole || "—")}</div>
-          <div><strong>Background:</strong> ${esc(sc.background || "—")}</div>
-          <div><strong>Today’s Goal:</strong> ${esc(sc.goal || "—")}</div>
-        </div>`;
+  function renderMessages() {
+     const msgs = shell.querySelector(".chat-messages");
+     msgs.innerHTML = "";
+     for (const m of conversation) {
+       const row = el("div", `message ${m.role}`);
+       const c = el("div", "content");
+       c.innerHTML = md(m.content);
+       row.appendChild(c);
+       msgs.appendChild(row);
     }
-
-function renderMessages() {
-   const msgs = shell.querySelector(".chat-messages");
-   msgs.innerHTML = "";
-   for (const m of conversation) {
-     const row = el("div", `message ${m.role}`);
-     const c = el("div", "content");
-     c.innerHTML = md(m.content);
-     row.appendChild(c);
-     msgs.appendChild(row);
-  }
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-function orderedPills(scores) {
-  const order = ["accuracy","empathy","clarity","compliance","discovery","objection_handling"];
-  return order
-    .filter(k => k in (scores || {}))
-    .map(k => `<span class="pill">${esc(k)}: ${scores[k]}</span>`)
-    .join(" ");
-}
-
-function renderCoach() {
-  const body = coach.querySelector(".coach-body");
-  if (!coachOn || currentMode === "product-knowledge") {
-    coach.style.display = "none";
-    return;
-  }
-  coach.style.display = "";
-
-  const last = conversation[conversation.length - 1];
-  if (!(last && last.role === "assistant" && last._coach)) {
-    body.innerHTML = `<span class="muted">Awaiting the first assistant reply…</span>`;
-    return;
-  }
-
-  const fb = last._coach;
-  const scores = fb.scores || fb.subscores || {};
-
-  const workedStr = (fb.worked && fb.worked.length)
-    ? fb.worked.join(". ") + "."
-    : "—";
-  const improveStr = (fb.improve && fb.improve.length)
-    ? fb.improve.join(". ") + "."
-    : (fb.feedback || "—");
-
-  body.innerHTML = `
-    <div class="coach-score">Score: <strong>${fb.overall ?? fb.score ?? "—"}</strong>/100</div>
-    <div class="coach-subs">${orderedPills(scores)}</div>
-    <ul class="coach-list">
-      <li><strong>What worked:</strong> ${esc(workedStr)}</li>
-      <li><strong>What to improve:</strong> ${esc(improveStr)}</li>
-      <li><strong>Suggested phrasing:</strong> ${esc(fb.phrasing || "—")}</li>
-    </ul>`;
-}
-
-    shell._renderMessages = renderMessages;
-    shell._renderCoach = renderCoach;
-    shell._renderMeta = renderMeta;
-
-    applyModeVisibility();
+    msgs.scrollTop = msgs.scrollHeight;
   }
 
   // ---------- transport ----------
