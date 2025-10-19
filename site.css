@@ -1,0 +1,34 @@
+/*
+ * Additional site-wide custom styles for ReflectivAI's modernized site.
+ * This stylesheet complements Tailwind's utility classes and contains
+ * bespoke rules for the carousel and interactive components that
+ * aren't easily expressed via Tailwind utilities. Keeping these in
+ * a separate file improves maintainability and avoids overriding
+ * external frameworks.  Feel free to extend this file as you iterate
+ * on the site's design.
+ */
+
+/* Ensure carousel items have a consistent width and smooth scroll */
+.carousel::-webkit-scrollbar {
+  display: none;
+}
+.carousel {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+/* Placeholder scenario images maintain aspect ratio */
+.scenario-card {
+  min-width: 16rem; /* Equivalent to Tailwind's w-64 */
+  height: 10rem; /* Equivalent to Tailwind's h-40 */
+  border-radius: 0.5rem; /* Equivalent to Tailwind's rounded-lg */
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Sticky navigation tab highlighting */
+.sticky-tabs a[aria-current="true"] {
+  color: #2563eb; /* Tailwind's blue-600 */
+  border-bottom: 2px solid #2563eb;
+}
