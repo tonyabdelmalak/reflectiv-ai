@@ -1,157 +1,144 @@
-/*
- * ReflectivAI Site Stylesheet (hero restored + why-banner image, tidy contact, navy chat bubble)
- * Save as styles.css
-*/
-
 :root{
-  --navy:#0f2747;        /* site dark blue */
-  --navy-2:#102b52;      /* slightly brighter for gradients */
+  --navy:#0f2747;
+  --navy-2:#0b3954;
   --teal:#1fa3a8;
-  --slate:#5b6b80;
   --ink:#1e2a3a;
-  --ink-2:#213044;
+  --slate:#596a82;
   --bg:#ffffff;
-  --card:#f1f6fb;
-  --card-border:#e2e9f2;
-  --shadow:0 10px 24px rgba(16,43,82,.16);
+  --soft:#f5f8fb;
+  --card:#edf3f9;
+  --border:#e3e9f1;
 }
-
 html{scroll-behavior:smooth}
 body{
   margin:0;
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   color:var(--ink);
   background:var(--bg);
   line-height:1.55;
 }
 
 /* ---------- Header / Nav ---------- */
-.site-header{
-  position:sticky; top:0; z-index:1000; width:100%;
-  background:var(--navy);
-  box-shadow:0 2px 6px rgba(0,0,0,.08);
+.site-header{position:sticky;top:0;z-index:1000;background:var(--navy);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.nav{max-width:1200px;margin:0 auto;padding:.75rem 1rem;display:flex;align-items:center;justify-content:space-between;position:relative}
+.brand{display:flex;align-items:center;gap:.5rem;color:#fff;text-decoration:none;font-weight:800;font-size:1.25rem}
+.brand img{width:28px;height:28px;display:block}
+.nav-links{display:flex;gap:1rem}
+.nav-links a{color:#fff;text-decoration:none;font-weight:600;padding:.5rem .25rem}
+.nav-links a:hover{color:var(--teal)}
+.hamburger{display:none;width:30px;height:22px;padding:0;border:0;background:transparent;cursor:pointer}
+.hamburger span{display:block;height:3px;background:#fff;border-radius:2px;margin:4px 0;transition:.2s}
+.hamburger.active span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.hamburger.active span:nth-child(2){opacity:0}
+.hamburger.active span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+@media (max-width:900px){
+  .hamburger{display:block}
+  .nav-links{display:none;position:absolute;left:0;right:0;top:100%;background:var(--navy);flex-direction:column;padding:.5rem 1rem;border-bottom:1px solid rgba(255,255,255,.08)}
+  .nav-links.active{display:flex}
+  .nav-links a{padding:.8rem 0;border-top:1px solid rgba(255,255,255,.08)}
 }
-.nav{
-  max-width:1200px; margin:0 auto;
-  display:flex; align-items:center; justify-content:space-between;
-  padding:.75rem 1rem; position:relative;
-}
-.brand{
-  display:flex; align-items:center; gap:.55rem; text-decoration:none;
-  color:#fff; font-weight:800; letter-spacing:-.01em; font-size:1.25rem;
-}
-.brand img{ width:28px; height:28px; display:block }
-.nav-links{ display:flex; gap:1rem; align-items:center }
-.nav-links a{
-  color:#fff; text-decoration:none; font-weight:600; padding:.5rem .25rem;
-}
-.nav-links a:hover{ color:var(--teal) }
-
-/* Hamburger */
-.hamburger{ display:none; width:28px; height:22px; border:0; background:none; cursor:pointer }
-.hamburger span{
-  display:block; height:3px; width:100%; background:#fff; border-radius:2px; transition:.2s;
-}
-.hamburger span+span{ margin-top:4px }
-.hamburger.active span:nth-child(1){ transform:translateY(7px) rotate(45deg) }
-.hamburger.active span:nth-child(2){ opacity:0 }
-.hamburger.active span:nth-child(3){ transform:translateY(-7px) rotate(-45deg) }
 
 /* ---------- Sections ---------- */
-.section{ padding:64px 16px }
-.section-inner{ max-width:1200px; margin:0 auto }
-h1,h2,h3{ margin:0 0 12px }
-h2{
-  font-size:clamp(26px,4.2vw,38px);
-  color:var(--ink-2); font-weight:800; letter-spacing:-.01em;
-}
+.section{padding:3rem 1rem}
+.section-inner{max-width:1200px;margin:0 auto}
 
-/* ---------- HERO (restored 2-column layout) ---------- */
+/* ---------- Hero (reverted structure, no image for now) ---------- */
 .hero{
-  background:linear-gradient(140deg, #001d3d 0%, #0b3954 42%, #1fa3a8 100%);
+  background:linear-gradient(140deg,#001d3d 0%, var(--navy-2) 42%, var(--teal) 100%);
   color:#fff;
 }
-.hero-inner{
-  max-width:1200px; margin:0 auto; padding:64px 16px;
-  display:grid; grid-template-columns: 1.1fr .9fr; gap:32px; align-items:center;
-}
+.hero-wrap{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1.1fr .9fr;gap:28px;align-items:center;padding:72px 20px}
 .hero h1{
-  font-size:clamp(32px,5.2vw,44px); line-height:1.05; font-weight:800; letter-spacing:-.02em;
-  margin-bottom:16px;
+  margin:0 0 12px;
+  font-weight:800;letter-spacing:-.02em;
+  font-size:clamp(32px,5.2vw,44px);line-height:1.05;
 }
-.hero p{
-  font-size:clamp(16px,2.2vw,18px); font-weight:500; margin:0 0 22px; max-width:700px;
-}
-.cta-row{ display:flex; gap:12px; flex-wrap:wrap }
-.btn{
-  display:inline-block; padding:13px 20px; border-radius:12px; font-weight:800;
-  text-decoration:none; transition:.15s ease; border:2px solid transparent;
-}
-.btn.primary{ background:#0f2747; color:#fff }
-.btn.primary:hover{ filter:brightness(.95) }
-.btn.secondary{ background:transparent; color:#fff; border-color:#0f2747 }
-.btn.secondary:hover{ background:rgba(255,255,255,.12) }
-.hero-image img{
-  width:100%; height:auto; border-radius:12px; box-shadow:var(--shadow);
+.hero p{margin:0 0 24px;font-size:clamp(16px,2.2vw,18px);max-width:720px;font-weight:500}
+.cta-row{display:flex;gap:14px;flex-wrap:wrap}
+.btn{display:inline-block;border-radius:12px;text-decoration:none;font-weight:800}
+.btn.primary{background:var(--navy);color:#fff;padding:13px 20px;border:0}
+.btn.secondary{background:transparent;color:#fff;border:2px solid var(--navy);padding:11px 18px}
+.btn.primary:hover{filter:brightness(.95)}
+.btn.secondary:hover{background:rgba(255,255,255,.10)}
+.hero-image{display:none} /* hidden until you provide a new hero image */
+
+@media (max-width:900px){
+  .hero-wrap{grid-template-columns:1fr;padding:56px 18px}
+  .cta-row{justify-content:flex-start}
 }
 
-/* ---------- WHY IT MATTERS (header + image moved here) ---------- */
-.why{
-  background:#0f2747; color:#fff; padding:56px 16px 64px;
-}
-.why .section-inner{ max-width:1100px }
+/* ---------- Why it Matters (image moved here) ---------- */
+.why{background:var(--navy);padding:0}
+.why-inner{max-width:1200px;margin:0 auto;padding:32px 20px 40px}
 .why h2{
-  color:#fff; font-weight:600; text-align:center; margin-bottom:18px; letter-spacing:0;
+  margin:0 0 16px;
+  color:#fff;
+  font-weight:600; /* light / non-bold look */
+  text-align:center;
+  letter-spacing:-.01em;
+  font-size:clamp(22px,2.8vw,28px);
 }
-.why .why-image{
-  border-radius:16px; overflow:hidden; box-shadow:var(--shadow);
+.why-card{
+  background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.02) 100%);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:18px;overflow:hidden
 }
-.why .why-image img{ width:100%; height:auto; display:block }
+.why-img{display:block;width:100%;height:auto}
 
-/* ---------- Cards & Grids ---------- */
-.card-grid{ display:grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap:18px }
+/* ---------- Platform Modules (keep compact alignment) ---------- */
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media (max-width:960px){.grid-3{grid-template-columns:1fr}}
 .card{
-  background:var(--card); border:1px solid var(--card-border); border-radius:12px; padding:18px;
-  box-shadow:0 1px 3px rgba(0,0,0,.05);
+  background:#eef4fb;border:1px solid var(--border);border-radius:14px;padding:18px 20px
 }
-.card h3{ margin-top:0; font-size:1.1rem }
-.card p{ margin:0 }
+.card h3{margin:0 0 .25rem;color:var(--ink);font-size:1.15rem}
+.card p{margin:.25rem 0 0}
 
-/* ---------- Analytics list links that open modals ---------- */
-.list-links{ display:grid; gap:12px }
-.list-links .link-card{
-  background:var(--card); border:1px solid var(--card-border); border-radius:12px;
-  padding:16px 18px; font-weight:700;
+/* ---------- Two-column listings with divider ---------- */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
+.duo .divider{width:2px;background:#20252d;margin:0 auto;border-radius:2px}
+.pill-list{display:grid;gap:12px}
+.pill{
+  background:#eef4fb;border:1px solid #dfe7f2;border-radius:12px;padding:14px 16px;
+  color:#0f1522;font-weight:700
 }
+.note{color:var(--slate);font-size:.95rem}
+@media (max-width:960px){.duo{grid-template-columns:1fr}.duo .divider{display:none}}
+
+/* ---------- Analytics: clickable metric chips ---------- */
+.metric-list{display:grid;gap:12px}
+.metric{background:#eef4fb;border:1px solid #dfe7f2;border-radius:12px;padding:14px 16px;font-weight:800;cursor:pointer}
+
+/* ---------- Modal (reused for pills/metrics) ---------- */
+.modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(7,12,20,.55);z-index:1200}
+.modal.open{display:grid}
+.modal-card{width:min(760px,92vw);max-height:85vh;overflow:auto;background:#fff;border-radius:16px;border:1px solid var(--border);box-shadow:0 10px 30px rgba(0,0,0,.2)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border)}
+.modal-body{padding:16px}
 
 /* ---------- Contact ---------- */
-.contact .section-inner{ max-width:980px }
-.contact h2{ margin-bottom:16px }
-.contact-form{ display:grid; gap:14px; max-width:560px }
-.form-row{ display:flex; flex-direction:column; gap:6px }
-label{ font-weight:700 }
-input,textarea{
-  font:inherit; padding:10px 12px; border:1px solid #cfd7e3; border-radius:10px;
-  outline:none;
+.contact-form{display:grid;gap:14px;max-width:640px}
+.form-group{display:flex;flex-direction:column}
+.form-group label{font-weight:700;color:var(--ink);margin-bottom:6px}
+.form-group input,.form-group textarea{
+  font:inherit;border:1px solid #cfd6df;border-radius:10px;padding:12px;outline:none
 }
-textarea{ resize:vertical; min-height:140px }
-.contact .btn.primary{ width:fit-content }
+.form-group textarea{resize:vertical}
+.contact .btn.primary{width:fit-content}
 
-/* ---------- Floating “Alora” site chat bubble ---------- */
-.help-bubble{
-  position:fixed; right:18px; bottom:18px; width:64px; height:64px; z-index:1001;
-  background:var(--navy); border-radius:50%;
-  box-shadow:0 12px 26px rgba(15,39,71,.28);
-  display:grid; place-items:center; cursor:pointer;
+/* ---------- Chat FAB (Alora) ---------- */
+.chat-fab{
+  position:fixed;right:18px;bottom:18px;width:64px;height:64px;border-radius:50%;
+  background:var(--navy);display:grid;place-items:center;cursor:pointer;z-index:1050;
+  box-shadow:0 8px 28px rgba(15,39,71,.35)
 }
-.help-bubble svg{ width:28px; height:28px; fill:#fff }
+.chat-fab svg{width:28px;height:28px;fill:#fff}
 
-/* ---------- Responsive ---------- */
-@media (max-width: 900px){
-  .hero-inner{ grid-template-columns:1fr; padding:56px 16px }
-  .hero-image{ order:-1 } /* image on top for mobile */
-  .nav-links{ display:none; position:absolute; top:100%; left:0; right:0; background:var(--navy); padding:10px 16px; flex-direction:column }
-  .nav-links a{ padding:10px 0; border-top:1px solid rgba(255,255,255,.08) }
-  .nav-links.active{ display:flex }
-  .hamburger{ display:block }
-}
+/* ---------- Footnotes (collapsible list container-ready) ---------- */
+.footnotes{background:#f0f4f8;padding:2rem 1rem;color:var(--ink)}
+.footnotes .section-inner{max-width:1100px}
+.details{border:1px solid var(--border);border-radius:10px;background:#fff;margin:.5rem 0}
+.details summary{cursor:pointer;list-style:none;padding:.75rem 1rem;font-weight:800}
+.details summary::-webkit-details-marker{display:none}
+.details[open] summary{border-bottom:1px solid var(--border)}
+.details .detail-body{padding:.75rem 1rem}
