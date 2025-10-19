@@ -32,3 +32,162 @@
   color: #2563eb; /* Tailwind's blue-600 */
   border-bottom: 2px solid #2563eb;
 }
+
+/* Custom background color for dark navy sections */
+.bg-navy {
+  background-color: #0a1931;
+}
+
+/* Primary and secondary button styles to align with ReflectivAI brand colors */
+.btn-primary {
+  background-color: #0e7490; /* Teal-like primary color */
+  color: #ffffff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+  text-align: center;
+}
+.btn-primary:hover {
+  background-color: #155e75;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: #0e7490;
+  padding: 0.75rem 1.5rem;
+  border: 2px solid #0e7490;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  text-align: center;
+}
+.btn-secondary:hover {
+  background-color: #0e7490;
+  color: #ffffff;
+}
+
+/* Full‑screen overlay for the chat widget */
+.chat-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* Inner chat container for the widget */
+.chat-container {
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  width: 100%;
+  max-width: 28rem;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+/* Chat header with close button */
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: #0e7490;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.chat-header button {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+/* Chat controls grid */
+.chat-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+}
+
+/* Chat messages area */
+.chat-messages {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  overflow-y: auto;
+  background-color: #f5f5f5;
+}
+
+/* Individual message styling */
+.message-user {
+  align-self: flex-end;
+  background-color: #0e7490;
+  color: #ffffff;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+  max-width: 80%;
+}
+
+.message-assistant {
+  align-self: flex-start;
+  background-color: #e0f2fe;
+  color: #0369a1;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+  max-width: 80%;
+}
+
+/* Chat input area */
+.chat-input {
+  display: flex;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+.chat-input textarea {
+  flex: 1;
+  resize: none;
+  border: 1px solid #d1d5db;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  margin-right: 0.5rem;
+  font-size: 0.875rem;
+}
+.chat-input button {
+  background-color: #0e7490;
+  color: #ffffff;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.chat-input button:hover {
+  background-color: #155e75;
+}
+
+/* Scenario card overlay text */
+.scenario-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #ffffff;
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+}

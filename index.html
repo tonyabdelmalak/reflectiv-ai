@@ -35,13 +35,12 @@
 
   <!-- Navigation with sticky behavior -->
   <nav class="bg-white shadow sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4">
+    <div class="max-w-screen-xl mx-auto px-6">
       <div class="flex justify-between items-center h-16">
         <!-- Logo -->
         <div class="flex items-center">
-          <!-- Use the modern logo placed at repository root (logo-modern.png) to avoid overwriting the existing brand asset -->
-          <img src="logo-modern.png" alt="ReflectivAI modern logo" class="h-10 w-auto">
-          <span class="ml-2 font-bold text-xl">ReflectivAI</span>
+          <img src="logo-modern.png" alt="ReflectivAI modern logo" class="h-12 w-auto">
+          <span class="ml-2 font-bold text-2xl text-gray-900">ReflectivAI</span>
         </div>
         <!-- Primary navigation: sticky tabs for section anchors -->
         <div class="hidden md:block sticky-tabs">
@@ -58,19 +57,22 @@
   </nav>
 
   <!-- Hero Section -->
-  <section id="home" class="bg-gradient-to-b from-blue-50 to-blue-100 py-16">
-    <div class="max-w-4xl mx-auto text-center">
-      <h1 class="text-4xl font-bold mb-4">Every sales call is a moment of influence.</h1>
-      <p class="text-lg mb-6">ReflectivAI turns those moments into actionable practice.</p>
-      <a href="#simulations" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">Explore Simulations</a>
+  <section id="home" class="relative bg-navy text-white py-24" style="background-image: url('hero-gradient.png'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+    <div class="max-w-6xl mx-auto px-6 text-center">
+      <h1 class="text-5xl md:text-6xl font-extrabold mb-4">Every sales call is a moment of influence.</h1>
+      <p class="text-xl md:text-2xl mb-8">ReflectivAI turns those moments into actionable practice.</p>
+      <div class="flex flex-col sm:flex-row justify-center gap-4">
+        <button id="explore-platform-btn" class="btn-primary">Explore the Platform</button>
+        <a href="mailto:info@reflectivai.com?subject=Request%20a%20Demo" class="btn-secondary">Request a Demo</a>
+      </div>
     </div>
   </section>
 
-  <!-- Simulations Section -->
+  <!-- Simulations Section (Platform) -->
   <section id="simulations" class="py-16 bg-white">
-    <div class="max-w-5xl mx-auto">
+    <div class="max-w-6xl mx-auto px-6">
       <h2 class="text-3xl font-semibold mb-8">Interactive Sales Simulations</h2>
-      <p class="mb-6">Our simulations go beyond message recall to emotional resonance under regulatory guardrails.</p>
+      <p class="mb-6 max-w-3xl">Our simulations go beyond message recall to emotional resonance under regulatory guardrails.</p>
       <!-- Micro subheaders -->
       <div class="grid gap-8 md:grid-cols-3">
         <div>
@@ -108,10 +110,16 @@
         <h3 class="text-2xl font-medium mb-4">Scenario Showcase</h3>
         <div class="relative">
           <div class="carousel flex overflow-x-auto space-x-4 p-4">
-            <!-- Carousel items: placeholders for now -->
-            <div class="scenario-card" style="background-image:url('scenario1.jpg')" aria-hidden="true"></div>
-            <div class="scenario-card" style="background-image:url('scenario2.jpg')" aria-hidden="true"></div>
-            <div class="scenario-card" style="background-image:url('scenario3.jpg')" aria-hidden="true"></div>
+            <!-- Carousel items with overlay labels -->
+            <div class="relative scenario-card" style="background-image:url('scenario1.jpg')">
+              <div class="scenario-label">Busy MD</div>
+            </div>
+            <div class="relative scenario-card" style="background-image:url('scenario2.jpg')">
+              <div class="scenario-label">Collaborative NP</div>
+            </div>
+            <div class="relative scenario-card" style="background-image:url('scenario3.jpg')">
+              <div class="scenario-label">Skeptical DO</div>
+            </div>
           </div>
           <p class="text-sm text-gray-500 mt-2">Swipe or scroll to explore sample persona reactions and coaching insights.</p>
         </div>
@@ -121,7 +129,7 @@
 
   <!-- Metrics Section -->
   <section id="metrics" class="py-16 bg-gray-50">
-    <div class="max-w-5xl mx-auto">
+    <div class="max-w-6xl mx-auto px-6">
       <h2 class="text-3xl font-semibold mb-8">Performance Analytics & Coaching Intelligence</h2>
       <div class="grid gap-8 md:grid-cols-3">
         <!-- Card 1 -->
@@ -185,7 +193,7 @@
 
   <!-- Compliance Section -->
   <section id="compliance" class="py-16 bg-white">
-    <div class="max-w-4xl mx-auto text-center">
+    <div class="max-w-5xl mx-auto px-6 text-center">
       <h2 class="text-3xl font-semibold mb-4">Compliance & Ethics</h2>
       <p class="max-w-3xl mx-auto">ReflectivAI embeds industry-leading compliance checks and ethical safeguards to ensure all training remains within regulatory boundaries.</p>
     </div>
@@ -193,11 +201,41 @@
 
   <!-- Integrations Section -->
   <section id="integrations" class="py-16 bg-gray-50">
-    <div class="max-w-4xl mx-auto text-center">
+    <div class="max-w-5xl mx-auto px-6 text-center">
       <h2 class="text-3xl font-semibold mb-4">Seamless Integrations</h2>
       <p class="max-w-3xl mx-auto">Integrate ReflectivAI with your CRM, analytics platforms, and internal tools for a unified sales enablement ecosystem.</p>
     </div>
   </section>
+
+  <!-- Chat Widget Overlay -->
+  <div id="chat-overlay" class="chat-overlay">
+    <div class="chat-container" id="reflectiv-widget">
+      <!-- Chat Header with title and close button -->
+      <div class="chat-header">
+        <span>ReflectivAI Coaching Chat</span>
+        <button id="chat-close-btn" aria-label="Close">&times;</button>
+      </div>
+      <!-- Controls for mode, therapy area, disease state, HCP profile, EI feature, and coach -->
+      <div class="chat-controls">
+        <select id="cw-mode" aria-label="Mode"></select>
+        <select id="cw-therapy" aria-label="Therapy Area"></select>
+        <select id="cw-disease" aria-label="Disease State"></select>
+        <select id="cw-hcp" aria-label="HCP Profile"></select>
+        <select id="cw-ei" aria-label="EI Feature"></select>
+        <select id="cw-coach" aria-label="Coach"></select>
+      </div>
+      <!-- Chat messages area -->
+      <div class="chat-messages" id="cw-messages"></div>
+      <!-- Input area for user message -->
+      <div class="chat-input">
+        <textarea id="cw-input" rows="2" placeholder="Type your message…"></textarea>
+        <button id="cw-send">Send</button>
+      </div>
+      <div class="p-2 text-right">
+        <a href="javascript:void(0)" id="scoring-guide" class="text-sm text-blue-600 underline">View Scoring Guide</a>
+      </div>
+    </div>
+  </div>
 
   <!-- Footer -->
   <footer class="bg-gray-800 text-gray-100 py-6">
@@ -208,5 +246,104 @@
 
   <!-- Widget script -->
   <script src="widget.js"></script>
+
+  <!-- UI script for chat overlay and controls -->
+  <script>
+    // Wait for the document to be ready
+    document.addEventListener('DOMContentLoaded', () => {
+      const overlay = document.getElementById('chat-overlay');
+      const exploreBtn = document.getElementById('explore-platform-btn');
+      const closeBtn = document.getElementById('chat-close-btn');
+      const messagesEl = document.getElementById('cw-messages');
+
+      // Show chat overlay when explore button is clicked
+      if (exploreBtn) {
+        exploreBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          overlay.style.display = 'flex';
+          // Initialize widget (if not already done); init is idempotent
+          if (window.ReflectivWidget && typeof window.ReflectivWidget.init === 'function') {
+            window.ReflectivWidget.init();
+          }
+        });
+      }
+
+      // Hide chat overlay when close button is clicked
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          overlay.style.display = 'none';
+        });
+      }
+
+      // Populate selects when state is loaded
+      document.addEventListener('rw:state', (e) => {
+        const s = e.detail;
+        const populate = (selectId, list, labelKey = 'label', keyKey = 'key') => {
+          const sel = document.getElementById(selectId);
+          if (!sel) return;
+          sel.innerHTML = '';
+          list.forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item[keyKey];
+            opt.textContent = item[labelKey];
+            sel.appendChild(opt);
+          });
+        };
+        populate('cw-mode', s.modes);
+        populate('cw-therapy', s.therapyAreas);
+        populate('cw-disease', s.diseaseStates);
+        populate('cw-hcp', s.hcpProfiles);
+        populate('cw-ei', s.eiFeatures);
+        populate('cw-coach', s.coaches);
+      });
+
+      // Update state when selects change
+      const selectIds = ['cw-mode', 'cw-therapy', 'cw-disease', 'cw-hcp', 'cw-ei', 'cw-coach'];
+      selectIds.forEach(id => {
+        const sel = document.getElementById(id);
+        if (sel) {
+          sel.addEventListener('change', (event) => {
+            const partial = {};
+            // Remove the cw- prefix to get a friendly key
+            partial[id.replace('cw-', '')] = event.target.value;
+            if (window.ReflectivWidget && typeof window.ReflectivWidget.updateState === 'function') {
+              window.ReflectivWidget.updateState(partial);
+            }
+          });
+        }
+      });
+
+      // Handle sending messages
+      const sendBtn = document.getElementById('cw-send');
+      if (sendBtn) {
+        sendBtn.addEventListener('click', () => {
+          const inputEl = document.getElementById('cw-input');
+          if (!inputEl) return;
+          const text = inputEl.value.trim();
+          if (!text) return;
+          // Add user message to thread
+          const userDiv = document.createElement('div');
+          userDiv.className = 'message-user';
+          userDiv.textContent = text;
+          messagesEl.appendChild(userDiv);
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+          // Dispatch through the widget's API for analytics
+          if (window.ReflectivWidget && typeof window.ReflectivWidget.send === 'function') {
+            window.ReflectivWidget.send(text);
+          }
+          // Clear input
+          inputEl.value = '';
+          // Simulate assistant response
+          setTimeout(() => {
+            const resp = document.createElement('div');
+            resp.className = 'message-assistant';
+            resp.textContent = 'Thanks for your question! A coach will respond shortly.';
+            messagesEl.appendChild(resp);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+          }, 1000);
+        });
+      }
+    });
+  </script>
 </body>
 </html>
