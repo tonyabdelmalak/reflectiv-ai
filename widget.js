@@ -41,22 +41,75 @@
   let coachOn = true;
 
   // ---------- EI Persona & Feature Definitions ----------
-const personas = [
-  { key: "difficult", label: "Difficult HCP", description: "Resistant, emotional, argumentative" },
-  { key: "engaged", label: "Highly Engaged HCP", description: "Collaborative, attentive, empathetic" },
-  { key: "indifferent", label: "Nice but Doesn’t Prescribe", description: "Pleasant, but disengaged, no prescriptions" }
-];
+  const personas = [
+    { key: "difficult", label: "Difficult HCP", description: "Resistant, emotional, argumentative" },
+    { key: "engaged", label: "Highly Engaged HCP", description: "Collaborative, attentive, empathetic" },
+    { key: "indifferent", label: "Nice but Doesn’t Prescribe", description: "Pleasant, but disengaged, no prescriptions" }
+  ];
 
-const eiFeatures = [
-  { key: "empathy", label: "Empathy Rating" },
-  { key: "stress", label: "Stress Level Indicator" }
-];
+  const eiFeatures = [
+    { key: "empathy", label: "Empathy Rating" },
+    { key: "stress", label: "Stress Level Indicator" }
+  ];
 
-const empathyRatings = {
-  difficult: { min: 0, max: 2 },
-  engaged: { min: 3, max: 5 },
-  indifferent: { min: 1, max: 3 }
-};
+  const empathyRatings = {
+    difficult: { min: 0, max: 2 },
+    engaged: { min: 3, max: 5 },
+    indifferent: { min: 1, max: 3 }
+  };
+
+  // ---------- buildEIUI function ----------
+  function buildEIUI() {
+    const shell = document.querySelector('.reflectiv-chat');
+
+    // Create labels and dropdown for Persona and EI Features
+    const personaLabel = el("label", "", "HCP Profiles");
+    personaLabel.htmlFor = "cw-hcp";
+    const personaSelect = el("select"); personaSelect.id = "cw-hcp";
+
+    const eiLabel = el("label", "", "EI Features");
+    eiLabel.htmlFor = "cw-ei";
+    const eiSelect = el("select"); eiSelect.id = "cw-ei";
+
+    // Populate Persona dropdown
+    personas.forEach(persona => {
+      const option = el("option");
+      option.value = persona.key;
+      option.textContent = persona.label;
+      personaSelect.appendChild(option);
+    });
+
+    // Populate EI Feature dropdown
+    eiFeatures.forEach(feature => {
+      const option = el("option");
+      option.value = feature.key;
+      option.textContent = feature.label;
+      eiSelect.appendChild(option);
+    });
+
+    // Add event listeners to the dropdowns
+    personaSelect.addEventListener("change", function() {
+      const selectedPersona = personaSelect.value;
+      const selectedEI = eiSelect.value;
+      const empathyScore = calculateEmpathyRating(selectedPersona);  // Define this function to calculate empathy
+      const feedback = generateFeedback(selectedPersona, selectedEI, empathyScore);  // Define this function to generate feedback
+      shell.querySelector(".coach-body").innerHTML = feedback;  // Update feedback on the widget UI
+    });
+
+    eiSelect.addEventListener("change", function() {
+      const selectedPersona = personaSelect.value;
+      const selectedEI = eiSelect.value;
+      const empathyScore = calculateEmpathyRating(selectedPersona);
+      const feedback = generateFeedback(selectedPersona, selectedEI, empathyScore);
+      shell.querySelector(".coach-body").innerHTML = feedback;  // Update feedback on the widget UI
+    });
+
+    // Append the dropdowns to the UI
+    shell.querySelector('.sim-controls').appendChild(personaLabel);
+    shell.querySelector('.sim-controls').appendChild(personaSelect);
+    shell.querySelector('.sim-controls').appendChild(eiLabel);
+    shell.querySelector('.sim-controls').appendChild(eiSelect);
+  }
 
   // ---------- utils ----------
   async function fetchLocal(path) {
@@ -339,7 +392,7 @@ function buildUI() {
   mount.appendChild(coach);
 
   // Call the new function to add persona and EI dropdowns
-  // buildEIUI();
+  buildEIUI();
 }
 
     function getDiseaseStates() {
