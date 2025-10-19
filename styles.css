@@ -456,12 +456,12 @@ th {
   padding:60px 20px;
 }
 .why-title{
-  font-family:"Pacifico",cursive;
-  font-size:34px;
-  color:#fff;
-  margin:0 0 20px 0;
-  line-height:1;
-  transform:rotate(-2deg);
+  
+  .why-it-matters {
+  font-family: "Inter", "Poppins", "Helvetica Neue", Arial, sans-serif;
+  font-weight: 300;
+  font-size: 2rem;
+  color: #ffffff;
 }
 .why-text{
   max-width:900px;
