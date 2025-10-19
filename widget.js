@@ -242,44 +242,92 @@
   /**
    * Generate context‑aware feedback text based on persona, feature, and rating.
    */
-  function generateDynamicFeedback(personaKey, featureKey, rating) {
-    if (!personaKey || !featureKey) return "";
-    let feedback = "";
-    if (featureKey === "empathy") {
-      // Empathy suggestions per persona
-      switch (personaKey) {
-        case "difficult":
-          feedback = "Remain calm and acknowledge frustration. Use phrases like 'I understand this is challenging' to show understanding.";
-          break;
-        case "engaged":
-          feedback = "Maintain a collaborative tone. Show appreciation for their engagement and ask insightful questions.";
-          break;
-        case "indifferent":
-          feedback = "Focus on patient impact to spark interest. Acknowledge concerns gently and pivot towards personal benefit.";
-          break;
-        default:
-          feedback = "Tailor your approach to the HCP's emotional needs, demonstrating genuine understanding and care.";
-      }
-    } else if (featureKey === "stress") {
-      // Stress suggestions per persona
-      switch (personaKey) {
-        case "difficult":
-          feedback = "The HCP may be under stress. Keep communication calm, concise and reassuring to reduce tension.";
-          break;
-        case "engaged":
-          feedback = "Moderate stress expected. Support their curiosity with clear information and invite collaboration.";
-          break;
-        case "indifferent":
-          feedback = "Average stress level. Build rapport by emphasizing patient benefits and addressing doubts thoughtfully.";
-          break;
-        default:
-          feedback = "Adjust your communication tone to match the HCP’s stress level, offering support and clarity.";
-      }
-    } else {
-      feedback = "Select a valid EI feature to receive targeted guidance.";
+  function generateDynamicFeedback(personaKey, featureKey) {
+  if (!personaKey || !featureKey) return "";
+  let feedback = "";
+
+  if (featureKey === "empathy") {
+    // Empathy suggestions per persona
+    switch (personaKey) {
+      case "difficult":
+        feedback = "Remain calm and acknowledge frustration. Use phrases like 'I understand this is challenging' to show understanding.";
+        break;
+      case "busy":
+        feedback = "Show empathy concisely. Respect their time while acknowledging their workload.";
+        break;
+      case "engaged":
+        feedback = "Maintain a collaborative tone. Show appreciation for their engagement and ask insightful questions.";
+        break;
+      case "indifferent":
+        feedback = "Focus on patient impact to spark interest. Acknowledge concerns gently and pivot toward personal benefit.";
+        break;
+      default:
+        feedback = "Tailor your approach to the HCP's emotional needs, demonstrating genuine understanding and care.";
     }
-    return feedback;
+
+  } else if (featureKey === "stress") {
+    // Stress suggestions per persona
+    switch (personaKey) {
+      case "difficult":
+        feedback = "The HCP may be under stress. Keep communication calm, concise, and reassuring to reduce tension.";
+        break;
+      case "busy":
+        feedback = "Time pressure likely high. Keep your delivery brief and focused on solutions.";
+        break;
+      case "engaged":
+        feedback = "Moderate stress expected. Support their curiosity with clear information and invite collaboration.";
+        break;
+      case "indifferent":
+        feedback = "Average stress level. Build rapport by emphasizing patient benefits and addressing doubts thoughtfully.";
+        break;
+      default:
+        feedback = "Adjust your communication tone to match the HCP’s stress level, offering support and clarity.";
+    }
+
+  } else if (featureKey === "listening") {
+    // Active Listening suggestions per persona
+    switch (personaKey) {
+      case "difficult":
+        feedback = "Use reflective listening to validate concerns. Rephrase what they say to show you understand.";
+        break;
+      case "busy":
+        feedback = "Acknowledge key points quickly and summarize their perspective to show attentiveness without delay.";
+        break;
+      case "engaged":
+        feedback = "Use affirmations and clarifying questions to deepen trust and co-create solutions.";
+        break;
+      case "indifferent":
+        feedback = "Use gentle prompts like 'I hear you' or 'That’s a fair point' to draw them into the conversation.";
+        break;
+      default:
+        feedback = "Use active listening techniques to validate, clarify, and engage.";
+    }
+
+  } else if (featureKey === "validation") {
+    // Validation & Reframing suggestions per persona
+    switch (personaKey) {
+      case "difficult":
+        feedback = "Validate their frustration first, then reframe the issue around shared goals or patient outcomes.";
+        break;
+      case "busy":
+        feedback = "Acknowledge their time constraints and reframe around efficiency or impact.";
+        break;
+      case "engaged":
+        feedback = "Validate their insights and reframe to emphasize partnership and shared understanding.";
+        break;
+      case "indifferent":
+        feedback = "Acknowledge neutrality, then reframe to highlight meaningful patient benefits or success stories.";
+        break;
+      default:
+        feedback = "Validate the HCP’s perspective and reframe toward collaboration or patient-centered outcomes.";
+    }
+
+  } else {
+    feedback = "Select a valid EI feature to receive targeted guidance.";
   }
+
+  return feedback;
+}
 
   /**
    * Generate and display empathy/stress feedback based on current selections and last user message.
