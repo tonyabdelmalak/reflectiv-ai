@@ -27,7 +27,7 @@ body {
 /* ---------- Navigation ---------- */
 .site-header {
   background-color: var(--navy);
-  color: fvar(--white);
+  color: var(--white);
   position: sticky;
   top: 0;
   z-index: 1000;
