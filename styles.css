@@ -454,24 +454,37 @@ th {
 .why-banner {
   background: #0f2747; /* dark navy */
   color: #ffffff;
+/* ---------- Why it matters banner (refined layout) ---------- */
+.why-banner {
+  background: #0f2747;
+  color: #ffffff;
+  text-align: center;
+  padding: 50px 20px;
 }
-.why-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 28px 1rem;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 14px 22px;
-  align-items: center;
-}
+
 .why-title {
-  grid-column: 1 / 2;
-  font-family: "Pacifico", cursive; /* cursive wordmark */
-  font-size: 26px;
-  transform: rotate(-3deg);
+  font-family: "Pacifico", cursive;
+  font-size: 30px;
+  transform: rotate(-2deg);
+  margin: 0 0 18px 0;
   line-height: 1;
-  margin: 0;
-  white-space: nowrap;
+}
+
+.why-text {
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: left;            /* left-aligned content */
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 600;
+  color: #ffffff;
+}
+  
+/* Responsive */
+@media (max-width: 720px) {
+  .why-banner { padding: 36px 16px; }
+  .why-title { font-size: 26px; transform: rotate(-1.5deg); }
+  .why-text { font-size: 16px; line-height: 1.45; }
 }
 .why-text {
   grid-column: 2 / 3;
