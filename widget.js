@@ -67,49 +67,49 @@
   }
 
   // ---------- Real-time EI Feedback Logic ----------
-  const personaSelect = document.getElementById("cw-hcp");
-  const eiSelect = document.getElementById("cw-ei");
-  const eiFeatureSelect = document.getElementById("cw-ei-feature");
-  const feedbackDisplay = document.getElementById("feedback-display");
+const personaSelect = document.getElementById("cw-hcp");
+const eiSelect = document.getElementById("cw-ei");
+const eiFeatureSelect = document.getElementById("cw-ei-feature");
+const feedbackDisplay = document.getElementById("feedback-display");
 
-  // Fetch personas and EI profiles from config.json
-  fetch('https://raw.githubusercontent.com/ReflectivEI/reflectiv-ai/refs/heads/main/assets/chat/config.json')
-    .then(response => response.json())
-    .then(data => {
-      const personas = data.personas;  // Corrected path for personas
-      const eiProfiles = data.eiProfiles || [];
-      const eiFeatures = data.eiFeatures || [];
+// Fetch personas and EI profiles from config.json
+  fetch('./assets/chat/config.json')
+  .then(response => response.json())
+  .then(data => {
+    const personas = data.personas;  // Corrected path for personas
+    const eiProfiles = data.eiProfiles || [];  // Default to an empty array if undefined
+    const eiFeatures = data.eiFeatures || [];  // Default to an empty array if undefined
 
-      // Populate Persona Dropdown
-      personas.forEach(persona => {
-        const option = document.createElement('option');
-        option.value = persona.key;
-        option.textContent = persona.label;
-        personaSelect.appendChild(option);
-      });
+    // Populate Persona Dropdown
+    personas.forEach(persona => {
+      const option = document.createElement('option');
+      option.value = persona.key;
+      option.textContent = persona.label;
+      personaSelect.appendChild(option);
+    });
 
-      // Populate EI Profile Dropdown
-      eiProfiles.forEach(profile => {
-        const option = document.createElement('option');
-        option.value = profile.key;
-        option.textContent = profile.label;
-        eiSelect.appendChild(option);
-      });
+    // Populate EI Profile Dropdown
+    eiProfiles.forEach(profile => {
+      const option = document.createElement('option');
+      option.value = profile.key;
+      option.textContent = profile.label;
+      eiSelect.appendChild(option);
+    });
 
-      // Populate EI Feature Dropdown
-      eiFeatures.forEach(feature => {
-        const option = document.createElement('option');
-        option.value = feature.key;
-        option.textContent = feature.label;
-        eiFeatureSelect.appendChild(option);
-      });
+    // Populate EI Feature Dropdown
+    eiFeatures.forEach(feature => {
+      const option = document.createElement('option');
+      option.value = feature.key;
+      option.textContent = feature.label;
+      eiFeatureSelect.appendChild(option);
+    });
 
-      // Add change listener to Persona and EI Feature dropdowns
-      personaSelect.addEventListener("change", generateFeedback);
-      eiSelect.addEventListener("change", generateFeedback);
-      eiFeatureSelect.addEventListener("change", generateFeedback);
-    })
-    .catch(error => console.error('Error loading config:', error));
+    // Add change listener to Persona and EI Feature dropdowns
+    personaSelect.addEventListener("change", generateFeedback);
+    eiSelect.addEventListener("change", generateFeedback);
+    eiFeatureSelect.addEventListener("change", generateFeedback);
+  })
+  .catch(error => console.error('Error loading config:', error));
 
   // Empathy Rating Logic
   function calculateEmpathy(persona, eiFeature) {
