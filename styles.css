@@ -48,7 +48,7 @@ body {
 .nav-logo {
   font-size: 1.4rem;
   font-weight: 700;
-  color: var(--white);
+  color: var(--teal);
   text-decoration: none;
   margin-right: 1rem;
 }
@@ -456,12 +456,12 @@ th {
   padding:60px 20px;
 }
 .why-title{
-  
-  .why-it-matters {
-  font-family: "Inter", "Poppins", "Helvetica Neue", Arial, sans-serif;
-  font-weight: 300;
-  font-size: 2rem;
-  color: #ffffff;
+  font-family:"Pacifico",cursive;
+  font-size:34px;
+  color:#fff;
+  margin:0 0 20px 0;
+  line-height:1;
+  transform:rotate(-2deg);
 }
 .why-text{
   max-width:900px;
