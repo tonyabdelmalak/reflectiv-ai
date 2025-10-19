@@ -39,6 +39,10 @@
   let conversation = [];
   let coachOn = true;
 
+  // ---------- Define modeSel here before usage ----------
+  const modeSel = document.getElementById("cw-mode");  // Ensure the ID matches your HTML
+  // Now you can use modeSel in the subsequent code
+
   // ---------- utils ----------
   async function fetchLocal(path) {
     const r = await fetch(path, { cache: "no-store" });
