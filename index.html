@@ -1,157 +1,323 @@
-/*
- * ReflectivAI Site Stylesheet (hero restored + why-banner image, tidy contact, navy chat bubble)
- * Save as styles.css
-*/
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>ReflectivAI – AI Sales Enablement for Life Sciences</title>
 
-:root{
-  --navy:#0f2747;        /* site dark blue */
-  --navy-2:#102b52;      /* slightly brighter for gradients */
-  --teal:#1fa3a8;
-  --slate:#5b6b80;
-  --ink:#1e2a3a;
-  --ink-2:#213044;
-  --bg:#ffffff;
-  --card:#f1f6fb;
-  --card-border:#e2e9f2;
-  --shadow:0 10px 24px rgba(16,43,82,.16);
-}
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-html{scroll-behavior:smooth}
-body{
-  margin:0;
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  color:var(--ink);
-  background:var(--bg);
-  line-height:1.55;
-}
+  <!-- Styles -->
+  <link rel="stylesheet" href="widget.css?v=9">
+  <link rel="stylesheet" href="styles.css?v=2025-10-19a">
+</head>
+<body>
 
-/* ---------- Header / Nav ---------- */
-.site-header{
-  position:sticky; top:0; z-index:1000; width:100%;
-  background:var(--navy);
-  box-shadow:0 2px 6px rgba(0,0,0,.08);
-}
-.nav{
-  max-width:1200px; margin:0 auto;
-  display:flex; align-items:center; justify-content:space-between;
-  padding:.75rem 1rem; position:relative;
-}
-.brand{
-  display:flex; align-items:center; gap:.55rem; text-decoration:none;
-  color:#fff; font-weight:800; letter-spacing:-.01em; font-size:1.25rem;
-}
-.brand img{ width:28px; height:28px; display:block }
-.nav-links{ display:flex; gap:1rem; align-items:center }
-.nav-links a{
-  color:#fff; text-decoration:none; font-weight:600; padding:.5rem .25rem;
-}
-.nav-links a:hover{ color:var(--teal) }
+  <!-- ============== NAV ============== -->
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="#home" aria-label="ReflectivAI home">
+        <!-- If you don't have this yet, keep the <span> text; else drop in your file -->
+        <img src="assets/logo-mark.svg" alt="" onerror="this.style.display='none'">
+        <span>ReflectivAI</span>
+      </a>
 
-/* Hamburger */
-.hamburger{ display:none; width:28px; height:22px; border:0; background:none; cursor:pointer }
-.hamburger span{
-  display:block; height:3px; width:100%; background:#fff; border-radius:2px; transition:.2s;
-}
-.hamburger span+span{ margin-top:4px }
-.hamburger.active span:nth-child(1){ transform:translateY(7px) rotate(45deg) }
-.hamburger.active span:nth-child(2){ opacity:0 }
-.hamburger.active span:nth-child(3){ transform:translateY(-7px) rotate(-45deg) }
+      <button id="navToggle" class="hamburger" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
 
-/* ---------- Sections ---------- */
-.section{ padding:64px 16px }
-.section-inner{ max-width:1200px; margin:0 auto }
-h1,h2,h3{ margin:0 0 12px }
-h2{
-  font-size:clamp(26px,4.2vw,38px);
-  color:var(--ink-2); font-weight:800; letter-spacing:-.01em;
-}
+      <div id="navMenu" class="nav-links">
+        <a href="#platform">Platform</a>
+        <a href="#disease-states">Disease&nbsp;States</a>
+        <a href="#hcp-profiles">HCP&nbsp;Profiles</a>
+        <a href="#simulations">Simulations</a>
+        <a href="#analytics">Analytics</a>
+        <a href="#ethics">Ethics</a>
+        <a href="#faq">FAQ</a>
+        <a href="#contact">Contact</a>
+      </div>
+    </nav>
+  </header>
 
-/* ---------- HERO (restored 2-column layout) ---------- */
-.hero{
-  background:linear-gradient(140deg, #001d3d 0%, #0b3954 42%, #1fa3a8 100%);
-  color:#fff;
-}
-.hero-inner{
-  max-width:1200px; margin:0 auto; padding:64px 16px;
-  display:grid; grid-template-columns: 1.1fr .9fr; gap:32px; align-items:center;
-}
-.hero h1{
-  font-size:clamp(32px,5.2vw,44px); line-height:1.05; font-weight:800; letter-spacing:-.02em;
-  margin-bottom:16px;
-}
-.hero p{
-  font-size:clamp(16px,2.2vw,18px); font-weight:500; margin:0 0 22px; max-width:700px;
-}
-.cta-row{ display:flex; gap:12px; flex-wrap:wrap }
-.btn{
-  display:inline-block; padding:13px 20px; border-radius:12px; font-weight:800;
-  text-decoration:none; transition:.15s ease; border:2px solid transparent;
-}
-.btn.primary{ background:#0f2747; color:#fff }
-.btn.primary:hover{ filter:brightness(.95) }
-.btn.secondary{ background:transparent; color:#fff; border-color:#0f2747 }
-.btn.secondary:hover{ background:rgba(255,255,255,.12) }
-.hero-image img{
-  width:100%; height:auto; border-radius:12px; box-shadow:var(--shadow);
-}
+  <!-- ============== HERO (restored) ============== -->
+  <section id="home" class="hero">
+    <div class="hero-inner">
+      <div>
+        <h1>Empowering Life Sciences Sales Teams to Connect — and Convert — with Intelligence</h1>
+        <p>ReflectivAI blends clinical accuracy, emotional intelligence, and adaptive AI coaching so every conversation with a healthcare professional feels authentic, confident, and compliant.</p>
+        <div class="cta-row">
+          <a class="btn primary" href="#contact">Request a Demo</a>
+          <a class="btn secondary" href="#simulations" id="openPlatform">Explore the Platform</a>
+        </div>
+      </div>
+      <div class="hero-image">
+        <!-- NEW hero image: replace src with your uploaded asset name -->
+        <!-- map: /assets/hero-alt.jpg -->
+        <img src="assets/hero-alt.jpg" alt="Digital health intelligence and analytics"/>
+      </div>
+    </div>
+  </section>
 
-/* ---------- WHY IT MATTERS (header + image moved here) ---------- */
-.why{
-  background:#0f2747; color:#fff; padding:56px 16px 64px;
-}
-.why .section-inner{ max-width:1100px }
-.why h2{
-  color:#fff; font-weight:600; text-align:center; margin-bottom:18px; letter-spacing:0;
-}
-.why .why-image{
-  border-radius:16px; overflow:hidden; box-shadow:var(--shadow);
-}
-.why .why-image img{ width:100%; height:auto; display:block }
+  <!-- ============== WHY IT MATTERS (old hero image lives here) ============== -->
+  <section id="why" class="why">
+    <div class="section-inner">
+      <h2>Why it matters</h2>
+      <div class="why-image">
+        <!-- This uses the PRIOR hero picture; you can swap the file whenever you upload your preferred version. -->
+        <!-- map: /assets/hero-image.png -->
+        <img src="assets/hero-image.png" alt="Clinicians collaborating; coaching and analytics overlay"/>
+      </div>
+    </div>
+  </section>
 
-/* ---------- Cards & Grids ---------- */
-.card-grid{ display:grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap:18px }
-.card{
-  background:var(--card); border:1px solid var(--card-border); border-radius:12px; padding:18px;
-  box-shadow:0 1px 3px rgba(0,0,0,.05);
-}
-.card h3{ margin-top:0; font-size:1.1rem }
-.card p{ margin:0 }
+  <!-- ============== PLATFORM MODULES ============== -->
+  <section id="platform" class="section">
+    <div class="section-inner">
+      <h2>Platform Modules</h2>
+      <div class="card-grid">
+        <article class="card">
+          <h3>Product Knowledge</h3>
+          <p>Train on complex data and regulatory messaging with confidence and compliance built in.</p>
+        </article>
+        <article class="card">
+          <h3>Sales Simulation</h3>
+          <p>Practice high-stakes calls in oncology, vaccines, and other therapeutic areas — anytime, anywhere.</p>
+        </article>
+        <article class="card">
+          <h3>Relationship Intelligence</h3>
+          <p>Understand behavioral blind spots. Track empathy, tone, and conversational agility.</p>
+        </article>
+      </div>
+    </div>
+  </section>
 
-/* ---------- Analytics list links that open modals ---------- */
-.list-links{ display:grid; gap:12px }
-.list-links .link-card{
-  background:var(--card); border:1px solid var(--card-border); border-radius:12px;
-  padding:16px 18px; font-weight:700;
-}
+  <!-- ============== DISEASE STATES (links that open popups still supported by your existing JS) ============== -->
+  <section id="disease-states" class="section">
+    <div class="section-inner">
+      <h2>Train by Therapeutic Area</h2>
+      <div class="list-links">
+        <a class="link-card" href="#" data-open="card-hiv">HIV PrEP</a>
+        <a class="link-card" href="#" data-open="card-vax">Vaccines</a>
+        <a class="link-card" href="#" data-open="card-hbv">Hepatitis B</a>
+        <a class="link-card" href="#" data-open="card-onc">Oncology</a>
+        <a class="link-card" href="#" data-open="card-cardio">Cardiology</a>
+        <a class="link-card" href="#" data-open="card-pulm">Pulmonology</a>
+      </div>
+      <p class="note">Our scenario library grows continually — new therapeutic areas and objections are added with each launch.</p>
+    </div>
+  </section>
 
-/* ---------- Contact ---------- */
-.contact .section-inner{ max-width:980px }
-.contact h2{ margin-bottom:16px }
-.contact-form{ display:grid; gap:14px; max-width:560px }
-.form-row{ display:flex; flex-direction:column; gap:6px }
-label{ font-weight:700 }
-input,textarea{
-  font:inherit; padding:10px 12px; border:1px solid #cfd7e3; border-radius:10px;
-  outline:none;
-}
-textarea{ resize:vertical; min-height:140px }
-.contact .btn.primary{ width:fit-content }
+  <!-- ============== HCP PROFILES ============== -->
+  <section id="hcp-profiles" class="section">
+    <div class="section-inner">
+      <h2>Practice with Realistic Personas</h2>
+      <div class="list-links">
+        <a class="link-card" href="#" data-open="p-im">Internal Medicine MD</a>
+        <a class="link-card" href="#" data-open="p-np">Nurse Practitioner (NP)</a>
+        <a class="link-card" href="#" data-open="p-pa">Physician Assistant (PA)</a>
+        <a class="link-card" href="#" data-open="p-id">Infectious Disease Specialist</a>
+        <a class="link-card" href="#" data-open="p-onc">Oncologist</a>
+        <a class="link-card" href="#" data-open="p-pulm">Pulmonologist</a>
+        <a class="link-card" href="#" data-open="p-cardio">Cardiologist</a>
+      </div>
+    </div>
+  </section>
 
-/* ---------- Floating “Alora” site chat bubble ---------- */
-.help-bubble{
-  position:fixed; right:18px; bottom:18px; width:64px; height:64px; z-index:1001;
-  background:var(--navy); border-radius:50%;
-  box-shadow:0 12px 26px rgba(15,39,71,.28);
-  display:grid; place-items:center; cursor:pointer;
-}
-.help-bubble svg{ width:28px; height:28px; fill:#fff }
+  <!-- ============== SIMULATIONS (platform widget container remains) ============== -->
+  <section id="simulations" class="section">
+    <div class="section-inner">
+      <h2>Interactive Sales Simulations</h2>
+      <ul class="list-links" aria-label="Simulation features">
+        <li><a class="link-card" href="#" data-open="feat-ai">AI role-play coach</a></li>
+        <li><a class="link-card" href="#" data-open="feat-lib">Scenario library</a></li>
+        <li><a class="link-card" href="#" data-open="feat-territory">Territory scoring</a></li>
+        <li><a class="link-card" href="#" data-open="feat-guard">Compliance guardrails</a></li>
+      </ul>
 
-/* ---------- Responsive ---------- */
-@media (max-width: 900px){
-  .hero-inner{ grid-template-columns:1fr; padding:56px 16px }
-  .hero-image{ order:-1 } /* image on top for mobile */
-  .nav-links{ display:none; position:absolute; top:100%; left:0; right:0; background:var(--navy); padding:10px 16px; flex-direction:column }
-  .nav-links a{ padding:10px 0; border-top:1px solid rgba(255,255,255,.08) }
-  .nav-links.active{ display:flex }
-  .hamburger{ display:block }
-}
+      <!-- ReflectivAI chat/coach widget container -->
+      <div id="reflectiv-widget" class="reflectiv-widget" style="margin-top:18px">
+        <noscript>You need JavaScript to use the ReflectivAI Coach.</noscript>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== ANALYTICS (same card-open behavior) ============== -->
+  <section id="analytics" class="section">
+    <div class="section-inner">
+      <h2>Performance Analytics &amp; Coaching Intelligence</h2>
+      <div class="list-links">
+        <a class="link-card" href="#" data-open="m-emp">Empathy Index</a>
+        <a class="link-card" href="#" data-open="m-acc">Accuracy Index</a>
+        <a class="link-card" href="#" data-open="m-conf">Confidence Delta</a>
+        <a class="link-card" href="#" data-open="m-comp">Compliance Guard</a>
+        <a class="link-card" href="#" data-open="m-read">Readiness Velocity</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== ETHICS & FAQ remain as in your current file ============== -->
+  <section id="ethics" class="section">
+    <div class="section-inner">
+      <h2>Ethics, Privacy &amp; Governance</h2>
+      <p class="lead">ReflectivAI is built for life-sciences training. We avoid Protected Health Information (PHI) by default and apply strict safeguards when customers choose to integrate real data.</p>
+
+      <details open>
+        <summary><strong>Data privacy &amp; security</strong></summary>
+        <ul>
+          <li>PHI is off by default; training uses synthetic or de-identified data.</li>
+          <li>When a customer enables PHI, we operate under HIPAA controls and a signed BAA.</li>
+          <li>Vendor risk management includes security reviews and right-to-audit.</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary><strong>Informed consent</strong></summary>
+        <ul><li>If real patient data is used, customers must obtain explicit consent with an opt-out.</li></ul>
+      </details>
+
+      <details>
+        <summary><strong>Algorithmic bias &amp; fairness</strong></summary>
+        <ul>
+          <li>Pre-deployment bias tests; periodic re-tests.</li>
+          <li>Monitor disparate performance and document remediation.</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary><strong>Transparency &amp; explainability</strong></summary>
+        <ul>
+          <li>In-product recommendations include reason codes.</li>
+          <li>Model cards document data sources, limits and cadence.</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary><strong>Human oversight &amp; accountability</strong></summary>
+        <ul>
+          <li>Human reviewers curate scenarios and rubrics; escalation paths defined.</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary><strong>Doctor-patient relationship</strong></summary>
+        <ul>
+          <li>Training supports HCP judgement; off-label promotion is prohibited.</li>
+        </ul>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============== FAQ (collapsible) ============== -->
+  <section id="faq" class="section">
+    <div class="section-inner">
+      <h2>Frequently Asked Questions</h2>
+
+      <details>
+        <summary><strong>What sets ReflectivAI apart?</strong></summary>
+        <p>ReflectivAI combines AI simulations and analytics with subtle, emotionally intelligent coaching cues — all within strict life-sciences compliance guardrails.</p>
+      </details>
+
+      <details>
+        <summary><strong>Does it replace human coaching?</strong></summary>
+        <p>No. ReflectivAI scales practice, insights, and certification; managers and trainers remain essential.</p>
+      </details>
+
+      <details>
+        <summary><strong>How do you handle PHI?</strong></summary>
+        <p>PHI is off by default. When enabled, we operate under HIPAA controls and a signed BAA.</p>
+      </details>
+
+      <details>
+        <summary><strong>Is it customizable by disease state and region?</strong></summary>
+        <p>Yes — modules align to your therapeutic areas and local regulations.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============== CONTACT (spacing restored) ============== -->
+  <section id="contact" class="section contact">
+    <div class="section-inner">
+      <h2>Let’s Redefine Your Sales Training</h2>
+      <form class="contact-form" onsubmit="return false;">
+        <div class="form-row">
+          <label for="name">Name</label>
+          <input id="name" type="text" placeholder="Your name" required>
+        </div>
+        <div class="form-row">
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="you@example.com" required>
+        </div>
+        <div class="form-row">
+          <label for="message">Message</label>
+          <textarea id="message" placeholder="Tell us about your team and goals"></textarea>
+        </div>
+        <button class="btn primary" type="submit">Request Demo</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============== Footnotes (collapsible master list) ============== -->
+  <section class="section">
+    <div class="section-inner">
+      <details>
+        <summary><strong>References &amp; Citations (expand)</strong></summary>
+        <ol>
+          <li>HIPAA Privacy Rule …</li>
+          <li>NIST AI Risk Management Framework …</li>
+          <li>ISO/IEC 27001 …</li>
+          <li>ISO/IEC 42001 …</li>
+          <li>OECD AI Principles …</li>
+          <li>PhRMA Code …</li>
+          <li>FDA OPDP …</li>
+          <li>AI Adoption Survey …</li>
+          <li>AI Value &amp; Productivity …</li>
+        </ol>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============== WIDGET ASSETS ============== -->
+  <link rel="stylesheet" href="widget.css?v=9"/>
+  <script defer src="widget.js?v=9"></script>
+
+  <!-- ============== UI JS: mobile nav + optional “Explore” hook ============== -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Mobile nav
+      const navToggle = document.getElementById('navToggle');
+      const navMenu = document.getElementById('navMenu');
+      if (navToggle && navMenu){
+        navToggle.addEventListener('click', () => {
+          const open = navMenu.classList.toggle('active');
+          navToggle.classList.toggle('active', open);
+          navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        // Close after click
+        navMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+          navMenu.classList.remove('active'); navToggle.classList.remove('active');
+          navToggle.setAttribute('aria-expanded','false');
+        }));
+      }
+
+      // (Optional) open the coach section when “Explore the Platform” is clicked
+      const openBtn = document.getElementById('openPlatform');
+      if (openBtn){
+        openBtn.addEventListener('click', (e) => {
+          // keep anchor behavior; widget.js handles its own layout
+        });
+      }
+    });
+  </script>
+
+  <!-- ============== Alora site help bubble (icon only; behavior handled by your chat embed) ============== -->
+  <button class="help-bubble" aria-label="Open site help">
+    <!-- inline chat-bubbles icon (white) -->
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 4h12a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm3 10h9a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2zm13-5h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-3v4l-4-4h-3a2 2 0 0 1-2-2v-1h8a2 2 0 0 0 2-2V9z"/>
+    </svg>
+  </button>
+</body>
+</html>
