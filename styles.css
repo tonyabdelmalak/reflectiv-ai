@@ -5,7 +5,7 @@
  */
 
 :root {
-  --navy: #1e2a3a;
+  --navy: #1e2a3a;        /* site dark blue */
   --teal: #20bfa9;
   --slate: #596a82;
   --white: #ffffff;
@@ -17,7 +17,8 @@ html {
 
 body {
   margin: 0;
-  font-family: 'Poppins', sans-serif;
+  /* Switch to Inter, keep Poppins as fallback */
+  font-family: "Inter", "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   color: var(--navy);
   line-height: 1.5;
   background-color: var(--white);
@@ -92,7 +93,6 @@ body {
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
-/* optional "X" animation when JS toggles .active on the button */
 .hamburger.active span:nth-child(1) { transform: translateY(8.5px) rotate(45deg); }
 .hamburger.active span:nth-child(2) { opacity: 0; }
 .hamburger.active span:nth-child(3) { transform: translateY(-8.5px) rotate(-45deg); }
@@ -111,21 +111,25 @@ h2 {
   font-size: 2rem;
   margin-bottom: 1.5rem;
   color: var(--navy);
+  font-weight: 800; /* Inter heavy */
+  letter-spacing: -0.01em;
 }
 
 h3 {
   margin-top: 0;
   font-size: 1.2rem;
   color: var(--navy);
+  font-weight: 700;
 }
 
-/* ---------- Hero ---------- */
+/* ---------- Hero (updated) ---------- */
 .hero {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  background-color: var(--slate);
+  /* gradient + white text */
+  background: linear-gradient(140deg, #001d3d 0%, #0b3954 42%, #1fa3a8 100%);
   color: var(--white);
   padding: 4rem 1rem;
 }
@@ -136,15 +140,19 @@ h3 {
 }
 
 .hero-content h1 {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
+  margin: 0 0 1rem;
   color: var(--white);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-size: clamp(2rem, 5.2vw, 2.75rem); /* ~32px to 44px */
+  line-height: 1.05;
 }
 
 .hero-content p {
-  font-size: 1.125rem;
+  font-size: clamp(1rem, 2.4vw, 1.125rem);
   margin-bottom: 2rem;
   max-width: 600px;
+  font-weight: 500;
 }
 
 .cta-buttons {
@@ -155,22 +163,28 @@ h3 {
 
 .btn {
   display: inline-block;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  font-weight: 600;
+  padding: 0.8125rem 1.25rem; /* 13px 20px */
+  border-radius: 10px;
+  font-weight: 700;
   text-decoration: none;
   text-align: center;
+  transition: all .15s ease;
 }
 
+/* CTAs changed to dark navy */
 .btn.primary {
-  background-color: var(--teal);
-  color: var(--navy);
+  background-color: var(--navy);
+  color: #ffffff;
+  border: 0;
 }
+.btn.primary:hover { filter: brightness(.95); }
 
 .btn.secondary {
-  border: 2px solid var(--teal);
-  color: var(--white);
+  border: 2px solid var(--navy);
+  color: #ffffff;
+  background: transparent;
 }
+.btn.secondary:hover { background: rgba(255,255,255,.12); }
 
 .hero-image {
   flex: 1 1 45%;
@@ -436,6 +450,37 @@ th {
   margin-left: 2px;
 }
 
+/* ---------- Why it matters banner (new) ---------- */
+.why-banner {
+  background: #0f2747; /* dark navy */
+  color: #ffffff;
+}
+.why-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 1rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px 22px;
+  align-items: center;
+}
+.why-title {
+  grid-column: 1 / 2;
+  font-family: "Pacifico", cursive; /* cursive wordmark */
+  font-size: 26px;
+  transform: rotate(-3deg);
+  line-height: 1;
+  margin: 0;
+  white-space: nowrap;
+}
+.why-text {
+  grid-column: 2 / 3;
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 768px) {
   .hero {
@@ -471,6 +516,10 @@ th {
     padding: 0.75rem 0;
     border-top: 1px solid rgba(255,255,255,0.08);
   }
+
+  .why-inner { grid-template-columns: 1fr; }
+  .why-title { font-size: 24px; transform: rotate(-2deg); }
+  .why-text { font-size: 16px; }
 }
 
 /* ===== Compact spacing for Platform Modules ===== */
