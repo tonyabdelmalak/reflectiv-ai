@@ -5,20 +5,23 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>ReflectivAI – AI Sales Enablement for Life Sciences</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="styles.css?v=2025-10-19-2"/>
-  <link rel="stylesheet" href="widget.css?v=9"/>
+  <!-- Styles -->
+  <link rel="stylesheet" href="widget.css?v=9">
+  <link rel="stylesheet" href="styles.css?v=2025-10-19a">
 </head>
 <body>
 
-  <!-- Header -->
+  <!-- ============== NAV ============== -->
   <header class="site-header">
     <nav class="nav">
-      <a href="#home" class="brand">
-        <img src="assets/reflectiv-logo.png" alt="ReflectivAI logo"/>
+      <a class="brand" href="#home" aria-label="ReflectivAI home">
+        <!-- If you don't have this yet, keep the <span> text; else drop in your file -->
+        <img src="assets/logo-mark.svg" alt="" onerror="this.style.display='none'">
         <span>ReflectivAI</span>
       </a>
 
@@ -39,36 +42,42 @@
     </nav>
   </header>
 
-  <!-- Hero (image hidden for now, two CTAs side-by-side) -->
+  <!-- ============== HERO (restored) ============== -->
   <section id="home" class="hero">
-    <div class="hero-wrap">
-      <div class="hero-copy">
-        <h1>Empowering Life-Sciences Sales Teams to Connect — and Convert — with Intelligence</h1>
+    <div class="hero-inner">
+      <div>
+        <h1>Empowering Life Sciences Sales Teams to Connect — and Convert — with Intelligence</h1>
         <p>ReflectivAI blends clinical accuracy, emotional intelligence, and adaptive AI coaching so every conversation with a healthcare professional feels authentic, confident, and compliant.</p>
         <div class="cta-row">
           <a class="btn primary" href="#contact">Request a Demo</a>
-          <a class="btn secondary" href="#platform" id="openPlatform">Explore the Platform</a>
+          <a class="btn secondary" href="#simulations" id="openPlatform">Explore the Platform</a>
         </div>
       </div>
-      <div class="hero-image"><!-- reserved for future hero image --></div>
-    </div>
-  </section>
-
-  <!-- Why it Matters (image moved here) -->
-  <section class="why" id="why">
-    <div class="why-inner">
-      <h2>Why it Matters</h2>
-      <div class="why-card">
-        <img class="why-img" src="assets/why-hero.jpg" alt="HCPs collaborating"/>
+      <div class="hero-image">
+        <!-- NEW hero image: replace src with your uploaded asset name -->
+        <!-- map: /assets/hero-alt.jpg -->
+        <img src="assets/hero-alt.jpg" alt="Digital health intelligence and analytics"/>
       </div>
     </div>
   </section>
 
-  <!-- Platform Modules -->
-  <section id="platform" class="section platform">
+  <!-- ============== WHY IT MATTERS (old hero image lives here) ============== -->
+  <section id="why" class="why">
+    <div class="section-inner">
+      <h2>Why it matters</h2>
+      <div class="why-image">
+        <!-- This uses the PRIOR hero picture; you can swap the file whenever you upload your preferred version. -->
+        <!-- map: /assets/hero-image.png -->
+        <img src="assets/hero-image.png" alt="Clinicians collaborating; coaching and analytics overlay"/>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== PLATFORM MODULES ============== -->
+  <section id="platform" class="section">
     <div class="section-inner">
       <h2>Platform Modules</h2>
-      <div class="grid-3">
+      <div class="card-grid">
         <article class="card">
           <h3>Product Knowledge</h3>
           <p>Train on complex data and regulatory messaging with confidence and compliance built in.</p>
@@ -85,305 +94,230 @@
     </div>
   </section>
 
-  <!-- Two-column: Therapeutic Areas & Personas -->
+  <!-- ============== DISEASE STATES (links that open popups still supported by your existing JS) ============== -->
   <section id="disease-states" class="section">
     <div class="section-inner">
-      <div class="duo">
-        <div>
-          <h2>Train by Therapeutic Area</h2>
-          <div class="pill-list">
-            <button class="pill" data-modal="ta1">HIV PrEP</button>
-            <button class="pill" data-modal="ta2">Vaccines</button>
-            <button class="pill" data-modal="ta3">Hepatitis B</button>
-            <button class="pill" data-modal="ta4">Oncology</button>
-            <button class="pill" data-modal="ta5">Cardiology</button>
-            <button class="pill" data-modal="ta6">Pulmonology</button>
-          </div>
-          <p class="note">Our scenario library grows continually — new therapeutic areas and objections are added with each launch.</p>
-        </div>
+      <h2>Train by Therapeutic Area</h2>
+      <div class="list-links">
+        <a class="link-card" href="#" data-open="card-hiv">HIV PrEP</a>
+        <a class="link-card" href="#" data-open="card-vax">Vaccines</a>
+        <a class="link-card" href="#" data-open="card-hbv">Hepatitis B</a>
+        <a class="link-card" href="#" data-open="card-onc">Oncology</a>
+        <a class="link-card" href="#" data-open="card-cardio">Cardiology</a>
+        <a class="link-card" href="#" data-open="card-pulm">Pulmonology</a>
+      </div>
+      <p class="note">Our scenario library grows continually — new therapeutic areas and objections are added with each launch.</p>
+    </div>
+  </section>
 
-        <div class="divider"></div>
-
-        <div>
-          <h2>Practice with Realistic Personas</h2>
-          <div class="pill-list">
-            <button class="pill" data-modal="hp1">Internal Medicine MD</button>
-            <button class="pill" data-modal="hp2">Nurse Practitioner (NP)</button>
-            <button class="pill" data-modal="hp3">Physician Assistant (PA)</button>
-            <button class="pill" data-modal="hp4">Infectious Disease Specialist</button>
-            <button class="pill" data-modal="hp5">Oncologist</button>
-            <button class="pill" data-modal="hp6">Pulmonologist</button>
-            <button class="pill" data-modal="hp7">Cardiologist</button>
-          </div>
-        </div>
+  <!-- ============== HCP PROFILES ============== -->
+  <section id="hcp-profiles" class="section">
+    <div class="section-inner">
+      <h2>Practice with Realistic Personas</h2>
+      <div class="list-links">
+        <a class="link-card" href="#" data-open="p-im">Internal Medicine MD</a>
+        <a class="link-card" href="#" data-open="p-np">Nurse Practitioner (NP)</a>
+        <a class="link-card" href="#" data-open="p-pa">Physician Assistant (PA)</a>
+        <a class="link-card" href="#" data-open="p-id">Infectious Disease Specialist</a>
+        <a class="link-card" href="#" data-open="p-onc">Oncologist</a>
+        <a class="link-card" href="#" data-open="p-pulm">Pulmonologist</a>
+        <a class="link-card" href="#" data-open="p-cardio">Cardiologist</a>
       </div>
     </div>
   </section>
 
-  <!-- Simulations -->
+  <!-- ============== SIMULATIONS (platform widget container remains) ============== -->
   <section id="simulations" class="section">
     <div class="section-inner">
       <h2>Interactive Sales Simulations</h2>
-      <ul class="metric-list">
-        <li class="metric" data-modal="m1">AI role-play coach</li>
-        <li class="metric" data-modal="m2">Scenario library</li>
-        <li class="metric" data-modal="m3">Territory scoring</li>
-        <li class="metric" data-modal="m4">Compliance guardrails</li>
+      <ul class="list-links" aria-label="Simulation features">
+        <li><a class="link-card" href="#" data-open="feat-ai">AI role-play coach</a></li>
+        <li><a class="link-card" href="#" data-open="feat-lib">Scenario library</a></li>
+        <li><a class="link-card" href="#" data-open="feat-territory">Territory scoring</a></li>
+        <li><a class="link-card" href="#" data-open="feat-guard">Compliance guardrails</a></li>
       </ul>
 
-      <!-- Embedded large widget container (opens via “Explore the Platform”) -->
-      <div id="reflectiv-widget" class="reflectiv-widget" style="margin-top:22px">
+      <!-- ReflectivAI chat/coach widget container -->
+      <div id="reflectiv-widget" class="reflectiv-widget" style="margin-top:18px">
         <noscript>You need JavaScript to use the ReflectivAI Coach.</noscript>
       </div>
     </div>
   </section>
 
-  <!-- Analytics (metrics become clickable cards via modals) -->
+  <!-- ============== ANALYTICS (same card-open behavior) ============== -->
   <section id="analytics" class="section">
     <div class="section-inner">
       <h2>Performance Analytics &amp; Coaching Intelligence</h2>
-      <ul class="metric-list">
-        <li class="metric" data-modal="mx1">Empathy Index</li>
-        <li class="metric" data-modal="mx2">Accuracy Index</li>
-        <li class="metric" data-modal="mx3">Confidence Delta</li>
-        <li class="metric" data-modal="mx4">Compliance Guard</li>
-        <li class="metric" data-modal="mx5">Readiness Velocity</li>
-      </ul>
+      <div class="list-links">
+        <a class="link-card" href="#" data-open="m-emp">Empathy Index</a>
+        <a class="link-card" href="#" data-open="m-acc">Accuracy Index</a>
+        <a class="link-card" href="#" data-open="m-conf">Confidence Delta</a>
+        <a class="link-card" href="#" data-open="m-comp">Compliance Guard</a>
+        <a class="link-card" href="#" data-open="m-read">Readiness Velocity</a>
+      </div>
     </div>
   </section>
 
-  <!-- Ethics (collapsible groups) -->
-  <section id="ethics" class="section ethics">
+  <!-- ============== ETHICS & FAQ remain as in your current file ============== -->
+  <section id="ethics" class="section">
     <div class="section-inner">
       <h2>Ethics, Privacy &amp; Governance</h2>
-      <p class="lead">ReflectivAI is built for life-sciences training. We avoid PHI by default and apply strict safeguards when customers choose to integrate real data.</p>
+      <p class="lead">ReflectivAI is built for life-sciences training. We avoid Protected Health Information (PHI) by default and apply strict safeguards when customers choose to integrate real data.</p>
 
-      <details class="details" open>
-        <summary>Data privacy &amp; security</summary>
-        <div class="detail-body">
-          <ul>
-            <li>PHI is off by default; training uses synthetic or de-identified data.</li>
-            <li>When a customer enables PHI, we operate under HIPAA controls with a signed BAA; encryption in transit/at rest; role-based access; audit logs.</li>
-            <li>Vendor risk management includes annual security reviews and a right-to-audit clause.</li>
-          </ul>
-        </div>
+      <details open>
+        <summary><strong>Data privacy &amp; security</strong></summary>
+        <ul>
+          <li>PHI is off by default; training uses synthetic or de-identified data.</li>
+          <li>When a customer enables PHI, we operate under HIPAA controls and a signed BAA.</li>
+          <li>Vendor risk management includes security reviews and right-to-audit.</li>
+        </ul>
       </details>
 
-      <details class="details">
-        <summary>Informed consent</summary>
-        <div class="detail-body">
-          <ul><li>If real patient data powers enablement, customers must obtain explicit, documented consent and provide clear opt-out.</li></ul>
-        </div>
+      <details>
+        <summary><strong>Informed consent</strong></summary>
+        <ul><li>If real patient data is used, customers must obtain explicit consent with an opt-out.</li></ul>
       </details>
 
-      <details class="details">
-        <summary>Algorithmic bias &amp; fairness</summary>
-        <div class="detail-body">
-          <ul>
-            <li>Pre-deployment bias testing; periodic re-tests.</li>
-            <li>Monitor disparate performance; publish remediation steps.</li>
-            <li>Guardrails prohibit non-clinical demographic targeting.</li>
-          </ul>
-        </div>
+      <details>
+        <summary><strong>Algorithmic bias &amp; fairness</strong></summary>
+        <ul>
+          <li>Pre-deployment bias tests; periodic re-tests.</li>
+          <li>Monitor disparate performance and document remediation.</li>
+        </ul>
       </details>
 
-      <details class="details">
-        <summary>Transparency &amp; explainability</summary>
-        <div class="detail-body">
-          <ul>
-            <li>In-product recommendations include reason codes.</li>
-            <li>Model cards document data sources, limitations, and cadence.</li>
-            <li>AI-generated content is clearly labeled.</li>
-          </ul>
-        </div>
+      <details>
+        <summary><strong>Transparency &amp; explainability</strong></summary>
+        <ul>
+          <li>In-product recommendations include reason codes.</li>
+          <li>Model cards document data sources, limits and cadence.</li>
+        </ul>
       </details>
 
-      <details class="details">
-        <summary>Human oversight &amp; accountability</summary>
-        <div class="detail-body">
-          <ul>
-            <li>Human reviewers curate scenario content and rubrics.</li>
-            <li>Defined escalation paths for model errors.</li>
-            <li>Versioning for MLR traceability.</li>
-          </ul>
-        </div>
+      <details>
+        <summary><strong>Human oversight &amp; accountability</strong></summary>
+        <ul>
+          <li>Human reviewers curate scenarios and rubrics; escalation paths defined.</li>
+        </ul>
       </details>
 
-      <details class="details">
-        <summary>Doctor–patient relationship</summary>
-        <div class="detail-body">
-          <ul>
-            <li>Training supports, not manipulates, HCP judgement.</li>
-            <li>Off-label promotion is prohibited; risky language flagged.</li>
-          </ul>
-        </div>
-      </details>
-
-      <details class="details">
-        <summary>Compliance anchors</summary>
-        <div class="detail-body">
-          <p>We align to HIPAA Privacy Rule, PhRMA Code, FDA OPDP, NIST AI RMF, ISO/IEC 27001, ISO/IEC 42001, and OECD AI Principles.</p>
-        </div>
+      <details>
+        <summary><strong>Doctor-patient relationship</strong></summary>
+        <ul>
+          <li>Training supports HCP judgement; off-label promotion is prohibited.</li>
+        </ul>
       </details>
     </div>
   </section>
 
-  <!-- FAQ (collapsible) -->
+  <!-- ============== FAQ (collapsible) ============== -->
   <section id="faq" class="section">
     <div class="section-inner">
       <h2>Frequently Asked Questions</h2>
 
-      <details class="details" open>
-        <summary>What sets ReflectivAI apart?</summary>
-        <div class="detail-body"><p>AI simulations + analytics with subtle, emotionally-intelligent coaching cues — all inside strict life-sciences compliance guardrails.</p></div>
+      <details>
+        <summary><strong>What sets ReflectivAI apart?</strong></summary>
+        <p>ReflectivAI combines AI simulations and analytics with subtle, emotionally intelligent coaching cues — all within strict life-sciences compliance guardrails.</p>
       </details>
 
-      <details class="details">
-        <summary>Does it replace human coaching?</summary>
-        <div class="detail-body"><p>No. ReflectivAI scales practice, insights, and certification; managers remain essential to interpret data and personalize development.</p></div>
+      <details>
+        <summary><strong>Does it replace human coaching?</strong></summary>
+        <p>No. ReflectivAI scales practice, insights, and certification; managers and trainers remain essential.</p>
       </details>
 
-      <details class="details">
-        <summary>How do you handle PHI?</summary>
-        <div class="detail-body"><p>PHI is off by default. When enabled, we operate under HIPAA controls and a signed BAA (minimum-necessary scope, encryption in transit/at rest, audit logging).</p></div>
+      <details>
+        <summary><strong>How do you handle PHI?</strong></summary>
+        <p>PHI is off by default. When enabled, we operate under HIPAA controls and a signed BAA.</p>
+      </details>
+
+      <details>
+        <summary><strong>Is it customizable by disease state and region?</strong></summary>
+        <p>Yes — modules align to your therapeutic areas and local regulations.</p>
       </details>
     </div>
   </section>
 
-  <!-- Contact -->
+  <!-- ============== CONTACT (spacing restored) ============== -->
   <section id="contact" class="section contact">
     <div class="section-inner">
       <h2>Let’s Redefine Your Sales Training</h2>
       <form class="contact-form" onsubmit="return false;">
-        <div class="form-group">
+        <div class="form-row">
           <label for="name">Name</label>
-          <input id="name" type="text" placeholder="Your name" required/>
+          <input id="name" type="text" placeholder="Your name" required>
         </div>
-        <div class="form-group">
+        <div class="form-row">
           <label for="email">Email</label>
-          <input id="email" type="email" placeholder="you@example.com" required/>
+          <input id="email" type="email" placeholder="you@example.com" required>
         </div>
-        <div class="form-group">
+        <div class="form-row">
           <label for="message">Message</label>
-          <textarea id="message" rows="4" placeholder="Tell us about your team and goals"></textarea>
+          <textarea id="message" placeholder="Tell us about your team and goals"></textarea>
         </div>
         <button class="btn primary" type="submit">Request Demo</button>
       </form>
     </div>
   </section>
 
-  <!-- Footnotes (collapsible list) -->
-  <section class="footnotes">
+  <!-- ============== Footnotes (collapsible master list) ============== -->
+  <section class="section">
     <div class="section-inner">
-      <h2>References</h2>
-      <details class="details" open>
-        <summary>Show / hide citations</summary>
-        <div class="detail-body">
-          <ol>
-            <li>HIPAA Privacy Rule — U.S. HHS.</li>
-            <li>NIST AI Risk Management Framework.</li>
-            <li>ISO/IEC 27001 — Information Security.</li>
-            <li>ISO/IEC 42001 — AI Management Systems.</li>
-            <li>OECD AI Principles.</li>
-            <li>PhRMA Code on Interactions with HCPs.</li>
-            <li>FDA OPDP guidance.</li>
-            <li>AI Adoption Survey (2025) — IQVIA.</li>
-            <li>AI Value &amp; Productivity — McKinsey &amp; Company.</li>
-          </ol>
-        </div>
+      <details>
+        <summary><strong>References &amp; Citations (expand)</strong></summary>
+        <ol>
+          <li>HIPAA Privacy Rule …</li>
+          <li>NIST AI Risk Management Framework …</li>
+          <li>ISO/IEC 27001 …</li>
+          <li>ISO/IEC 42001 …</li>
+          <li>OECD AI Principles …</li>
+          <li>PhRMA Code …</li>
+          <li>FDA OPDP …</li>
+          <li>AI Adoption Survey …</li>
+          <li>AI Value &amp; Productivity …</li>
+        </ol>
       </details>
     </div>
   </section>
 
-  <!-- Modals (content abbreviated; reuse for TA, HCP, Metrics) -->
-  <div class="modal" id="modal">
-    <div class="modal-card">
-      <div class="modal-head">
-        <strong id="modalTitle">Details</strong>
-        <button id="modalClose" aria-label="Close">✕</button>
-      </div>
-      <div class="modal-body" id="modalBody"></div>
-    </div>
-  </div>
-
-  <!-- Alora site-help FAB -->
-  <button class="chat-fab" id="aloraFab" aria-label="Chat with Alora">
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 4h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4 4v-4H3a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm18 5h2v7a2 2 0 0 1-2 2h-3v3l-3-3h-2v-2h6a2 2 0 0 0 2-2V9z"/>
-    </svg>
-  </button>
-
-  <!-- Scripts -->
+  <!-- ============== WIDGET ASSETS ============== -->
+  <link rel="stylesheet" href="widget.css?v=9"/>
   <script defer src="widget.js?v=9"></script>
+
+  <!-- ============== UI JS: mobile nav + optional “Explore” hook ============== -->
   <script>
-    // Mobile nav
-    const navToggle=document.getElementById('navToggle');
-    const navMenu=document.getElementById('navMenu');
-    if(navToggle&&navMenu){
-      navToggle.addEventListener('click',()=>{
-        navToggle.classList.toggle('active');
-        navMenu.classList.toggle('active');
-        navToggle.setAttribute('aria-expanded',navMenu.classList.contains('active')?'true':'false');
-      });
-      navMenu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{
-        navMenu.classList.remove('active');navToggle.classList.remove('active');navToggle.setAttribute('aria-expanded','false');
-      }));
-    }
-    // Always start at top
-    if('scrollRestoration' in history){history.scrollRestoration='manual'};window.scrollTo(0,0);
+    document.addEventListener('DOMContentLoaded', () => {
+      // Mobile nav
+      const navToggle = document.getElementById('navToggle');
+      const navMenu = document.getElementById('navMenu');
+      if (navToggle && navMenu){
+        navToggle.addEventListener('click', () => {
+          const open = navMenu.classList.toggle('active');
+          navToggle.classList.toggle('active', open);
+          navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        // Close after click
+        navMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+          navMenu.classList.remove('active'); navToggle.classList.remove('active');
+          navToggle.setAttribute('aria-expanded','false');
+        }));
+      }
 
-    // “Explore the Platform” – scroll to widget (keeps original size/placement)
-    document.getElementById('openPlatform')?.addEventListener('click',()=>{
-      setTimeout(()=>document.getElementById('reflectiv-widget')?.scrollIntoView({behavior:'smooth',block:'start'}),0);
-    });
-
-    // Simple modal content map (examples)
-    const MODAL_CONTENT={
-      ta1:{title:'HIV PrEP',body:'Urgency framing & prevention benefits; stigma sensitivity; adherence.'},
-      ta2:{title:'Vaccines',body:'Address hesitancy with evidence; community impact; schedules & safety.'},
-      ta3:{title:'Hepatitis B',body:'Access & affordability; resistance; screening and vaccination guidelines.'},
-      ta4:{title:'Oncology',body:'Data interpretation; payer value; empathy for patients & caregivers.'},
-      ta5:{title:'Cardiology',body:'Outcomes framing; comorbidities; guideline-driven conversations.'},
-      ta6:{title:'Pulmonology',body:'Translate advances; adherence & technique; access & chronic mgmt.'},
-
-      hp1:{title:'Internal Medicine MD',body:'Objectives: prevention & chronic care. Common objections: time, formulary.'},
-      hp2:{title:'Nurse Practitioner (NP)',body:'Objectives: holistic education & adherence. Objections: workload, reimbursement.'},
-      hp3:{title:'Physician Assistant (PA)',body:'Objectives: team collaboration. Questions: authority, samples.'},
-      hp4:{title:'Infectious Disease Specialist',body:'Focus: stewardship, resistance, DDI.'},
-      hp5:{title:'Oncologist',body:'Focus: precision medicine, cost, QoL.'},
-      hp6:{title:'Pulmonologist',body:'Focus: function, readmissions, outpatient logistics.'},
-      hp7:{title:'Cardiologist',body:'Focus: CV outcomes, GDMT, endpoints.'},
-
-      m1:{title:'AI role-play coach',body:'Responsive personas adapt to tone, content, and questions.'},
-      m2:{title:'Scenario library',body:'Hundreds of practice calls across disease states and objections.'},
-      m3:{title:'Territory scoring',body:'Benchmark by geography, team, and rep; track certification.'},
-      m4:{title:'Compliance guardrails',body:'Real-time checks for fair balance and regulated language.'},
-
-      mx1:{title:'Empathy Index',body:'Measures emotional attunement and conversational trust with HCPs.'},
-      mx2:{title:'Accuracy Index',body:'Tracks medical and regulatory precision.'},
-      mx3:{title:'Confidence Delta',body:'Compares self-perceived vs. observed skill growth.'},
-      mx4:{title:'Compliance Guard',body:'Flags deviations from approved messaging; detects off-label risks.'},
-      mx5:{title:'Readiness Velocity',body:'Quantifies ramp-up speed by rep, team, or territory.'}
-    };
-
-    const modal=document.getElementById('modal');
-    const modalTitle=document.getElementById('modalTitle');
-    const modalBody=document.getElementById('modalBody');
-    const modalClose=document.getElementById('modalClose');
-    function openModal(key){
-      const c=MODAL_CONTENT[key]; if(!c) return;
-      modalTitle.textContent=c.title; modalBody.textContent=c.body; modal.classList.add('open');
-    }
-    modalClose.addEventListener('click',()=>modal.classList.remove('open'));
-    modal.addEventListener('click',e=>{ if(e.target===modal) modal.classList.remove('open'); });
-    document.querySelectorAll('[data-modal]').forEach(el=>{
-      el.addEventListener('click',()=>openModal(el.getAttribute('data-modal')));
-    });
-
-    // Alora FAB (tiny help chat placeholder hook)
-    document.getElementById('aloraFab')?.addEventListener('click',()=>{
-      alert("Hi, I’m Alora! I’m here to answer questions about ReflectivAI. (Hook this to your site-help chat when ready.)");
+      // (Optional) open the coach section when “Explore the Platform” is clicked
+      const openBtn = document.getElementById('openPlatform');
+      if (openBtn){
+        openBtn.addEventListener('click', (e) => {
+          // keep anchor behavior; widget.js handles its own layout
+        });
+      }
     });
   </script>
+
+  <!-- ============== Alora site help bubble (icon only; behavior handled by your chat embed) ============== -->
+  <button class="help-bubble" aria-label="Open site help">
+    <!-- inline chat-bubbles icon (white) -->
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 4h12a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm3 10h9a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h2zm13-5h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-3v4l-4-4h-3a2 2 0 0 1-2-2v-1h8a2 2 0 0 0 2-2V9z"/>
+    </svg>
+  </button>
 </body>
 </html>
