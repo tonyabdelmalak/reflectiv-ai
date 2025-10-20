@@ -9,28 +9,26 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="styles.css?v=2025-10-20">
-<link rel="stylesheet" href="widget.css?v=2025-10-20"><!-- Coach -->
-<link rel="stylesheet" href="alora.css?v=2025-10-20"><!-- Alora -->
-
+<link rel="stylesheet" href="styles.css?v=20251020-2">
+<link rel="stylesheet" href="widget.css?v=20251020-2">
+<link rel="stylesheet" href="alora.css?v=20251020-2">
 </head>
 <body>
 
-<!-- ================= Header / Nav ================= -->
 <header class="site-header">
-  <div class="nav-wrap">
-    <a class="brand" href="#home" aria-label="ReflectivAI">
-      <img src="assets/logo-reflectivai.png" alt="ReflectivAI logo" />
-      <span>ReflectivAI</span>
+  <div class="container nav-wrap">
+    <a class="brand" href="#home">
+      <img src="assets/logo-reflectivai.png" alt="ReflectivAI" class="brand-logo">
+      <span class="brand-name">ReflectivAI</span>
     </a>
 
-    <nav class="main-nav" aria-label="Primary">
-      <button class="hamburger" id="navToggle" aria-expanded="false" aria-controls="navMenu" aria-label="Toggle navigation">
-        <span></span><span></span><span></span>
-      </button>
+    <button id="navToggle" class="hamburger" aria-expanded="false" aria-controls="navMenu" aria-label="Toggle navigation">
+      <span></span><span></span><span></span>
+    </button>
 
-      <ul id="navMenu" class="links">
-        <li class="has-dd">
+    <nav class="nav" aria-label="Primary">
+      <ul id="navMenu" class="nav-list">
+        <li class="nav-item has-dd">
           <button class="dd-toggle" aria-expanded="false">Platform</button>
           <ul class="dropdown" role="menu" aria-label="Platform">
             <li><a href="#platform-mods" role="menuitem">Platform Modules</a></li>
@@ -39,132 +37,165 @@
             <li><a href="#simulations" role="menuitem">Simulations</a></li>
           </ul>
         </li>
-        <li><a href="#analytics">Analytics</a></li>
-        <li><a href="#ethics">Ethics</a></li>
-        <li><a href="#faq">FAQ</a></li>
-        <li><a href="#contact" class="cta-link">Contact</a></li>
+        <li class="nav-item has-dd">
+          <button class="dd-toggle" aria-expanded="false">Resources</button>
+          <ul class="dropdown" role="menu" aria-label="Resources">
+            <li><a href="#" role="menuitem">Sales Enablement Blog</a></li>
+            <li><a href="#" role="menuitem">Guides & Reports</a></li>
+            <li><a href="#" role="menuitem">Training & Certifications</a></li>
+            <li><a href="#" role="menuitem">Customer Stories</a></li>
+          </ul>
+        </li>
+        <li class="nav-item"><a href="#analytics">Analytics</a></li>
+        <li class="nav-item"><a href="#ethics">Ethics</a></li>
+        <li class="nav-item"><a href="#faq">FAQ</a></li>
+        <li class="nav-item"><a href="#contact">Contact</a></li>
       </ul>
     </nav>
   </div>
-</header>
 
-<!-- ================= Hero ================= -->
-<section id="home" class="slab-navy hero">
-  <div class="hero-inner">
-    <div class="hero-copy">
-      <h1>Empowering Life-Sciences Teams to Connect — and Convert — with Intelligence</h1>
-      <p>ReflectivAI blends clinical accuracy, emotional intelligence, and adaptive AI coaching so every HCP conversation feels authentic, confident, and compliant.</p>
-      <div class="btn-row">
-        <a class="btn btn-light" href="#contact">Request a Demo</a>
-        <button id="btnExplore" class="btn btn-outline">Explore the Platform</button>
+  <!-- Mobile mega-menu -->
+  <div id="mobileMenu" class="mobile-menu" aria-hidden="true">
+    <div class="mobile-inner">
+      <button id="mobileClose" class="mobile-close" aria-label="Close">×</button>
+      <div class="mobile-block">
+        <h4>Platform</h4>
+        <a href="#platform-mods">Platform Modules</a>
+        <a href="#therapy">Disease States</a>
+        <a href="#personas">HCP Profiles</a>
+        <a href="#simulations">Simulations</a>
+        <a href="#">Integrations</a>
+        <a href="#">Security</a>
+        <a href="#">Partner Ecosystem</a>
+      </div>
+
+      <div class="mobile-block">
+        <h4>Why ReflectivAI</h4>
+        <a href="#">Why ReflectivAI</a>
+        <a href="#">Why You Need Sales Enablement</a>
+        <a href="#">Services</a>
+        <a href="#">Reviews</a>
+        <a href="#">Calculate Your ROI</a>
+      </div>
+
+      <div class="mobile-block">
+        <h4>Solutions</h4>
+        <a href="#">AI Role Play</a>
+        <a href="#">Sales Content Management</a>
+        <a href="#">Sales Plays & Playbooks</a>
+        <a href="#">Buyer Engagement</a>
+        <a href="#">Sales Training</a>
+        <a href="#">Sales Coaching</a>
+        <a href="#">Partner Enablement</a>
+      </div>
+
+      <div class="mobile-block">
+        <h4>Resources</h4>
+        <a href="#">GTM Resources & Insights</a>
+        <a href="#">Training & Certifications</a>
+        <a href="#">Podcast</a>
+        <a href="#">Customer Stories</a>
+      </div>
+
+      <div class="mobile-block">
+        <h4>Company</h4>
+        <a href="#">About</a>
+        <a href="#">Careers</a>
+        <a href="#">News</a>
+      </div>
+
+      <div class="mobile-block">
+        <h4>Pricing</h4>
+        <a href="#contact">Request a Demo</a>
       </div>
     </div>
-    <div class="hero-media">
-      <img src="assets/hero-placeholder.jpg" alt="HCP team collaboration" />
+  </div>
+</header>
+
+<section id="home" class="slab-navy hero">
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <h1>Empowering life-sciences teams to connect and convert with intelligence</h1>
+      <p>ReflectivAI blends clinical accuracy, emotional intelligence, and adaptive AI coaching so every HCP conversation is authentic, confident, and compliant.</p>
+      <div class="btn-row">
+        <a class="btn btn-ghost" href="#contact">Request a Demo</a>
+        <button id="ctaExplore" class="btn btn-ghost" type="button">Explore the Platform</button>
+      </div>
+    </div>
+    <div class="hero-art">
+      <img src="assets/hero-placeholder.jpg" alt="HCP team with analytics overlay">
     </div>
   </div>
-  <div class="hero-divider">
-    <p>Why it matters</p>
-    <span>Emotional intelligence drives connection. ReflectivAI helps reps practice active listening, empathy, and tone calibration—turning compliance into confidence and insight into influence.</span>
+  <div class="hero-bottom-shadow"></div>
+</section>
+
+<section class="slab-gray">
+  <div class="container section">
+    <h2 class="eyebrow">Why it matters</h2>
+    <p class="lead">Emotional intelligence drives connection. ReflectivAI helps reps practice active listening, empathy, and tone calibration—turning compliance into confidence and insight into action.</p>
   </div>
 </section>
 
-<!-- ================= Platform Modules ================= -->
-<section id="platform-mods" class="slab-white section">
-  <div class="section-inner">
+<section id="platform-mods" class="slab-white">
+  <div class="container section">
     <h2>Platform Modules</h2>
     <div class="cards-3">
-      <article class="card">
-        <img src="assets/module-1.jpg" alt="" />
-        <h3>Product Knowledge</h3>
-        <p>Train on complex data and regulatory messaging with confidence and compliance built in.</p>
-      </article>
-      <article class="card">
-        <img src="assets/module-2.jpg" alt="" />
-        <h3>Sales Simulation</h3>
-        <p>Practice high-stakes calls in oncology, vaccines, and other therapeutic areas.</p>
-      </article>
-      <article class="card">
-        <img src="assets/module-3.jpg" alt="" />
-        <h3>Relationship Intelligence</h3>
-        <p>Understand blind spots. Track empathy, tone, and conversational agility.</p>
-      </article>
+      <article class="card"><img src="assets/img-mod-1.jpg" alt=""><h3>Product Knowledge</h3><p>Train on complex data and regulatory messaging with confidence.</p></article>
+      <article class="card"><img src="assets/img-mod-2.jpg" alt=""><h3>Sales Simulation</h3><p>Practice high-stakes calls in oncology, vaccines, and more.</p></article>
+      <article class="card"><img src="assets/img-mod-3.jpg" alt=""><h3>Relationship Intelligence</h3><p>Track empathy, tone, and conversational agility.</p></article>
     </div>
   </div>
 </section>
 
-<!-- ================= Split: Disease States + Personas ================= -->
-<section id="platform" class="slab-gray section">
-  <div class="section-inner split">
+<section id="platform" class="slab-gray">
+  <div class="container section split">
     <div class="col">
       <h2 id="therapy">Train by Therapeutic Area</h2>
-      <ul class="chips">
-        <li><button class="tag" data-card="HIV PrEP">HIV PrEP</button></li>
-        <li><button class="tag" data-card="Vaccines">Vaccines</button></li>
-        <li><button class="tag" data-card="Hepatitis B">Hepatitis B</button></li>
-        <li><button class="tag" data-card="Oncology">Oncology</button></li>
-        <li><button class="tag" data-card="Cardiology">Cardiology</button></li>
-        <li><button class="tag" data-card="Pulmonology">Pulmonology</button></li>
-      </ul>
-      <p class="muted">Scenario library grows continually. New therapeutic areas and objections added each launch.</p>
+      <div class="chips">
+        <button class="tag" data-card="HIV PrEP">HIV PrEP</button>
+        <button class="tag" data-card="Vaccines">Vaccines</button>
+        <button class="tag" data-card="Hepatitis B">Hepatitis B</button>
+        <button class="tag" data-card="Oncology">Oncology</button>
+        <button class="tag" data-card="Cardiology">Cardiology</button>
+        <button class="tag" data-card="Pulmonology">Pulmonology</button>
+      </div>
+      <p class="muted mt-12">Our scenario library grows continually—new therapeutic areas and objections are added with each launch.</p>
     </div>
 
     <div class="divider" aria-hidden="true"></div>
 
     <div class="col">
       <h2 id="personas">Practice with Realistic Personas</h2>
-      <ul class="chips">
-        <li><button class="tag" data-card="Internal Medicine MD">Internal Medicine MD</button></li>
-        <li><button class="tag" data-card="Nurse Practitioner (NP)">Nurse Practitioner (NP)</button></li>
-        <li><button class="tag" data-card="Physician Assistant (PA)">Physician Assistant (PA)</button></li>
-        <li><button class="tag" data-card="Infectious Disease Specialist">Infectious Disease Specialist</button></li>
-        <li><button class="tag" data-card="Oncologist">Oncologist</button></li>
-        <li><button class="tag" data-card="Pulmonologist">Pulmonologist</button></li>
-        <li><button class="tag" data-card="Cardiologist">Cardiologist</button></li>
-      </ul>
+      <div class="chips">
+        <button class="tag" data-card="Internal Medicine MD">Internal Medicine MD</button>
+        <button class="tag" data-card="Nurse Practitioner (NP)">Nurse Practitioner (NP)</button>
+        <button class="tag" data-card="Physician Assistant (PA)">Physician Assistant (PA)</button>
+        <button class="tag" data-card="Infectious Disease Specialist">Infectious Disease Specialist</button>
+        <button class="tag" data-card="Oncologist">Oncologist</button>
+        <button class="tag" data-card="Pulmonologist">Pulmonologist</button>
+        <button class="tag" data-card="Cardiologist">Cardiologist</button>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- ================= Simulations ================= -->
-<section id="simulations" class="slab-white section">
-  <div class="section-inner">
-    <div class="section-head">
-      <h2>Interactive Sales Simulations</h2>
-      <button id="btnLaunchCoach" class="btn btn-dark">Launch AI Coach</button>
-    </div>
-    <ul class="feature-stack">
-      <li>
-        <div class="stack-card">
-          <h3>AI role-play coach</h3>
-          <p>Responsive personas that adapt to your messaging, tone, and questions.</p>
-        </div>
-      </li>
-      <li>
-        <div class="stack-card">
-          <h3>Scenario library</h3>
-          <p>Hundreds of practice calls mapped to disease states, objections, and profiles.</p>
-        </div>
-      </li>
-      <li>
-        <div class="stack-card">
-          <h3>Territory scoring</h3>
-          <p>Benchmark by geography, team and rep; track certification status.</p>
-        </div>
-      </li>
-      <li>
-        <div class="stack-card">
-          <h3>Compliance guardrails</h3>
-          <p>Real-time checks for fair balance and regulated language.</p>
-        </div>
-      </li>
+<section id="simulations" class="slab-white">
+  <div class="container section">
+    <h2>Interactive Sales Simulations</h2>
+    <ul class="feature-list">
+      <li><div class="feature"><h3>AI role-play coach</h3><p>Responsive personas that adapt to your messaging, tone, and questions.</p></div></li>
+      <li><div class="feature"><h3>Scenario library</h3><p>Hundreds of practice calls mapped to disease states, objections, and profiles.</p></div></li>
+      <li><div class="feature"><h3>Territory scoring</h3><p>Benchmark by geography, team, and rep; track certification status.</p></div></li>
+      <li><div class="feature"><h3>Compliance guardrails</h3><p>Real-time checks for fair balance and regulated language.</p></div></li>
     </ul>
+    <div class="btn-row mt-16">
+      <button id="launchCoachSecondary" class="btn btn-dark" type="button">Launch AI Coach</button>
+    </div>
   </div>
 </section>
 
-<!-- ================= Analytics ================= -->
-<section id="analytics" class="slab-gray section">
-  <div class="section-inner">
+<section id="analytics" class="slab-gray">
+  <div class="container section">
     <h2>Performance Analytics & Coaching Intelligence</h2>
     <div class="metrics-grid">
       <button class="tag" data-card="Empathy Index">Empathy Index</button>
@@ -176,197 +207,202 @@
   </div>
 </section>
 
-<!-- ================= Ethics ================= -->
-<section id="ethics" class="slab-navy section">
-  <div class="section-inner light">
+<section id="ethics" class="slab-white">
+  <div class="container section">
     <h2>Ethics, Privacy & Governance</h2>
-    <div class="ethics-grid">
-      <article>
-        <h3>Data privacy & security</h3>
-        <ul>
-          <li>PHI off by default; training uses synthetic or de-identified data.</li>
-          <li>When enabled, HIPAA BAA, encryption, RBAC, purge on expiration.</li>
-          <li>Vendor risk management with annual reviews and right-to-audit.</li>
-        </ul>
-      </article>
-      <article>
-        <h3>Algorithmic fairness</h3>
-        <ul>
-          <li>Pre-deployment bias tests and periodic re-tests.</li>
-          <li>Monitor disparate performance; remediate and publish changes.</li>
-          <li>Guardrails block non-clinical proxies for targeting.</li>
-        </ul>
-      </article>
-      <article>
-        <h3>Transparency</h3>
-        <ul>
-          <li>Recommendations show reason codes.</li>
-          <li>Model cards document data sources, limits, cadence.</li>
-          <li>AI-generated content labeled in product.</li>
-        </ul>
-      </article>
+    <div class="cols-2">
+      <div>
+        <details open><summary><strong>Data privacy & security</strong></summary>
+          <ul>
+            <li>PHI off by default; training uses synthetic or de-identified data.</li>
+            <li>When enabled, HIPAA BAA, encryption, RBAC, purge on expiration.</li>
+            <li>Vendor risk management with annual reviews and audit rights.</li>
+          </ul>
+        </details>
+        <details><summary><strong>Transparency & explainability</strong></summary>
+          <ul><li>In-product recommendations include reason codes; model cards document sources and limits.</li></ul>
+        </details>
+      </div>
+      <div>
+        <details><summary><strong>Algorithmic bias & fairness</strong></summary>
+          <ul>
+            <li>Pre-deployment bias testing and periodic re-tests.</li>
+            <li>Monitor disparate performance; publish remediation steps.</li>
+          </ul>
+        </details>
+        <details><summary><strong>Human oversight & accountability</strong></summary>
+          <ul><li>Humans curate scenarios and rubrics; MLR traceability for message libraries.</li></ul>
+        </details>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- ================= FAQ ================= -->
-<section id="faq" class="slab-white section">
-  <div class="section-inner">
+<section id="faq" class="slab-gray">
+  <div class="container section">
     <h2>Frequently Asked Questions</h2>
-    <details>
-      <summary><strong>What sets ReflectivAI apart?</strong></summary>
-      <p>Simulations + analytics with subtle EI coaching cues inside strict compliance guardrails.</p>
-    </details>
-    <details>
-      <summary><strong>Does it replace human coaching?</strong></summary>
-      <p>No. It scales practice and insights; managers remain essential for development.</p>
-    </details>
-    <details>
-      <summary><strong>How do you handle PHI?</strong></summary>
-      <p>PHI is off by default. When enabled, we operate under HIPAA controls and a signed BAA.</p>
-    </details>
-    <details>
-      <summary><strong>Integrations?</strong></summary>
-      <p>Export packs and APIs for Salesforce, Veeva, and major LMS platforms.</p>
-    </details>
+    <details><summary><strong>What sets ReflectivAI apart?</strong></summary><p>AI simulations + analytics with EI coaching cues inside strict compliance guardrails.</p></details>
+    <details><summary><strong>Does it replace human coaching?</strong></summary><p>No. It scales practice and insights; managers remain essential for interpretation and development.</p></details>
+    <details><summary><strong>How do you handle PHI?</strong></summary><p>PHI is off by default. When enabled, we operate under HIPAA controls and a signed BAA.</p></details>
+    <details><summary><strong>Integrations?</strong></summary><p>Export packs and APIs for Salesforce, Veeva, and major LMS platforms.</p></details>
   </div>
 </section>
 
-<!-- ================= Contact ================= -->
-<section id="contact" class="slab-gray section">
-  <div class="section-inner">
-    <h2>Let’s Redefine Your Sales Training</h2>
-    <div class="contact-cta">
-      <a class="btn btn-dark" href="mailto:ReflectivEI.AI@gmail.com">Schedule a Demo</a>
-      <a class="btn btn-outline-dark" href="#simulations" id="footerLaunchCoach">Launch AI Coach</a>
+<section id="contact" class="slab-navy">
+  <div class="container section contact">
+    <div>
+      <h2>Let’s redefine your sales training</h2>
+      <p class="lead">Request a demo and we’ll align modules to your goals.</p>
+      <div class="btn-row">
+        <a class="btn btn-ghost" href="mailto:ReflectivEI.AI@gmail.com">Email us</a>
+        <button class="btn btn-ghost" type="button" id="openCoachFromFooter">Launch AI Coach</button>
+      </div>
     </div>
+    <div class="contact-art"><img src="assets/contact-placeholder.jpg" alt=""></div>
   </div>
 </section>
 
-<!-- ================= Footer ================= -->
 <footer class="site-footer slab-navy">
-  <div class="footer-inner">
-    <div class="foot-brand">
-      <img src="assets/logo-reflectivai.png" alt="ReflectivAI logo" />
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      <img src="assets/logo-reflectivai.png" alt="ReflectivAI" class="brand-logo">
       <span>ReflectivAI</span>
     </div>
-    <div class="foot-links">
-      <a href="mailto:ReflectivEI.AI@gmail.com" aria-label="Email">Email</a>
-      <a href="#" aria-label="LinkedIn">LinkedIn</a>
+    <div class="footer-links">
+      <a href="#">LinkedIn</a>
+      <a href="mailto:ReflectivEI.AI@gmail.com">Email</a>
+      <a href="#ethics">Ethics</a>
+      <a href="#faq">FAQ</a>
     </div>
-    <div class="foot-copy">© <span id="y"></span> ReflectivAI. All rights reserved.</div>
+    <div class="footer-copy">© <span id="y"></span> ReflectivAI. All rights reserved.</div>
   </div>
 </footer>
 
-<!-- =================== Modals =================== -->
+<!-- ====== Modals ====== -->
 <div id="cardModal" class="modal" aria-hidden="true">
   <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="cardTitle">
     <div class="modal-head">
       <div id="cardTitle" class="modal-title">Details</div>
-      <button class="modal-close" data-close="#cardModal" aria-label="Close">Close</button>
+      <button class="modal-close" data-close="#cardModal">Close</button>
     </div>
     <div id="cardBody" class="modal-body"></div>
   </div>
 </div>
 
-<!-- Coach Modal -->
 <div id="coachModal" class="modal" aria-hidden="true">
-  <div class="modal-box modal-wide" role="dialog" aria-modal="true" aria-labelledby="coachTitle">
-    <div class="modal-head">
+  <div class="modal-box coach-box" role="dialog" aria-modal="true" aria-labelledby="coachTitle">
+    <div class="modal-head navy">
       <div id="coachTitle" class="modal-title">ReflectivAI Coach</div>
-      <div class="modal-actions">
-        <a class="rubric-link" href="#scoring-rubric" id="openRubric">Scoring rubric</a>
-        <button class="modal-close" data-close="#coachModal" aria-label="Close">Close</button>
-      </div>
+      <button class="modal-close" data-close="#coachModal">Close</button>
     </div>
-    <div id="coachBody">
+    <div class="modal-body">
       <div id="reflectiv-widget" class="reflectiv-widget">
-        <noscript>Enable JavaScript to use the ReflectivAI Coach.</noscript>
+        <noscript>You need JavaScript to use the ReflectivAI Coach.</noscript>
       </div>
-      <section id="scoring-rubric" class="rubric">
-        <h3>How scoring works</h3>
-        <ul>
-          <li><strong>Accuracy (0–5):</strong> factual precision; label-aligned.</li>
-          <li><strong>Compliance (0–5):</strong> avoids off-label; fair balance.</li>
-          <li><strong>Discovery (0–5):</strong> clear questions driving next step.</li>
-          <li><strong>Objection handling (0–5):</strong> addresses barriers safely.</li>
-          <li><strong>Clarity (0–5):</strong> concise, one idea per sentence.</li>
-          <li><strong>Empathy (0–5):</strong> validates HCP context.</li>
-        </ul>
-        <p>Overall score is a weighted blend of the above with bonuses for ideal length and a closing question.</p>
-      </section>
+      <div class="rubric-note">
+        <a href="#" id="openRubric">View scoring rubric</a>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- =================== Scripts =================== -->
-<script defer src="widget.js?v=2025-10-20"></script>
-<script defer src="alora.js?v=2025-10-20"></script>
+<div id="rubricModal" class="modal" aria-hidden="true">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="rubricTitle">
+    <div class="modal-head">
+      <div id="rubricTitle" class="modal-title">Scoring rubric</div>
+      <button class="modal-close" data-close="#rubricModal">Close</button>
+    </div>
+    <div class="modal-body rubric">
+      <ul>
+        <li><strong>Accuracy</strong>: Label-aligned facts, correct claims (0–5)</li>
+        <li><strong>Compliance</strong>: No off-label, fair balance present (0–5)</li>
+        <li><strong>Discovery</strong>: Clear, targeted question (0–5)</li>
+        <li><strong>Objection handling</strong>: Addresses barriers with evidence (0–5)</li>
+        <li><strong>Clarity</strong>: 3–6 concise sentences, one idea per sentence (0–5)</li>
+        <li><strong>Empathy</strong>: Acknowledges HCP context and constraints (0–5)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ====== Alora bubble (always visible) ====== -->
+<button id="aloraFab" aria-label="Open chat with Alora">
+  <img src="assets/icons/chat-bubble.png" alt="" aria-hidden="true">
+</button>
+
+<div id="alora" class="alora" aria-live="polite" aria-hidden="true">
+  <div class="alora-head">
+    <div class="alora-title">Alora, ReflectivAI Agent</div>
+    <div class="alora-actions">
+      <a id="aloraLaunchCoach" title="Launch AI Coach" aria-label="Launch AI Coach">💬</a>
+      <a href="mailto:ReflectivEI.AI@gmail.com" title="Schedule Demo" aria-label="Schedule Demo">📅</a>
+    </div>
+    <button id="aloraClose" class="alora-close" aria-label="Close">×</button>
+  </div>
+  <div id="aloraBody" class="alora-body"></div>
+  <form id="aloraForm" class="alora-input" autocomplete="off">
+    <input id="aloraInput" placeholder="Ask about ReflectivAI…">
+    <button class="btn primary" type="submit">Send</button>
+  </form>
+</div>
+
+<script src="widget.js?v=20251020-2" defer></script>
+<script src="alora.js?v=20251020-2" defer></script>
 <script>
-  // year
-  document.getElementById('y').textContent = new Date().getFullYear();
+/* Nav + mobile menu */
+const navToggle=document.getElementById('navToggle');
+const mobileMenu=document.getElementById('mobileMenu');
+const mobileClose=document.getElementById('mobileClose');
+navToggle.addEventListener('click',()=>{mobileMenu.classList.add('open');mobileMenu.setAttribute('aria-hidden','false');});
+mobileClose.addEventListener('click',()=>{mobileMenu.classList.remove('open');mobileMenu.setAttribute('aria-hidden','true');});
+document.querySelectorAll('.dd-toggle').forEach(btn=>{
+  const dd=btn.nextElementSibling;
+  btn.addEventListener('click',()=>{const open=btn.getAttribute('aria-expanded')==='true';btn.setAttribute('aria-expanded',!open);dd.classList.toggle('open',!open);});
+});
 
-  // mobile nav
-  const navToggle=document.getElementById('navToggle');
-  const navMenu=document.getElementById('navMenu');
-  navToggle.addEventListener('click',()=>{
-    const open=!navMenu.classList.contains('open');
-    navMenu.classList.toggle('open',open);
-    navToggle.setAttribute('aria-expanded',open?'true':'false');
+/* Smooth close on link click (mobile) */
+mobileMenu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{mobileMenu.classList.remove('open');mobileMenu.setAttribute('aria-hidden','true');}));
+
+/* Modals */
+function openModal(id){document.querySelector(id).classList.add('open')}
+function closeModal(id){document.querySelector(id).classList.remove('open')}
+document.querySelectorAll('.modal-close').forEach(btn=>btn.addEventListener('click',()=>closeModal(btn.getAttribute('data-close'))));
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); }));
+
+/* Launch points for Coach */
+document.getElementById('ctaExplore').addEventListener('click',()=>openModal('#coachModal'));
+document.getElementById('launchCoachSecondary').addEventListener('click',()=>openModal('#coachModal'));
+document.getElementById('openCoachFromFooter').addEventListener('click',()=>openModal('#coachModal'));
+document.getElementById('aloraLaunchCoach').addEventListener('click',()=>openModal('#coachModal'));
+document.getElementById('openRubric').addEventListener('click',(e)=>{e.preventDefault();openModal('#rubricModal')});
+
+/* Card modal content (same copy as before) */
+const CARD_COPY = {
+  "HIV PrEP":"<div class='card'><ul><li><strong>Objection:</strong> Stigma and adherence.</li><li><strong>Challenge:</strong> Prevention urgency with empathy.</li><li><strong>Goal:</strong> Normalize prevention options.</li></ul></div>",
+  "Vaccines":"<div class='card'><ul><li><strong>Objection:</strong> Misinformation and side-effect fears.</li><li><strong>Challenge:</strong> Translate population data to outcomes.</li><li><strong>Goal:</strong> Confidence in safety and efficacy.</li></ul></div>",
+  "Hepatitis B":"<div class='card'><ul><li><strong>Objection:</strong> Low perceived need.</li><li><strong>Challenge:</strong> Risk and reactivation misconceptions.</li><li><strong>Goal:</strong> Promote screening and protection.</li></ul></div>",
+  "Oncology":"<div class='card'><ul><li><strong>Challenge:</strong> Explain complex data with compassion.</li><li><strong>Objection:</strong> Cost and access.</li><li><strong>Goal:</strong> Discuss outcomes and biomarkers.</li></ul></div>",
+  "Cardiology":"<div class='card'><ul><li><strong>Objection:</strong> Incremental benefit skepticism.</li><li><strong>Challenge:</strong> Clarify endpoints and RWE.</li><li><strong>Goal:</strong> Align to guidelines.</li></ul></div>",
+  "Pulmonology":"<div class='card'><ul><li><strong>Challenge:</strong> Differentiate MOA in crowded classes.</li><li><strong>Objection:</strong> Device complexity.</li><li><strong>Goal:</strong> Technique training and support.</li></ul></div>",
+  "Empathy Index":"<div class='card'><ul><li><strong>Purpose:</strong> Attunement during HCP interactions.</li><li><strong>Goal:</strong> Adjust tone to build trust.</li></ul></div>",
+  "Accuracy Index":"<div class='card'><ul><li><strong>Purpose:</strong> Factual precision and regulatory alignment.</li><li><strong>Goal:</strong> Consistent scientific messaging.</li></ul></div>",
+  "Confidence Delta":"<div class='card'><ul><li><strong>Purpose:</strong> Self-perceived vs demonstrated skill growth.</li></ul></div>",
+  "Compliance Guard":"<div class='card'><ul><li><strong>Purpose:</strong> Detect off-label or risky phrasing.</li></ul></div>",
+  "Readiness Velocity":"<div class='card'><ul><li><strong>Purpose:</strong> Ramp-up speed and proficiency over time.</li></ul></div>"
+};
+document.querySelectorAll('[data-card]').forEach(el=>{
+  el.addEventListener('click',()=>{
+    const t=el.getAttribute('data-card');
+    document.getElementById('cardTitle').textContent=t;
+    document.getElementById('cardBody').innerHTML=CARD_COPY[t]||'<p>No details.</p>';
+    openModal('#cardModal');
   });
+});
 
-  // dropdown
-  document.querySelectorAll('.has-dd .dd-toggle').forEach(btn=>{
-    const dd = btn.nextElementSibling;
-    btn.addEventListener('click',()=>{
-      const exp = btn.getAttribute('aria-expanded')==='true';
-      btn.setAttribute('aria-expanded',(!exp)+'');
-      dd.classList.toggle('open',!exp);
-    });
-  });
-  document.addEventListener('click',e=>{
-    if(!e.target.closest('.has-dd')) document.querySelectorAll('.dropdown.open').forEach(d=>d.classList.remove('open'));
-  });
+/* Footer year */
+document.getElementById('y').textContent=new Date().getFullYear();
 
-  // modal helpers
-  function openModal(id){const m=document.querySelector(id); m?.classList.add('open'); document.body.classList.add('no-scroll');}
-  function closeModal(id){const m=document.querySelector(id); m?.classList.remove('open'); document.body.classList.remove('no-scroll');}
-  document.querySelectorAll('.modal-close').forEach(b=>b.addEventListener('click',()=>closeModal(b.getAttribute('data-close'))));
-  document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); document.body.classList.remove('no-scroll'); }));
-
-  // open coach from hero + simulations + footer
-  document.getElementById('btnExplore').addEventListener('click',()=>openModal('#coachModal'));
-  document.getElementById('btnLaunchCoach').addEventListener('click',()=>openModal('#coachModal'));
-  document.getElementById('footerLaunchCoach').addEventListener('click',e=>{ e.preventDefault(); openModal('#coachModal'); });
-
-  // open rubric link inside modal
-  document.getElementById('openRubric').addEventListener('click',e=>{
-    e.preventDefault();
-    document.getElementById('scoring-rubric').scrollIntoView({behavior:'smooth'});
-  });
-
-  // site cards
-  const CARD_COPY = {
-    "HIV PrEP":"<p>Objections: stigma and adherence. Goal: normalize prevention and build trust.</p>",
-    "Vaccines":"<p>Objections: hesitancy and side-effects. Goal: reinforce safety and community protection.</p>",
-    "Hepatitis B":"<p>Objections: perceived low risk. Goal: screening and long-term protection.</p>",
-    "Oncology":"<p>Challenges: complex data, access, value. Goal: outcomes, QoL, biomarkers.</p>",
-    "Cardiology":"<p>Objections: differentiation vs generics. Goal: endpoints and real-world outcomes.</p>",
-    "Pulmonology":"<p>Challenges: MoA differentiation, device technique. Goal: simplified training and support.</p>",
-    "Empathy Index":"<p>Measures emotional attunement and rapport.</p>",
-    "Accuracy Index":"<p>Evaluates factual precision and regulatory alignment.</p>",
-    "Confidence Delta":"<p>Compares perceived vs demonstrated skill growth.</p>",
-    "Compliance Guard":"<p>Detects off-label or risky phrasing.</p>",
-    "Readiness Velocity":"<p>Tracks ramp-up speed and proficiency.</p>"
-  };
-  document.querySelectorAll('[data-card]').forEach(el=>{
-    el.addEventListener('click',()=>{
-      const title=el.getAttribute('data-card');
-      document.getElementById('cardTitle').textContent=title;
-      document.getElementById('cardBody').innerHTML=CARD_COPY[title]||'<p>No details.</p>';
-      openModal('#cardModal');
-    });
-  });
+/* Prevent overlap: keep Alora above footer but below Coach modal */
 </script>
 </body>
 </html>
