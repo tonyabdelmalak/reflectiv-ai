@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReflectivAI - Modern UI Mockup</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom Font for a professional look */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Very light slate background for depth */
+        }
+        /* Define custom colors based on the suggestion (Professional Blue and Clinical Cyan) */
+        .primary-dark { background-color: #1E3A8A; } /* Dark Blue */
+        .text-primary-dark { color: #1E3A8A; }
+        .accent-teal { background-color: #06B6D4; } /* Vibrant Cyan/Teal */
+        .text-accent-teal { color: #06B6D4; }
+
+        /* Style for the sticky header */
+        .sticky-header {
+            transition: all 0.3s ease-in-out;
+        }
+        .section-separator {
+            content: "";
+            display: block;
+            width: 80px;
+            height: 4px;
+            margin-bottom: 24px;
+            border-radius: 9999px;
+            background-color: #06B6D4;
+        }
+        /* Mobile-first sizing adjustment for the layout */
+        .grid-mobile-center {
+            text-align: center;
+        }
+        @media (min-width: 768px) {
+            .grid-mobile-center {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header & Navigation (Sticky & Responsive) -->
+    <header id="navbar" class="sticky-header fixed top-0 left-0 w-full z-50 bg-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <a href="#" class="flex items-center text-xl font-extrabold text-primary-dark tracking-tight">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-accent-teal mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    ReflectivAI
+                </a>
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden md:flex space-x-8">
+                    <a href="#platform" class="text-gray-600 hover:text-accent-teal transition duration-200">Platform</a>
+                    <a href="#analytics" class="text-gray-600 hover:text-accent-teal transition duration-200">Analytics</a>
+                    <a href="#ethics" class="text-gray-600 hover:text-accent-teal transition duration-200">Ethics</a>
+                    <a href="#contact" class="px-4 py-2 rounded-full primary-dark text-white font-semibold shadow-lg hover:shadow-xl transition duration-300">Request Demo</a>
+                </nav>
+                <!-- Mobile Menu Button - (Note: For a single-file demo, this button is purely visual) -->
+                <button class="md:hidden p-2 text-gray-700 hover:text-accent-teal rounded-md transition duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+    <!-- Add padding to prevent content from being hidden by fixed header -->
+    <div class="pt-16"></div> 
+
+    <!-- 1. Hero Section -->
+    <section class="py-16 md:py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12 items-center">
+            <!-- Text Content -->
+            <div class="grid-mobile-center">
+                <span class="text-sm font-semibold uppercase text-accent-teal tracking-widest mb-3 block">AI Sales Enablement for Life Sciences</span>
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight mb-6">
+                    Connect and Convert with Intelligence
+                </h1>
+                <p class="text-lg sm:text-xl text-gray-600 mb-8">
+                    ReflectivAI blends clinical accuracy, emotional intelligence, and adaptive AI coaching so every HCP conversation feels authentic, confident, and compliant.
+                </p>
+                <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                    <a href="#contact" class="px-8 py-3 rounded-full primary-dark text-white font-bold shadow-xl hover:bg-indigo-900 transition duration-300 transform hover:scale-[1.02] text-center">
+                        Request a Demo
+                    </a>
+                    <a href="#platform" class="px-8 py-3 rounded-full bg-white text-primary-dark border-2 border-primary-dark font-bold hover:bg-gray-50 transition duration-300 text-center">
+                        Explore the Platform
+                    </a>
+                </div>
+            </div>
+            <!-- Image Placeholder -->
+            <div class="rounded-xl overflow-hidden shadow-2xl mt-8 md:mt-0">
+                <!-- Placeholder for the Hero Image -->
+                <img src="https://placehold.co/700x500/1E3A8A/ffffff?text=Intuitive+Simulation+Dashboard" alt="HCP conversation with analytics overlay mockup" class="w-full h-auto object-cover"/>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. Core Value Proposition Section (Lighter background for separation) -->
+    <section class="py-16 bg-gray-50 border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">Why Emotional Intelligence Matters in Sales</h2>
+            <div class="w-20 mx-auto section-separator"></div>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+                Emotional intelligence drives connection and adherence. ReflectivAI helps reps practice active listening, empathy, and tone calibration—transforming compliance into confidence and insight into influence.
+            </p>
+        </div>
+    </section>
+
+    <!-- 3. Platform Modules (Cards with Icons and Accent Color) -->
+    <section id="platform" class="py-16 md:py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-extrabold text-gray-900 mb-4 text-center md:text-left">Platform Modules</h2>
+            <div class="section-separator mx-auto md:mx-0"></div>
+            <p class="text-xl text-gray-600 mb-12 max-w-3xl text-center md:text-left mx-auto md:mx-0">Integrated tools designed for high-stakes life science interactions.</p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Module Card 1: Product Knowledge -->
+                <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100 hover:shadow-2xl transition duration-300 transform hover:scale-[1.01]">
+                    <div class="w-12 h-12 accent-teal rounded-xl flex items-center justify-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Product Knowledge</h3>
+                    <p class="text-gray-600">Train on complex clinical data and regulatory messaging with compliance and real-time correction built in.</p>
+                </div>
+                <!-- Module Card 2: Sales Simulation -->
+                <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100 hover:shadow-2xl transition duration-300 transform hover:scale-[1.01]">
+                    <div class="w-12 h-12 accent-teal rounded-xl flex items-center justify-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Sales Simulation</h3>
+                    <p class="text-gray-600">Practice high-stakes calls in oncology, vaccines, and other areas — anytime, anywhere with adaptive AI personas.</p>
+                </div>
+                <!-- Module Card 3: Relationship Intelligence -->
+                <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100 hover:shadow-2xl transition duration-300 transform hover:scale-[1.01]">
+                    <div class="w-12 h-12 accent-teal rounded-xl flex items-center justify-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Relationship Intelligence</h3>
+                    <p class="text-gray-600">Track behavioral blind spots. Understand empathy, tone, and conversational agility with granular data.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. Analytics Section (Using Primary Color Block for contrast) -->
+    <section id="analytics" class="py-16 md:py-24 primary-dark text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-extrabold mb-4">Performance Analytics & Coaching Intelligence</h2>
+                <div class="w-20 mx-auto section-separator" style="background-color: white;"></div>
+                <p class="text-xl text-indigo-200 max-w-3xl mx-auto">Turn training data into measurable business outcomes.</p>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-6 text-center">
+                <!-- Metric 1 -->
+                <div class="bg-white/10 p-6 rounded-xl shadow-lg border border-white/20">
+                    <div class="text-4xl font-bold text-accent-teal mb-2">94\%</div>
+                    <p class="text-sm font-semibold uppercase text-indigo-100">Accuracy Index</p>
+                </div>
+                <!-- Metric 2 -->
+                <div class="bg-white/10 p-6 rounded-xl shadow-lg border border-white/20">
+                    <div class="text-4xl font-bold text-accent-teal mb-2">1.4x</div>
+                    <p class="text-sm font-semibold uppercase text-indigo-100">Readiness Velocity</p>
+                </div>
+                <!-- Metric 3 -->
+                <div class="bg-white/10 p-6 rounded-xl shadow-lg border border-white/20">
+                    <div class="text-4xl font-bold text-accent-teal mb-2">Empathy</div>
+                    <p class="text-sm font-semibold uppercase text-indigo-100">Coaching Index</p>
+                </div>
+                <!-- Metric 4 -->
+                <div class="bg-white/10 p-6 rounded-xl shadow-lg border border-white/20">
+                    <div class="text-4xl font-bold text-accent-teal mb-2">Compliance</div>
+                    <p class="text-sm font-semibold uppercase text-indigo-100">Guardrails</p>
+                </div>
+                 <!-- Metric 5 -->
+                <div class="bg-white/10 p-6 rounded-xl shadow-lg border border-white/20">
+                    <div class="text-4xl font-bold text-accent-teal mb-2">Confidence</div>
+                    <p class="text-sm font-semibold uppercase text-indigo-100">Delta</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. Therapeutic Areas & Personas (Use visual tags/chips) -->
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12">
+            <!-- Therapeutic Areas -->
+            <div class="grid-mobile-center md:grid-mobile-center">
+                <h3 class="text-3xl font-bold text-gray-900 mb-4">Train by Therapeutic Area</h3>
+                <div class="section-separator mx-auto md:mx-0"></div>
+                <div class="flex flex-wrap gap-3 justify-center md:justify-start">
+                    <!-- Apply accent color to tags -->
+                    <span class="px-4 py-1.5 rounded-full bg-accent-teal/10 text-accent-teal font-medium text-sm">Oncology</span>
+                    <span class="px-4 py-1.5 rounded-full bg-accent-teal/10 text-accent-teal font-medium text-sm">Vaccines</span>
+                    <span class="px-4 py-1.5 rounded-full bg-accent-teal/10 text-accent-teal font-medium text-sm">HIV PrEP</span>
+                    <span class="px-4 py-1.5 rounded-full bg-accent-teal/10 text-accent-teal font-medium text-sm">Cardiology</span>
+                    <span class="px-4 py-1.5 rounded-full bg-accent-teal/10 text-accent-teal font-medium text-sm">Pulmonology</span>
+                    <span class="px-4 py-1.5 rounded-full bg-accent-teal/10 text-accent-teal font-medium text-sm">Hepatitis B</span>
+                    <span class="px-4 py-1.5 rounded-full bg-gray-200 text-gray-700 font-medium text-sm">+ Custom Scenarios</span>
+                </div>
+            </div>
+
+            <!-- HCP Profiles -->
+            <div class="grid-mobile-center md:grid-mobile-center mt-10 md:mt-0">
+                <h3 class="text-3xl font-bold text-gray-900 mb-4">Practice with Realistic Personas</h3>
+                <div class="section-separator mx-auto md:mx-0"></div>
+                <div class="flex flex-wrap gap-3 justify-center md:justify-start">
+                    <!-- Apply primary color to tags -->
+                    <span class="px-4 py-1.5 rounded-full bg-primary-dark/10 text-primary-dark font-medium text-sm">Internal Medicine MD</span>
+                    <span class="px-4 py-1.5 rounded-full bg-primary-dark/10 text-primary-dark font-medium text-sm">Oncologist</span>
+                    <span class="px-4 py-1.5 rounded-full bg-primary-dark/10 text-primary-dark font-medium text-sm">Nurse Practitioner (NP)</span>
+                    <span class="px-4 py-1.5 rounded-full bg-primary-dark/10 text-primary-dark font-medium text-sm">Infectious Disease Specialist</span>
+                    <span class="px-4 py-1.5 rounded-full bg-primary-dark/10 text-primary-dark font-medium text-sm">Cardiologist</span>
+                    <span class="px-4 py-1.5 rounded-full bg-primary-dark/10 text-primary-dark font-medium text-sm">Physician Assistant (PA)</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. Ethics, Privacy & Governance (Using collapsible-like cards for scannability) -->
+    <section id="ethics" class="py-16 md:py-24 bg-gray-50 border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-extrabold text-gray-900 mb-4">Ethics, Privacy & Governance</h2>
+                <div class="w-20 mx-auto section-separator"></div>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">Compliance and responsible AI built for the rigors of life-sciences training.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Ethics Principle 1 -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-accent-teal">
+                    <h4 class="text-xl font-bold text-gray-900 mb-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent-teal mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        Data Privacy & Security
+                    </h4>
+                    <p class="text-gray-600 text-sm">PHI is off by default, training uses synthetic data. When enabled, we operate under BAA, encryption, and role-based access controls.</p>
+                </div>
+                <!-- Ethics Principle 2 -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-accent-teal">
+                    <h4 class="text-xl font-bold text-gray-900 mb-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent-teal mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+                        Algorithmic Bias & Fairness
+                    </h4>
+                    <p class="text-gray-600 text-sm">Pre-deployment bias testing and continuous monitoring. Remediation steps published, and guardrails prohibit non-clinical proxies.</p>
+                </div>
+                <!-- Ethics Principle 3 -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-accent-teal">
+                    <h4 class="text-xl font-bold text-gray-900 mb-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent-teal mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        Transparency & Explainability
+                    </h4>
+                    <p class="text-gray-600 text-sm">In-product coaching recommendations include clear reason codes. Model cards document data sources and limitations for full traceability.</p>
+                </div>
+                <!-- Ethics Principle 4 -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-accent-teal">
+                    <h4 class="text-xl font-bold text-gray-900 mb-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent-teal mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9l6-6M20 6l-6 6M10 20l-6-6M4 14l6 6"></path></svg>
+                        Human Oversight & Accountability
+                    </h4>
+                    <p class="text-gray-600 text-sm">Humans curate all scenarios and rubrics. All message libraries are versioned for Medical, Legal, Regulatory (MLR) traceability.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 7. Contact Section (Form) -->
+    <section id="contact" class="py-16 md:py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12 items-start">
+            <!-- Contact Info -->
+            <div class="grid-mobile-center md:grid-mobile-center">
+                <h2 class="text-4xl font-extrabold text-gray-900 mb-4">Let's Redefine Your Sales Training</h2>
+                <div class="section-separator mx-auto md:mx-0"></div>
+                <p class="text-xl text-gray-600 mb-8">
+                    Ready to see how adaptive AI coaching can drive confidence and compliance for your life sciences team? Request a personalized demonstration.
+                </p>
+                <div class="space-y-4 text-center md:text-left">
+                    <p class="flex items-center justify-center md:justify-start text-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary-dark mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                        (555) 123-4567
+                    </p>
+                    <p class="flex items-center justify-center md:justify-start text-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary-dark mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                        demo@reflectivai.com
+                    </p>
+                </div>
+            </div>
+
+            <!-- Demo Request Form -->
+            <form class="bg-white p-8 rounded-xl shadow-2xl border border-gray-100 w-full">
+                <div class="space-y-6">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                        <input type="text" id="name" name="name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-accent-teal focus:border-accent-teal transition duration-200">
+                    </div>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="email" name="email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-accent-teal focus:border-accent-teal transition duration-200">
+                    </div>
+                    <div>
+                        <label for="message" class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                        <textarea id="message" name="message" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-accent-teal focus:border-accent-teal transition duration-200"></textarea>
+                    </div>
+                    <button type="submit" class="w-full px-8 py-3 rounded-full primary-dark text-white font-bold shadow-xl hover:bg-indigo-900 transition duration-300 transform hover:scale-[1.01]">
+                        Request Demo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-8 bg-gray-800 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm">
+            <p>&copy; 2025 ReflectivAI. All rights reserved. Design Mockup.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
