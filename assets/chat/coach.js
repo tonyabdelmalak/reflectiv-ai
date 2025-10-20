@@ -334,4 +334,24 @@
       initUI();
     }
   };
+
+  // --- expose global mount for widget.js ---
+window.ReflectivCoach = window.ReflectivCoach || {};
+window.ReflectivCoach.mount = function (targetId = "reflectiv-widget") {
+  try {
+    const el = document.getElementById(targetId);
+    if (!el) throw new Error("Target container not found");
+    // basic UI render confirmation
+    el.innerHTML = `
+      <div style="padding:18px;border-radius:12px;border:1px solid #d6dbe3;background:#fff">
+        <h3 style="margin:0 0 6px;color:#0c2740;">ReflectivAI Coach</h3>
+        <p style="margin:0;color:#314159;">Coach module initialized successfully. (Placeholder UI)</p>
+      </div>
+    `;
+    console.info("[ReflectivAI] Coach widget mounted.");
+  } catch (err) {
+    console.error("[ReflectivAI] mount failed:", err);
+  }
+};
+
 })();
