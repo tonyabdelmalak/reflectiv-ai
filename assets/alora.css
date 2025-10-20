@@ -1,0 +1,50 @@
+/* =====================================================
+   Alora — ReflectivAI Agent (floating chat)
+   ===================================================== */
+:root{
+  --navy:#0c2740; --teal:#20bfa9; --ink:#0f1522; --line:#e5e9f0; --panel:#f7f9fc; --white:#fff;
+}
+
+/* Bubble */
+#aloraFab{
+  position:fixed; right:18px; bottom:18px; width:64px; height:64px;
+  border-radius:50%; border:3px solid #7fb0b7;
+  background:var(--navy); color:#fff; display:grid; place-items:center;
+  box-shadow:0 10px 24px rgba(0,0,0,.28); cursor:pointer; z-index:9000;
+}
+#aloraFab img, #aloraFab svg{ width:32px; height:32px; display:block; }
+
+/* Panel */
+#aloraPanel{
+  position:fixed; right:18px; bottom:92px; width:min(640px,92vw); max-height:70vh;
+  background:#fff; border-radius:14px; border:1px solid var(--line);
+  box-shadow:0 16px 40px rgba(0,0,0,.22); overflow:hidden; display:none; flex-direction:column; z-index:9500;
+  font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+}
+#aloraPanel.open{ display:flex; }
+
+/* Header */
+#aloraPanel .head{
+  display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:var(--navy); color:#fff;
+}
+#aloraPanel .head .title{ font-weight:700; }
+#aloraPanel .head .actions{ display:flex; gap:10px; align-items:center; }
+#aloraPanel .icon-btn{
+  width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08);
+  display:grid; place-items:center; cursor:pointer;
+}
+#aloraPanel .icon-btn:hover{ background:rgba(255,255,255,.18); }
+#aloraPanel .close{ appearance:none; border:0; background:transparent; color:#fff; font-size:20px; line-height:1; cursor:pointer; }
+
+/* Messages */
+#aloraPanel .body{ background:#fbfdff; padding:12px; overflow:auto; min-height:220px; }
+#aloraPanel .msg{ display:flex; margin:8px 0; }
+#aloraPanel .msg.user{ justify-content:flex-end; }
+#aloraPanel .bubble{ max-width:82%; padding:10px 12px; border-radius:12px; border:1px solid #d6dbe3; background:#e9edf3; color:var(--ink); font-size:14px; }
+#aloraPanel .msg.user .bubble{ background:#e0e0e0; color:#000; }
+
+/* Input */
+#aloraPanel .input{ display:flex; gap:8px; padding:10px 12px; border-top:1px solid var(--line); background:#fff; }
+#aloraPanel textarea{ flex:1; resize:none; min-height:40px; max-height:120px; border:1px solid #cfd6df; border-radius:10px; padding:10px 12px; font-size:14px; }
+#aloraPanel .btn{ min-width:84px; border-radius:999px; border:0; background:var(--navy); color:#fff; font-weight:700; padding:10px 16px; cursor:pointer; }
+#aloraPanel .btn:hover{ background:#183553; }
