@@ -39,7 +39,7 @@
   /* ---- Alora FAB (right) ---- */
   #aloraFab{position:fixed;right:22px;bottom:22px;z-index:9999;width:64px;height:64px;border:none;border-radius:50%;background:#0c2740;color:#fff;display:grid;place-items:center;box-shadow:0 6px 18px rgba(0,0,0,.28);cursor:pointer}
   #aloraFab svg{width:30px;height:30px;display:block}
-  .alora-toggle{display:none !important} /* ensure any legacy left bubble stays hidden */
+  .alora-toggle{display:none !important}
 
   /* ---- Alora panel (slide-in) ---- */
   .alora{position:fixed;right:22px;bottom:98px;width:360px;max-width:92vw;background:#fff;border:1px solid #e6ecf3;border-radius:16px;box-shadow:0 16px 36px rgba(0,0,0,.22);transform:translateY(18px);opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;display:flex;flex-direction:column;overflow:hidden;z-index:9999}
@@ -57,6 +57,12 @@
   .alora-input input{flex:1;border:1px solid #cfd8e3;border-radius:10px;padding:10px 12px;font-size:15px}
   .alora-input .btn.primary{background:#0c2740;color:#fff;border:none;border-radius:10px;padding:10px 12px}
 </style>
+
+<!-- Endpoints for Worker (Groq behind /coach and /alora) -->
+<script>
+  window.COACH_ENDPOINT = '/coach';
+  window.ALORA_ENDPOINT = '/alora';
+</script>
 </head>
 <body>
 
@@ -122,7 +128,7 @@
   </div>
 </section>
 
-<!-- Split Lists: Therapeutic Areas / Personas -->
+<!-- Split Lists -->
 <section id="platform" class="section">
   <div class="section-inner split">
     <div class="col">
@@ -137,16 +143,14 @@
       </div>
       <p class="muted" style="margin-top:12px">Our scenario library grows continually — new therapeutic areas and objections are added with each launch.</p>
     </div>
-
     <div class="divider" aria-hidden="true"></div>
-
     <div class="col">
       <h2 id="personas">Practice with Realistic Personas</h2>
       <div class="chips">
-        <a class="tag" data-card="Internal Medicine MD">Internal Medicine MD</a>
-        <a class="tag" data-card="Nurse Practitioner (NP)">Nurse Practitioner (NP)</a>
-        <a class="tag" data-card="Physician Assistant (PA)">Physician Assistant (PA)</a>
-        <a class="tag" data-card="Infectious Disease Specialist">Infectious Disease Specialist</a>
+        <a class="tag" data-card="Internal Medicine">Internal Medicine MD</a>
+        <a class="tag" data-card="Nurse Practitioner">Nurse Practitioner (NP)</a>
+        <a class="tag" data-card="Physician Assistant">Physician Assistant (PA)</a>
+        <a class="tag" data-card="ID Specialist">Infectious Disease Specialist</a>
         <a class="tag" data-card="Oncologist">Oncologist</a>
         <a class="tag" data-card="Pulmonologist">Pulmonologist</a>
         <a class="tag" data-card="Cardiologist">Cardiologist</a>
@@ -387,167 +391,25 @@ document.getElementById('openCoach')?.addEventListener('click',(e)=>{
 
 /* ---------- Site Cards (titles removed from body) ---------- */
 const CARD_COPY = {
-  /* --- Therapeutic Areas --- */
-  "HIV PrEP": `
-    <div class='card'>
-      <ul>
-        <li><strong>Objection:</strong> Stigma and patient adherence concerns.</li>
-        <li><strong>Challenge:</strong> Framing prevention urgency with empathy.</li>
-        <li><strong>Goal:</strong> Build trust and normalize discussion of prevention options.</li>
-      </ul>
-    </div>`,
-
-  "Vaccines": `
-    <div class='card'>
-      <ul>
-        <li><strong>Objection:</strong> Hesitancy rooted in misinformation or side-effect fears.</li>
-        <li><strong>Challenge:</strong> Translating population data into relatable patient outcomes.</li>
-        <li><strong>Goal:</strong> Reinforce confidence in safety, efficacy, and community protection.</li>
-      </ul>
-    </div>`,
-
-  "Hepatitis B": `
-    <div class='card'>
-      <ul>
-        <li><strong>Objection:</strong> Limited perceived need for adult vaccination.</li>
-        <li><strong>Challenge:</strong> Addressing misconceptions around risk and reactivation.</li>
-        <li><strong>Goal:</strong> Promote screening and long-term protection messaging.</li>
-      </ul>
-    </div>`,
-
-  "Oncology": `
-    <div class='card'>
-      <ul>
-        <li><strong>Challenge:</strong> Explaining complex clinical data with compassion.</li>
-        <li><strong>Objection:</strong> Cost, access, and value justification with payers.</li>
-        <li><strong>Goal:</strong> Empower HCPs to discuss outcomes, QoL, and biomarker relevance.</li>
-      </ul>
-    </div>`,
-
-  "Cardiology": `
-    <div class='card'>
-      <ul>
-        <li><strong>Objection:</strong> Skepticism about incremental benefit over generics.</li>
-        <li><strong>Challenge:</strong> Clarifying endpoints and real-world outcomes.</li>
-        <li><strong>Goal:</strong> Strengthen guideline alignment and adherence messaging.</li>
-      </ul>
-    </div>`,
-
-  "Pulmonology": `
-    <div class='card'>
-      <ul>
-        <li><strong>Challenge:</strong> Differentiating mechanism of action within crowded classes.</li>
-        <li><strong>Objection:</strong> Concerns over device complexity or adherence.</li>
-        <li><strong>Goal:</strong> Simplify technique training and highlight patient support resources.</li>
-      </ul>
-    </div>`,
-
-  /* --- HCP Personas --- */
-  "Internal Medicine": `
-    <div class='card'>
-      <ul>
-        <li><strong>Challenge:</strong> Managing broad chronic disease spectrum under time constraints.</li>
-        <li><strong>Objection:</strong> Skepticism toward novel therapies without long-term data.</li>
-        <li><strong>Goal:</strong> Present concise, outcomes-driven value aligned with guidelines.</li>
-      </ul>
-    </div>`,
-
-  "Nurse Practitioner": `
-    <div class='card'>
-      <ul>
-        <li><strong>Challenge:</strong> Heavy workload and need for clear patient education tools.</li>
-        <li><strong>Objection:</strong> Cost or coverage limitations impacting adherence.</li>
-        <li><strong>Goal:</strong> Provide simplified dosing and patient-ready resources.</li>
-      </ul>
-    </div>`,
-
-  "Physician Assistant": `
-    <div class='card'>
-      <ul>
-        <li><strong>Challenge:</strong> Balancing clinical autonomy with supervising-physician protocols.</li>
-        <li><strong>Objection:</strong> Administrative burden around prior authorization.</li>
-        <li><strong>Goal:</strong> Supply efficient talking points and coverage documentation.</li>
-      </ul>
-    </div>`,
-
-  "ID Specialist": `
-    <div class='card'>
-      <ul>
-        <li><strong>Challenge:</strong> Translating evolving data into real-world practice.</li>
-        <li><strong>Objection:</strong> Resistance or DDI concerns limiting prescribing comfort.</li>
-        <li><strong>Goal:</strong> Provide concise evidence and patient-case comparisons.</li>
-      </ul>
-    </div>`,
-
-  "Oncologist": `
-    <div class='card'>
-      <ul>
-        <li><strong>Challenge:</strong> Staying current with biomarker and trial landscape.</li>
-        <li><strong>Objection:</strong> Cost, QoL trade-offs, and insurance barriers.</li>
-        <li><strong>Goal:</strong> Position therapy value with empathy for patient impact.</li>
-      </ul>
-    </div>`,
-
-  "Pulmonologist": `
-    <div class='card'>
-      <ul>
-        <li><strong>Challenge:</strong> Coordinating multi-therapy regimens and adherence.</li>
-        <li><strong>Objection:</strong> Device complexity and inhaler confusion among patients.</li>
-        <li><strong>Goal:</strong> Reinforce education on correct use and symptom tracking.</li>
-      </ul>
-    </div>`,
-
-  "Cardiologist": `
-    <div class='card'>
-      <ul>
-        <li><strong>Objection:</strong> Limited differentiation from established standards of care.</li>
-        <li><strong>Challenge:</strong> Communicating trial design and endpoint nuance quickly.</li>
-        <li><strong>Goal:</strong> Emphasize outcome improvements and workflow simplicity.</li>
-      </ul>
-    </div>`,
-
-  /* --- Analytics / Metrics --- */
-  "Empathy Index": `
-    <div class='card'>
-      <ul>
-        <li><strong>Purpose:</strong> Measures emotional attunement and rapport during HCP interactions.</li>
-        <li><strong>Goal:</strong> Help reps adjust tone and phrasing to strengthen trust.</li>
-      </ul>
-    </div>`,
-
-  "Accuracy Index": `
-    <div class='card'>
-      <ul>
-        <li><strong>Purpose:</strong> Evaluates factual precision and regulatory alignment.</li>
-        <li><strong>Goal:</strong> Reinforce consistent, compliant scientific messaging.</li>
-      </ul>
-    </div>`,
-
-  "Confidence Delta": `
-    <div class='card'>
-      <ul>
-        <li><strong>Purpose:</strong> Compares self-perceived versus demonstrated skill growth.</li>
-        <li><strong>Goal:</strong> Visualize mindset improvement across coaching sessions.</li>
-      </ul>
-    </div>`,
-
-  "Compliance Guard": `
-    <div class='card'>
-      <ul>
-        <li><strong>Purpose:</strong> Detects off-label or risky phrasing in simulations.</li>
-        <li><strong>Goal:</strong> Maintain fair balance and protect brand integrity.</li>
-      </ul>
-    </div>`,
-
-  "Readiness Velocity": `
-    <div class='card'>
-      <ul>
-        <li><strong>Purpose:</strong> Tracks ramp-up speed and proficiency over time.</li>
-        <li><strong>Goal:</strong> Benchmark progress by rep, team, or territory.</li>
-      </ul>
-    </div>`
+  "HIV PrEP": `<div class='card'><ul><li><strong>Objection:</strong> Stigma and patient adherence concerns.</li><li><strong>Challenge:</strong> Framing prevention urgency with empathy.</li><li><strong>Goal:</strong> Build trust and normalize discussion of prevention options.</li></ul></div>`,
+  "Vaccines": `<div class='card'><ul><li><strong>Objection:</strong> Hesitancy rooted in misinformation or side-effect fears.</li><li><strong>Challenge:</strong> Translating population data into relatable patient outcomes.</li><li><strong>Goal:</strong> Reinforce confidence in safety, efficacy, and community protection.</li></ul></div>`,
+  "Hepatitis B": `<div class='card'><ul><li><strong>Objection:</strong> Limited perceived need for adult vaccination.</li><li><strong>Challenge:</strong> Addressing misconceptions around risk and reactivation.</li><li><strong>Goal:</strong> Promote screening and long-term protection messaging.</li></ul></div>`,
+  "Oncology": `<div class='card'><ul><li><strong>Challenge:</strong> Explaining complex clinical data with compassion.</li><li><strong>Objection:</strong> Cost, access, and value justification with payers.</li><li><strong>Goal:</strong> Empower HCPs to discuss outcomes, QoL, and biomarker relevance.</li></ul></div>`,
+  "Cardiology": `<div class='card'><ul><li><strong>Objection:</strong> Skepticism about incremental benefit over generics.</li><li><strong>Challenge:</strong> Clarifying endpoints and real-world outcomes.</li><li><strong>Goal:</strong> Strengthen guideline alignment and adherence messaging.</li></ul></div>`,
+  "Pulmonology": `<div class='card'><ul><li><strong>Challenge:</strong> Differentiating mechanism of action within crowded classes.</li><li><strong>Objection:</strong> Concerns over device complexity or adherence.</li><li><strong>Goal:</strong> Simplify technique training and highlight patient support resources.</li></ul></div>`,
+  "Internal Medicine": `<div class='card'><ul><li><strong>Challenge:</strong> Managing broad chronic disease spectrum under time constraints.</li><li><strong>Objection:</strong> Skepticism toward novel therapies without long-term data.</li><li><strong>Goal:</strong> Present concise, outcomes-driven value aligned with guidelines.</li></ul></div>`,
+  "Nurse Practitioner": `<div class='card'><ul><li><strong>Challenge:</strong> Heavy workload and need for clear patient education tools.</li><li><strong>Objection:</strong> Cost or coverage limitations impacting adherence.</li><li><strong>Goal:</strong> Provide simplified dosing and patient-ready resources.</li></ul></div>`,
+  "Physician Assistant": `<div class='card'><ul><li><strong>Challenge:</strong> Balancing clinical autonomy with protocols.</li><li><strong>Objection:</strong> Prior auth admin burden.</li><li><strong>Goal:</strong> Supply efficient talking points and coverage docs.</li></ul></div>`,
+  "ID Specialist": `<div class='card'><ul><li><strong>Challenge:</strong> Translating evolving data into practice.</li><li><strong>Objection:</strong> DDI concerns limiting comfort.</li><li><strong>Goal:</strong> Provide concise evidence and patient-case comparisons.</li></ul></div>`,
+  "Oncologist": `<div class='card'><ul><li><strong>Challenge:</strong> Keeping up with biomarkers and trials.</li><li><strong>Objection:</strong> Cost, QoL trade-offs, coverage barriers.</li><li><strong>Goal:</strong> Position value with empathy for patient impact.</li></ul></div>`,
+  "Pulmonologist": `<div class='card'><ul><li><strong>Challenge:</strong> Coordinating multi-therapy regimens.</li><li><strong>Objection:</strong> Device complexity and inhaler confusion.</li><li><strong>Goal:</strong> Reinforce education on correct use and tracking.</li></ul></div>`,
+  "Cardiologist": `<div class='card'><ul><li><strong>Objection:</strong> Limited differentiation vs SOC.</li><li><strong>Challenge:</strong> Communicating endpoint nuance quickly.</li><li><strong>Goal:</strong> Emphasize outcome improvements and workflow simplicity.</li></ul></div>`,
+  "Empathy Index": `<div class='card'><ul><li><strong>Purpose:</strong> Measures emotional attunement and rapport during HCP interactions.</li><li><strong>Goal:</strong> Help reps adjust tone and phrasing to strengthen trust.</li></ul></div>`,
+  "Accuracy Index": `<div class='card'><ul><li><strong>Purpose:</strong> Evaluates factual precision and regulatory alignment.</li><li><strong>Goal:</strong> Reinforce consistent, compliant scientific messaging.</li></ul></div>`,
+  "Confidence Delta": `<div class='card'><ul><li><strong>Purpose:</strong> Compares self-perceived versus demonstrated skill growth.</li><li><strong>Goal:</strong> Visualize mindset improvement across coaching sessions.</li></ul></div>`,
+  "Compliance Guard": `<div class='card'><ul><li><strong>Purpose:</strong> Detects off-label or risky phrasing in simulations.</li><li><strong>Goal:</strong> Maintain fair balance and protect brand integrity.</li></ul></div>`,
+  "Readiness Velocity": `<div class='card'><ul><li><strong>Purpose:</strong> Tracks ramp-up speed and proficiency over time.</li><li><strong>Goal:</strong> Benchmark progress by rep, team, or territory.</li></ul></div>`
 };
-
 document.querySelectorAll('[data-card]').forEach(el=>{
   el.addEventListener('click',()=>{
     const title=el.getAttribute('data-card');
@@ -557,75 +419,64 @@ document.querySelectorAll('[data-card]').forEach(el=>{
   });
 });
 
-/* ---------- Alora helpful AI Agent with warmer persona ---------- */
-function respond(q){
-  const s = q.toLowerCase();
-  const warm = {
-    greet:"Hey there 👋, I’m Alora — ReflectivAI’s resident coach-bot.",
-    thanks:"Aw, you’re kind! Anything else you’d like to know?",
-    unknown:"Hmm… I’m not sure about that one yet. I can tell you about pricing, security, simulations, personas, or EI coaching!"
-  };
+/* ---------- Alora: open/close + typing + Worker fetch fallback ---------- */
+const aloraFab=document.getElementById('aloraFab');
+const alora=document.getElementById('alora');
+const aloraClose=document.getElementById('aloraClose');
+const aloraBody=document.getElementById('aloraBody');
+const aloraForm=document.getElementById('aloraForm');
+const aloraInput=document.getElementById('aloraInput');
 
-  // greetings / small talk
-  if(/^(hi|hello|hey|yo)\b/.test(s)) return `${warm.greet} Ask me anything about the platform or training modules.`;
-  if(/\b(thanks|thank you|appreciate)\b/.test(s)) return warm.thanks;
-  if(/\b(how are you|how’s it going|what’s up)\b/.test(s)) return "Doing great and ready to help you explore ReflectivAI.";
+function aloraOpen(){alora.classList.add('open');alora.setAttribute('aria-hidden','false');if(!aloraBody.dataset.greeted){bot("Hi, I’m Alora, a Reflective AI Agent. How can I help?");aloraBody.dataset.greeted='1';}}
+function aloraHide(){alora.classList.remove('open');alora.setAttribute('aria-hidden','true');}
+aloraFab.addEventListener('click',aloraOpen);
+aloraClose.addEventListener('click',aloraHide);
 
-  // company basics
-  if(s.includes('reflectivai') || s.includes('what is reflectiv'))
-    return "ReflectivAI is an AI-driven sales-enablement platform built for life-sciences teams — blending human coaching with emotional intelligence scoring.";
-
-  // pricing
-  if(s.includes('price')||s.includes('pricing')||s.includes('cost'))
-    return "Pricing scales by team size and selected modules. The Request Demo form connects you with our partnerships team for a quote.";
-
-  // security / compliance
-  if(s.includes('security')||s.includes('privacy')||s.includes('hipaa')||s.includes('compliance'))
-    return "ReflectivAI follows HIPAA safeguards, NIST AI RMF, and ISO 27001/42001. PHI is off by default and protected when enabled under BAA.";
-
-  // simulations / coach
-  if(s.includes('simulate')||s.includes('simulation')||s.includes('coach')||s.includes('practice'))
-    return "Our AI Coach lets you role-play with realistic HCP personas, receive empathy scoring, and instant compliance feedback.";
-
-  // personas
-  if(s.includes('persona')||s.includes('hcp'))
-    return "We include HCP personas such as Internal Medicine MDs, NPs, PAs, Oncologists, and more — each tuned to realistic tone and objections.";
-
-  // EI
-  if(s.includes('ei')||s.includes('emotional intelligence')||s.includes('empathy'))
-    return "Emotional Intelligence Mode measures empathy, stress cues, and tone. You’ll see metrics like Empathy Index and Readiness Velocity update in real time.";
-
-  // integrations
-  if(s.includes('integration')||s.includes('crm')||s.includes('lms')||s.includes('salesforce')||s.includes('veeva'))
-    return "ReflectivAI integrates with Salesforce, Veeva, and major LMS platforms. We map data fields during onboarding to sync training progress.";
-
-  // ethics / governance
-  if(s.includes('ethic')||s.includes('governance')||s.includes('privacy policy'))
-    return "Our Ethics & Governance section outlines data privacy, bias testing, and transparency safeguards following FDA OPDP and PhRMA Code principles.";
-
-  // analytics
-  if(s.includes('analytics')||s.includes('metrics')||s.includes('index'))
-    return "Analytics dashboards track Empathy Index, Confidence Delta, Compliance Guard, and other KPIs for individual or team performance.";
-
-  // contact / demo
-  if(s.includes('contact')||s.includes('demo')||s.includes('call'))
-    return "Use the Request Demo form at the bottom of the page. Add your goals, and our team will schedule a brief intro session.";
-
-  // mission / values
-  if(s.includes('mission')||s.includes('values'))
-    return "Our mission is to humanize AI training — helping sales reps communicate with empathy, accuracy, and confidence.";
-
-  // fallback
-  return warm.unknown;
+function user(t){const d=document.createElement('div');d.className='alora-msg user';d.textContent=t;aloraBody.appendChild(d);aloraBody.scrollTop=aloraBody.scrollHeight;}
+function bot(t){const d=document.createElement('div');d.className='alora-msg bot';d.textContent=t;aloraBody.appendChild(d);aloraBody.scrollTop=aloraBody.scrollHeight;}
+function typing(show){
+  if(show){
+    const t=document.createElement('div');t.className='alora-typing';t.id='aloraTyping';let i=0;
+    t.textContent='Alora is typing'; aloraBody.appendChild(t);
+    t._timer=setInterval(()=>{i=(i+1)%4;t.textContent='Alora is typing'+'.'.repeat(i)},300);
+    aloraBody.scrollTop=aloraBody.scrollHeight;
+  }else{
+    const t=document.getElementById('aloraTyping'); if(t){clearInterval(t._timer); t.remove();}
+  }
 }
 
-aloraForm.addEventListener('submit',e=>{
+/* endpoint call with fallback to on-page respond() */
+async function askAlora(q){
+  try{
+    const r=await fetch(window.ALORA_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({role:'alora',site:'reflectivai',message:q})});
+    if(r.ok){const j=await r.json(); return j.reply||null;}
+    return null;
+  }catch{ return null; }
+}
+
+/* lightweight local fallback responses */
+function respondLocal(q){
+  const s=q.toLowerCase();
+  if(/^(hi|hello|hey|yo)\b/.test(s)) return "Hey there 👋, I’m Alora — ReflectivAI’s resident coach-bot. Ask me about modules, EI, or launching the Coach.";
+  if(/\bprice|pricing|cost\b/.test(s)) return "Pricing scales by team size and modules. Use Request Demo to get a quote.";
+  if(/\bsecurity|privacy|hipaa|compliance\b/.test(s)) return "HIPAA safeguards, NIST AI RMF, ISO 27001/42001. PHI off by default; BAA when enabled.";
+  if(/\b(simulate|simulation|coach|practice)\b/.test(s)) return "Launch the Coach from the hero or Simulations. You’ll get empathy scoring and compliance feedback.";
+  if(/\bpersona|hcp\b/.test(s)) return "Personas include Internal Medicine MDs, NPs, PAs, Oncologists, and more.";
+  if(/\bei|emotional intelligence|empathy\b/.test(s)) return "EI Mode measures Empathy, Accuracy, Tone, and Clarity with coaching tips.";
+  if(/\bintegration|crm|lms|salesforce|veeva\b/.test(s)) return "Integrates with Salesforce, Veeva, and major LMS platforms.";
+  if(/\banalytics|metrics|index\b/.test(s)) return "Dashboards track Empathy Index, Confidence Delta, Compliance Guard, and Readiness Velocity.";
+  if(/\bcontact|demo|call\b/.test(s)) return "Use the Request Demo form below and the team will reach out.";
+  return "I can cover platform, analytics, ethics, FAQs, navigation, and launching the Coach.";
+}
+
+aloraForm.addEventListener('submit',async e=>{
   e.preventDefault();
   const q=aloraInput.value.trim(); if(!q) return;
   aloraInput.value=''; user(q);
   typing(true);
-  const answer=respond(q);
-  setTimeout(()=>{ typing(false); bot(answer); }, 280);
+  const remote=await askAlora(q);
+  typing(false);
+  bot(remote || respondLocal(q));
 });
 
 /* Start at top on load/back-forward cache */
