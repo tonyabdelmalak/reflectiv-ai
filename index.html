@@ -1,324 +1,655 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ReflectivAI - Modern UI Mockup</title>
-    <!-- Load Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Custom Font for a professional look */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc; /* Very light slate background for depth */
-        }
-        /* Define custom colors based on the suggestion (Professional Blue and Clinical Cyan) */
-        .primary-dark { background-color: #1E3A8A; } /* Dark Blue */
-        .text-primary-dark { color: #1E3A8A; }
-        .accent-teal { background-color: #06B6D4; } /* Vibrant Cyan/Teal */
-        .text-accent-teal { color: #06B6D4; }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ReflectivAI – AI Sales Enablement for Life Sciences</title>
 
-        /* Style for the sticky header */
-        .sticky-header {
-            transition: all 0.3s ease-in-out;
-        }
-        .section-separator {
-            content: "";
-            display: block;
-            width: 80px;
-            height: 4px;
-            margin-bottom: 24px;
-            border-radius: 9999px;
-            background-color: #06B6D4;
-        }
-        /* Mobile-first sizing adjustment for the layout */
-        .grid-mobile-center {
-            text-align: center;
-        }
-        @media (min-width: 768px) {
-            .grid-mobile-center {
-                text-align: left;
-            }
-        }
-    </style>
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --navy:#1E3A8A; /* darker blue per request */
+    --ink:#0b1323;
+    --teal:#06B6D4;
+    --slab:#f3f6fb;
+    --card:#ffffff;
+    --border:#e5ecf6;
+  }
+  body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica Neue,Arial,sans-serif;background:#f8fafc;color:var(--ink)}
+
+  /* header */
+  .sticky-header{transition:all .25s ease}
+
+  /* hero */
+  .hero-grad{background:radial-gradient(1100px 560px at 70% -12%,#2a4fb4 0%,#1E3A8A 40%,#162a61 78%,#111e48 100%);}
+
+  /* section title underline */
+  .sep{display:block;width:84px;height:4px;border-radius:9999px;background:var(--teal);margin:.5rem 0 1.25rem}
+
+  /* cards */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 28px rgba(12,39,64,.08)}
+
+  /* flip oval chips (hover + tap) */
+  .flip{perspective:1000px;width:100%;max-width:420px;margin:0 auto}
+  .flip-inner{position:relative;width:100%;border-radius:9999px;transform-style:preserve-3d;transition:transform .5s}
+  .flip:hover .flip-inner,.flip:focus-within .flip-inner,.flip.touched .flip-inner{transform:rotateY(180deg)}
+  .flip-front,.flip-back{position:relative;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+  .flip-front{background:rgba(6,182,212,.10);color:#065f6a;border:1px solid rgba(6,182,212,.25)}
+  .flip-back{background:#ffffff;color:#111e48;border:1px solid var(--border);transform:rotateY(180deg)}
+  .oval{display:flex;align-items:center;justify-content:center;padding:16px 22px;border-radius:9999px;font-weight:800}
+  .flip .desc{padding:16px 20px;border-radius:14px}
+
+  /* metrics row chips */
+  .metric{display:flex;align-items:center;justify-content:center;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);padding:18px}
+
+  /* modal shell */
+  .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(3,14,24,.55);z-index:1200}
+  .modal.open{display:flex}
+  .modal-box{background:#fff;border-radius:18px;box-shadow:0 24px 50px rgba(0,0,0,.28);max-width:1100px;width:96vw;max-height:88vh;overflow:auto;border:1px solid var(--border)}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);background:#f6f9fe;border-radius:18px 18px 0 0}
+  .modal-title{font-weight:900}
+  .modal-close{background:#e7edf6;border:0;border-radius:10px;padding:6px 10px;cursor:pointer}
+
+  /* Coach panel bits */
+  .label{font-size:.8rem;font-weight:700;color:#334155}
+  .sel{width:100%;border:1px solid #cfd8e3;border-radius:12px;padding:10px}
+  .coach-col{display:grid;gap:10px}
+
+  /* real-time scoring panel */
+  .score-pill{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--border);border-radius:9999px;padding:8px 12px;background:#fff}
+  .score-pill .k{font-weight:900}
+  .score-pill .v{font-weight:800;color:#0ea5a7}
+
+  /* rubric popover */
+  .popover{position:fixed;right:20px;top:20px;max-width:520px;background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:0 18px 36px rgba(0,0,0,.22);padding:14px;z-index:1400;display:none}
+
+  /* Alora FAB left-bottom per spec */
+  #aloraFab{position:fixed;left:22px;bottom:22px;z-index:1300;width:64px;height:64px;border:none;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;box-shadow:0 6px 18px rgba(0,0,0,.28);cursor:pointer}
+  #aloraFab svg{width:30px;height:30px}
+  .alora{position:fixed;left:22px;bottom:98px;width:360px;max-width:92vw;background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:0 16px 36px rgba(0,0,0,.22);transform:translateY(18px);opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;display:flex;flex-direction:column;overflow:hidden;z-index:1300}
+  .alora.open{opacity:1;transform:translateY(0);pointer-events:auto}
+  .alora-head{display:flex;align-items:center;justify-content:space-between;background:var(--navy);color:#fff;padding:12px 14px}
+  .alora-body{padding:12px;max-height:46vh;overflow:auto;background:#fbfdff}
+  .alora-msg{padding:10px 12px;border-radius:12px;margin:8px 0;max-width:82%}
+  .alora-msg.bot{background:#eef5ff;color:#0b1323}
+  .alora-msg.user{background:#111e48;color:#fff;margin-left:auto}
+  .alora-input{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border);background:#fff}
+  .alora-input input{flex:1;border:1px solid #cfd8e3;border-radius:10px;padding:10px 12px;font-size:15px}
+  .alora-input .send{background:var(--navy);color:#fff;border:none;border-radius:10px;padding:10px 12px;font-weight:800}
+</style>
 </head>
-<body>
+<body class="antialiased">
 
-    <!-- Header & Navigation (Sticky & Responsive) -->
-    <header id="navbar" class="sticky-header fixed top-0 left-0 w-full z-50 bg-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <!-- Logo -->
-                <a href="#" class="flex items-center text-xl font-extrabold text-primary-dark tracking-tight">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-accent-teal mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                    ReflectivAI
-                </a>
-                <!-- Desktop Navigation Links -->
-                <nav class="hidden md:flex space-x-8">
-                    <a href="#platform" class="text-gray-600 hover:text-accent-teal transition duration-200">Platform</a>
-                    <a href="#analytics" class="text-gray-600 hover:text-accent-teal transition duration-200">Analytics</a>
-                    <a href="#ethics" class="text-gray-600 hover:text-accent-teal transition duration-200">Ethics</a>
-                    <a href="#contact" class="px-4 py-2 rounded-full primary-dark text-white font-semibold shadow-lg hover:shadow-xl transition duration-300">Request Demo</a>
-                </nav>
-                <!-- Mobile Menu Button - (Note: For a single-file demo, this button is purely visual) -->
-                <button class="md:hidden p-2 text-gray-700 hover:text-accent-teal rounded-md transition duration-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
-                </button>
-            </div>
+<!-- Header -->
+<header class="sticky-header fixed top-0 left-0 w-full z-50 bg-white shadow-md">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-16">
+      <a href="#" class="flex items-center text-xl font-extrabold text-[color:var(--navy)] tracking-tight">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-[color:var(--teal)] mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        ReflectivAI
+      </a>
+      <nav class="hidden md:flex space-x-8">
+        <a href="#platform" class="text-gray-600 hover:text-[color:var(--teal)]">Platform</a>
+        <a href="#analytics" class="text-gray-600 hover:text-[color:var(--teal)]">Analytics</a>
+        <a href="#ethics" class="text-gray-600 hover:text-[color:var(--teal)]">Ethics</a>
+        <a href="#contact" class="px-4 py-2 rounded-full bg-[color:var(--navy)] text-white font-semibold shadow-lg">Request Demo</a>
+      </nav>
+    </div>
+  </div>
+</header>
+<div class="pt-16"></div>
+
+<!-- Hero -->
+<section class="hero-grad text-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-10 items-center py-16 md:py-20">
+    <div>
+      <span class="text-sm font-semibold uppercase text-[color:var(--teal)] tracking-widest mb-3 block">AI Sales Enablement for Life Sciences</span>
+      <h1 class="text-4xl sm:text-5xl font-extrabold leading-tight mb-4">Connect and Convert with Intelligence</h1>
+      <p class="text-lg text-slate-100 mb-8">ReflectivAI blends clinical accuracy, emotional intelligence, and adaptive AI coaching so every HCP conversation feels authentic, confident, and compliant.</p>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <a href="#contact" class="px-7 py-3 rounded-full bg-white text-[color:var(--navy)] font-bold">Request a Demo</a>
+        <a id="launchCoachTop" href="#platform" class="px-7 py-3 rounded-full border-2 border-white font-bold text-white">Explore the Platform</a>
+      </div>
+    </div>
+    <div class="rounded-xl overflow-hidden shadow-2xl">
+      <img src="https://placehold.co/700x460/1E3A8A/ffffff?text=Intuitive+Simulation+Dashboard" class="w-full h-auto" alt="">
+    </div>
+  </div>
+</section>
+
+<!-- Why -->
+<section class="py-14 bg-white border-t border-gray-200">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center md:text-left">
+    <h2 class="text-3xl font-bold text-gray-900">Why Emotional Intelligence Matters in Sales</h2>
+    <span class="sep mx-auto md:mx-0"></span>
+    <p class="text-lg text-gray-600 max-w-3xl">Emotional intelligence drives connection and adherence. ReflectivAI helps reps practice active listening, empathy, and tone calibration—transforming compliance into confidence and insight into influence.</p>
+  </div>
+</section>
+
+<!-- Platform Modules -->
+<section id="platform" class="py-16 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 class="text-4xl font-extrabold text-gray-900 mb-2">Platform Modules</h2>
+    <span class="sep"></span>
+    <p class="text-xl text-gray-600 mb-10 max-w-3xl">Integrated tools designed for high-stakes life science interactions.</p>
+
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="card p-7">
+        <div class="w-12 h-12 rounded-xl bg-[color:var(--teal)] text-white grid place-items-center mb-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
         </div>
-    </header>
-    <!-- Add padding to prevent content from being hidden by fixed header -->
-    <div class="pt-16"></div> 
-
-    <!-- 1. Hero Section -->
-    <section class="py-16 md:py-24 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12 items-center">
-            <!-- Text Content -->
-            <div class="grid-mobile-center">
-                <span class="text-sm font-semibold uppercase text-accent-teal tracking-widest mb-3 block">AI Sales Enablement for Life Sciences</span>
-                <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight mb-6">
-                    Connect and Convert with Intelligence
-                </h1>
-                <p class="text-lg sm:text-xl text-gray-600 mb-8">
-                    ReflectivAI blends clinical accuracy, emotional intelligence, and adaptive AI coaching so every HCP conversation feels authentic, confident, and compliant.
-                </p>
-                <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                    <a href="#contact" class="px-8 py-3 rounded-full primary-dark text-white font-bold shadow-xl hover:bg-indigo-900 transition duration-300 transform hover:scale-[1.02] text-center">
-                        Request a Demo
-                    </a>
-                    <a href="#platform" class="px-8 py-3 rounded-full bg-white text-primary-dark border-2 border-primary-dark font-bold hover:bg-gray-50 transition duration-300 text-center">
-                        Explore the Platform
-                    </a>
-                </div>
-            </div>
-            <!-- Image Placeholder -->
-            <div class="rounded-xl overflow-hidden shadow-2xl mt-8 md:mt-0">
-                <!-- Placeholder for the Hero Image -->
-                <img src="https://placehold.co/700x500/1E3A8A/ffffff?text=Intuitive+Simulation+Dashboard" alt="HCP conversation with analytics overlay mockup" class="w-full h-auto object-cover"/>
-            </div>
+        <h3 class="text-xl font-bold mb-2">Product Knowledge</h3>
+        <p class="text-slate-600">Train on complex clinical data and regulatory messaging with compliance and real-time correction built in.</p>
+      </div>
+      <div class="card p-7">
+        <div class="w-12 h-12 rounded-xl bg-[color:var(--teal)] text-white grid place-items-center mb-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         </div>
-    </section>
-
-    <!-- 2. Core Value Proposition Section (Lighter background for separation) -->
-    <section class="py-16 bg-gray-50 border-t border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 class="text-3xl font-bold text-gray-900 mb-4">Why Emotional Intelligence Matters in Sales</h2>
-            <div class="w-20 mx-auto section-separator"></div>
-            <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                Emotional intelligence drives connection and adherence. ReflectivAI helps reps practice active listening, empathy, and tone calibration—transforming compliance into confidence and insight into influence.
-            </p>
+        <h3 class="text-xl font-bold mb-2">Sales Simulation</h3>
+        <p class="text-slate-600">Practice high-stakes calls with adaptive AI personas across therapeutic areas.</p>
+      </div>
+      <div class="card p-7">
+        <div class="w-12 h-12 rounded-xl bg-[color:var(--teal)] text-white grid place-items-center mb-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg>
         </div>
-    </section>
+        <h3 class="text-xl font-bold mb-2">Relationship Intelligence</h3>
+        <p class="text-slate-600">Track behavioral blind spots. Understand empathy, tone, and agility with granular data.</p>
+      </div>
+    </div>
 
-    <!-- 3. Platform Modules (Cards with Icons and Accent Color) -->
-    <section id="platform" class="py-16 md:py-24 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-4xl font-extrabold text-gray-900 mb-4 text-center md:text-left">Platform Modules</h2>
-            <div class="section-separator mx-auto md:mx-0"></div>
-            <p class="text-xl text-gray-600 mb-12 max-w-3xl text-center md:text-left mx-auto md:mx-0">Integrated tools designed for high-stakes life science interactions.</p>
+    <div class="mt-8">
+      <a id="launchCoachMid" href="#" class="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[color:var(--navy)] text-white font-bold">
+        Explore the Platform • Launch AI Coach
+      </a>
+    </div>
+  </div>
+</section>
 
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Module Card 1: Product Knowledge -->
-                <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100 hover:shadow-2xl transition duration-300 transform hover:scale-[1.01]">
-                    <div class="w-12 h-12 accent-teal rounded-xl flex items-center justify-center mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Product Knowledge</h3>
-                    <p class="text-gray-600">Train on complex clinical data and regulatory messaging with compliance and real-time correction built in.</p>
-                </div>
-                <!-- Module Card 2: Sales Simulation -->
-                <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100 hover:shadow-2xl transition duration-300 transform hover:scale-[1.01]">
-                    <div class="w-12 h-12 accent-teal rounded-xl flex items-center justify-center mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Sales Simulation</h3>
-                    <p class="text-gray-600">Practice high-stakes calls in oncology, vaccines, and other areas — anytime, anywhere with adaptive AI personas.</p>
-                </div>
-                <!-- Module Card 3: Relationship Intelligence -->
-                <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100 hover:shadow-2xl transition duration-300 transform hover:scale-[1.01]">
-                    <div class="w-12 h-12 accent-teal rounded-xl flex items-center justify-center mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Relationship Intelligence</h3>
-                    <p class="text-gray-600">Track behavioral blind spots. Understand empathy, tone, and conversational agility with granular data.</p>
-                </div>
-            </div>
+<!-- Analytics -->
+<section id="analytics" class="py-16 bg-[color:var(--navy)] text-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-10">
+      <h2 class="text-4xl font-extrabold">Performance Analytics & Coaching Intelligence</h2>
+      <span class="sep mx-auto" style="background:#fff"></span>
+      <p class="text-indigo-200 text-lg">Turn training data into measurable business outcomes.</p>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div class="metric"><div><div class="text-4xl font-extrabold text-[color:var(--teal)]">94%</div><div class="uppercase text-xs tracking-wide">Accuracy Index</div></div></div>
+      <div class="metric"><div><div class="text-4xl font-extrabold text-[color:var(--teal)]">1.4x</div><div class="uppercase text-xs tracking-wide">Readiness Velocity</div></div></div>
+      <div class="metric"><div><div class="text-2xl font-extrabold text-[color:var(--teal)]">Empathy</div><div class="uppercase text-xs tracking-wide">Coaching Index</div></div></div>
+      <div class="metric"><div><div class="text-2xl font-extrabold text-[color:var(--teal)]">Compliance</div><div class="uppercase text-xs tracking-wide">Guardrails</div></div></div>
+      <div class="metric"><div><div class="text-2xl font-extrabold text-[color:var(--teal)]">Confidence</div><div class="uppercase text-xs tracking-wide">Delta</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Therapeutic Areas (stacked) -->
+<section class="py-16 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h3 class="text-3xl font-bold text-gray-900">Train by Therapeutic Area</h3>
+    <span class="sep"></span>
+
+    <div class="grid gap-4">
+      <!-- Each flip uses data-card key for modal copy -->
+      <button class="flip text-left" data-card="Oncology">
+        <div class="flip-inner">
+          <div class="flip-front oval">Oncology</div>
+          <div class="flip-back desc">
+            <p class="font-semibold mb-1">Oncology — quick brief</p>
+            <ul class="list-disc pl-5 text-sm">
+              <li>Explain complex data with compassion.</li>
+              <li>Address cost/access and value evidence.</li>
+              <li>Align biomarkers and outcomes with QoL.</li>
+            </ul>
+          </div>
         </div>
-    </section>
+      </button>
 
-    <!-- 4. Analytics Section (Using Primary Color Block for contrast) -->
-    <section id="analytics" class="py-16 md:py-24 primary-dark text-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
-                <h2 class="text-4xl font-extrabold mb-4">Performance Analytics & Coaching Intelligence</h2>
-                <div class="w-20 mx-auto section-separator" style="background-color: white;"></div>
-                <p class="text-xl text-indigo-200 max-w-3xl mx-auto">Turn training data into measurable business outcomes.</p>
-            </div>
-            
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-6 text-center">
-                <!-- Metric 1 -->
-                <div class="bg-white/10 p-6 rounded-xl shadow-lg border border-white/20">
-                    <div class="text-4xl font-bold text-accent-teal mb-2">94\%</div>
-                    <p class="text-sm font-semibold uppercase text-indigo-100">Accuracy Index</p>
-                </div>
-                <!-- Metric 2 -->
-                <div class="bg-white/10 p-6 rounded-xl shadow-lg border border-white/20">
-                    <div class="text-4xl font-bold text-accent-teal mb-2">1.4x</div>
-                    <p class="text-sm font-semibold uppercase text-indigo-100">Readiness Velocity</p>
-                </div>
-                <!-- Metric 3 -->
-                <div class="bg-white/10 p-6 rounded-xl shadow-lg border border-white/20">
-                    <div class="text-4xl font-bold text-accent-teal mb-2">Empathy</div>
-                    <p class="text-sm font-semibold uppercase text-indigo-100">Coaching Index</p>
-                </div>
-                <!-- Metric 4 -->
-                <div class="bg-white/10 p-6 rounded-xl shadow-lg border border-white/20">
-                    <div class="text-4xl font-bold text-accent-teal mb-2">Compliance</div>
-                    <p class="text-sm font-semibold uppercase text-indigo-100">Guardrails</p>
-                </div>
-                 <!-- Metric 5 -->
-                <div class="bg-white/10 p-6 rounded-xl shadow-lg border border-white/20">
-                    <div class="text-4xl font-bold text-accent-teal mb-2">Confidence</div>
-                    <p class="text-sm font-semibold uppercase text-indigo-100">Delta</p>
-                </div>
-            </div>
+      <button class="flip text-left" data-card="Vaccines">
+        <div class="flip-inner">
+          <div class="flip-front oval">Vaccines</div>
+          <div class="flip-back desc">
+            <p class="font-semibold mb-1">Vaccines — quick brief</p>
+            <ul class="list-disc pl-5 text-sm">
+              <li>Counter hesitancy with clear safety data.</li>
+              <li>Translate population data to individuals.</li>
+              <li>Reinforce community protection.</li>
+            </ul>
+          </div>
         </div>
-    </section>
+      </button>
 
-    <!-- 5. Therapeutic Areas & Personas (Use visual tags/chips) -->
-    <section class="py-16 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12">
-            <!-- Therapeutic Areas -->
-            <div class="grid-mobile-center md:grid-mobile-center">
-                <h3 class="text-3xl font-bold text-gray-900 mb-4">Train by Therapeutic Area</h3>
-                <div class="section-separator mx-auto md:mx-0"></div>
-                <div class="flex flex-wrap gap-3 justify-center md:justify-start">
-                    <!-- Apply accent color to tags -->
-                    <span class="px-4 py-1.5 rounded-full bg-accent-teal/10 text-accent-teal font-medium text-sm">Oncology</span>
-                    <span class="px-4 py-1.5 rounded-full bg-accent-teal/10 text-accent-teal font-medium text-sm">Vaccines</span>
-                    <span class="px-4 py-1.5 rounded-full bg-accent-teal/10 text-accent-teal font-medium text-sm">HIV PrEP</span>
-                    <span class="px-4 py-1.5 rounded-full bg-accent-teal/10 text-accent-teal font-medium text-sm">Cardiology</span>
-                    <span class="px-4 py-1.5 rounded-full bg-accent-teal/10 text-accent-teal font-medium text-sm">Pulmonology</span>
-                    <span class="px-4 py-1.5 rounded-full bg-accent-teal/10 text-accent-teal font-medium text-sm">Hepatitis B</span>
-                    <span class="px-4 py-1.5 rounded-full bg-gray-200 text-gray-700 font-medium text-sm">+ Custom Scenarios</span>
-                </div>
-            </div>
-
-            <!-- HCP Profiles -->
-            <div class="grid-mobile-center md:grid-mobile-center mt-10 md:mt-0">
-                <h3 class="text-3xl font-bold text-gray-900 mb-4">Practice with Realistic Personas</h3>
-                <div class="section-separator mx-auto md:mx-0"></div>
-                <div class="flex flex-wrap gap-3 justify-center md:justify-start">
-                    <!-- Apply primary color to tags -->
-                    <span class="px-4 py-1.5 rounded-full bg-primary-dark/10 text-primary-dark font-medium text-sm">Internal Medicine MD</span>
-                    <span class="px-4 py-1.5 rounded-full bg-primary-dark/10 text-primary-dark font-medium text-sm">Oncologist</span>
-                    <span class="px-4 py-1.5 rounded-full bg-primary-dark/10 text-primary-dark font-medium text-sm">Nurse Practitioner (NP)</span>
-                    <span class="px-4 py-1.5 rounded-full bg-primary-dark/10 text-primary-dark font-medium text-sm">Infectious Disease Specialist</span>
-                    <span class="px-4 py-1.5 rounded-full bg-primary-dark/10 text-primary-dark font-medium text-sm">Cardiologist</span>
-                    <span class="px-4 py-1.5 rounded-full bg-primary-dark/10 text-primary-dark font-medium text-sm">Physician Assistant (PA)</span>
-                </div>
-            </div>
+      <button class="flip text-left" data-card="HIV PrEP">
+        <div class="flip-inner">
+          <div class="flip-front oval">HIV PrEP</div>
+          <div class="flip-back desc">
+            <p class="font-semibold mb-1">HIV PrEP — quick brief</p>
+            <ul class="list-disc pl-5 text-sm">
+              <li>Address stigma and adherence fears.</li>
+              <li>Frame prevention urgency with empathy.</li>
+              <li>Normalize prevention conversations.</li>
+            </ul>
+          </div>
         </div>
-    </section>
+      </button>
 
-    <!-- 6. Ethics, Privacy & Governance (Using collapsible-like cards for scannability) -->
-    <section id="ethics" class="py-16 md:py-24 bg-gray-50 border-t border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
-                <h2 class="text-4xl font-extrabold text-gray-900 mb-4">Ethics, Privacy & Governance</h2>
-                <div class="w-20 mx-auto section-separator"></div>
-                <p class="text-xl text-gray-600 max-w-3xl mx-auto">Compliance and responsible AI built for the rigors of life-sciences training.</p>
-            </div>
-            
-            <div class="grid md:grid-cols-2 gap-6">
-                <!-- Ethics Principle 1 -->
-                <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-accent-teal">
-                    <h4 class="text-xl font-bold text-gray-900 mb-2 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent-teal mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                        Data Privacy & Security
-                    </h4>
-                    <p class="text-gray-600 text-sm">PHI is off by default, training uses synthetic data. When enabled, we operate under BAA, encryption, and role-based access controls.</p>
-                </div>
-                <!-- Ethics Principle 2 -->
-                <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-accent-teal">
-                    <h4 class="text-xl font-bold text-gray-900 mb-2 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent-teal mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
-                        Algorithmic Bias & Fairness
-                    </h4>
-                    <p class="text-gray-600 text-sm">Pre-deployment bias testing and continuous monitoring. Remediation steps published, and guardrails prohibit non-clinical proxies.</p>
-                </div>
-                <!-- Ethics Principle 3 -->
-                <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-accent-teal">
-                    <h4 class="text-xl font-bold text-gray-900 mb-2 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent-teal mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                        Transparency & Explainability
-                    </h4>
-                    <p class="text-gray-600 text-sm">In-product coaching recommendations include clear reason codes. Model cards document data sources and limitations for full traceability.</p>
-                </div>
-                <!-- Ethics Principle 4 -->
-                <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-accent-teal">
-                    <h4 class="text-xl font-bold text-gray-900 mb-2 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent-teal mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9l6-6M20 6l-6 6M10 20l-6-6M4 14l6 6"></path></svg>
-                        Human Oversight & Accountability
-                    </h4>
-                    <p class="text-gray-600 text-sm">Humans curate all scenarios and rubrics. All message libraries are versioned for Medical, Legal, Regulatory (MLR) traceability.</p>
-                </div>
-            </div>
+      <button class="flip text-left" data-card="Cardiology">
+        <div class="flip-inner">
+          <div class="flip-front oval">Cardiology</div>
+          <div class="flip-back desc">
+            <p class="font-semibold mb-1">Cardiology — quick brief</p>
+            <ul class="list-disc pl-5 text-sm">
+              <li>Clarify endpoints and outcomes.</li>
+              <li>Differentiate from generics/guidelines.</li>
+              <li>Reinforce adherence and risk reduction.</li>
+            </ul>
+          </div>
         </div>
-    </section>
+      </button>
 
-    <!-- 7. Contact Section (Form) -->
-    <section id="contact" class="py-16 md:py-24 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12 items-start">
-            <!-- Contact Info -->
-            <div class="grid-mobile-center md:grid-mobile-center">
-                <h2 class="text-4xl font-extrabold text-gray-900 mb-4">Let's Redefine Your Sales Training</h2>
-                <div class="section-separator mx-auto md:mx-0"></div>
-                <p class="text-xl text-gray-600 mb-8">
-                    Ready to see how adaptive AI coaching can drive confidence and compliance for your life sciences team? Request a personalized demonstration.
-                </p>
-                <div class="space-y-4 text-center md:text-left">
-                    <p class="flex items-center justify-center md:justify-start text-gray-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary-dark mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                        (555) 123-4567
-                    </p>
-                    <p class="flex items-center justify-center md:justify-start text-gray-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary-dark mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                        demo@reflectivai.com
-                    </p>
-                </div>
-            </div>
-
-            <!-- Demo Request Form -->
-            <form class="bg-white p-8 rounded-xl shadow-2xl border border-gray-100 w-full">
-                <div class="space-y-6">
-                    <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                        <input type="text" id="name" name="name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-accent-teal focus:border-accent-teal transition duration-200">
-                    </div>
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input type="email" id="email" name="email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-accent-teal focus:border-accent-teal transition duration-200">
-                    </div>
-                    <div>
-                        <label for="message" class="block text-sm font-medium text-gray-700 mb-1">Message</label>
-                        <textarea id="message" name="message" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-accent-teal focus:border-accent-teal transition duration-200"></textarea>
-                    </div>
-                    <button type="submit" class="w-full px-8 py-3 rounded-full primary-dark text-white font-bold shadow-xl hover:bg-indigo-900 transition duration-300 transform hover:scale-[1.01]">
-                        Request Demo
-                    </button>
-                </div>
-            </form>
+      <button class="flip text-left" data-card="Pulmonology">
+        <div class="flip-inner">
+          <div class="flip-front oval">Pulmonology</div>
+          <div class="flip-back desc">
+            <p class="font-semibold mb-1">Pulmonology — quick brief</p>
+            <ul class="list-disc pl-5 text-sm">
+              <li>Differentiate MOA in crowded classes.</li>
+              <li>Address device complexity.</li>
+              <li>Emphasize usage technique education.</li>
+            </ul>
+          </div>
         </div>
-    </section>
+      </button>
 
-    <!-- Footer -->
-    <footer class="py-8 bg-gray-800 text-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm">
-            <p>&copy; 2025 ReflectivAI. All rights reserved. Design Mockup.</p>
+      <button class="flip text-left" data-card="Hepatitis B">
+        <div class="flip-inner">
+          <div class="flip-front oval">Hepatitis B</div>
+          <div class="flip-back desc">
+            <p class="font-semibold mb-1">Hepatitis B — quick brief</p>
+            <ul class="list-disc pl-5 text-sm">
+              <li>Increase adult screening and vaccination.</li>
+              <li>Resolve risk/reactivation misconceptions.</li>
+              <li>Highlight long-term protection value.</li>
+            </ul>
+          </div>
         </div>
-    </footer>
+      </button>
+    </div>
 
+    <p class="text-slate-600 mt-4">Our scenario library grows continually—new therapeutic areas and objections are added with each launch.</p>
+  </div>
+</section>
+
+<!-- Personas (stacked) -->
+<section class="py-16 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h3 class="text-3xl font-bold text-gray-900">Practice with Realistic Personas</h3>
+    <span class="sep"></span>
+
+    <div class="grid gap-4">
+      <button class="flip text-left" data-card="Internal Medicine MD">
+        <div class="flip-inner">
+          <div class="flip-front oval bg-[color:var(--navy)]/10 border border-[color:var(--navy)]/20 text-[color:var(--navy)]">Internal Medicine MD</div>
+          <div class="flip-back desc">
+            <p class="font-semibold mb-1">Internal Medicine — quick brief</p>
+            <ul class="list-disc pl-5 text-sm">
+              <li>Broad chronic spectrum under time pressure.</li>
+              <li>Concise, outcomes-driven value.</li>
+              <li>Guideline alignment and clarity.</li>
+            </ul>
+          </div>
+        </div>
+      </button>
+
+      <button class="flip text-left" data-card="Nurse Practitioner (NP)">
+        <div class="flip-inner">
+          <div class="flip-front oval bg-[color:var(--navy)]/10 border border-[color:var(--navy)]/20 text-[color:var(--navy)]">Nurse Practitioner (NP)</div>
+          <div class="flip-back desc">
+            <p class="font-semibold mb-1">NP — quick brief</p>
+            <ul class="list-disc pl-5 text-sm">
+              <li>Heavy workload and education tools.</li>
+              <li>Coverage constraints and adherence.</li>
+              <li>Simplified dosing + resources.</li>
+            </ul>
+          </div>
+        </div>
+      </button>
+
+      <button class="flip text-left" data-card="Physician Assistant (PA)">
+        <div class="flip-inner">
+          <div class="flip-front oval bg-[color:var(--navy)]/10 border border-[color:var(--navy)]/20 text-[color:var(--navy)]">Physician Assistant (PA)</div>
+          <div class="flip-back desc">
+            <p class="font-semibold mb-1">PA — quick brief</p>
+            <ul class="list-disc pl-5 text-sm">
+              <li>Autonomy within protocols.</li>
+              <li>Prior auth burden.</li>
+              <li>Provide efficient documentation.</li>
+            </ul>
+          </div>
+        </div>
+      </button>
+
+      <button class="flip text-left" data-card="Infectious Disease Specialist">
+        <div class="flip-inner">
+          <div class="flip-front oval bg-[color:var(--navy)]/10 border border-[color:var(--navy)]/20 text-[color:var(--navy)]">Infectious Disease Specialist</div>
+          <div class="flip-back desc">
+            <p class="font-semibold mb-1">ID — quick brief</p>
+            <ul class="list-disc pl-5 text-sm">
+              <li>Rapidly evolving evidence.</li>
+              <li>DDI/resistance concerns.</li>
+              <li>Concise trial evidence + cases.</li>
+            </ul>
+          </div>
+        </div>
+      </button>
+
+      <button class="flip text-left" data-card="Oncologist">
+        <div class="flip-inner">
+          <div class="flip-front oval bg-[color:var(--navy)]/10 border border-[color:var(--navy)]/20 text-[color:var(--navy)]">Oncologist</div>
+          <div class="flip-back desc">
+            <p class="font-semibold mb-1">Oncologist — quick brief</p>
+            <ul class="list-disc pl-5 text-sm">
+              <li>Biomarkers and trial landscape.</li>
+              <li>QoL and access trade-offs.</li>
+              <li>Empathetic outcomes framing.</li>
+            </ul>
+          </div>
+        </div>
+      </button>
+
+      <button class="flip text-left" data-card="Pulmonologist">
+        <div class="flip-inner">
+          <div class="flip-front oval bg-[color:var(--navy)]/10 border border-[color:var(--navy)]/20 text-[color:var(--navy)]">Pulmonologist</div>
+          <div class="flip-back desc">
+            <p class="font-semibold mb-1">Pulmonologist — quick brief</p>
+            <ul class="list-disc pl-5 text-sm">
+              <li>Multi-therapy coordination.</li>
+              <li>Device training and adherence.</li>
+              <li>Symptom tracking resources.</li>
+            </ul>
+          </div>
+        </div>
+      </button>
+
+      <button class="flip text-left" data-card="Cardiologist">
+        <div class="flip-inner">
+          <div class="flip-front oval bg-[color:var(--navy)]/10 border border-[color:var(--navy)]/20 text-[color:var(--navy)]">Cardiologist</div>
+          <div class="flip-back desc">
+            <p class="font-semibold mb-1">Cardiologist — quick brief</p>
+            <ul class="list-disc pl-5 text-sm">
+              <li>Differentiate vs SoC quickly.</li>
+              <li>Endpoints nuance in minutes.</li>
+              <li>Outcome + workflow simplicity.</li>
+            </ul>
+          </div>
+        </div>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- Ethics -->
+<section id="ethics" class="py-16 bg-[#f1f5fb]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center md:text-left mb-6">
+      <h2 class="text-4xl font-extrabold text-gray-900">Ethics, Privacy & Governance</h2>
+      <span class="sep"></span>
+      <p class="text-xl text-gray-600 max-w-3xl">Compliance and responsible AI built for the rigors of life-sciences training.</p>
+    </div>
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="card p-6 border-t-4 border-[color:var(--teal)]">
+        <h4 class="text-xl font-bold mb-2 flex items-center"><span class="w-2 h-2 rounded-full bg-[color:var(--teal)] mr-2"></span>Data Privacy & Security</h4>
+        <p class="text-slate-600 text-sm">PHI off by default; BAA, encryption, RBAC when enabled.</p>
+      </div>
+      <div class="card p-6 border-t-4 border-[color:var(--teal)]">
+        <h4 class="text-xl font-bold mb-2 flex items-center"><span class="w-2 h-2 rounded-full bg-[color:var(--teal)] mr-2"></span>Algorithmic Bias & Fairness</h4>
+        <p class="text-slate-600 text-sm">Bias testing + monitoring; remediation published; no non-clinical proxies.</p>
+      </div>
+      <div class="card p-6 border-t-4 border-[color:var(--teal)]">
+        <h4 class="text-xl font-bold mb-2 flex items-center"><span class="w-2 h-2 rounded-full bg-[color:var(--teal)] mr-2"></span>Transparency & Explainability</h4>
+        <p class="text-slate-600 text-sm">Reason codes in product; model cards document sources and limits.</p>
+      </div>
+      <div class="card p-6 border-t-4 border-[color:var(--teal)]">
+        <h4 class="text-xl font-bold mb-2 flex items-center"><span class="w-2 h-2 rounded-full bg-[color:var(--teal)] mr-2"></span>Human Oversight & Accountability</h4>
+        <p class="text-slate-600 text-sm">Scenarios curated by humans; MLR versioning for traceability.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Contact -->
+<section id="contact" class="py-16 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-10 items-start">
+    <div>
+      <h2 class="text-4xl font-extrabold text-gray-900 mb-2">Let’s Redefine Your Sales Training</h2>
+      <span class="sep"></span>
+      <p class="text-xl text-gray-600 mb-6">Ready to see how adaptive AI coaching can drive confidence and compliance for your life sciences team? Request a personalized demonstration.</p>
+      <p class="flex items-center text-gray-700"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[color:var(--navy)] mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>(555) 123-4567</p>
+      <p class="flex items-center text-gray-700"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[color:var(--navy)] mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>demo@reflectivai.com</p>
+    </div>
+    <form class="card p-8" action="https://formspree.io/f/reflectiv-demo" method="POST">
+      <div class="grid md:grid-cols-2 gap-4">
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Name</label><input name="name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg"></div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Email</label><input name="_replyto" type="email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg"></div>
+      </div>
+      <div class="mt-4"><label class="block text-sm font-medium text-gray-700 mb-1">Message</label><textarea name="message" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg"></textarea></div>
+      <input type="hidden" name="_subject" value="ReflectivAI Demo Request">
+      <button type="submit" class="w-full mt-5 px-8 py-3 rounded-full bg-[color:var(--navy)] text-white font-bold">Request Demo</button>
+    </form>
+  </div>
+</section>
+
+<!-- ====== Coach Modal ====== -->
+<div id="coachModal" class="modal" aria-hidden="true">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">Reflectiv Coach</div>
+      <button class="modal-close" data-close="#coachModal">Close</button>
+    </div>
+
+    <div class="p-4 grid md:grid-cols-[280px,1fr] gap-4">
+      <!-- EI Mode controls -->
+      <aside class="coach-col">
+        <div>
+          <label class="label">Learning Center</label>
+          <select id="coachCenter" class="sel">
+            <option>Product Knowledge</option>
+            <option>Role Play</option>
+            <option>Objection Handling</option>
+            <option>Compliance Guard</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">Disease State</label>
+          <select id="coachDisease" class="sel">
+            <option>Oncology</option><option>Vaccines</option><option>HIV</option><option>Cardiology</option><option>Pulmonology</option><option>Hepatitis B</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">HCP Profile</label>
+          <select id="coachHcp" class="sel">
+            <option>Internal Medicine MD</option><option>Nurse Practitioner (NP)</option><option>Physician Assistant (PA)</option><option>Infectious Disease Specialist</option><option>Oncologist</option><option>Pulmonologist</option><option>Cardiologist</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">EI Feature</label>
+          <select id="coachEi" class="sel">
+            <option>Empathy Coaching</option><option>Accuracy Guard</option><option>Confidence Builder</option><option>Compliance Guard</option>
+          </select>
+        </div>
+
+        <div class="mt-2">
+          <div class="label mb-2">Real-time Scores</div>
+          <div class="flex flex-wrap gap-2">
+            <div class="score-pill"><span class="k">Empathy</span><span class="v" id="sEmp">—</span></div>
+            <div class="score-pill"><span class="k">Accuracy</span><span class="v" id="sAcc">—</span></div>
+            <div class="score-pill"><span class="k">Confidence</span><span class="v" id="sConf">—</span></div>
+            <div class="score-pill"><span class="k">Compliance</span><span class="v" id="sComp">—</span></div>
+            <div class="score-pill"><span class="k">Readiness</span><span class="v" id="sRead">—</span></div>
+          </div>
+          <button id="openRubric" class="mt-2 text-[color:var(--navy)] underline text-sm">Scoring rubric & logic</button>
+        </div>
+      </aside>
+
+      <!-- Chat area -->
+      <section class="card p-4">
+        <div id="coachFeed" class="h-[46vh] overflow-auto bg-[#f9fbff] border border-[color:var(--border)] rounded-md p-3"></div>
+        <form id="coachForm" class="mt-3 flex gap-2">
+          <input id="coachInput" class="flex-1 border border-[#cfd8e3] rounded-md px-3 py-2" placeholder="Type your message…">
+          <button class="px-4 py-2 rounded-md bg-[color:var(--navy)] text-white font-bold" type="submit">Send</button>
+        </form>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- rubric popover -->
+<div id="rubric" class="popover">
+  <h4 class="font-extrabold text-lg mb-1">Empathy/Accuracy Scoring Rubric</h4>
+  <p class="text-sm text-slate-700 mb-2">High-level rubric used in EI Mode:</p>
+  <ul class="list-disc pl-5 text-sm">
+    <li><b>Empathy Index:</b> active listening, validation, tone calibration.</li>
+    <li><b>Accuracy Index:</b> factual correctness, claims alignment, fair balance.</li>
+    <li><b>Confidence Delta:</b> growth vs prior session, hesitation markers.</li>
+    <li><b>Compliance Guard:</b> off-label detection, risk/benefit balance.</li>
+    <li><b>Readiness Velocity:</b> ramp speed and proficiency trend.</li>
+  </ul>
+  <button id="closeRubric" class="mt-2 px-3 py-1 rounded bg-[color:var(--navy)] text-white">Close</button>
+</div>
+
+<!-- ===== Alora FAB + panel ===== -->
+<button id="aloraFab" aria-label="Open Alora chat">
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path fill="#fff" d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9.4L5 19.9V16H5a2 2 0 0 1-2-2V5z"/></svg>
+</button>
+
+<div id="alora" class="alora" aria-live="polite" aria-hidden="true">
+  <div class="alora-head">
+    <div class="font-extrabold">Alora — ReflectivAI Help</div>
+    <button id="aloraClose" class="alora-close text-white text-2xl leading-none">×</button>
+  </div>
+  <div id="aloraBody" class="alora-body"></div>
+  <form id="aloraForm" class="alora-input" autocomplete="off">
+    <input id="aloraInput" placeholder="Ask about ReflectivAI…">
+    <button class="send" type="submit">Send</button>
+  </form>
+</div>
+
+<!-- ===== Scripts ===== -->
+<script>
+/* ---------- helpers ---------- */
+function openModal(id){document.querySelector(id).classList.add('open')}
+function closeModal(id){document.querySelector(id).classList.remove('open')}
+document.querySelectorAll('.modal-close').forEach(b=>b.addEventListener('click',()=>closeModal(b.getAttribute('data-close'))));
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); }));
+
+/* ---------- Launch Coach CTAs ---------- */
+document.getElementById('launchCoachTop').addEventListener('click',e=>{e.preventDefault();openModal('#coachModal')});
+document.getElementById('launchCoachMid').addEventListener('click',e=>{e.preventDefault();openModal('#coachModal')});
+
+/* ---------- Flip tap support on mobile ---------- */
+document.querySelectorAll('.flip').forEach(el=>{
+  el.addEventListener('click',()=>el.classList.toggle('touched'));
+});
+
+/* ---------- Rubric popover ---------- */
+const rub=document.getElementById('rubric');
+document.getElementById('openRubric').addEventListener('click',()=>{rub.style.display='block';});
+document.getElementById('closeRubric').addEventListener('click',()=>{rub.style.display='none';});
+
+/* ---------- Coach chat ---------- */
+const coachFeed=document.getElementById('coachFeed');
+const coachForm=document.getElementById('coachForm');
+const coachInput=document.getElementById('coachInput');
+function coachMsg(txt,who){const d=document.createElement('div');d.className='mb-2';d.innerHTML='<div class="'+(who==='user'?'bg-[color:var(--navy)] text-white':'bg-white')+' rounded-md inline-block px-3 py-2 shadow">'+txt+'</div>';coachFeed.appendChild(d);coachFeed.scrollTop=coachFeed.scrollHeight;}
+function updateScores(scores={}){ const {empathy='—',accuracy='—',confidence='—',compliance='—',readiness='—'}=scores; sEmp.textContent=empathy; sAcc.textContent=accuracy; sConf.textContent=confidence; sComp.textContent=compliance; sRead.textContent=readiness; }
+
+coachForm.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const q=coachInput.value.trim(); if(!q) return;
+  coachInput.value=''; coachMsg(q,'user');
+
+  const payload={
+    center:coachCenter.value,
+    disease:coachDisease.value,
+    hcp:coachHcp.value,
+    ei:coachEi.value,
+    message:q
+  };
+
+  try{
+    const r=await fetch('/coach',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(!r.ok) throw new Error('bad');
+    const j=await r.json();
+    coachMsg(j.reply || '…', 'bot');
+    updateScores(j.scores||{});
+  }catch(_){
+    coachMsg('Coach service unavailable. Using local guidance.', 'bot');
+    updateScores({empathy:'–',accuracy:'–',confidence:'–',compliance:'–',readiness:'–'});
+  }
+});
+
+/* ---------- Alora wired with fallback ---------- */
+(() => {
+  const fab = document.getElementById('aloraFab');
+  const panel = document.getElementById('alora');
+  const closeBtn = document.getElementById('aloraClose');
+  const bodyEl = document.getElementById('aloraBody');
+  const form = document.getElementById('aloraForm');
+  const input = document.getElementById('aloraInput');
+
+  function bot(text){ const d=document.createElement('div'); d.className='alora-msg bot'; d.textContent=text; bodyEl.appendChild(d); bodyEl.scrollTop=bodyEl.scrollHeight; }
+  function user(text){ const d=document.createElement('div'); d.className='alora-msg user'; d.textContent=text; bodyEl.appendChild(d); bodyEl.scrollTop=bodyEl.scrollHeight; }
+  function greet(){ if(!bodyEl.dataset.greeted){ bot("Hi, I’m Alora, a Reflective AI Agent. How can I help?"); bodyEl.dataset.greeted='1'; } }
+
+  function openPanel(){ panel.classList.add('open'); panel.setAttribute('aria-hidden','false'); greet(); }
+  function closePanel(){ panel.classList.remove('open'); panel.setAttribute('aria-hidden','true'); }
+
+  fab.addEventListener('click', openPanel);
+  closeBtn.addEventListener('click', closePanel);
+
+  async function askRemote(q){
+    try{
+      const r = await fetch('/alora',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ message:q })});
+      if(!r.ok) return null;
+      const j = await r.json().catch(()=>null);
+      return j && j.reply ? String(j.reply) : null;
+    }catch{ return null; }
+  }
+  function localAnswer(q){
+    const s=q.toLowerCase();
+    if(/^(hi|hello|hey)\b/.test(s)) return "Hey there 👋 Ask about modules, EI, analytics, ethics, or launch the Coach.";
+    if(/\bprice|pricing|cost\b/.test(s)) return "Pricing depends on team size and modules. Use Request Demo for a quote.";
+    if(/\bsecurity|privacy|hipaa|compliance\b/.test(s)) return "HIPAA safeguards, NIST AI RMF, ISO 27001/42001. PHI off by default; BAA when enabled.";
+    if(/\b(simulate|simulation|coach|practice)\b/.test(s)) return "Open the Coach to role-play with HCP personas and get empathy/compliance feedback.";
+    if(/\bpersona|hcp\b/.test(s)) return "Personas: Internal Med MD, NP, PA, ID, Oncologist, Pulmonologist, Cardiologist.";
+    if(/\bei|emotional intelligence|empathy\b/.test(s)) return "EI Mode tracks Empathy, Accuracy, Confidence, Compliance, Readiness.";
+    if(/\banalytics|metrics|index\b/.test(s)) return "Dashboards roll up the five metrics by rep, team, and territory.";
+    if(/\bcontact|demo\b/.test(s)) return "Use the Request Demo form at the bottom.";
+    return "I can help with platform, analytics, ethics, FAQs, navigation, and launching the Coach.";
+  }
+
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const q = input.value.trim(); if(!q) return;
+    input.value=''; user(q);
+    const remote = await askRemote(q);
+    bot(remote || localAnswer(q));
+  });
+})();
+</script>
+
+<!-- Footer -->
+<footer class="py-8 bg-gray-800 text-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm">
+    <p>&copy; 2025 ReflectivAI. All rights reserved.</p>
+  </div>
+</footer>
 </body>
 </html>
