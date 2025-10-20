@@ -1,11 +1,8 @@
-
-/* assets/chat/widget.js
+/* widget.js
  * ReflectivAI Chat/Coach — drop-in (coach-v2, deterministic scoring v3)
  * Modes: emotional-assessment | product-knowledge | sales-simulation
- *
  * EI mode adds Persona + EI Feature dropdowns and context-aware feedback.
  */
-
 (function () {
   // ---------- safe bootstrapping ----------
   let mount = null;
@@ -50,18 +47,18 @@
   let featureLabelElem = null;
   let lastUserMessage = "";
 
-  // Fallbacks so dropdowns show even if config.json lacks entries
+  // ---------- EI defaults ----------
   const DEFAULT_PERSONAS = [
     { key: "difficult",   label: "Difficult HCP" },
-    { key: "busy",        label: "Busy HCP" },                     // added
+    { key: "busy",        label: "Busy HCP" },
     { key: "engaged",     label: "Engaged HCP" },
     { key: "indifferent", label: "Indifferent HCP" }
   ];
   const DEFAULT_EI_FEATURES = [
     { key: "empathy",    label: "Empathy Rating" },
     { key: "stress",     label: "Stress Level Indicator" },
-    { key: "listening",  label: "Active Listening Hints" },        // added
-    { key: "validation", label: "Validation & Reframing Tips" }    // added
+    { key: "listening",  label: "Active Listening Hints" },
+    { key: "validation", label: "Validation & Reframing Tips" }
   ];
 
   // ---------- utils ----------
@@ -121,7 +118,7 @@
     return { coach, clean };
   }
 
-  // ---------- local scoring fallback (coach-v3 deterministic) ----------
+  // ---------- local scoring (deterministic v3) ----------
   function scoreReply(userText, replyText) {
     const text = String(replyText || "");
     const t = text.toLowerCase();
@@ -165,7 +162,7 @@
     const worked = [
       sig.empathy ? "Acknowledged HCP context" : null,
       sig.discovery ? "Closed with a clear discovery question" : null,
-      sig.label ? "Referenced label/guidelines" : null,
+      sig.label ? "Referenced label or guidelines" : null,
       sig.accuracyCue ? "Tied points to clinical cues" : null
     ].filter(Boolean);
 
@@ -234,74 +231,38 @@
 
     if (featureKey === "empathy") {
       switch (personaKey) {
-        case "difficult":
-          feedback = "Remain calm and acknowledge frustration. Use phrases like 'I understand this is challenging' to show understanding.";
-          break;
-        case "busy":
-          feedback = "Show empathy concisely. Respect their time while acknowledging their workload.";
-          break;
-        case "engaged":
-          feedback = "Maintain a collaborative tone. Show appreciation for their engagement and ask insightful questions.";
-          break;
-        case "indifferent":
-          feedback = "Focus on patient impact to spark interest. Acknowledge concerns gently and pivot toward personal benefit.";
-          break;
-        default:
-          feedback = "Tailor your approach to the HCP's emotional needs, demonstrating genuine understanding and care.";
+        case "difficult":   feedback = "Acknowledge frustration and keep voice calm. Use short validating phrases before you propose next steps."; break;
+        case "busy":        feedback = "Empathize in one line, then get to the point. Lead with the outcome and time saved."; break;
+        case "engaged":     feedback = "Reinforce collaboration. Thank them for input and ask one specific next question."; break;
+        case "indifferent": feedback = "Validate neutrality, then pivot to patient impact and one meaningful benefit."; break;
+        default:            feedback = "Match tone to the HCP and show you understand their context before offering guidance.";
       }
     } else if (featureKey === "stress") {
       switch (personaKey) {
-        case "difficult":
-          feedback = "The HCP may be under stress. Keep communication calm, concise, and reassuring to reduce tension.";
-          break;
-        case "busy":
-          feedback = "Time pressure likely high. Keep your delivery brief and focused on solutions.";
-          break;
-        case "engaged":
-          feedback = "Moderate stress expected. Support their curiosity with clear information and invite collaboration.";
-          break;
-        case "indifferent":
-          feedback = "Average stress level. Build rapport by emphasizing patient benefits and addressing doubts thoughtfully.";
-          break;
-        default:
-          feedback = "Adjust your communication tone to match the HCP’s stress level, offering support and clarity.";
+        case "difficult":   feedback = "Stress likely high. Keep it brief and reassuring. Remove jargon."; break;
+        case "busy":        feedback = "Time pressure high. Bottom line first. Offer one low-effort next step."; break;
+        case "engaged":     feedback = "Moderate stress. Provide clear info and invite collaboration."; break;
+        case "indifferent": feedback = "Average stress. Build rapport through patient-centered framing."; break;
+        default:            feedback = "Adjust tone to stress level. Reduce cognitive load and give clear choices.";
       }
     } else if (featureKey === "listening") {
       switch (personaKey) {
-        case "difficult":
-          feedback = "Use reflective listening to validate concerns. Rephrase what they say to show you understand.";
-          break;
-        case "busy":
-          feedback = "Acknowledge key points quickly and summarize their perspective to show attentiveness without delay.";
-          break;
-        case "engaged":
-          feedback = "Use affirmations and clarifying questions to deepen trust and co-create solutions.";
-          break;
-        case "indifferent":
-          feedback = "Use gentle prompts like 'I hear you' or 'That’s a fair point' to draw them into the conversation.";
-          break;
-        default:
-          feedback = "Use active listening techniques to validate, clarify, and engage.";
+        case "difficult":   feedback = "Reflect back their words. Confirm you got it right, then ask a short clarifier."; break;
+        case "busy":        feedback = "Summarize their point in one sentence. Ask one yes or no clarifier."; break;
+        case "engaged":     feedback = "Affirm insights and build on them. Use clarifying questions to deepen trust."; break;
+        case "indifferent": feedback = "Use light affirmations to draw them in. Ask a simple patient-impact question."; break;
+        default:            feedback = "Use reflective and clarifying questions. Keep it concise.";
       }
     } else if (featureKey === "validation") {
       switch (personaKey) {
-        case "difficult":
-          feedback = "Validate their frustration first, then reframe the issue around shared goals or patient outcomes.";
-          break;
-        case "busy":
-          feedback = "Acknowledge their time constraints and reframe around efficiency or impact.";
-          break;
-        case "engaged":
-          feedback = "Validate their insights and reframe to emphasize partnership and shared understanding.";
-          break;
-        case "indifferent":
-          feedback = "Acknowledge neutrality, then reframe to highlight meaningful patient benefits or success stories.";
-          break;
-        default:
-          feedback = "Validate the HCP’s perspective and reframe toward collaboration or patient-centered outcomes.";
+        case "difficult":   feedback = "Validate frustration first. Reframe around shared goals and patient outcomes."; break;
+        case "busy":        feedback = "Validate time constraints. Reframe to efficiency and workflow fit."; break;
+        case "engaged":     feedback = "Validate expertise. Reframe to partnership and quick experimentation."; break;
+        case "indifferent": feedback = "Validate neutrality. Reframe to meaningful benefits for a typical patient."; break;
+        default:            feedback = "Validate perspective and reframe to collaboration and patient value.";
       }
     } else {
-      feedback = "Select a valid EI feature to receive targeted guidance.";
+      feedback = "Select a valid EI feature for targeted guidance.";
     }
 
     return feedback;
@@ -320,15 +281,18 @@
       feedbackDisplayElem.innerHTML = `<span class="muted">Select a persona and EI feature, then send a message to see feedback.</span>`;
       return;
     }
-    let rating = 0;
+    let rating = null;
     if (featureKey === "empathy") rating = calculateEmpathyRating(personaKey, lastUserMessage);
     else if (featureKey === "stress") rating = calculateStressRating(personaKey, lastUserMessage);
 
     const featureList = (cfg?.eiFeatures && cfg.eiFeatures.length ? cfg.eiFeatures : DEFAULT_EI_FEATURES);
     const featureObj = featureList.find(f => f.key === featureKey);
     const featureLabel = featureObj ? featureObj.label : featureKey;
-    const feedback = generateDynamicFeedback(personaKey, featureKey, rating);
-    feedbackDisplayElem.innerHTML = `<strong>${esc(featureLabel)}: ${rating}/5</strong><br/><p>${esc(feedback)}</p>`;
+    const feedback = generateDynamicFeedback(personaKey, featureKey);
+
+    feedbackDisplayElem.innerHTML = rating == null
+      ? `<strong>${esc(featureLabel)}</strong><br><p>${esc(feedback)}</p>`
+      : `<strong>${esc(featureLabel)}: ${rating}/5</strong><br><p>${esc(feedback)}</p>`;
   }
 
   // ---------- prompt preface ----------
@@ -339,14 +303,7 @@ Return exactly two parts. No code blocks. No markdown headings.
 1) Sales Guidance: short, actionable, accurate guidance.
 2) <coach>{
      "overall": 0-100,
-     "scores": {
-       "accuracy": 0-5,
-       "empathy": 0-5,
-       "clarity": 0-5,
-       "compliance": 0-5,
-       "discovery": 0-5,
-       "objection_handling": 0-5
-     },
+     "scores": { "accuracy":0-5,"empathy":0-5,"clarity":0-5,"compliance":0-5,"discovery":0-5,"objection_handling":0-5 },
      "worked": ["…"],
      "improve": ["…"],
      "phrasing": "…",
@@ -358,7 +315,7 @@ Return exactly two parts. No code blocks. No markdown headings.
     if (mode === "sales-simulation") {
       return `
 # Role
-You are a virtual pharma coach responding to the sales rep’s last message and preparing them for a 30-second HCP interaction. Be direct, label-aligned, and safe.
+You are a virtual pharma coach. Be direct, label-aligned, and safe.
 
 # Scenario
 ${sc ? [
@@ -370,7 +327,7 @@ ${sc ? [
 
 # Style
 - 3–6 sentences and one closing question.
-- Mention only appropriate, publicly known, label-aligned facts.
+- Only appropriate, publicly known, label-aligned facts.
 - No pricing advice or PHI. No off-label.
 
 ${COMMON}`.trim();
@@ -381,7 +338,7 @@ ${COMMON}`.trim();
     }
 
     return `
-Provide brief, practical self-reflection tips tied to communication with HCPs. No clinical or drug guidance.
+Provide brief self-reflection tips tied to HCP communication.
 - 3–5 sentences, then one reflective question.
 
 ${COMMON}`.trim();
@@ -392,30 +349,35 @@ ${COMMON}`.trim();
     mount.innerHTML = "";
     if (!mount.classList.contains("cw")) mount.classList.add("cw");
 
-    const style = document.createElement("style");
-    style.textContent = `
-      #reflectiv-widget .reflectiv-chat{ display:flex; flex-direction:column; gap:12px; border:3px solid #bfc7d4; border-radius:14px; background:#fff; overflow:hidden; }
-      #reflectiv-widget .chat-toolbar{ display:block; padding:14px 16px; background:#f6f8fb; border-bottom:1px solid #e1e6ef; }
-      #reflectiv-widget .sim-controls{ display:grid; grid-template-columns:220px 1fr 220px 1fr; gap:12px 16px; align-items:center; }
-      #reflectiv-widget .sim-controls label{ font-size:13px; font-weight:600; color:#2f3a4f; justify-self:end; white-space:nowrap; }
-      #reflectiv-widget .sim-controls select{ width:100%; height:38px; padding:6px 10px; font-size:14px; border:1px solid #cfd6df; border-radius:8px; background:#fff; }
-      #reflectiv-widget .chat-messages{ min-height:260px; height:320px; max-height:50vh; overflow:auto; padding:12px 14px; background:#fafbfd; }
-      #reflectiv-widget .message{ margin:8px 0; display:flex; }
-      #reflectiv-widget .message.user{ justify-content:flex-end; }
-      #reflectiv-widget .message.assistant{ justify-content:flex-start; }
-      #reflectiv-widget .message .content{ max-width:85%; line-height:1.45; font-size:14px; padding:10px 12px; border-radius:14px; border:1px solid #d6dbe3; color:#0f1522; background:#e9edf3; }
-      #reflectiv-widget .message.user .content{ background:#e0e0e0; color:#000; }
-      #reflectiv-widget .chat-input{ display:flex; gap:8px; padding:10px 12px; border-top:1px solid #e1e6ef; background:#fff; }
-      #reflectiv-widget .chat-input textarea{ flex:1; resize:none; min-height:44px; max-height:120px; padding:10px 12px; border:1px solid #cfd6df; border-radius:10px; outline:none; }
-      #reflectiv-widget .chat-input .btn{ min-width:86px; border:0; border-radius:999px; background:#2f3a4f; color:#fff; font-weight:600; }
-      #reflectiv-widget .coach-section{ margin-top:0; padding:12px 14px; border:1px solid #e1e6ef; border-radius:12px; background:#fffbe8; }
-      #reflectiv-widget .coach-subs .pill{ display:inline-block; padding:2px 8px; margin-right:6px; font-size:12px; background:#f1f3f7; border:1px solid #d6dbe3; border-radius:999px; text-transform:unset; }
-      #reflectiv-widget .scenario-meta .meta-card{ padding:10px 12px; background:#f7f9fc; border:1px solid #e1e6ef; border-radius:10px; }
-      @media (max-width:900px){ #reflectiv-widget .sim-controls{ grid-template-columns:1fr; gap:8px; } #reflectiv-widget .sim-controls label{ justify-self:start; } }
-      @media (max-width:520px){ #reflectiv-widget .chat-messages{ height:46vh; } }
-      #reflectiv-widget .hidden{ display:none !important; }
-    `;
-    document.head.appendChild(style);
+    const STYLE_ID = "reflectiv-widget-inline-style";
+    let style = document.getElementById(STYLE_ID);
+    if (!style) {
+      style = document.createElement("style");
+      style.id = STYLE_ID;
+      style.textContent = `
+        #reflectiv-widget .reflectiv-chat{display:flex;flex-direction:column;gap:12px;border:3px solid #bfc7d4;border-radius:14px;background:#fff;overflow:hidden}
+        #reflectiv-widget .chat-toolbar{display:block;padding:14px 16px;background:#f6f8fb;border-bottom:1px solid #e1e6ef}
+        #reflectiv-widget .sim-controls{display:grid;grid-template-columns:220px 1fr 220px 1fr;gap:12px 16px;align-items:center}
+        #reflectiv-widget .sim-controls label{font-size:13px;font-weight:600;color:#2f3a4f;justify-self:end;white-space:nowrap}
+        #reflectiv-widget .sim-controls select{width:100%;height:38px;padding:6px 10px;font-size:14px;border:1px solid #cfd6df;border-radius:8px;background:#fff}
+        #reflectiv-widget .chat-messages{min-height:260px;height:320px;max-height:50vh;overflow:auto;padding:12px 14px;background:#fafbfd}
+        #reflectiv-widget .message{margin:8px 0;display:flex}
+        #reflectiv-widget .message.user{justify-content:flex-end}
+        #reflectiv-widget .message.assistant{justify-content:flex-start}
+        #reflectiv-widget .message .content{max-width:85%;line-height:1.45;font-size:14px;padding:10px 12px;border-radius:14px;border:1px solid #d6dbe3;color:#0f1522;background:#e9edf3}
+        #reflectiv-widget .message.user .content{background:#e0e0e0;color:#000}
+        #reflectiv-widget .chat-input{display:flex;gap:8px;padding:10px 12px;border-top:1px solid #e1e6ef;background:#fff}
+        #reflectiv-widget .chat-input textarea{flex:1;resize:none;min-height:44px;max-height:120px;padding:10px 12px;border:1px solid #cfd6df;border-radius:10px;outline:none}
+        #reflectiv-widget .chat-input .btn{min-width:86px;border:0;border-radius:999px;background:#2f3a4f;color:#fff;font-weight:600}
+        #reflectiv-widget .coach-section{margin-top:0;padding:12px 14px;border:1px solid #e1e6ef;border-radius:12px;background:#fffbe8}
+        #reflectiv-widget .coach-subs .pill{display:inline-block;padding:2px 8px;margin-right:6px;font-size:12px;background:#f1f3f7;border:1px solid #d6dbe3;border-radius:999px}
+        #reflectiv-widget .scenario-meta .meta-card{padding:10px 12px;background:#f7f9fc;border:1px solid #e1e6ef;border-radius:10px}
+        #reflectiv-widget .hidden{display:none!important}
+        @media (max-width:900px){#reflectiv-widget .sim-controls{grid-template-columns:1fr;gap:8px}#reflectiv-widget .sim-controls label{justify-self:start}}
+        @media (max-width:520px){#reflectiv-widget .chat-messages{height:46vh}}
+      `;
+      document.head.appendChild(style);
+    }
 
     const shell = el("div", "reflectiv-chat");
 
@@ -504,12 +466,13 @@ ${COMMON}`.trim();
     feedbackDisplayElem.style.fontSize = "14px";
     coach.appendChild(feedbackDisplayElem);
 
+    // helpers
     function getDiseaseStates() {
       let ds = Array.isArray(cfg?.diseaseStates) ? cfg.diseaseStates.slice() : [];
       if (!ds.length && Array.isArray(scenarios) && scenarios.length){
         ds = Array.from(new Set(scenarios.map(s => (s.therapeuticArea || s.diseaseState || "").trim()))).filter(Boolean);
       }
-      ds = ds.map(x => x.replace(/\bHiv\b/gi,"HIV"));
+      ds = ds.map(x => x.replace(/\bhiv\b/ig,"HIV"));
       return ds;
     }
 
@@ -550,12 +513,11 @@ ${COMMON}`.trim();
         setSelectOptions(hcpSelect, opts, true);
         hcpSelect.disabled = false;
       } else {
-        setSelectOptions(hcpSelect, [], true);
+        setSelectOptions(hcpSelect, [{ value:"", label:"No scenarios for this disease" }], true);
         hcpSelect.disabled = true;
       }
     }
 
-    // Populate EI dropdowns (config first, then fallback defaults)
     function populateEIOptions() {
       const personaList = (cfg && Array.isArray(cfg.personas) && cfg.personas.length) ? cfg.personas : DEFAULT_PERSONAS;
       const featureList = (cfg && Array.isArray(cfg.eiFeatures) && cfg.eiFeatures.length) ? cfg.eiFeatures : DEFAULT_EI_FEATURES;
@@ -712,7 +674,9 @@ ${COMMON}`.trim();
 
   // ---------- transport ----------
   async function callModel(messages) {
-    const r = await fetch((cfg?.apiBase || cfg?.workerUrl || "").trim(), {
+    const url = (cfg?.apiBase || cfg?.workerUrl || "").trim();
+    if (!url) throw new Error("No API endpoint configured (set config.apiBase or config.workerUrl).");
+    const r = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -825,22 +789,27 @@ ${COMMON}`.trim();
     } else {
       scenarios = [];
     }
-    scenarios.forEach(s => { if (/^hiv\b/i.test(s.therapeuticArea)) s.therapeuticArea = "HIV"; });
+    // keep token case, do not collapse "HIV PrEP"
+    scenarios.forEach(s => {
+      if (s.therapeuticArea) s.therapeuticArea = s.therapeuticArea.replace(/\bhiv\b/ig, "HIV");
+    });
     scenariosById = new Map(scenarios.map((s)=>[s.id,s]));
   }
 
   // ---------- init ----------
   async function init() {
     try {
-      cfg = await fetchLocal("./assets/chat/config.json");
+      try { cfg = await fetchLocal("./assets/chat/config.json"); }
+      catch { cfg = await fetchLocal("./config.json"); }
     } catch (e) {
-      console.error("config.json load failed:", e);
+      console.error("config load failed:", e);
       cfg = { defaultMode: "sales-simulation" };
     }
 
     try {
       systemPrompt = await fetchLocal("./assets/chat/system.md");
-    } catch (_) {
+    } catch (e) {
+      console.error("system.md load failed:", e);
       systemPrompt = "";
     }
 
