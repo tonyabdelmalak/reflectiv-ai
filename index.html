@@ -1,3 +1,5 @@
+Updated full drop-in file with Alora close “×”, ESC-to-close, and warmer basic persona responses. Replace your current index.html with this.
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -12,59 +14,50 @@
 <link rel="stylesheet" href="styles.css?v=20251019-1">
 <link rel="stylesheet" href="widget.css?v=9"><!-- keep original widget styles -->
 
-<!-- Minimal overrides: hero revert + demo form + right FAB for Alora -->
+<!-- Minimal overrides: hero revert + demo form + right FAB + Alora panel/close -->
 <style>
-  /* ---- Hero revert: left text + right visual, ample spacing ---- */
-  .hero{
-    background: radial-gradient(1200px 600px at 70% -10%, #1b6b88 0%, #0e2b40 45%, #0b1f30 70%, #0a1a27 100%);
-    color:#eaf2f7; padding:72px 0 56px;
-  }
-  .hero-wrap{
-    max-width:1120px; margin:0 auto; padding:0 20px;
-    display:grid; grid-template-columns:1.2fr .8fr; gap:28px; align-items:center;
-  }
-  .hero h1{margin:0 0 14px; font-weight:800; line-height:1.1; color:#fff;
-    font-size:clamp(28px,4.8vw,44px)}
-  .hero p{margin:0 0 22px; font-size:clamp(16px,2.5vw,20px); color:#e5eff6}
-  .cta{display:flex; gap:12px; flex-wrap:wrap}
-  .btn.primary{background:#0c2740; color:#fff; border:none}
-  .btn.secondary{background:transparent; color:#eaf2f7; border:2px solid rgba(255,255,255,.65)}
+  /* ---- Hero revert ---- */
+  .hero{background:radial-gradient(1200px 600px at 70% -10%,#1b6b88 0%,#0e2b40 45%,#0b1f30 70%,#0a1a27 100%);color:#eaf2f7;padding:72px 0 56px}
+  .hero-wrap{max-width:1120px;margin:0 auto;padding:0 20px;display:grid;grid-template-columns:1.2fr .8fr;gap:28px;align-items:center}
+  .hero h1{margin:0 0 14px;font-weight:800;line-height:1.1;color:#fff;font-size:clamp(28px,4.8vw,44px)}
+  .hero p{margin:0 0 22px;font-size:clamp(16px,2.5vw,20px);color:#e5eff6}
+  .cta{display:flex;gap:12px;flex-wrap:wrap}
+  .btn.primary{background:#0c2740;color:#fff;border:none}
+  .btn.secondary{background:transparent;color:#eaf2f7;border:2px solid rgba(255,255,255,.65)}
   .hero-img{width:100%}
-  .hero-img img,.hero-img .art{
-    width:100%; height:320px; border-radius:16px; object-fit:cover;
-    box-shadow:0 12px 30px rgba(0,0,0,.35); outline:1px solid rgba(255,255,255,.12)
-  }
-  @media (max-width:900px){
-    .hero{padding:56px 0 40px}
-    .hero-wrap{grid-template-columns:1fr}
-    .hero-img img,.hero-img .art{height:220px}
-  }
+  .hero-img img,.hero-img .art{width:100%;height:320px;border-radius:16px;object-fit:cover;box-shadow:0 12px 30px rgba(0,0,0,.35);outline:1px solid rgba(255,255,255,.12)}
+  @media (max-width:900px){.hero{padding:56px 0 40px}.hero-wrap{grid-template-columns:1fr}.hero-img img,.hero-img .art{height:220px}}
 
-  /* ---- Demo request (Formspree) block at page bottom ---- */
-  #contact .section-inner{max-width:1120px; margin:0 auto; padding:0 20px}
-  .contact-form{
-    display:grid; gap:12px; background:#fff; border:1px solid #e6ecf3;
-    border-radius:14px; padding:18px; box-shadow:0 10px 24px rgba(16,24,40,.04)
-  }
-  .contact-form .form-row{display:grid; grid-template-columns:1fr 1fr; gap:12px}
-  .contact-form label{display:block; font-size:13px; font-weight:600; color:#223048; margin:0 0 6px}
-  .contact-form input,.contact-form textarea{
-    width:100%; border:1px solid #cfd8e3; border-radius:10px; padding:12px; font-size:15px
-  }
-  .contact-form textarea{min-height:120px; resize:vertical}
-  .contact-form .btn.primary{background:#1e2a3a; color:#fff}
-  @media (max-width:900px){ .contact-form .form-row{grid-template-columns:1fr} }
+  /* ---- Contact/Demo (Formspree live) ---- */
+  #contact .section-inner{max-width:1120px;margin:0 auto;padding:0 20px}
+  .contact-form{display:grid;gap:12px;background:#fff;border:1px solid #e6ecf3;border-radius:14px;padding:18px;box-shadow:0 10px 24px rgba(16,24,40,.04)}
+  .contact-form .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .contact-form label{display:block;font-size:13px;font-weight:600;color:#223048;margin:0 0 6px}
+  .contact-form input,.contact-form textarea{width:100%;border:1px solid #cfd8e3;border-radius:10px;padding:12px;font-size:15px}
+  .contact-form textarea{min-height:120px;resize:vertical}
+  .contact-form .btn.primary{background:#1e2a3a;color:#fff}
+  @media (max-width:900px){.contact-form .form-row{grid-template-columns:1fr}}
 
-  /* ---- Alora FAB on right, no blue halo ---- */
-  #aloraFab{
-    position:fixed; right:22px; bottom:22px; z-index:9999;
-    width:64px; height:64px; border:none; border-radius:50%;
-    background:#0c2740; color:#fff; display:grid; place-items:center;
-    box-shadow:0 6px 18px rgba(0,0,0,.28); cursor:pointer
-  }
-  #aloraFab svg{width:30px; height:30px; display:block}
-  /* ensure legacy left button (if styled) is hidden */
-  .alora-toggle{display:none !important}
+  /* ---- Alora FAB (right) ---- */
+  #aloraFab{position:fixed;right:22px;bottom:22px;z-index:9999;width:64px;height:64px;border:none;border-radius:50%;background:#0c2740;color:#fff;display:grid;place-items:center;box-shadow:0 6px 18px rgba(0,0,0,.28);cursor:pointer}
+  #aloraFab svg{width:30px;height:30px;display:block}
+  .alora-toggle{display:none !important} /* ensure any legacy left bubble stays hidden */
+
+  /* ---- Alora panel (slide-in) ---- */
+  .alora{position:fixed;right:22px;bottom:98px;width:360px;max-width:92vw;background:#fff;border:1px solid #e6ecf3;border-radius:16px;box-shadow:0 16px 36px rgba(0,0,0,.22);transform:translateY(18px);opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;display:flex;flex-direction:column;overflow:hidden;z-index:9999}
+  .alora.open{opacity:1;transform:translateY(0);pointer-events:auto}
+  .alora-head{display:flex;align-items:center;justify-content:space-between;background:#0c2740;color:#fff;padding:12px 14px}
+  .alora-title{font-weight:700}
+  .alora-close{appearance:none;border:none;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:4px 6px;border-radius:8px}
+  .alora-close:focus{outline:2px solid #7ed9ca;outline-offset:2px}
+  .alora-body{padding:12px;max-height:46vh;overflow:auto;background:#fbfdff}
+  .alora-msg{padding:10px 12px;border-radius:12px;margin:8px 0;max-width:82%}
+  .alora-msg.bot{background:#eef5ff;color:#0b1323}
+  .alora-msg.user{background:#1e2a3a;color:#fff;margin-left:auto}
+  .alora-typing{font-size:12px;color:#596a82;margin:6px 2px}
+  .alora-input{display:flex;gap:8px;padding:12px;border-top:1px solid #e6ecf3;background:#fff}
+  .alora-input input{flex:1;border:1px solid #cfd8e3;border-radius:10px;padding:10px 12px;font-size:15px}
+  .alora-input .btn.primary{background:#0c2740;color:#fff;border:none;border-radius:10px;padding:10px 12px}
 </style>
 </head>
 <body>
@@ -94,7 +87,7 @@
   </nav>
 </header>
 
-<!-- ========== Hero (reverted layout, keep your copy) ========== -->
+<!-- Hero -->
 <section id="home" class="hero">
   <div class="hero-wrap">
     <div>
@@ -164,7 +157,7 @@
   </div>
 </section>
 
-<!-- Simulations bullets -->
+<!-- Simulations -->
 <section id="simulations" class="section">
   <div class="section-inner">
     <h2>Interactive Sales Simulations</h2>
@@ -291,7 +284,7 @@
   </div>
 </section>
 
-<!-- ===== Contact / Request Demo (Formspree live submit) ===== -->
+<!-- Contact / Request Demo (Formspree live) -->
 <section id="contact" class="section">
   <div class="section-inner">
     <h2>Let’s Redefine Your Sales Training</h2>
@@ -318,7 +311,6 @@
 </section>
 
 <!-- =================== Modals =================== -->
-<!-- Generic Card Modal -->
 <div id="cardModal" class="modal" aria-hidden="true">
   <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="cardTitle">
     <div class="modal-head">
@@ -329,7 +321,6 @@
   </div>
 </div>
 
-<!-- Coach Modal (loads the existing widget) -->
 <div id="coachModal" class="modal" aria-hidden="true">
   <div class="modal-box">
     <div class="modal-head">
@@ -344,15 +335,18 @@
   </div>
 </div>
 
-<!-- ============== Alora right-side FAB + panel ============== -->
+<!-- ============== Alora FAB + panel ============== -->
 <button id="aloraFab" aria-label="Open Alora chat">
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <path fill="#fff" d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9.4L5 19.9V16H5a2 2 0 0 1-2-2V5z"/>
   </svg>
 </button>
 
-<div id="alora" class="alora" aria-live="polite">
-  <div class="alora-head">Alora — ReflectivAI Help</div>
+<div id="alora" class="alora" aria-live="polite" aria-hidden="true">
+  <div class="alora-head">
+    <div class="alora-title">Alora — ReflectivAI Help</div>
+    <button id="aloraClose" class="alora-close" aria-label="Close Alora chat" title="Close">×</button>
+  </div>
   <div id="aloraBody" class="alora-body"></div>
   <form id="aloraForm" class="alora-input" autocomplete="off">
     <input id="aloraInput" placeholder="Ask about ReflectivAI…">
@@ -425,37 +419,93 @@ document.querySelectorAll('[data-card]').forEach(el=>{
   });
 });
 
-/* ---------- Alora help panel ---------- */
+/* ---------- Alora help panel (with Close × and warmer persona) ---------- */
 const alora = document.getElementById('alora');
 const aloraFab = document.getElementById('aloraFab');
+const aloraClose = document.getElementById('aloraClose');
 const aloraBody = document.getElementById('aloraBody');
 const aloraForm = document.getElementById('aloraForm');
 const aloraInput = document.getElementById('aloraInput');
 
-function aloraMsg(txt,who='bot'){
-  const b=document.createElement('div'); b.className='alora-msg '+who; b.textContent=txt;
-  aloraBody.appendChild(b); aloraBody.scrollTop=aloraBody.scrollHeight;
-}
-const KB = {
-  "pricing":"We don’t publish pricing on the site; request a demo and we’ll tailor a plan to your team size and use cases.",
-  "security":"We align to HIPAA, NIST AI RMF, ISO/IEC 27001 & 42001, and OPDP guidance. See Ethics for details.",
-  "simulate":"Open “Explore the Platform” to launch the coach with personas, EI scoring, and scenarios.",
-  "persona":"Personas include Internal Medicine MD, NP, PA, ID, Oncology, Pulmonology and more.",
-  "ei":"Our EI mode scores empathy (0–5), stress cues, and offers phrasing tips in real time."
-};
-aloraFab.addEventListener('click',()=>{
-  alora.classList.toggle('open');
-  if(alora.classList.contains('open') && !aloraBody.dataset.greet){
+function setAloraOpen(open){
+  alora.classList.toggle('open', open);
+  alora.setAttribute('aria-hidden', open ? 'false' : 'true');
+  if(open && !aloraBody.dataset.greet){
     aloraBody.dataset.greet='1';
-    aloraMsg("Hi, I’m Alora. Ask about pricing, security, simulations, personas, or EI.");
+    bot("Hi, I’m Alora. I can help with pricing, security, simulations, personas, and EI coaching. What would you like to know?");
   }
-});
+}
+aloraFab.addEventListener('click',()=>setAloraOpen(!alora.classList.contains('open')));
+aloraClose.addEventListener('click',()=>setAloraOpen(false));
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && alora.classList.contains('open')) setAloraOpen(false); });
+
+function el(tag, cls, txt){ const n=document.createElement(tag); if(cls) n.className=cls; if(txt) n.textContent=txt; return n; }
+function typing(show=true){
+  let t=document.getElementById('aloraTyping');
+  if(show && !t){ t=el('div','alora-typing'); t.id='aloraTyping'; t.textContent='Alora is typing…'; aloraBody.appendChild(t); aloraBody.scrollTop=aloraBody.scrollHeight; }
+  if(!show && t){ t.remove(); }
+}
+function bot(text){ const b=el('div','alora-msg bot',text); aloraBody.appendChild(b); aloraBody.scrollTop=aloraBody.scrollHeight; }
+function user(text){ const b=el('div','alora-msg user',text); aloraBody.appendChild(b); aloraBody.scrollTop=aloraBody.scrollHeight; }
+
+/* Intent router with warm, concise tone */
+function respond(q){
+  const s=q.toLowerCase();
+  const warm = {
+    greet:"Hi there. Glad you’re here.",
+    thanks:"You’re welcome. Anything else?",
+    unknown:"I didn’t catch that. Try asking about pricing, security, simulations, personas, or EI coaching."
+  };
+
+  // greetings
+  if(/^(hi|hello|hey)\b/.test(s)) return `${warm.greet} Ask me about the platform, EI coaching, or request a demo.`;
+  if(/\b(thanks|thank you|appreciate)\b/.test(s)) return warm.thanks;
+
+  // who/what
+  if(/\b(who are you|what are you|your name)\b/.test(s)) return "I’m Alora, your on-site guide. I answer quick questions and point you to the right module or demo.";
+
+  // pricing
+  if(s.includes('price')||s.includes('pricing')||s.includes('cost'))
+    return "We tailor pricing by team size and modules. Best next step is a short discovery call. Use the Request Demo form below and we’ll follow up.";
+
+  // security / compliance
+  if(s.includes('security')||s.includes('privacy')||s.includes('hipaa')||s.includes('compliance'))
+    return "We align to HIPAA safeguards, NIST AI RMF, and ISO/IEC 27001/42001 practices. PHI is off by default; BAA + role-based access if enabled.";
+
+  // simulations / coach
+  if(s.includes('simulate')||s.includes('simulation')||s.includes('coach')||s.includes('practice'))
+    return "Open “Explore the Platform” to launch the coach. You can practice by disease state, objection, and HCP persona with EI feedback.";
+
+  // personas
+  if(s.includes('persona')||s.includes('hcp'))
+    return "Common personas: Internal Medicine MD, NP, PA, Infectious Disease, Oncology, Pulmonology, Cardiology. Each adapts to tone and content.";
+
+  // EI
+  if(s.includes('ei')||s.includes('emotional intelligence')||s.includes('empathy'))
+    return "EI mode scores empathy cues and offers phrasing tips in real time. You’ll see trend metrics like Empathy Index and Readiness Velocity.";
+
+  // integrations
+  if(s.includes('integrations')||s.includes('crm')||s.includes('lms')||s.includes('salesforce')||s.includes('veeva'))
+    return "We provide export packs and APIs for Salesforce, Veeva, and major LMS platforms. We can map to your fields during onboarding.";
+
+  // contact/demo
+  if(s.includes('contact')||s.includes('demo')||s.includes('call'))
+    return "Use the Request Demo form at the bottom of this page. Add your team size and goals, and we’ll set up a quick intro call.";
+
+  // hours / human
+  if(s.includes('hours')||s.includes('support')||s.includes('help'))
+    return "I’m available here anytime. For human support, submit the Request Demo form and note “support only” in the message.";
+
+  return warm.unknown;
+}
+
 aloraForm.addEventListener('submit',e=>{
   e.preventDefault();
   const q=aloraInput.value.trim(); if(!q) return;
-  aloraInput.value=''; aloraMsg(q,'user');
-  const key=Object.keys(KB).find(k=>q.toLowerCase().includes(k));
-  setTimeout(()=>aloraMsg(key?KB[key]:"Try keywords: pricing, security, simulate, persona, or EI."),250);
+  aloraInput.value=''; user(q);
+  typing(true);
+  const answer=respond(q);
+  setTimeout(()=>{ typing(false); bot(answer); }, 280);
 });
 
 /* Start at top on load/back-forward cache */
