@@ -1,189 +1,131 @@
 /* =====================================================
-   ReflectivAI Chat Widget Styles
+   ReflectivAI Coach — modal widget styles
+   Palette matches site: navy / gray / white
    ===================================================== */
 
-/* Optional font import to match Poppins usage in this file */
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap");
-
-.cw, .reflectiv-chat {
-  font-family: "Poppins", Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  color: #0f1522;
+:root{
+  --navy:#0c2740;
+  --teal:#20bfa9;
+  --ink:#0f1522;
+  --text:#1b2738;
+  --muted:#596a82;
+  --line:#e5e9f0;
+  --panel:#f7f9fc;
+  --white:#fff;
 }
 
-/* utility */
-.hidden { display: none !important; }
+/* Modal shell */
+#reflectiv-coach-overlay{
+  position:fixed; inset:0; background:rgba(15,21,34,.52);
+  display:none; align-items:center; justify-content:center;
+  z-index:10000; /* above Alora */
+}
+#reflectiv-coach-overlay.open{ display:flex; }
 
-/* ---------- Widget Shell ---------- */
-.reflectiv-chat {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  border: 1px solid #d6dbe3;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #fff;
+/* Modal */
+#reflectiv-coach{
+  width:min(960px,92vw);
+  background:var(--white);
+  border-radius:16px;
+  box-shadow:0 24px 64px rgba(0,0,0,.24);
+  overflow:hidden;
+  display:flex; flex-direction:column;
+  font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
 }
 
-/* ---------- Toolbar ---------- */
-.chat-toolbar {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-  align-items: end;
-  padding: 10px;
-  background: #f7f9fc;
-  border-bottom: 1px solid #e5e9f0;
+/* Header */
+#reflectiv-coach .header{
+  display:flex; align-items:center; justify-content:space-between;
+  background:var(--navy); color:#fff; padding:12px 16px;
+}
+#reflectiv-coach .header .title{ font-weight:700; }
+#reflectiv-coach .header .close{
+  appearance:none; border:0; background:transparent; color:#fff;
+  font-size:22px; line-height:1; padding:6px 8px; cursor:pointer;
+  border-radius:8px;
+}
+#reflectiv-coach .header .close:focus{ outline:2px solid var(--teal); outline-offset:2px; }
+
+/* Toolbar / controls */
+#reflectiv-coach .toolbar{
+  background:var(--panel); border-bottom:1px solid var(--line);
+  padding:12px 16px;
+}
+#reflectiv-coach .controls{
+  display:grid; gap:12px 16px; align-items:end;
+  grid-template-columns:180px 1fr 180px 1fr;
+}
+#reflectiv-coach label{ font-size:12px; font-weight:600; color:var(--ink); }
+#reflectiv-coach select{
+  height:38px; border:1px solid #cfd6df; border-radius:8px; background:#fff;
+  padding:6px 10px; font-size:14px; color:var(--ink);
+}
+#reflectiv-coach .hint{ font-size:12px; color:var(--muted); }
+
+/* Body */
+#reflectiv-coach .body{
+  display:grid; grid-template-rows:1fr auto auto; min-height:420px;
 }
 
-/* ---------- Scenario / Dropdown Controls ---------- */
-.sim-controls {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px 12px;
-  align-items: end;
+/* Chat area */
+#reflectiv-coach .messages{
+  background:#fbfdff; padding:14px; overflow:auto; max-height:44vh; min-height:220px;
+  border-bottom:1px solid var(--line);
+}
+#reflectiv-coach .msg{ display:flex; margin:8px 0; }
+#reflectiv-coach .msg.user{ justify-content:flex-end; }
+#reflectiv-coach .bubble{
+  max-width:78%; padding:10px 12px; border-radius:14px; line-height:1.45;
+  border:1px solid #d6dbe3; background:#e9edf3; color:var(--ink); font-size:14px;
+}
+#reflectiv-coach .msg.user .bubble{ background:#e0e0e0; color:#000; }
+
+/* Input row */
+#reflectiv-coach .input{
+  display:flex; gap:10px; padding:12px 14px; background:#fff; border-bottom:1px solid var(--line);
+}
+#reflectiv-coach textarea{
+  flex:1; resize:none; min-height:44px; max-height:128px;
+  border:1px solid #cfd6df; border-radius:10px; padding:10px 12px; font-size:14px; outline:0;
+}
+#reflectiv-coach .btn{
+  min-width:92px; border-radius:999px; border:0; background:var(--navy); color:#fff; font-weight:700; cursor:pointer; padding:10px 16px;
+}
+#reflectiv-coach .btn:hover{ background:#183553; }
+
+/* Coach feedback panel */
+#reflectiv-coach .coach{
+  background:#fffbe8; border-top:1px solid var(--line);
+  padding:12px 14px;
+}
+#reflectiv-coach .coach h4{ margin:0 0 6px; font-size:15px; color:var(--ink); }
+#reflectiv-coach .score{ font-weight:700; margin-right:8px; }
+#reflectiv-coach .pills{ margin:6px 0 8px; }
+#reflectiv-coach .pill{
+  display:inline-block; font-size:12px; padding:2px 8px; margin-right:6px;
+  background:#f1f3f7; border:1px solid #d6dbe3; border-radius:999px;
+}
+#reflectiv-coach details{ margin-top:6px; }
+#reflectiv-coach summary{ cursor:pointer; font-weight:600; }
+
+/* Tooltip for EI descriptors */
+.tooltip{
+  position:relative; display:inline-block; cursor:help;
+}
+.tooltip .tip{
+  position:absolute; left:50%; transform:translateX(-50%);
+  bottom:140%; width:220px; background:#0f1522; color:#fff; padding:8px 10px; border-radius:8px;
+  font-size:12px; line-height:1.35; opacity:0; pointer-events:none; transition:opacity .15s ease;
+  box-shadow:0 8px 18px rgba(0,0,0,.22);
+}
+.tooltip:hover .tip{ opacity:1; }
+.tooltip .tip:after{
+  content:""; position:absolute; left:50%; transform:translateX(-50%);
+  top:100%; border:8px solid transparent; border-top-color:#0f1522;
 }
 
-.sim-controls label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #2f3a4f;
-}
-
-/* was `.sim-controls .select` — change to target native <select> */
-.sim-controls select {
-  height: 38px;
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid #cfd6df;
-  background: #fff;
-  font-size: 14px;
-  color: #0f1522;
-}
-
-/* ---------- Chat Area ---------- */
-.chat-messages {
-  height: 320px;
-  max-height: 50vh;
-  overflow: auto;
-  padding: 12px;
-  background: #fafbfd;
-}
-
-/* ---------- Message Bubbles ---------- */
-.message {
-  margin: 8px 0;
-  display: flex;
-}
-
-.message.user { justify-content: flex-end; }
-.message.assistant { justify-content: flex-start; }
-
-.message .content {
-  max-width: 85%;
-  border-radius: 14px;
-  padding: 10px 12px;
-  border: 1px solid #d6dbe3;
-  line-height: 1.45;
-  font-size: 14px;
-  background: #e9edf3;
-  color: #0f1522;
-}
-
-.message.user .content {
-  background: #e0e0e0;
-  color: #000;
-}
-
-/* ---------- Input Area ---------- */
-.chat-input {
-  display: flex;
-  gap: 8px;
-  padding: 10px;
-  border-top: 1px solid #e5e9f0;
-  background: #fff;
-}
-
-.chat-input textarea {
-  flex: 1;
-  resize: none;
-  min-height: 44px;
-  max-height: 120px;
-  padding: 10px 12px;
-  border: 1px solid #cfd6df;
-  border-radius: 10px;
-  outline: none;
-  font-family: "Poppins", Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  font-size: 14px;
-}
-
-/* focus states */
-.sim-controls select:focus,
-.chat-input textarea:focus,
-.chat-input .btn:focus {
-  outline: 2px solid #7ed9ca;
-  outline-offset: 2px;
-}
-
-.chat-input .btn {
-  min-width: 84px;
-  border: 0;
-  border-radius: 999px;
-  background: #2f3a4f;
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.chat-input .btn:hover { background: #394768; }
-
-/* ---------- Meta (Scenario Background) ---------- */
-.scenario-meta .meta-card {
-  padding: 10px 12px;
-  background: #f7f9fc;
-  border: 1px solid #e5e9f0;
-  border-radius: 10px;
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-/* ---------- Coach Feedback ---------- */
-.coach-section {
-  margin-top: 10px;
-  padding: 12px;
-  border: 1px solid #e5e9f0;
-  border-radius: 12px;
-  background: #fffbe8;
-}
-
-.coach-section h3 {
-  font-size: 15px;
-  margin: 0 0 6px 0;
-  color: #2f3a4f;
-}
-
-.coach-score { margin-bottom: 8px; font-weight: 600; }
-
-.coach-subs .pill {
-  display: inline-block;
-  background: #f1f3f7;
-  border: 1px solid #d6dbe3;
-  border-radius: 999px;
-  padding: 2px 8px;
-  margin-right: 6px;
-  font-size: 12px;
-}
-
-.coach-list {
-  padding-left: 16px;
-  font-size: 13px;
-  color: #0f1522;
-}
-
-.coach-list li { margin-bottom: 4px; }
-
-/* ---------- Responsive ---------- */
-@media (max-width: 520px) {
-  .chat-messages { height: 46vh; }
-  .chat-toolbar { grid-template-columns: 1fr; }
-  .sim-controls { grid-template-columns: 1fr; }
+/* Responsive */
+@media (max-width:900px){
+  #reflectiv-coach .controls{ grid-template-columns:1fr; }
+  #reflectiv-coach .messages{ max-height:46vh; }
 }
