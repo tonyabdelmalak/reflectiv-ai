@@ -557,83 +557,65 @@ document.querySelectorAll('[data-card]').forEach(el=>{
   });
 });
 
-/* ---------- Alora help panel (with Close × and warmer persona) ---------- */
-const alora = document.getElementById('alora');
-const aloraFab = document.getElementById('aloraFab');
-const aloraClose = document.getElementById('aloraClose');
-const aloraBody = document.getElementById('aloraBody');
-const aloraForm = document.getElementById('aloraForm');
-const aloraInput = document.getElementById('aloraInput');
-
-function setAloraOpen(open){
-  alora.classList.toggle('open', open);
-  alora.setAttribute('aria-hidden', open ? 'false' : 'true');
-  if(open && !aloraBody.dataset.greet){
-    aloraBody.dataset.greet='1';
-    bot("Hi, I’m Alora. I can help with pricing, security, simulations, personas, and EI coaching. What would you like to know?");
-  }
-}
-aloraFab.addEventListener('click',()=>setAloraOpen(!alora.classList.contains('open')));
-aloraClose.addEventListener('click',()=>setAloraOpen(false));
-document.addEventListener('keydown',e=>{ if(e.key==='Escape' && alora.classList.contains('open')) setAloraOpen(false); });
-
-function el(tag, cls, txt){ const n=document.createElement(tag); if(cls) n.className=cls; if(txt) n.textContent=txt; return n; }
-function typing(show=true){
-  let t=document.getElementById('aloraTyping');
-  if(show && !t){ t=el('div','alora-typing'); t.id='aloraTyping'; t.textContent='Alora is typing…'; aloraBody.appendChild(t); aloraBody.scrollTop=aloraBody.scrollHeight; }
-  if(!show && t){ t.remove(); }
-}
-function bot(text){ const b=el('div','alora-msg bot',text); aloraBody.appendChild(b); aloraBody.scrollTop=aloraBody.scrollHeight; }
-function user(text){ const b=el('div','alora-msg user',text); aloraBody.appendChild(b); aloraBody.scrollTop=aloraBody.scrollHeight; }
-
-/* Intent router with warm, concise tone */
+/* ---------- Alora helpful AI Agent with warmer persona ---------- */
 function respond(q){
-  const s=q.toLowerCase();
+  const s = q.toLowerCase();
   const warm = {
-    greet:"Hi there. Glad you’re here.",
-    thanks:"You’re welcome. Anything else?",
-    unknown:"I didn’t catch that. Try asking about pricing, security, simulations, personas, or EI coaching."
+    greet:"Hey there 👋, I’m Alora — ReflectivAI’s resident coach-bot.",
+    thanks:"Aw, you’re kind! Anything else you’d like to know?",
+    unknown:"Hmm… I’m not sure about that one yet. I can tell you about pricing, security, simulations, personas, or EI coaching!"
   };
 
-  // greetings
-  if(/^(hi|hello|hey)\b/.test(s)) return `${warm.greet} Ask me about the platform, EI coaching, or request a demo.`;
+  // greetings / small talk
+  if(/^(hi|hello|hey|yo)\b/.test(s)) return `${warm.greet} Ask me anything about the platform or training modules.`;
   if(/\b(thanks|thank you|appreciate)\b/.test(s)) return warm.thanks;
+  if(/\b(how are you|how’s it going|what’s up)\b/.test(s)) return "Doing great and ready to help you explore ReflectivAI.";
 
-  // who/what
-  if(/\b(who are you|what are you|your name)\b/.test(s)) return "I’m Alora, your on-site guide. I answer quick questions and point you to the right module or demo.";
+  // company basics
+  if(s.includes('reflectivai') || s.includes('what is reflectiv'))
+    return "ReflectivAI is an AI-driven sales-enablement platform built for life-sciences teams — blending human coaching with emotional intelligence scoring.";
 
   // pricing
   if(s.includes('price')||s.includes('pricing')||s.includes('cost'))
-    return "We tailor pricing by team size and modules. Best next step is a short discovery call. Use the Request Demo form below and we’ll follow up.";
+    return "Pricing scales by team size and selected modules. The Request Demo form connects you with our partnerships team for a quote.";
 
   // security / compliance
   if(s.includes('security')||s.includes('privacy')||s.includes('hipaa')||s.includes('compliance'))
-    return "We align to HIPAA safeguards, NIST AI RMF, and ISO/IEC 27001/42001 practices. PHI is off by default; BAA + role-based access if enabled.";
+    return "ReflectivAI follows HIPAA safeguards, NIST AI RMF, and ISO 27001/42001. PHI is off by default and protected when enabled under BAA.";
 
   // simulations / coach
   if(s.includes('simulate')||s.includes('simulation')||s.includes('coach')||s.includes('practice'))
-    return "Open “Explore the Platform” to launch the coach. You can practice by disease state, objection, and HCP persona with EI feedback.";
+    return "Our AI Coach lets you role-play with realistic HCP personas, receive empathy scoring, and instant compliance feedback.";
 
   // personas
   if(s.includes('persona')||s.includes('hcp'))
-    return "Common personas: Internal Medicine MD, NP, PA, Infectious Disease, Oncology, Pulmonology, Cardiology. Each adapts to tone and content.";
+    return "We include HCP personas such as Internal Medicine MDs, NPs, PAs, Oncologists, and more — each tuned to realistic tone and objections.";
 
   // EI
   if(s.includes('ei')||s.includes('emotional intelligence')||s.includes('empathy'))
-    return "EI mode scores empathy cues and offers phrasing tips in real time. You’ll see trend metrics like Empathy Index and Readiness Velocity.";
+    return "Emotional Intelligence Mode measures empathy, stress cues, and tone. You’ll see metrics like Empathy Index and Readiness Velocity update in real time.";
 
   // integrations
-  if(s.includes('integrations')||s.includes('crm')||s.includes('lms')||s.includes('salesforce')||s.includes('veeva'))
-    return "We provide export packs and APIs for Salesforce, Veeva, and major LMS platforms. We can map to your fields during onboarding.";
+  if(s.includes('integration')||s.includes('crm')||s.includes('lms')||s.includes('salesforce')||s.includes('veeva'))
+    return "ReflectivAI integrates with Salesforce, Veeva, and major LMS platforms. We map data fields during onboarding to sync training progress.";
 
-  // contact/demo
+  // ethics / governance
+  if(s.includes('ethic')||s.includes('governance')||s.includes('privacy policy'))
+    return "Our Ethics & Governance section outlines data privacy, bias testing, and transparency safeguards following FDA OPDP and PhRMA Code principles.";
+
+  // analytics
+  if(s.includes('analytics')||s.includes('metrics')||s.includes('index'))
+    return "Analytics dashboards track Empathy Index, Confidence Delta, Compliance Guard, and other KPIs for individual or team performance.";
+
+  // contact / demo
   if(s.includes('contact')||s.includes('demo')||s.includes('call'))
-    return "Use the Request Demo form at the bottom of this page. Add your team size and goals, and we’ll set up a quick intro call.";
+    return "Use the Request Demo form at the bottom of the page. Add your goals, and our team will schedule a brief intro session.";
 
-  // hours / human
-  if(s.includes('hours')||s.includes('support')||s.includes('help'))
-    return "I’m available here anytime. For human support, submit the Request Demo form and note “support only” in the message.";
+  // mission / values
+  if(s.includes('mission')||s.includes('values'))
+    return "Our mission is to humanize AI training — helping sales reps communicate with empathy, accuracy, and confidence.";
 
+  // fallback
   return warm.unknown;
 }
 
