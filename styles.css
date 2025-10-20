@@ -1,26 +1,26 @@
 /*
  * ReflectivAI Site Stylesheet (drop-in)
- * Clean layout, modern cards, coach modal, Alora FAB.
+ * Clean slabs, navy bands, wide coach toolbar, aligned chips, CTA/CTN styles.
  */
 
-/* ============== Tokens ============== */
+/* ================= Tokens ================= */
 :root{
   --navy:#1e2a3a;
   --navy-2:#0b1f30;
   --ink:#0b1323;
   --slate:#596a82;
   --bg:#ffffff;
-  --soft:#eef4fa;
+  --soft:#f6f8fb;
   --card:#fbfdff;
   --border:#e6ecf3;
-  --shadow:0 8px 24px rgba(15,24,36,.12);
+  --shadow:0 8px 24px rgba(15,24,36,.10);
 
   /* CTN chips */
-  --chip-bg:#6b7280;    /* medium gray */
+  --chip-bg:#6b7280;         /* medium gray */
   --chip-text:#ffffff;
   --chip-border:#ffffff;
 
-  /* CTA buttons */
+  /* Hero CTAs */
   --cta-bg:#0c2740;
   --cta-text:#ffffff;
   --cta-border:#ffffff;
@@ -35,7 +35,7 @@ body{
   line-height:1.55;
 }
 
-/* ============== Header / Nav ============== */
+/* ================= Header / Nav ================= */
 .site-header{position:sticky;top:0;z-index:1000;background:var(--navy);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.12)}
 .nav{max-width:1120px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:10px clamp(16px,4vw,28px);position:relative}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none}
@@ -59,21 +59,17 @@ body{
   .nav-links a{width:100%}
 }
 
-/* ============== Buttons ============== */
-.btn{
-  display:inline-block;border-radius:12px;padding:13px 18px;
-  font-weight:800;text-decoration:none;border:2px solid var(--cta-border);
-  transition:transform .06s ease, filter .15s ease;
-}
+/* ================= Buttons ================= */
+.btn{display:inline-block;border-radius:12px;padding:13px 18px;font-weight:800;text-decoration:none;border:2px solid var(--cta-border);transition:transform .06s ease,filter .15s ease}
 .btn.primary{background:var(--cta-bg);color:var(--cta-text)}
 .btn.secondary{background:transparent;color:var(--cta-text)}
 .btn:hover{filter:brightness(.98)}
 .btn:active{transform:scale(.98)}
 
-/* Hero CTA size bump ~10% */
+/* Hero CTA size bump ~10% + white line border */
 .hero .btn{padding:15px 20px;font-size:1.06rem;border:2px solid var(--cta-border)}
 
-/* ============== Hero ============== */
+/* ================= Hero ================= */
 .hero{
   background:radial-gradient(1200px 600px at 70% -10%,#1b6b88 0%,#0e2b40 45%,#0b1f30 70%,#0a1a27 100%);
   color:#eaf2f7; padding:72px 0 56px
@@ -90,25 +86,36 @@ body{
   .hero-img img{height:220px}
 }
 
-/* ============== Why strip ============== */
+/* ================= Why strip ================= */
 .why{background:#0c2740;color:#fff}
 .why-inner{max-width:1120px;margin:0 auto;padding:36px clamp(16px,4vw,28px)}
 .why-title{margin:0 0 8px;font-weight:700;font-size:clamp(20px,3.2vw,28px)}
 .why-text{margin:0;color:#eaf2f7}
 
-/* ============== Sections ============== */
+/* ================= Sections ================= */
 .section{padding:56px clamp(16px,4vw,28px)}
 .section-inner{max-width:1120px;margin:0 auto}
 h2{font-size:clamp(26px,3.6vw,40px);margin:0 0 18px;font-weight:900;letter-spacing:-.01em;color:var(--ink)}
 .muted{color:var(--slate)}
 
-/* ============== Cards / grids ============== */
+/* “Slab” section option: rounded card with subtle border and off-white bg */
+.section.slabbed .section-inner{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  box-shadow:var(--shadow);
+  padding:26px;
+}
+
+/* Navy “band” separator block */
+.band{padding:48px 0}
+.band--navy{background:#0e2133}
+.band--navy .section-inner{max-width:1120px;margin:0 auto;color:#eaf2f7}
+
+/* ================= Cards / grids ================= */
 .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 @media (max-width:960px){.grid-3{grid-template-columns:1fr}}
-.card{
-  background:#fff;border:1px solid var(--border);border-radius:14px;
-  padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04);
-}
+.card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
 .card h3{margin:.25rem 0 .5rem;font-size:20px}
 .card p{margin:0}
 
@@ -117,10 +124,10 @@ h2{font-size:clamp(26px,3.6vw,40px);margin:0 0 18px;font-weight:900;letter-spaci
 .platform .grid-3 .card h3{margin:0}
 @media (max-width:720px){.platform .grid-3 .card{grid-template-columns:1fr}}
 
-/* ============== Split Lists alignment fix ============== */
+/* ================= Split Lists alignment fix ================= */
 .split{
   display:grid;
-  grid-template-columns:1fr 1px 1fr;   /* clean divider */
+  grid-template-columns:1fr 1px 1fr;   /* crisp divider */
   gap:24px;
   align-items:start;
 }
@@ -137,16 +144,16 @@ h2{font-size:clamp(26px,3.6vw,40px);margin:0 0 18px;font-weight:900;letter-spaci
 }
 .tag:hover{filter:brightness(.95)}
 
-/* ============== Feature list ============== */
+/* ================= Feature list ================= */
 .feature-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
 @media (max-width:900px){.feature-list{grid-template-columns:1fr}}
 .feature-list li{list-style:none}
 
-/* ============== Metrics pills (reuse CTN) ============== */
+/* ================= Metrics pills reuse CTN ================= */
 .metrics-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
 .metrics-grid .tag{background:var(--chip-bg);color:var(--chip-text);border:1px solid var(--chip-border)}
 
-/* ============== Modal ============== */
+/* ================= Modal ================= */
 .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(6,12,20,.45);z-index:1200}
 .modal.open{display:flex}
 .modal-box{background:#fff;border-radius:16px;box-shadow:var(--shadow);max-width:min(980px,92vw);width:100%;max-height:88vh;overflow:auto;border:1px solid var(--border)}
@@ -156,33 +163,48 @@ h2{font-size:clamp(26px,3.6vw,40px);margin:0 0 18px;font-weight:900;letter-spaci
 #coachModal .modal-box{max-width:1100px;width:96vw}
 #coachBody{padding:0}
 
-/* ============== Coach toolbar — WIDER selects ============== */
-/* Force four equal columns and make selects expand fully */
+/* ================= Coach toolbar — force WIDE selects ================= */
+/* High-specificity rules with !important to beat legacy widget.css */
+#coachModal .chat-toolbar,
+#coachModal .controls-grid{
+  display:grid !important;
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  gap:12px !important;
+  align-items:end;
+}
+#coachModal .ctrl{display:flex;flex-direction:column;gap:6px;min-width:0;width:100% !important}
+#coachModal .ctrl label{font-size:12px;font-weight:600;opacity:.9}
+#coachModal .ctrl select{
+  display:block !important;
+  width:100% !important;
+  min-width:0 !important;
+  height:40px !important;
+  padding:6px 10px !important;
+  font-size:14px !important;
+  border:1px solid #b9c5d6 !important;
+  border-radius:10px !important;
+  background:#fff !important;
+  color:#0b1323 !important;
+  box-sizing:border-box !important;
+}
+
+/* In-widget fallback (if rendered outside modal) */
 #reflectiv-widget .chat-toolbar{padding:16px;background:#0c2740;color:#fff}
 #reflectiv-widget .controls-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:end}
 #reflectiv-widget .ctrl{display:flex;flex-direction:column;gap:6px;min-width:0}
 #reflectiv-widget .ctrl label{font-size:12px;font-weight:600;opacity:.9}
-#reflectiv-widget .ctrl select{
-  width:100% !important; min-width:0; height:40px;
-  padding:6px 10px; font-size:14px; border:1px solid #b9c5d6;
-  border-radius:10px; background:#fff; color:#0b1323;
-}
-#coachModal .chat-toolbar,
-#coachModal .controls-grid{display:grid !important;grid-template-columns:repeat(4,minmax(0,1fr)) !important;gap:12px !important;align-items:end}
-#coachModal .ctrl{min-width:0}
-#coachModal .ctrl select{width:100% !important;min-width:0;height:40px;padding:6px 10px;font-size:14px;border:1px solid #b9c5d6;border-radius:10px;background:#fff;color:#0b1323}
-#coachModal .chat-toolbar > *{width:100%}
+#reflectiv-widget .ctrl select{display:block;width:100%;min-width:0;height:40px;padding:6px 10px;font-size:14px;border:1px solid #b9c5d6;border-radius:10px;background:#fff;color:#0b1323;box-sizing:border-box}
 
 @media (max-width:900px){
-  #reflectiv-widget .controls-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   #coachModal .controls-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+  #reflectiv-widget .controls-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media (max-width:540px){
-  #reflectiv-widget .controls-grid{grid-template-columns:1fr}
   #coachModal .controls-grid{grid-template-columns:1fr !important}
+  #reflectiv-widget .controls-grid{grid-template-columns:1fr}
 }
 
-/* ============== Chat area ============== */
+/* ================= Chat area ================= */
 #reflectiv-widget .chat-messages{min-height:260px;height:320px;max-height:50vh;overflow:auto;padding:12px 14px;background:#f7f9fc}
 #reflectiv-widget .message{margin:8px 0;display:flex}
 #reflectiv-widget .message.user{justify-content:flex-end}
@@ -195,7 +217,7 @@ h2{font-size:clamp(26px,3.6vw,40px);margin:0 0 18px;font-weight:900;letter-spaci
 #reflectiv-widget .coach-section{margin:0 14px 14px;padding:12px 14px;border:1px solid #e1e6ef;border-radius:12px;background:#fff}
 #reflectiv-widget .coach-subs .pill{display:inline-block;padding:2px 8px;margin-right:6px;font-size:12px;background:#f1f3f7;border:1px solid #d6dbe3;border-radius:999px}
 
-/* ============== Alora FAB + panel (right) ============== */
+/* ================= Alora FAB + panel (right) ================= */
 #aloraFab{
   position:fixed;right:22px;bottom:22px;z-index:9999;width:64px;height:64px;
   border:none;border-radius:50%;background:#0c2740;color:#fff;
@@ -217,6 +239,6 @@ h2{font-size:clamp(26px,3.6vw,40px);margin:0 0 18px;font-weight:900;letter-spaci
 .alora-input input{flex:1;border:1px solid #cfd8e3;border-radius:10px;padding:10px 12px;font-size:15px}
 .alora-input .btn.primary{background:#0c2740;color:#fff;border:none;border-radius:10px;padding:10px 12px}
 
-/* ============== Utilities ============== */
+/* ================= Utilities ================= */
 .hidden{display:none !important}
 *:focus-visible{outline:2px solid #7ed9ca;outline-offset:2px}
