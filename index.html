@@ -385,29 +385,169 @@ document.getElementById('openCoach')?.addEventListener('click',(e)=>{
   e.preventDefault(); openModal('#coachModal');
 });
 
-/* ---------- Clickable chips -> open content cards ---------- */
+/* ---------- Site Cards (titles removed from body) ---------- */
 const CARD_COPY = {
-  "HIV PrEP": "<div class='card'><h3>HIV PrEP</h3><ul><li>Urgency framing and prevention benefits</li><li>Stigma sensitivity and inclusive language</li><li>Adherence and risk reduction</li></ul></div>",
-  "Vaccines": "<div class='card'><h3>Vaccines</h3><ul><li>Address hesitancy with evidence translation</li><li>Population and community impact</li><li>Schedules, safety, eligibility</li></ul></div>",
-  "Hepatitis B": "<div class='card'><h3>Hepatitis B</h3><ul><li>Access & affordability</li><li>Resistance & safety framing</li><li>Screening & vaccination guidelines</li></ul></div>",
-  "Oncology": "<div class='card'><h3>Oncology</h3><ul><li>Complex data with compassion</li><li>Payer concerns & value</li><li>Empathy for patients & caregivers</li></ul></div>",
-  "Cardiology": "<div class='card'><h3>Cardiology</h3><ul><li>Evidence framing for new therapies</li><li>Comorbidities & patient complexity</li><li>Outcomes & guideline dialogue</li></ul></div>",
-  "Pulmonology": "<div class='card'><h3>Pulmonology</h3><ul><li>Translate respiratory advances</li><li>Adherence & inhaler technique</li><li>Access barriers & chronic mgmt</li></ul></div>",
+  /* --- Therapeutic Areas --- */
+  "HIV PrEP": `
+    <div class='card'>
+      <ul>
+        <li><strong>Objection:</strong> Stigma and patient adherence concerns.</li>
+        <li><strong>Challenge:</strong> Framing prevention urgency with empathy.</li>
+        <li><strong>Goal:</strong> Build trust and normalize discussion of prevention options.</li>
+      </ul>
+    </div>`,
 
-  "Internal Medicine MD":"<div class='card'><h3>Internal Medicine MD</h3><ul><li>Preventative care & chronic disease</li><li>Constraints: time, formulary</li><li>Needs: safety, comparative data</li></ul></div>",
-  "Nurse Practitioner (NP)":"<div class='card'><h3>Nurse Practitioner (NP)</h3><ul><li>Holistic education, adherence</li><li>Constraints: workload, reimbursement</li><li>Needs: dosing, side effects, resources</li></ul></div>",
-  "Physician Assistant (PA)":"<div class='card'><h3>Physician Assistant (PA)</h3><ul><li>Collaborative care, triage</li><li>Constraints: scope, admin burden</li><li>Needs: authority, samples</li></ul></div>",
-  "Infectious Disease Specialist":"<div class='card'><h3>Infectious Disease Specialist</h3><ul><li>Evidence translation</li><li>Resistance, DDI concerns</li><li>Real-world data, emerging therapies</li></ul></div>",
-  "Oncologist":"<div class='card'><h3>Oncologist</h3><ul><li>Research & precision medicine</li><li>Cost & QoL considerations</li><li>Trials, biomarkers, survivorship</li></ul></div>",
-  "Pulmonologist":"<div class='card'><h3>Pulmonologist</h3><ul><li>Optimize function, reduce readmissions</li><li>Workflow & access logistics</li><li>Eligibility, DDI, initiation timing</li></ul></div>",
-  "Cardiologist":"<div class='card'><h3>Cardiologist</h3><ul><li>CV outcomes & GDMT adherence</li><li>Polypharmacy, renal thresholds</li><li>Endpoints, CKD/HF safety</li></ul></div>",
+  "Vaccines": `
+    <div class='card'>
+      <ul>
+        <li><strong>Objection:</strong> Hesitancy rooted in misinformation or side-effect fears.</li>
+        <li><strong>Challenge:</strong> Translating population data into relatable patient outcomes.</li>
+        <li><strong>Goal:</strong> Reinforce confidence in safety, efficacy, and community protection.</li>
+      </ul>
+    </div>`,
 
-  "Empathy Index":"<div class='card'><h3>Empathy Index</h3><p>Measures emotional attunement and conversational trust with HCPs.</p></div>",
-  "Accuracy Index":"<div class='card'><h3>Accuracy Index</h3><p>Tracks medical and regulatory precision.</p></div>",
-  "Confidence Delta":"<div class='card'><h3>Confidence Delta</h3><p>Compares self-perceived vs. actual skill growth.</p></div>",
-  "Compliance Guard":"<div class='card'><h3>Compliance Guard</h3><p>Flags deviations from approved messaging and detects off-label or risky phrasing.</p></div>",
-  "Readiness Velocity":"<div class='card'><h3>Readiness Velocity</h3><p>Quantifies ramp-up speed by rep, team, or territory.</p></div>"
+  "Hepatitis B": `
+    <div class='card'>
+      <ul>
+        <li><strong>Objection:</strong> Limited perceived need for adult vaccination.</li>
+        <li><strong>Challenge:</strong> Addressing misconceptions around risk and reactivation.</li>
+        <li><strong>Goal:</strong> Promote screening and long-term protection messaging.</li>
+      </ul>
+    </div>`,
+
+  "Oncology": `
+    <div class='card'>
+      <ul>
+        <li><strong>Challenge:</strong> Explaining complex clinical data with compassion.</li>
+        <li><strong>Objection:</strong> Cost, access, and value justification with payers.</li>
+        <li><strong>Goal:</strong> Empower HCPs to discuss outcomes, QoL, and biomarker relevance.</li>
+      </ul>
+    </div>`,
+
+  "Cardiology": `
+    <div class='card'>
+      <ul>
+        <li><strong>Objection:</strong> Skepticism about incremental benefit over generics.</li>
+        <li><strong>Challenge:</strong> Clarifying endpoints and real-world outcomes.</li>
+        <li><strong>Goal:</strong> Strengthen guideline alignment and adherence messaging.</li>
+      </ul>
+    </div>`,
+
+  "Pulmonology": `
+    <div class='card'>
+      <ul>
+        <li><strong>Challenge:</strong> Differentiating mechanism of action within crowded classes.</li>
+        <li><strong>Objection:</strong> Concerns over device complexity or adherence.</li>
+        <li><strong>Goal:</strong> Simplify technique training and highlight patient support resources.</li>
+      </ul>
+    </div>`,
+
+  /* --- HCP Personas --- */
+  "Internal Medicine": `
+    <div class='card'>
+      <ul>
+        <li><strong>Challenge:</strong> Managing broad chronic disease spectrum under time constraints.</li>
+        <li><strong>Objection:</strong> Skepticism toward novel therapies without long-term data.</li>
+        <li><strong>Goal:</strong> Present concise, outcomes-driven value aligned with guidelines.</li>
+      </ul>
+    </div>`,
+
+  "Nurse Practitioner": `
+    <div class='card'>
+      <ul>
+        <li><strong>Challenge:</strong> Heavy workload and need for clear patient education tools.</li>
+        <li><strong>Objection:</strong> Cost or coverage limitations impacting adherence.</li>
+        <li><strong>Goal:</strong> Provide simplified dosing and patient-ready resources.</li>
+      </ul>
+    </div>`,
+
+  "Physician Assistant": `
+    <div class='card'>
+      <ul>
+        <li><strong>Challenge:</strong> Balancing clinical autonomy with supervising-physician protocols.</li>
+        <li><strong>Objection:</strong> Administrative burden around prior authorization.</li>
+        <li><strong>Goal:</strong> Supply efficient talking points and coverage documentation.</li>
+      </ul>
+    </div>`,
+
+  "ID Specialist": `
+    <div class='card'>
+      <ul>
+        <li><strong>Challenge:</strong> Translating evolving data into real-world practice.</li>
+        <li><strong>Objection:</strong> Resistance or DDI concerns limiting prescribing comfort.</li>
+        <li><strong>Goal:</strong> Provide concise evidence and patient-case comparisons.</li>
+      </ul>
+    </div>`,
+
+  "Oncologist": `
+    <div class='card'>
+      <ul>
+        <li><strong>Challenge:</strong> Staying current with biomarker and trial landscape.</li>
+        <li><strong>Objection:</strong> Cost, QoL trade-offs, and insurance barriers.</li>
+        <li><strong>Goal:</strong> Position therapy value with empathy for patient impact.</li>
+      </ul>
+    </div>`,
+
+  "Pulmonologist": `
+    <div class='card'>
+      <ul>
+        <li><strong>Challenge:</strong> Coordinating multi-therapy regimens and adherence.</li>
+        <li><strong>Objection:</strong> Device complexity and inhaler confusion among patients.</li>
+        <li><strong>Goal:</strong> Reinforce education on correct use and symptom tracking.</li>
+      </ul>
+    </div>`,
+
+  "Cardiologist": `
+    <div class='card'>
+      <ul>
+        <li><strong>Objection:</strong> Limited differentiation from established standards of care.</li>
+        <li><strong>Challenge:</strong> Communicating trial design and endpoint nuance quickly.</li>
+        <li><strong>Goal:</strong> Emphasize outcome improvements and workflow simplicity.</li>
+      </ul>
+    </div>`,
+
+  /* --- Analytics / Metrics --- */
+  "Empathy Index": `
+    <div class='card'>
+      <ul>
+        <li><strong>Purpose:</strong> Measures emotional attunement and rapport during HCP interactions.</li>
+        <li><strong>Goal:</strong> Help reps adjust tone and phrasing to strengthen trust.</li>
+      </ul>
+    </div>`,
+
+  "Accuracy Index": `
+    <div class='card'>
+      <ul>
+        <li><strong>Purpose:</strong> Evaluates factual precision and regulatory alignment.</li>
+        <li><strong>Goal:</strong> Reinforce consistent, compliant scientific messaging.</li>
+      </ul>
+    </div>`,
+
+  "Confidence Delta": `
+    <div class='card'>
+      <ul>
+        <li><strong>Purpose:</strong> Compares self-perceived versus demonstrated skill growth.</li>
+        <li><strong>Goal:</strong> Visualize mindset improvement across coaching sessions.</li>
+      </ul>
+    </div>`,
+
+  "Compliance Guard": `
+    <div class='card'>
+      <ul>
+        <li><strong>Purpose:</strong> Detects off-label or risky phrasing in simulations.</li>
+        <li><strong>Goal:</strong> Maintain fair balance and protect brand integrity.</li>
+      </ul>
+    </div>`,
+
+  "Readiness Velocity": `
+    <div class='card'>
+      <ul>
+        <li><strong>Purpose:</strong> Tracks ramp-up speed and proficiency over time.</li>
+        <li><strong>Goal:</strong> Benchmark progress by rep, team, or territory.</li>
+      </ul>
+    </div>`
 };
+
 document.querySelectorAll('[data-card]').forEach(el=>{
   el.addEventListener('click',()=>{
     const title=el.getAttribute('data-card');
