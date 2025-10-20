@@ -1,8 +1,6 @@
 /* assets/chat/widget.js
  * ReflectivAI Chat/Coach — drop-in (coach-v2, deterministic scoring v3)
  * Modes: emotional-assessment | product-knowledge | sales-simulation
- *
- * EI mode adds Persona + EI Feature dropdowns and context-aware feedback.
  */
 
 (function () {
@@ -52,15 +50,15 @@
   // Fallbacks so dropdowns show even if config.json lacks entries
   const DEFAULT_PERSONAS = [
     { key: "difficult",   label: "Difficult HCP" },
-    { key: "busy",        label: "Busy HCP" },                     // added
+    { key: "busy",        label: "Busy HCP" },
     { key: "engaged",     label: "Engaged HCP" },
     { key: "indifferent", label: "Indifferent HCP" }
   ];
   const DEFAULT_EI_FEATURES = [
     { key: "empathy",    label: "Empathy Rating" },
     { key: "stress",     label: "Stress Level Indicator" },
-    { key: "listening",  label: "Active Listening Hints" },        // added
-    { key: "validation", label: "Validation & Reframing Tips" }    // added
+    { key: "listening",  label: "Active Listening Hints" },
+    { key: "validation", label: "Validation & Reframing Tips" }
   ];
 
   // ---------- utils ----------
@@ -118,6 +116,30 @@
     try { coach = JSON.parse(m[1]); } catch {}
     const clean = sanitizeLLM(String(raw).replace(m[0], "").trim());
     return { coach, clean };
+  }
+
+  // ---------- persona snapshot ----------
+  function getPersonaSnapshot(profileLabel = "") {
+    const k = profileLabel.toLowerCase();
+    const pick = (arr) => arr.slice(0, 17);
+
+    if (k.includes("internal medicine"))
+      return pick(["time-pressed","guideline-driven","broad-spectrum","chronic-care","risk-stratifies","skeptical","data-oriented","value-focused","workflow-conscious","formulary-aware","pragmatic","outcomes-minded","team-based","patient-education","preventive-care","evidence-first","concise"]);
+    if (k.includes("nurse practitioner"))
+      return pick(["holistic","patient-centered","education-forward","empathetic","adherence-minded","practical","care-coordination","resource-seeking","workload-heavy","protocol-aware","time-limited","community-focused","clear-instructions","safety-oriented","access-aware","collaborative","approachable"]);
+    if (k.includes("physician assistant"))
+      return pick(["collaborative","protocol-aligned","triage-savvy","throughput-focused","documentation-heavy","coverage-aware","concise-updates","safety-first","evidence-seeking","task-oriented","team-based","scope-conscious","practical","checklist-minded","patient-education","prior-auth-aware","efficient"]);
+    if (k.includes("infectious"))
+      return pick(["evidence-intense","resistance-aware","ddi-sensitive","guideline-driven","case-based","nuance-seeking","trial-literate","safety-vigilant","population-health","stewardship-focused","risk-benefit","outbreak-aware","adherence-minded","equity-conscious","follow-up-oriented","precise","skeptical"]);
+    if (k.includes("oncolog"))
+      return pick(["precision-medicine","trial-savvy","biomarker-driven","QoL-aware","shared-decision","value-focused","access-sensitive","time-limited","adverse-event-vigilant","guideline-aligned","multidisciplinary","compassionate","data-dense","survivorship-minded","payer-aware","nuanced","measured"]);
+    if (k.includes("pulmonolog"))
+      return pick(["device-aware","technique-focused","adherence-sensitive","exacerbation-prevention","spirometry-literate","step-up/step-down","education-forward","workflow-minded","coverage-aware","chronic-care","guideline-aligned","safety-oriented","pragmatic","inhaler-coaching","symptom-tracking","access-focused","efficient"]);
+    if (k.includes("cardiolog"))
+      return pick(["endpoint-focused","risk-reduction","polypharmacy-aware","renal-thresholds","guideline-driven","outcomes-oriented","value-conscious","skeptical","time-efficient","workflow-minded","safety-vigilant","metric-driven","adherence-focused","care-team","prior-auth-aware","practical","evidence-first"]);
+
+    // generic fallback
+    return pick(["time-pressed","evidence-seeking","guideline-aligned","value-focused","coverage-aware","workflow-minded","adherence-minded","safety-first","concise","pragmatic","patient-education","team-based","access-sensitive","data-oriented","empathetic","outcomes-driven","measured"]);
   }
 
   // ---------- local scoring fallback (coach-v3 deterministic) ----------
@@ -361,8 +383,7 @@ You are a virtual pharma coach responding to the sales rep’s last message and 
 
 # Scenario
 ${sc ? [
-  `Therapeutic Area: ${sc.therapeuticArea || "—"}`,
-  `HCP Role: ${sc.hcpRole || "—"}`,
+  // removed “Therapeutic Area” and “HCP Role” from the system preface
   `Background: ${sc.background || "—"}`,
   `Today’s Goal: ${sc.goal || "—"}`
 ].join("\n") : ""}
@@ -391,38 +412,53 @@ ${COMMON}`.trim();
     mount.innerHTML = "";
     if (!mount.classList.contains("cw")) mount.classList.add("cw");
 
+    // modernized visual tweaks + symmetric controls
     const style = document.createElement("style");
     style.textContent = `
-      #reflectiv-widget .reflectiv-chat{ display:flex; flex-direction:column; gap:12px; border:3px solid #bfc7d4; border-radius:14px; background:#fff; overflow:hidden; }
-      #reflectiv-widget .chat-toolbar{ display:block; padding:14px 16px; background:#f6f8fb; border-bottom:1px solid #e1e6ef; }
-      #reflectiv-widget .sim-controls{ display:grid; grid-template-columns:220px 1fr 220px 1fr; gap:12px 16px; align-items:center; }
-      #reflectiv-widget .sim-controls label{ font-size:13px; font-weight:600; color:#2f3a4f; justify-self:end; white-space:nowrap; }
-      #reflectiv-widget .sim-controls select{ width:100%; height:38px; padding:6px 10px; font-size:14px; border:1px solid #cfd6df; border-radius:8px; background:#fff; }
-      #reflectiv-widget .chat-messages{ min-height:260px; height:320px; max-height:50vh; overflow:auto; padding:12px 14px; background:#fafbfd; }
+      #reflectiv-widget .reflectiv-chat{ display:flex; flex-direction:column; gap:14px; border:2px solid #d1dae6; border-radius:16px; background:#fff; overflow:hidden; box-shadow:0 8px 28px rgba(15,24,36,.08); }
+      #reflectiv-widget .chat-toolbar{ padding:16px; background:#0c2740; color:#fff; }
+      #reflectiv-widget .controls-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+      #reflectiv-widget .ctrl{ display:flex; flex-direction:column; gap:6px; }
+      #reflectiv-widget .ctrl label{ font-size:12px; font-weight:600; opacity:.9; }
+      #reflectiv-widget .ctrl select{ width:100%; height:38px; padding:6px 10px; font-size:14px; border:1px solid #b9c5d6; border-radius:10px; background:#fff; color:#0b1323; }
+      #reflectiv-widget .chat-messages{ min-height:260px; height:320px; max-height:50vh; overflow:auto; padding:12px 14px; background:#f7f9fc; }
       #reflectiv-widget .message{ margin:8px 0; display:flex; }
       #reflectiv-widget .message.user{ justify-content:flex-end; }
       #reflectiv-widget .message.assistant{ justify-content:flex-start; }
       #reflectiv-widget .message .content{ max-width:85%; line-height:1.45; font-size:14px; padding:10px 12px; border-radius:14px; border:1px solid #d6dbe3; color:#0f1522; background:#e9edf3; }
       #reflectiv-widget .message.user .content{ background:#e0e0e0; color:#000; }
-      #reflectiv-widget .chat-input{ display:flex; gap:8px; padding:10px 12px; border-top:1px solid #e1e6ef; background:#fff; }
+      #reflectiv-widget .chat-input{ display:flex; gap:8px; padding:12px 14px; border-top:1px solid #e1e6ef; background:#fff; }
       #reflectiv-widget .chat-input textarea{ flex:1; resize:none; min-height:44px; max-height:120px; padding:10px 12px; border:1px solid #cfd6df; border-radius:10px; outline:none; }
-      #reflectiv-widget .chat-input .btn{ min-width:86px; border:0; border-radius:999px; background:#2f3a4f; color:#fff; font-weight:600; }
-      #reflectiv-widget .coach-section{ margin-top:0; padding:12px 14px; border:1px solid #e1e6ef; border-radius:12px; background:#fffbe8; }
+      #reflectiv-widget .chat-input .btn{ min-width:86px; border:0; border-radius:999px; background:#1e2a3a; color:#fff; font-weight:600; }
+      #reflectiv-widget .coach-section{ margin:0 14px 14px; padding:12px 14px; border:1px solid #e1e6ef; border-radius:12px; background:#fff; }
       #reflectiv-widget .coach-subs .pill{ display:inline-block; padding:2px 8px; margin-right:6px; font-size:12px; background:#f1f3f7; border:1px solid #d6dbe3; border-radius:999px; text-transform:unset; }
-      #reflectiv-widget .scenario-meta .meta-card{ padding:10px 12px; background:#f7f9fc; border:1px solid #e1e6ef; border-radius:10px; }
-      @media (max-width:900px){ #reflectiv-widget .sim-controls{ grid-template-columns:1fr; gap:8px; } #reflectiv-widget .sim-controls label{ justify-self:start; } }
-      @media (max-width:520px){ #reflectiv-widget .chat-messages{ height:46vh; } }
+      #reflectiv-widget .scenario-meta .meta-card{ margin:0 14px; padding:12px 14px; background:linear-gradient(0deg,#f6fbff,#fff); border:1px solid #e1e6ef; border-radius:12px; }
+      #reflectiv-widget .briefing-label{ display:block; font-size:12px; font-weight:700; color:#405065; margin-bottom:4px; }
+      #reflectiv-widget .briefing-val{ font-size:14px; color:#0b1323; }
+      @media (max-width:900px){
+        #reflectiv-widget .controls-grid{ grid-template-columns:repeat(2,1fr); }
+        #reflectiv-widget .chat-messages{ height:46vh; }
+      }
+      @media (max-width:540px){
+        #reflectiv-widget .controls-grid{ grid-template-columns:1fr; }
+      }
       #reflectiv-widget .hidden{ display:none !important; }
     `;
     document.head.appendChild(style);
 
     const shell = el("div", "reflectiv-chat");
 
+    // toolbar with symmetric controls
     const bar = el("div", "chat-toolbar");
-    const simControls = el("div","sim-controls");
+    const grid = el("div","controls-grid");
 
-    const lcLabel = el("label", "", "Learning Center");
-    lcLabel.htmlFor = "cw-mode";
+    function makeField(labelText, inputEl, id){
+      const wrap = el("div","ctrl"); const lab = el("label","",labelText);
+      if(id) lab.htmlFor = id;
+      wrap.appendChild(lab); wrap.appendChild(inputEl);
+      return wrap;
+    }
+
     const modeSel = el("select"); modeSel.id = "cw-mode";
     LC_OPTIONS.forEach((name) => {
       const o = el("option"); o.value = name; o.textContent = name;
@@ -432,8 +468,6 @@ ${COMMON}`.trim();
     modeSel.value = initialLc;
     currentMode = LC_TO_INTERNAL[modeSel.value];
 
-    const coachLabel = el("label", "", "Coach");
-    coachLabel.htmlFor = "cw-coach";
     const coachSel = el("select"); coachSel.id = "cw-coach";
     [{v:"on",t:"Coach On"},{v:"off",t:"Coach Off"}].forEach(({v,t})=>{
       const o = el("option"); o.value=v; o.textContent=t; coachSel.appendChild(o);
@@ -441,38 +475,27 @@ ${COMMON}`.trim();
     coachSel.value = coachOn ? "on" : "off";
     coachSel.onchange = () => { coachOn = coachSel.value === "on"; renderCoach(); };
 
-    const diseaseLabel = el("label", "", "Disease State");
-    diseaseLabel.htmlFor = "cw-disease";
     const diseaseSelect = el("select"); diseaseSelect.id = "cw-disease";
-
-    const hcpLabel = el("label","","HCP Profiles");
-    hcpLabel.htmlFor="cw-hcp";
     const hcpSelect = el("select"); hcpSelect.id="cw-hcp";
 
-    // EI Persona/EI Feature
-    const personaLabel = el("label", "", "HCP Persona");
-    personaLabel.htmlFor = "cw-ei-persona";
     const personaSelect = el("select"); personaSelect.id = "cw-ei-persona";
     personaSelectElem = personaSelect;
-    personaLabelElem = personaLabel;
-    personaSelect.addEventListener("change", generateFeedback);
-
-    const featureLabel = el("label", "", "EI Feature");
-    featureLabel.htmlFor = "cw-ei-feature";
     const featureSelect = el("select"); featureSelect.id = "cw-ei-feature";
     eiFeatureSelectElem = featureSelect;
-    featureLabelElem = featureLabel;
+
+    personaLabelElem = el("span"); featureLabelElem = el("span"); // not used now, kept for visibility toggles
+
+    personaSelect.addEventListener("change", generateFeedback);
     featureSelect.addEventListener("change", generateFeedback);
 
-    // mount controls
-    simControls.appendChild(lcLabel);    simControls.appendChild(modeSel);
-    simControls.appendChild(coachLabel); simControls.appendChild(coachSel);
-    simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
-    simControls.appendChild(hcpLabel);     simControls.appendChild(hcpSelect);
-    simControls.appendChild(personaLabel); simControls.appendChild(personaSelect);
-    simControls.appendChild(featureLabel); simControls.appendChild(featureSelect);
+    grid.appendChild(makeField("Learning Center", modeSel, "cw-mode"));
+    grid.appendChild(makeField("Disease State",  diseaseSelect, "cw-disease"));
+    grid.appendChild(makeField("Coach",          coachSel, "cw-coach"));
+    grid.appendChild(makeField("HCP Profiles",   hcpSelect, "cw-hcp"));
+    grid.appendChild(makeField("HCP Persona",    personaSelect, "cw-ei-persona"));
+    grid.appendChild(makeField("EI Feature",     featureSelect, "cw-ei-feature"));
 
-    bar.appendChild(simControls);
+    bar.appendChild(grid);
     shell.appendChild(bar);
 
     const meta = el("div", "scenario-meta");
@@ -489,8 +512,6 @@ ${COMMON}`.trim();
     inp.appendChild(ta); inp.appendChild(send);
     shell.appendChild(inp);
 
-    mount.appendChild(shell);
-
     const coach = el("div", "coach-section");
     coach.innerHTML = `<h3>Coach Feedback</h3><div class="coach-body muted">Awaiting the first assistant reply…</div>`;
     shell.appendChild(coach);
@@ -503,6 +524,7 @@ ${COMMON}`.trim();
     feedbackDisplayElem.style.fontSize = "14px";
     coach.appendChild(feedbackDisplayElem);
 
+    // helpers
     function getDiseaseStates() {
       let ds = Array.isArray(cfg?.diseaseStates) ? cfg.diseaseStates.slice() : [];
       if (!ds.length && Array.isArray(scenarios) && scenarios.length){
@@ -554,7 +576,7 @@ ${COMMON}`.trim();
       }
     }
 
-    // Populate EI dropdowns (config first, then fallback defaults)
+    // EI dropdowns
     function populateEIOptions() {
       const personaList = (cfg && Array.isArray(cfg.personas) && cfg.personas.length) ? cfg.personas : DEFAULT_PERSONAS;
       const featureList = (cfg && Array.isArray(cfg.eiFeatures) && cfg.eiFeatures.length) ? cfg.eiFeatures : DEFAULT_EI_FEATURES;
@@ -562,88 +584,26 @@ ${COMMON}`.trim();
       setSelectOptions(featureSelect, featureList.map(f => ({ value: f.key || f.id || f.label, label: f.label || f.key || f.id })), true);
     }
 
-    function applyModeVisibility() {
-      const lc = modeSel.value;
-      currentMode = LC_TO_INTERNAL[lc];
-      const pk = currentMode === "product-knowledge";
-
-      coachLabel.classList.toggle("hidden", pk);
-      coachSel.classList.toggle("hidden", pk);
-
-      if (currentMode === "sales-simulation") {
-        diseaseLabel.classList.remove("hidden");
-        diseaseSelect.classList.remove("hidden");
-        hcpLabel.classList.remove("hidden");
-        hcpSelect.classList.remove("hidden");
-        personaLabelElem.classList.add("hidden");
-        personaSelectElem.classList.add("hidden");
-        featureLabelElem.classList.add("hidden");
-        eiFeatureSelectElem.classList.add("hidden");
-        feedbackDisplayElem.innerHTML = "";
-        populateDiseases();
-      } else if (currentMode === "product-knowledge") {
-        diseaseLabel.classList.remove("hidden");
-        diseaseSelect.classList.remove("hidden");
-        hcpLabel.classList.add("hidden");
-        hcpSelect.classList.add("hidden");
-        personaLabelElem.classList.add("hidden");
-        personaSelectElem.classList.add("hidden");
-        featureLabelElem.classList.add("hidden");
-        eiFeatureSelectElem.classList.add("hidden");
-        feedbackDisplayElem.innerHTML = "";
-        populateDiseases();
-      } else {
-        diseaseLabel.classList.add("hidden");
-        diseaseSelect.classList.add("hidden");
-        hcpLabel.classList.add("hidden");
-        hcpSelect.classList.add("hidden");
-        personaLabelElem.classList.remove("hidden");
-        personaSelectElem.classList.remove("hidden");
-        featureLabelElem.classList.remove("hidden");
-        eiFeatureSelectElem.classList.remove("hidden");
-        feedbackDisplayElem.innerHTML = "";
-        currentScenarioId = null;
-        conversation = [];
-        renderMessages(); renderCoach(); renderMeta();
-      }
-
-      if (currentMode !== "sales-simulation") {
-        currentScenarioId = null;
-        conversation = [];
-        renderMessages(); renderCoach(); renderMeta();
-      }
+    function selectedHcpLabel(){
+      const opt = hcpSelect.options[hcpSelect.selectedIndex];
+      return opt ? opt.textContent : "";
     }
-
-    modeSel.addEventListener("change", applyModeVisibility);
-
-    diseaseSelect.addEventListener("change", ()=>{
-      const ds = diseaseSelect.value || "";
-      if (!ds) return;
-      if (currentMode === "sales-simulation") {
-        populateHcpForDisease(ds);
-      } else if (currentMode === "product-knowledge") {
-        currentScenarioId = null;
-      }
-      conversation=[]; renderMessages(); renderCoach(); renderMeta();
-    });
-
-    hcpSelect.addEventListener("change", ()=>{
-      const sel = hcpSelect.value || "";
-      if (!sel) return;
-      const sc = scenariosById.get(sel);
-      currentScenarioId = sc ? sc.id : null;
-      conversation=[]; renderMessages(); renderCoach(); renderMeta();
-    });
 
     function renderMeta() {
       const sc = scenariosById.get(currentScenarioId);
       if (!sc || !currentScenarioId || currentMode !== "sales-simulation") { meta.innerHTML = ""; return; }
+      // Background snapshot from profile label
+      const snapshot = getPersonaSnapshot(selectedHcpLabel()).join(", ");
       meta.innerHTML = `
         <div class="meta-card">
-          <div><strong>Therapeutic Area:</strong> ${esc(sc.therapeuticArea || sc.diseaseState || "—")}</div>
-          <div><strong>HCP Role:</strong> ${esc(sc.hcpRole || "—")}</div>
-          <div><strong>Background:</strong> ${esc(sc.background || "—")}</div>
-          <div><strong>Today’s Goal:</strong> ${esc(sc.goal || "—")}</div>
+          <div>
+            <span class="briefing-label">Background</span>
+            <div class="briefing-val">${esc(snapshot || sc.background || "—")}</div>
+          </div>
+          <div style="margin-top:8px">
+            <span class="briefing-label">Today’s Goal</span>
+            <div class="briefing-val">${esc(sc.goal || "—")}</div>
+          </div>
         </div>`;
     }
 
@@ -703,10 +663,72 @@ ${COMMON}`.trim();
     shell._renderCoach = renderCoach;
     shell._renderMeta = renderMeta;
 
-    // Populate dropdowns and apply mode
+    // wiring
+    function applyModeVisibility() {
+      const lc = modeSel.value;
+      currentMode = LC_TO_INTERNAL[lc];
+      const pk = currentMode === "product-knowledge";
+
+      // visibility
+      coachSel.parentElement.classList.toggle("hidden", pk);
+
+      if (currentMode === "sales-simulation") {
+        diseaseSelect.parentElement.classList.remove("hidden");
+        hcpSelect.parentElement.classList.remove("hidden");
+        personaSelect.parentElement.classList.add("hidden");
+        featureSelect.parentElement.classList.add("hidden");
+        feedbackDisplayElem.innerHTML = "";
+        populateDiseases();
+      } else if (currentMode === "product-knowledge") {
+        diseaseSelect.parentElement.classList.remove("hidden");
+        hcpSelect.parentElement.classList.add("hidden");
+        personaSelect.parentElement.classList.add("hidden");
+        featureSelect.parentElement.classList.add("hidden");
+        feedbackDisplayElem.innerHTML = "";
+        populateDiseases();
+      } else {
+        diseaseSelect.parentElement.classList.add("hidden");
+        hcpSelect.parentElement.classList.add("hidden");
+        personaSelect.parentElement.classList.remove("hidden");
+        featureSelect.parentElement.classList.remove("hidden");
+        feedbackDisplayElem.innerHTML = "";
+        currentScenarioId = null;
+        conversation = [];
+        renderMessages(); renderCoach(); renderMeta();
+      }
+
+      if (currentMode !== "sales-simulation") {
+        currentScenarioId = null;
+        conversation = [];
+        renderMessages(); renderCoach(); renderMeta();
+      }
+    }
+
     populateDiseases();
     populateEIOptions();
     applyModeVisibility();
+
+    diseaseSelect.addEventListener("change", ()=>{
+      const ds = diseaseSelect.value || "";
+      if (!ds) return;
+      if (currentMode === "sales-simulation") {
+        populateHcpForDisease(ds);
+      } else if (currentMode === "product-knowledge") {
+        currentScenarioId = null;
+      }
+      conversation=[]; renderMessages(); renderCoach(); renderMeta();
+    });
+
+    hcpSelect.addEventListener("change", ()=>{
+      const sel = hcpSelect.value || "";
+      if (!sel) return;
+      const sc = scenariosById.get(sel);
+      currentScenarioId = sc ? sc.id : null;
+      conversation=[]; renderMessages(); renderCoach(); renderMeta();
+    });
+
+    modeSel.addEventListener("change", applyModeVisibility);
+    mount.appendChild(shell);
   }
 
   // ---------- transport ----------
