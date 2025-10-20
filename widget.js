@@ -1,14 +1,15 @@
-/* ReflectivAI — widget bootstrap with resilient coach loader (auto repo base) */
-
+/* ReflectivAI — resilient bootstrap (classic script injection, no ESM) */
 (() => {
   const ready = (fn) =>
     document.readyState === "loading"
       ? document.addEventListener("DOMContentLoaded", fn, { once: true })
       : fn();
 
+  // worker endpoints
   const COACH_ENDPOINT = window.COACH_ENDPOINT || "/coach";
   const ALORA_ENDPOINT = window.ALORA_ENDPOINT || "/alora";
 
+  // shared helpers for coach.js
   const cache = new Map();
   async function fetchJSON(url, opts = {}) {
     const key = `${url}|${opts.method || "GET"}`;
@@ -41,38 +42,52 @@
     };
   })();
 
-  // auto-detect GitHub Pages repo base: "/<repo>/" or "/" for apex
-  function detectRepoBase() {
-    // pathname like "/reflectiv-ai/index.html" -> "/reflectiv-ai/"
-    const seg = location.pathname.split("/").filter(Boolean);
-    if (seg.length > 0) return `/${seg[0]}/`;
-    return "/";
-  }
-  const ORIGIN = location.origin;
-  const REPO = detectRepoBase();
-
-  function join(base, rel) {
-    return new URL(rel, base).toString();
-  }
-
-  function coachCandidates() {
-    const v = `?v=${Date.now()}`;
-    return [
-      join(ORIGIN + REPO, "assets/chat/coach.js" + v),
-      join(location.href, "assets/chat/coach.js" + v),
-      join(ORIGIN + "/", "assets/chat/coach.js" + v),
-    ];
-  }
-
+  // expose to coach.js (IIFE reads window.ReflectivShared)
   window.ReflectivShared = {
-    BASE: ORIGIN + REPO,
     COACH_ENDPOINT,
     ALORA_ENDPOINT,
     fetchJSON,
     debounce,
     bus,
-    join,
   };
+
+  // ---------- classic script loader (tries multiple paths) ----------
+  function coachCandidates() {
+    const v = `?v=${Date.now()}`;
+    const base = location.origin + "/reflectiv-ai/";
+    return [
+      base + "assets/chat/coach.js" + v, // GitHub Pages repo base
+      location.origin + "/assets/chat/coach.js" + v, // origin root (just in case)
+      "assets/chat/coach.js" + v, // relative to document
+    ];
+  }
+
+  function injectScript(src) {
+    return new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = src;
+      s.async = true;
+      s.onload = () => resolve(src);
+      s.onerror = () => reject(new Error(`load failed: ${src}`));
+      document.head.appendChild(s);
+    });
+  }
+
+  async function loadCoachClassic(urls) {
+    const errors = [];
+    for (const u of urls) {
+      try {
+        // quick existence check
+        const h = await fetch(u, { method: "HEAD" });
+        if (!h.ok) throw new Error(`HTTP ${h.status}`);
+        await injectScript(u);
+        return u;
+      } catch (e) {
+        errors.push(`${u} → ${e.message || e}`);
+      }
+    }
+    throw new Error(errors.join(" | "));
+  }
 
   function renderLoadError(host, tried) {
     host.innerHTML = `
@@ -83,39 +98,41 @@
           Tried:<br>${tried.map(u=>`<div>${u}</div>`).join("")}
         </div>
         <p style="margin-top:8px;color:#314159">
-          Ensure <code>assets/chat/coach.js</code> exists in the published branch and Pages cache is clear.
+          Confirm <code>assets/chat/coach.js</code> is published by GitHub Pages. If this still 404s, push any small commit to trigger a Pages rebuild.
         </p>
       </div>`;
   }
 
-  async function importFirst(urls) {
-    const errs = [];
-    for (const u of urls) {
-      try {
-        const head = await fetch(u, { method: "HEAD", cache: "no-store" });
-        if (!head.ok) throw new Error(`HTTP ${head.status}`);
-        return { mod: await import(/* @vite-ignore */ u), url: u };
-      } catch (e) {
-        errs.push(`${u} → ${e.message || e}`);
-      }
-    }
-    throw new Error(errs.join(" | "));
+  // call whichever global the coach registers
+  function callMount(targetId) {
+    const g =
+      (window.ReflectivCoach && (window.ReflectivCoach.mount || window.ReflectivCoach.mountCoach)) ||
+      window.mountCoach ||
+      (window.COACH && window.COACH.mount);
+
+    if (typeof g !== "function") throw new Error("mount function not found");
+    g(targetId);
   }
 
+  // ---------- mount on DOM ready ----------
   ready(async () => {
     const host = document.getElementById("reflectiv-widget");
     if (!host) return;
 
     const tries = coachCandidates();
     try {
-      const { mod, url } = await importFirst(tries);
-      const mount =
-        (mod.default && (mod.default.mountCoach || mod.default)) ||
-        mod.mountCoach ||
-        mod.mount;
-      if (typeof mount !== "function") throw new Error("coach.js missing mount()");
-      mount("reflectiv-widget");
-      console.info("[ReflectivAI] coach.js loaded from", url);
+      const url = await loadCoachClassic(tries);
+
+      // give the IIFE a tick to attach globals, then mount
+      setTimeout(() => {
+        try {
+          callMount("reflectiv-widget");
+          console.info("[ReflectivAI] coach.js loaded from", url);
+        } catch (e) {
+          console.error("[ReflectivAI] coach mount error:", e);
+          renderLoadError(host, tries);
+        }
+      }, 0);
     } catch (e) {
       console.error("[ReflectivAI] coach loader error:", e);
       renderLoadError(host, tries);
