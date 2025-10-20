@@ -5,119 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ReflectivAI – AI Sales Enablement for Life Sciences</title>
 
-<!-- Fonts and site styles -->
+<!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20251019-1">
-<link rel="stylesheet" href="widget.css?v=9"><!-- keep original widget styles -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
 
-<!-- Minimal overrides: spacing, hero, why-band, header brand color, demo form, right FAB, Alora panel/close -->
-<style>
-  /* ---- Global safe spacing ---- */
-  html { scroll-behavior:smooth }
-  body { margin:0; background:#ffffff }
-  .section, .hero { padding-left: clamp(16px, 4vw, 28px); padding-right: clamp(16px, 4vw, 28px) }
-  .section-inner, .hero-wrap { max-width: 1120px; margin: 0 auto }
-
-  /* ---- Header tweaks ---- */
-  .site-header { position: sticky; top:0; z-index:1000 }
-  .nav { display:flex; align-items:center; justify-content:space-between; padding:10px clamp(16px,4vw,28px); background:#1e2a3a }
-  .brand { display:flex; align-items:center; gap:10px; text-decoration:none }
-  .brand img { height:36px; width:auto } /* larger logo */
-  .brand span { font: 800 20px/1 Inter, system-ui, sans-serif; color:#ffffff } /* force white brand text */
-  .nav-links { display:flex; gap:16px }
-  .nav-links a { color:#ffffff; text-decoration:none; font:600 14px/1 Inter, system-ui, sans-serif; opacity:.95 }
-  .nav-links a:hover { opacity:1 }
-  .hamburger { display:none; width:40px; height:40px; background:transparent; border:0; position:relative }
-  .hamburger span { position:absolute; left:10px; right:10px; height:2px; background:#ffffff; transition:.2s }
-  .hamburger span:nth-child(1){ top:12px } .hamburger span:nth-child(2){ top:19px } .hamburger span:nth-child(3){ top:26px }
-  @media (max-width:900px){
-    .hamburger{display:block}
-    .nav-links{position:absolute; left:0; right:0; top:60px; background:#1e2a3a; flex-direction:column; padding:12px clamp(16px,4vw,28px); display:none}
-    .nav-links.active{display:flex}
-    .hamburger.active span:nth-child(1){ transform:translateY(7px) rotate(45deg) }
-    .hamburger.active span:nth-child(2){ opacity:0 }
-    .hamburger.active span:nth-child(3){ transform:translateY(-7px) rotate(-45deg) }
-  }
-
-  /* ---- Hero revert ---- */
-  .hero{background:radial-gradient(1200px 600px at 70% -10%,#1b6b88 0%,#0e2b40 45%,#0b1f30 70%,#0a1a27 100%);color:#eaf2f7;padding:72px 0 56px}
-  .hero-wrap{display:grid;grid-template-columns:1.2fr .8fr;gap:28px;align-items:center}
-  .hero h1{margin:0 0 14px;font-weight:800;line-height:1.1;color:#fff;font-size:clamp(28px,4.8vw,44px)}
-  .hero p{margin:0 0 22px;font-size:clamp(16px,2.5vw,20px);color:#e5eff6}
-  .cta{display:flex;gap:12px;flex-wrap:wrap}
-  .btn{display:inline-block;padding:12px 16px;border-radius:12px;border:2px solid transparent;font:700 14px/1 Inter,system-ui,sans-serif;text-decoration:none}
-  .btn.primary{background:#0c2740;color:#fff;border:none}
-  .btn.secondary{background:#0c2740;color:#fff;border:none} /* both dark blue with white text */
-  .hero-img{width:100%}
-  .hero-img img,.hero-img .art{width:100%;height:320px;border-radius:16px;object-fit:cover;box-shadow:0 12px 30px rgba(0,0,0,.35);outline:1px solid rgba(255,255,255,.12)}
-  @media (max-width:900px){.hero{padding:56px 0 40px}.hero-wrap{grid-template-columns:1fr}.hero-img img,.hero-img .art{height:220px}}
-
-  /* ---- Why band: thin modern font, white text on navy ---- */
-  .why{background:#0c2740;color:#ffffff;padding:36px 0}
-  .why-inner{max-width:1120px;margin:0 auto;padding:0}
-  .why-title{margin:0 0 8px;font-family:Inter,system-ui,sans-serif;font-weight:300;letter-spacing:.2px;font-size:clamp(20px,3.2vw,28px);color:#ffffff}
-  .why-text{margin:0;font:400 15px/1.6 Inter,system-ui,sans-serif;color:#eaf2f7}
-
-  /* ---- Cards, grids, chips ---- */
-  .section{padding:48px 0}
-  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-  .card{background:#fff;border:1px solid #e6ecf3;border-radius:14px;padding:16px;box-shadow:0 10px 24px rgba(16,24,40,.04)}
-  .chips{display:flex;flex-wrap:wrap;gap:10px}
-  .tag{display:inline-block;background:#eef5ff;border:1px solid #d6e6ff;color:#0b1323;padding:8px 12px;border-radius:999px;font:600 13px/1 Inter,system-ui,sans-serif;text-decoration:none;cursor:pointer}
-  .tag:hover{background:#e6f0ff}
-  .split{display:grid;grid-template-columns:1fr 12px 1fr;gap:16px;align-items:start}
-  .divider{width:2px;height:100%;background:#e6ecf3;border-radius:2px;justify-self:center}
-  @media (max-width:900px){.grid-3{grid-template-columns:1fr}.split{grid-template-columns:1fr}.divider{display:none}}
-
-  /* ---- Feature list ---- */
-  .feature-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-  .feature-list .card h3{margin:0 0 6px}
-  @media (max-width:900px){.feature-list{grid-template-columns:1fr}}
-
-  /* ---- Metrics ---- */
-  .metrics-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
-
-  /* ---- Contact/Demo (Formspree live) ---- */
-  #contact .section-inner{max-width:1120px;margin:0 auto}
-  .contact-form{display:grid;gap:12px;background:#fff;border:1px solid #e6ecf3;border-radius:14px;padding:18px;box-shadow:0 10px 24px rgba(16,24,40,.04)}
-  .contact-form .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .contact-form label{display:block;font-size:13px;font-weight:600;color:#223048;margin:0 0 6px}
-  .contact-form input,.contact-form textarea{width:100%;border:1px solid #cfd8e3;border-radius:10px;padding:12px;font-size:15px}
-  .contact-form textarea{min-height:120px;resize:vertical}
-  .contact-form .btn.primary{background:#1e2a3a;color:#fff}
-  @media (max-width:900px){.contact-form .form-row{grid-template-columns:1fr}}
-
-  /* ---- Modal ---- */
-  .modal{position:fixed;inset:0;background:rgba(6,12,20,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:9998}
-  .modal.open{display:flex}
-  .modal-box{background:#fff;border:1px solid #e6ecf3;border-radius:16px;max-width:min(680px,92vw);width:100%;box-shadow:0 24px 48px rgba(0,0,0,.28);overflow:auto;max-height:86vh}
-  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid #e6ecf3;background:#f9fbff}
-  .modal-title{font:700 16px/1 Inter,system-ui}
-  .modal-close{appearance:none;border:none;background:#1e2a3a;color:#fff;border-radius:10px;padding:8px 12px;cursor:pointer}
-
-  /* ---- Alora FAB (right) ---- */
-  #aloraFab{position:fixed;right:22px;bottom:22px;z-index:9999;width:64px;height:64px;border:none;border-radius:50%;background:#0c2740;color:#fff;display:grid;place-items:center;box-shadow:0 6px 18px rgba(0,0,0,.28);cursor:pointer}
-  #aloraFab svg{width:30px;height:30px;display:block}
-  .alora-toggle{display:none !important} /* ensure any legacy left bubble stays hidden */
-
-  /* ---- Alora panel (slide-in) ---- */
-  .alora{position:fixed;right:22px;bottom:98px;width:360px;max-width:92vw;background:#fff;border:1px solid #e6ecf3;border-radius:16px;box-shadow:0 16px 36px rgba(0,0,0,.22);transform:translateY(18px);opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;display:flex;flex-direction:column;overflow:hidden;z-index:9999}
-  .alora.open{opacity:1;transform:translateY(0);pointer-events:auto}
-  .alora-head{display:flex;align-items:center;justify-content:space-between;background:#0c2740;color:#fff;padding:12px 14px}
-  .alora-title{font-weight:700}
-  .alora-close{appearance:none;border:none;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:4px 6px;border-radius:8px}
-  .alora-close:focus{outline:2px solid #7ed9ca;outline-offset:2px}
-  .alora-body{padding:12px;max-height:46vh;overflow:auto;background:#fbfdff}
-  .alora-msg{padding:10px 12px;border-radius:12px;margin:8px 0;max-width:82%}
-  .alora-msg.bot{background:#eef5ff;color:#0b1323}
-  .alora-msg.user{background:#1e2a3a;color:#fff;margin-left:auto}
-  .alora-typing{font-size:12px;color:#596a82;margin:6px 2px}
-  .alora-input{display:flex;gap:8px;padding:12px;border-top:1px solid #e6ecf3;background:#fff}
-  .alora-input input{flex:1;border:1px solid #cfd8e3;border-radius:10px;padding:10px 12px;font-size:15px}
-  .alora-input .btn.primary{background:#0c2740;color:#fff;border:none;border-radius:10px;padding:10px 12px}
-</style>
+<!-- Load widget.css first so site CSS can override it -->
+<link rel="stylesheet" href="widget.css?v=9">
+<!-- Site styles last to win specificity -->
+<link rel="stylesheet" href="styles.css?v=20251019-3">
 </head>
 <body>
 
@@ -163,16 +59,15 @@
   </div>
 </section>
 
-<!-- Why it matters -->
-<section class="why">
-  <div class="why-inner">
-    <h3 class="why-title">Why it matters</h3>
+<section class="band band--navy">
+  <div class="section-inner">
+    <h3 class="why-title" style="margin:0 0 6px">Why it matters</h3>
     <p class="why-text">Emotional intelligence drives connection. ReflectivAI helps reps practice active listening, empathy, and tone calibration—transforming compliance into confidence and insight into influence.</p>
   </div>
 </section>
 
 <!-- Platform Modules -->
-<section id="platform-mods" class="section platform">
+<section id="platform-mods" class="section slabbed">
   <div class="section-inner">
     <h2>Platform Modules</h2>
     <div class="grid-3">
@@ -184,7 +79,7 @@
 </section>
 
 <!-- Split Lists: Therapeutic Areas / Personas -->
-<section id="platform" class="section">
+<section id="platform" class="section slabbed">
   <div class="section-inner split">
     <div class="col">
       <h2 id="therapy">Train by Therapeutic Area</h2>
@@ -204,10 +99,10 @@
     <div class="col">
       <h2 id="personas">Practice with Realistic Personas</h2>
       <div class="chips">
-        <a class="tag" data-card="Internal Medicine">Internal Medicine MD</a>
-        <a class="tag" data-card="Nurse Practitioner">Nurse Practitioner (NP)</a>
-        <a class="tag" data-card="Physician Assistant">Physician Assistant (PA)</a>
-        <a class="tag" data-card="ID Specialist">Infectious Disease Specialist</a>
+        <a class="tag" data-card="Internal Medicine MD">Internal Medicine MD</a>
+        <a class="tag" data-card="Nurse Practitioner (NP)">Nurse Practitioner (NP)</a>
+        <a class="tag" data-card="Physician Assistant (PA)">Physician Assistant (PA)</a>
+        <a class="tag" data-card="Infectious Disease Specialist">Infectious Disease Specialist</a>
         <a class="tag" data-card="Oncologist">Oncologist</a>
         <a class="tag" data-card="Pulmonologist">Pulmonologist</a>
         <a class="tag" data-card="Cardiologist">Cardiologist</a>
@@ -216,8 +111,12 @@
   </div>
 </section>
 
+<section class="band band--navy">
+  <div class="section-inner"></div>
+</section>
+
 <!-- Simulations -->
-<section id="simulations" class="section">
+<section id="simulations" class="section slabbed">
   <div class="section-inner">
     <h2>Interactive Sales Simulations</h2>
     <ul class="feature-list">
@@ -230,7 +129,7 @@
 </section>
 
 <!-- Analytics -->
-<section id="analytics" class="section">
+<section id="analytics" class="section slabbed">
   <div class="section-inner">
     <h2>Performance Analytics & Coaching Intelligence</h2>
     <div class="metrics-grid">
@@ -243,8 +142,12 @@
   </div>
 </section>
 
+<section class="band band--navy">
+  <div class="section-inner"></div>
+</section>
+
 <!-- Ethics -->
-<section id="ethics" class="section">
+<section id="ethics" class="section slabbed">
   <div class="section-inner">
     <h2>Ethics, Privacy & Governance</h2>
     <p class="muted">ReflectivAI is built for life-sciences training. We avoid PHI by default and apply strict safeguards when customers choose to integrate real data.</p>
@@ -300,14 +203,14 @@
 </section>
 
 <!-- References -->
-<section id="refs" class="section">
+<section id="refs" class="section slabbed">
   <div class="section-inner">
     <h2>References</h2>
     <details>
       <summary><strong>Show all references</strong></summary>
       <ol>
         <li>HIPAA Privacy Rule — HHS overview and safeguards.</li>
-        <li>NIST AI Risk Management Framework — trustworthy AI guidance.</li>
+        <li>NIST AI RMF — trustworthy AI guidance.</li>
         <li>ISO/IEC 27001 — information security management.</li>
         <li>ISO/IEC 42001 — AI management system standard.</li>
         <li>OECD AI Principles — trustworthy AI recommendations.</li>
@@ -321,7 +224,7 @@
 </section>
 
 <!-- FAQ -->
-<section id="faq" class="section">
+<section id="faq" class="section slabbed">
   <div class="section-inner">
     <h2>Frequently Asked Questions</h2>
     <details>
@@ -343,8 +246,8 @@
   </div>
 </section>
 
-<!-- Contact / Request Demo (Formspree live) -->
-<section id="contact" class="section">
+<!-- Contact / Request Demo -->
+<section id="contact" class="section slabbed">
   <div class="section-inner">
     <h2>Let’s Redefine Your Sales Training</h2>
     <form class="contact-form" action="https://formspree.io/f/reflectiv-demo" method="POST">
@@ -414,7 +317,7 @@
 </div>
 
 <!-- =================== Scripts =================== -->
-<script defer src="widget.js?v=9"></script>
+<script defer src="widget.js?v=10"></script>
 <script>
 /* ---------- Mobile nav ---------- */
 const navToggle=document.getElementById('navToggle');
@@ -446,185 +349,15 @@ document.getElementById('openCoach')?.addEventListener('click',(e)=>{
   e.preventDefault(); openModal('#coachModal');
 });
 
-/* ---------- Simple Alora helper ---------- */
-const alora=document.getElementById('alora');
-const aloraFab=document.getElementById('aloraFab');
-const aloraClose=document.getElementById('aloraClose');
-const aloraBody=document.getElementById('aloraBody');
-const aloraForm=document.getElementById('aloraForm');
-const aloraInput=document.getElementById('aloraInput');
-
-function bot(t){ const b=document.createElement('div'); b.className='alora-msg bot'; b.textContent=t; aloraBody.appendChild(b); aloraBody.scrollTop=aloraBody.scrollHeight; }
-function user(t){ const u=document.createElement('div'); u.className='alora-msg user'; u.textContent=t; aloraBody.appendChild(u); aloraBody.scrollTop=aloraBody.scrollHeight; }
-function typing(on){ let el=document.querySelector('.alora-typing'); if(on){ if(!el){ el=document.createElement('div'); el.className='alora-typing'; el.textContent='typing…'; aloraBody.appendChild(el);} } else { el&&el.remove(); } }
-
-aloraFab.addEventListener('click',()=>{ alora.classList.add('open'); alora.setAttribute('aria-hidden','false'); if(!aloraBody.dataset.greet){ bot("Hey there 👋, I’m Alora — ask about pricing, security, simulations, personas, or EI coaching."); aloraBody.dataset.greet='1'; }});
-aloraClose.addEventListener('click',()=>{ alora.classList.remove('open'); alora.setAttribute('aria-hidden','true'); });
-
-function respond(q){
-  const s=q.toLowerCase();
-  if(/^(hi|hello|hey|yo)\b/.test(s)) return "Hi — what would you like to explore about ReflectivAI?";
-  if(s.includes('price')||s.includes('pricing')) return "Pricing depends on team size and modules. Use the Request Demo form to get a quote.";
-  if(s.includes('security')||s.includes('hipaa')||s.includes('privacy')) return "HIPAA controls, NIST AI RMF, ISO 27001/42001. PHI is off by default and protected under BAA when enabled.";
-  if(s.includes('simulate')||s.includes('coach')) return "Role-play with realistic HCP personas, empathy scoring, and instant compliance checks.";
-  if(s.includes('persona')||s.includes('hcp')) return "Personas include Internal Medicine MDs, NPs, PAs, Oncologists, and more.";
-  if(s.includes('ei')||s.includes('emotional intelligence')) return "EI Mode tracks Empathy Index, tone alignment, and Readiness Velocity during simulations.";
-  if(s.includes('integration')||s.includes('salesforce')||s.includes('veeva')) return "APIs and export packs for Salesforce, Veeva, and major LMS platforms.";
-  if(s.includes('demo')||s.includes('contact')) return "Scroll to the Request Demo form at the bottom and share your goals.";
-  return "I can help with simulations, personas, EI coaching, pricing, or security.";
-}
-
-aloraForm.addEventListener('submit',e=>{
-  e.preventDefault();
-  const q=aloraInput.value.trim(); if(!q) return;
-  aloraInput.value=''; user(q); typing(true);
-  const a=respond(q);
-  setTimeout(()=>{ typing(false); bot(a); }, 240);
-});
-
-/* ---------- Card details ---------- */
+/* ---------- Card modal copy ---------- */
 const CARD_COPY = {
-  "HIV PrEP": `
-    <div class='card'>
-      <ul>
-        <li><strong>Objection:</strong> Stigma and patient adherence concerns.</li>
-        <li><strong>Challenge:</strong> Framing prevention urgency with empathy.</li>
-        <li><strong>Goal:</strong> Build trust and normalize discussion of prevention options.</li>
-      </ul>
-    </div>`,
-  "Vaccines": `
-    <div class='card'>
-      <ul>
-        <li><strong>Objection:</strong> Hesitancy rooted in misinformation or side-effect fears.</li>
-        <li><strong>Challenge:</strong> Translating population data into relatable patient outcomes.</li>
-        <li><strong>Goal:</strong> Reinforce confidence in safety, efficacy, and community protection.</li>
-      </ul>
-    </div>`,
-  "Hepatitis B": `
-    <div class='card'>
-      <ul>
-        <li><strong>Objection:</strong> Limited perceived need for adult vaccination.</li>
-        <li><strong>Challenge:</strong> Addressing misconceptions around risk and reactivation.</li>
-        <li><strong>Goal:</strong> Promote screening and long-term protection messaging.</li>
-      </ul>
-    </div>`,
-  "Oncology": `
-    <div class='card'>
-      <ul>
-        <li><strong>Challenge:</strong> Explaining complex clinical data with compassion.</li>
-        <li><strong>Objection:</strong> Cost, access, and value justification with payers.</li>
-        <li><strong>Goal:</strong> Empower HCPs to discuss outcomes, QoL, and biomarker relevance.</li>
-      </ul>
-    </div>`,
-  "Cardiology": `
-    <div class='card'>
-      <ul>
-        <li><strong>Objection:</strong> Skepticism about incremental benefit over generics.</li>
-        <li><strong>Challenge:</strong> Clarifying endpoints and real-world outcomes.</li>
-        <li><strong>Goal:</strong> Strengthen guideline alignment and adherence messaging.</li>
-      </ul>
-    </div>`,
-  "Pulmonology": `
-    <div class='card'>
-      <ul>
-        <li><strong>Challenge:</strong> Differentiating mechanism of action within crowded classes.</li>
-        <li><strong>Objection:</strong> Concerns over device complexity or adherence.</li>
-        <li><strong>Goal:</strong> Simplify technique training and highlight patient support resources.</li>
-      </ul>
-    </div>`,
-  "Internal Medicine": `
-    <div class='card'>
-      <ul>
-        <li><strong>Challenge:</strong> Managing broad chronic disease spectrum under time constraints.</li>
-        <li><strong>Objection:</strong> Skepticism toward novel therapies without long-term data.</li>
-        <li><strong>Goal:</strong> Present concise, outcomes-driven value aligned with guidelines.</li>
-      </ul>
-    </div>`,
-  "Nurse Practitioner": `
-    <div class='card'>
-      <ul>
-        <li><strong>Challenge:</strong> Heavy workload and need for clear patient education tools.</li>
-        <li><strong>Objection:</strong> Cost or coverage limitations impacting adherence.</li>
-        <li><strong>Goal:</strong> Provide simplified dosing and patient-ready resources.</li>
-      </ul>
-    </div>`,
-  "Physician Assistant": `
-    <div class='card'>
-      <ul>
-        <li><strong>Challenge:</strong> Balancing clinical autonomy with supervising-physician protocols.</li>
-        <li><strong>Objection:</strong> Administrative burden around prior authorization.</li>
-        <li><strong>Goal:</strong> Supply efficient talking points and coverage documentation.</li>
-      </ul>
-    </div>`,
-  "ID Specialist": `
-    <div class='card'>
-      <ul>
-        <li><strong>Challenge:</strong> Translating evolving data into real-world practice.</li>
-        <li><strong>Objection:</strong> Resistance or DDI concerns limiting prescribing comfort.</li>
-        <li><strong>Goal:</strong> Provide concise evidence and patient-case comparisons.</li>
-      </ul>
-    </div>`,
-  "Oncologist": `
-    <div class='card'>
-      <ul>
-        <li><strong>Challenge:</strong> Staying current with biomarker and trial landscape.</li>
-        <li><strong>Objection:</strong> Cost, QoL trade-offs, and insurance barriers.</li>
-        <li><strong>Goal:</strong> Position therapy value with empathy for patient impact.</li>
-      </ul>
-    </div>`,
-  "Pulmonologist": `
-    <div class='card'>
-      <ul>
-        <li><strong>Challenge:</strong> Coordinating multi-therapy regimens and adherence.</li>
-        <li><strong>Objection:</strong> Device complexity and inhaler confusion among patients.</li>
-        <li><strong>Goal:</strong> Reinforce education on correct use and symptom tracking.</li>
-      </ul>
-    </div>`,
-  "Cardiologist": `
-    <div class='card'>
-      <ul>
-        <li><strong>Objection:</strong> Limited differentiation from established standards of care.</li>
-        <li><strong>Challenge:</strong> Communicating trial design and endpoint nuance quickly.</li>
-        <li><strong>Goal:</strong> Emphasize outcome improvements and workflow simplicity.</li>
-      </ul>
-    </div>`,
-  "Empathy Index": `
-    <div class='card'>
-      <ul>
-        <li><strong>Purpose:</strong> Measures emotional attunement and rapport during HCP interactions.</li>
-        <li><strong>Goal:</strong> Help reps adjust tone and phrasing to strengthen trust.</li>
-      </ul>
-    </div>`,
-  "Accuracy Index": `
-    <div class='card'>
-      <ul>
-        <li><strong>Purpose:</strong> Evaluates factual precision and regulatory alignment.</li>
-        <li><strong>Goal:</strong> Reinforce consistent, compliant scientific messaging.</li>
-      </ul>
-    </div>`,
-  "Confidence Delta": `
-    <div class='card'>
-      <ul>
-        <li><strong>Purpose:</strong> Compares self-perceived versus demonstrated skill growth.</li>
-        <li><strong>Goal:</strong> Visualize mindset improvement across coaching sessions.</li>
-      </ul>
-    </div>`,
-  "Compliance Guard": `
-    <div class='card'>
-      <ul>
-        <li><strong>Purpose:</strong> Detects off-label or risky phrasing in simulations.</li>
-        <li><strong>Goal:</strong> Maintain fair balance and protect brand integrity.</li>
-      </ul>
-    </div>`,
-  "Readiness Velocity": `
-    <div class='card'>
-      <ul>
-        <li><strong>Purpose:</strong> Tracks ramp-up speed and proficiency over time.</li>
-        <li><strong>Goal:</strong> Benchmark progress by rep, team, or territory.</li>
-      </ul>
-    </div>`
+  "HIV PrEP":"<div class='card'><ul><li><strong>Objection:</strong> Stigma and patient adherence concerns.</li><li><strong>Challenge:</strong> Framing prevention urgency with empathy.</li><li><strong>Goal:</strong> Build trust and normalize discussion of prevention options.</li></ul></div>",
+  "Vaccines":"<div class='card'><ul><li><strong>Objection:</strong> Hesitancy rooted in misinformation or side-effect fears.</li><li><strong>Challenge:</strong> Translate population data into relatable outcomes.</li><li><strong>Goal:</strong> Reinforce confidence in safety, efficacy, and protection.</li></ul></div>",
+  "Hepatitis B":"<div class='card'><ul><li><strong>Objection:</strong> Limited perceived need for adult vaccination.</li><li><strong>Challenge:</strong> Address misconceptions around risk and reactivation.</li><li><strong>Goal:</strong> Promote screening and long-term protection messaging.</li></ul></div>",
+  "Oncology":"<div class='card'><ul><li><strong>Challenge:</strong> Explaining complex clinical data with compassion.</li><li><strong>Objection:</strong> Cost, access, and value justification.</li><li><strong>Goal:</strong> Discuss outcomes, QoL, and biomarker relevance.</li></ul></div>",
+  "Cardiology":"<div class='card'><ul><li><strong>Objection:</strong> Skepticism about incremental benefit over generics.</li><li><strong>Challenge:</strong> Clarifying endpoints and real-world outcomes.</li><li><strong>Goal:</strong> Guideline alignment and adherence messaging.</li></ul></div>",
+  "Pulmonology":"<div class='card'><ul><li><strong>Challenge:</strong> Differentiating MoA in crowded classes.</li><li><strong>Objection:</strong> Device complexity or adherence.</li><li><strong>Goal:</strong> Technique training and support resources.</li></ul></div>"
 };
-
 document.querySelectorAll('[data-card]').forEach(el=>{
   el.addEventListener('click',()=>{
     const title=el.getAttribute('data-card');
@@ -632,6 +365,31 @@ document.querySelectorAll('[data-card]').forEach(el=>{
     document.getElementById('cardBody').innerHTML=CARD_COPY[title]||'<p>No details.</p>';
     openModal('#cardModal');
   });
+});
+
+/* ---------- Alora mini agent ---------- */
+const alora=document.getElementById('alora');
+const aloraFab=document.getElementById('aloraFab');
+const aloraForm=document.getElementById('aloraForm');
+const aloraInput=document.getElementById('aloraInput');
+const aloraBody=document.getElementById('aloraBody');
+document.getElementById('aloraClose').addEventListener('click',()=>alora.classList.remove('open'));
+aloraFab.addEventListener('click',()=>alora.classList.toggle('open'));
+function typing(on){const t=document.getElementById('aloraTyping')||document.createElement('div');t.id='aloraTyping';t.className='alora-typing';t.textContent='Alora is typing…';if(on){aloraBody.appendChild(t)}else{t.remove()}}
+function bot(t){const d=document.createElement('div');d.className='alora-msg bot';d.textContent=t;aloraBody.appendChild(d);aloraBody.scrollTop=aloraBody.scrollHeight}
+function user(t){const d=document.createElement('div');d.className='alora-msg user';d.textContent=t;aloraBody.appendChild(d);aloraBody.scrollTop=aloraBody.scrollHeight}
+function respond(q){
+  const s=q.toLowerCase();
+  if(/^(hi|hello|hey)\b/.test(s)) return "Hey there 👋, I’m Alora. Ask me about modules, security, simulations, personas, or EI coaching.";
+  if(/\bprice|pricing|cost\b/.test(s)) return "Pricing scales by team size and modules. Use Request a Demo to get a quote.";
+  if(/\bsecurity|privacy|hipaa|compliance\b/.test(s)) return "HIPAA safeguards with PHI off by default. When enabled, we operate under BAA.";
+  if(/\bsimulate|coach|practice\b/.test(s)) return "Role-play with dynamic HCP personas and get instant empathy and compliance feedback.";
+  return "I can help with platform, personas, simulations, analytics, integrations, and governance.";
+}
+aloraForm.addEventListener('submit',e=>{
+  e.preventDefault();
+  const q=aloraInput.value.trim(); if(!q) return;
+  aloraInput.value=''; user(q); typing(true); setTimeout(()=>{ typing(false); bot(respond(q)); }, 260);
 });
 
 /* Start at top on load/back-forward cache */
