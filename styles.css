@@ -1,29 +1,20 @@
 /*
- * ReflectivAI Site Stylesheet (drop-in)
- * Clean slabs, navy bands, wide coach toolbar, aligned chips, CTA/CTN styles.
+ * ReflectivAI Site Stylesheet (clean slabs)
+ * Rounded sections, soft borders, navy dividers, wide selects.
  */
 
-/* ================= Tokens ================= */
 :root{
-  --navy:#1e2a3a;
-  --navy-2:#0b1f30;
+  --navy:#0f2747;
+  --navy-2:#0b3954;
   --ink:#0b1323;
   --slate:#596a82;
   --bg:#ffffff;
-  --soft:#f6f8fb;
-  --card:#fbfdff;
-  --border:#e6ecf3;
-  --shadow:0 8px 24px rgba(15,24,36,.10);
-
-  /* CTN chips */
-  --chip-bg:#6b7280;         /* medium gray */
-  --chip-text:#ffffff;
-  --chip-border:#ffffff;
-
-  /* Hero CTAs */
-  --cta-bg:#0c2740;
-  --cta-text:#ffffff;
-  --cta-border:#ffffff;
+  --soft:#f6f9fe;
+  --card:#f3f6fb;
+  --border:#e2e9f3;
+  --pill:#727b87;
+  --shadow:0 16px 40px rgba(15,24,36,.12);
+  --outline:#ffffff;
 }
 
 html{scroll-behavior:smooth}
@@ -35,210 +26,129 @@ body{
   line-height:1.55;
 }
 
-/* ================= Header / Nav ================= */
+/* ---------- Header / Nav ---------- */
 .site-header{position:sticky;top:0;z-index:1000;background:var(--navy);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.12)}
-.nav{max-width:1120px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:10px clamp(16px,4vw,28px);position:relative}
-.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
-.brand img{height:36px;width:auto;display:block}
-.brand span{font-weight:800;font-size:20px;color:#fff}
+.nav{max-width:1160px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;position:relative}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;font-weight:800;font-size:20px}
+.brand img{width:28px;height:28px;display:block;border-radius:4px;background:#fff}
 .nav-links{display:flex;gap:16px;align-items:center}
-.nav-links a{color:#fff;text-decoration:none;font-weight:600;padding:8px 6px;border-radius:8px;opacity:.95}
-.nav-links a:hover{opacity:1;background:rgba(255,255,255,.08)}
-.hamburger{display:none;flex-direction:column;gap:5px;width:40px;height:40px;background:transparent;border:0;cursor:pointer;position:relative}
-.hamburger span{position:absolute;left:10px;right:10px;height:2px;background:#fff;border-radius:2px;transition:.2s}
-.hamburger span:nth-child(1){top:12px}
-.hamburger span:nth-child(2){top:19px}
-.hamburger span:nth-child(3){top:26px}
-.hamburger.active span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.nav-links a{color:#fff;text-decoration:none;font-weight:600;padding:8px 6px;border-radius:8px}
+.nav-links a:hover{background:rgba(255,255,255,.08)}
+.hamburger{display:none;flex-direction:column;gap:5px;width:34px;height:26px;background:transparent;border:0;cursor:pointer}
+.hamburger span{display:block;height:3px;background:#fff;border-radius:2px;transition:.2s}
+.hamburger.active span:nth-child(1){transform:translateY(9px) rotate(45deg)}
 .hamburger.active span:nth-child(2){opacity:0}
-.hamburger.active span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.hamburger.active span:nth-child(3){transform:translateY(-9px) rotate(-45deg)}
 @media (max-width:900px){
   .hamburger{display:flex}
-  .nav-links{display:none;position:absolute;left:0;right:0;top:60px;background:var(--navy);flex-direction:column;padding:12px clamp(16px,4vw,28px);border-radius:12px;box-shadow:var(--shadow)}
+  .nav-links{display:none;position:absolute;left:12px;right:12px;top:100%;background:var(--navy);flex-direction:column;padding:10px;border-radius:12px;box-shadow:var(--shadow)}
   .nav-links.active{display:flex}
   .nav-links a{width:100%}
 }
 
-/* ================= Buttons ================= */
-.btn{display:inline-block;border-radius:12px;padding:13px 18px;font-weight:800;text-decoration:none;border:2px solid var(--cta-border);transition:transform .06s ease,filter .15s ease}
-.btn.primary{background:var(--cta-bg);color:var(--cta-text)}
-.btn.secondary{background:transparent;color:var(--cta-text)}
-.btn:hover{filter:brightness(.98)}
-.btn:active{transform:scale(.98)}
-
-/* Hero CTA size bump ~10% + white line border */
-.hero .btn{padding:15px 20px;font-size:1.06rem;border:2px solid var(--cta-border)}
-
-/* ================= Hero ================= */
-.hero{
-  background:radial-gradient(1200px 600px at 70% -10%,#1b6b88 0%,#0e2b40 45%,#0b1f30 70%,#0a1a27 100%);
-  color:#eaf2f7; padding:72px 0 56px
-}
-.hero-wrap{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:1.2fr .8fr;gap:28px;align-items:center;padding:0 clamp(16px,4vw,28px)}
-.hero h1{margin:0 0 14px;font-size:clamp(28px,4.8vw,44px);line-height:1.1;font-weight:800;color:#fff}
-.hero p{margin:0 0 22px;font-size:clamp(16px,2.5vw,20px);max-width:720px;color:#e5eff6}
-.cta{display:flex;gap:12px;flex-wrap:wrap}
-.hero-img{border-radius:16px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.35);outline:1px solid rgba(255,255,255,.12)}
-.hero-img img{width:100%;height:320px;object-fit:cover;display:block}
-@media (max-width:900px){
-  .hero{padding:56px 0 40px}
-  .hero-wrap{grid-template-columns:1fr}
-  .hero-img img{height:220px}
-}
-
-/* ================= Why strip ================= */
-.why{background:#0c2740;color:#fff}
-.why-inner{max-width:1120px;margin:0 auto;padding:36px clamp(16px,4vw,28px)}
-.why-title{margin:0 0 8px;font-weight:700;font-size:clamp(20px,3.2vw,28px)}
-.why-text{margin:0;color:#eaf2f7}
-
-/* ================= Sections ================= */
-.section{padding:56px clamp(16px,4vw,28px)}
+/* ---------- Slabs + band ---------- */
+.slab{background:#fff;border:1px solid var(--border);border-radius:22px;margin:18px auto;box-shadow:0 10px 40px rgba(15,24,36,.06);max-width:1160px}
+.band{background:linear-gradient(0deg,#f7fbff,#fff)}
+.divider-top{box-shadow:inset 0 8px 0 rgba(10,23,40,.18), 0 10px 40px rgba(15,24,36,.06)}
+.section{padding:28px 16px}
 .section-inner{max-width:1120px;margin:0 auto}
+.p-lg{padding:22px}
+
+/* ---------- Hero ---------- */
+.hero{background:radial-gradient(1200px 600px at 70% -10%,#1b6b88 0%,#0e2b40 45%,#0b1f30 70%,#0a1a27 100%);color:#eaf2f7}
+.hero-wrap{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:1.2fr .8fr;gap:28px;align-items:center;padding:56px 20px}
+.hero h1{margin:0 0 14px;font-weight:800;line-height:1.1;color:#fff;font-size:clamp(28px,4.8vw,44px)}
+.hero p{margin:0 0 22px;font-size:clamp(16px,2.5vw,20px);color:#e5eff6}
+.cta{display:flex;gap:12px;flex-wrap:wrap}
+.btn{display:inline-block;border-radius:14px;padding:14px 22px;font-weight:900;text-decoration:none;transition:transform .05s ease}
+.btn:active{transform:translateY(1px)}
+.btn-outline{border:2px solid var(--outline)}
+.btn.primary{background:#0c2740;color:#fff}
+.btn.secondary{background:transparent;color:#fff}
+.hero-img img{width:100%;height:320px;border-radius:16px;object-fit:cover;box-shadow:0 12px 30px rgba(0,0,0,.35);outline:1px solid rgba(255,255,255,.12)}
+@media (max-width:900px){.hero-wrap{grid-template-columns:1fr}.hero-img img{height:220px}}
+
+/* ---------- Why strip ---------- */
+.why{background:var(--navy);color:#fff;border:none}
+.why-inner{max-width:1120px;margin:0 auto;padding:26px 20px;display:grid;grid-template-columns:auto 1fr;gap:16px 22px;align-items:center}
+.why-title{font-family:"Pacifico",cursive;font-size:26px;transform:rotate(-3deg);margin:0}
+.why-text{margin:0;font-weight:600}
+
+/* ---------- Headings ---------- */
 h2{font-size:clamp(26px,3.6vw,40px);margin:0 0 18px;font-weight:900;letter-spacing:-.01em;color:var(--ink)}
 .muted{color:var(--slate)}
 
-/* “Slab” section option: rounded card with subtle border and off-white bg */
-.section.slabbed .section-inner{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:18px;
-  box-shadow:var(--shadow);
-  padding:26px;
-}
-
-/* Navy “band” separator block */
-.band{padding:48px 0}
-.band--navy{background:#0e2133}
-.band--navy .section-inner{max-width:1120px;margin:0 auto;color:#eaf2f7}
-
-/* ================= Cards / grids ================= */
-.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+/* ---------- Cards / grids ---------- */
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 @media (max-width:960px){.grid-3{grid-template-columns:1fr}}
-.card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
 .card h3{margin:.25rem 0 .5rem;font-size:20px}
 .card p{margin:0}
+.feature-list{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.feature-list.two-col{grid-template-columns:repeat(2,1fr)}
+@media (max-width:900px){.feature-list.two-col{grid-template-columns:1fr}}
 
-/* modules layout */
-.platform .grid-3 .card{display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:center}
-.platform .grid-3 .card h3{margin:0}
-@media (max-width:720px){.platform .grid-3 .card{grid-template-columns:1fr}}
+/* ---------- Split Lists ---------- */
+.split{display:grid;grid-template-columns:1fr 12px 1fr;gap:18px;align-items:start}
+.split-balanced .col{display:flex;flex-direction:column}
+.split .divider{background:#1c2738;opacity:.12;border-radius:2px}
+.chips{display:grid;gap:10px}
+.tag{display:inline-block;border:1px solid #fff;padding:10px 14px;border-radius:999px;font-weight:800;text-decoration:none;cursor:pointer}
+.tag:hover{filter:brightness(.98)}
+/* CTN buttons: medium grey with white text + white border */
+.ctn{background:var(--pill);color:#fff;border:2px solid #fff}
 
-/* ================= Split Lists alignment fix ================= */
-.split{
-  display:grid;
-  grid-template-columns:1fr 1px 1fr;   /* crisp divider */
-  gap:24px;
-  align-items:start;
-}
-.split .divider{background:var(--border);border-radius:1px;align-self:stretch}
-.split .col{min-width:0}
-.split .col h2{margin-bottom:12px}
+/* ---------- Metrics pills ---------- */
+.pill{display:inline-block;background:#eef3fa;border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-weight:700;margin:2px 6px 0 0}
 
-/* CTN chips — medium gray bg, white text, white border */
-.chips{display:flex;flex-wrap:wrap;gap:10px}
-.tag{
-  display:inline-block;background:var(--chip-bg);color:var(--chip-text);
-  border:1px solid var(--chip-border);padding:10px 14px;border-radius:999px;
-  font-weight:700;text-decoration:none;cursor:pointer;white-space:nowrap;
-}
-.tag:hover{filter:brightness(.95)}
+/* ---------- Analytics grid ---------- */
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
 
-/* ================= Feature list ================= */
-.feature-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-@media (max-width:900px){.feature-list{grid-template-columns:1fr}}
-.feature-list li{list-style:none}
+/* ---------- Band layouts ---------- */
+.band-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;align-items:center}
+.band-grid.rev{grid-template-columns:.9fr 1.1fr}
+.band-art img{width:100%;height:auto;border-radius:16px;border:1px solid var(--border);box-shadow:var(--shadow)}
+@media (max-width:900px){.band-grid,.band-grid.rev{grid-template-columns:1fr}}
 
-/* ================= Metrics pills reuse CTN ================= */
-.metrics-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
-.metrics-grid .tag{background:var(--chip-bg);color:var(--chip-text);border:1px solid var(--chip-border)}
-
-/* ================= Modal ================= */
-.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(6,12,20,.45);z-index:1200}
+/* ---------- Modal ---------- */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(3,14,24,.55);z-index:1200}
 .modal.open{display:flex}
-.modal-box{background:#fff;border-radius:16px;box-shadow:var(--shadow);max-width:min(980px,92vw);width:100%;max-height:88vh;overflow:auto;border:1px solid var(--border)}
-.modal-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);background:#f9fbff;border-radius:16px 16px 0 0}
+.modal-box{background:#fff;border-radius:18px;box-shadow:var(--shadow);max-width:980px;width:92vw;max-height:88vh;overflow:auto}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);background:#f6f9fe;border-radius:18px 18px 0 0}
 .modal-title{font-weight:900}
-.modal-close{background:#1e2a3a;color:#fff;border:0;border-radius:10px;padding:6px 10px;cursor:pointer}
+.modal-close{background:#e7edf6;border:0;border-radius:10px;padding:6px 10px;cursor:pointer}
 #coachModal .modal-box{max-width:1100px;width:96vw}
 #coachBody{padding:0}
 
-/* ================= Coach toolbar — force WIDE selects ================= */
-/* High-specificity rules with !important to beat legacy widget.css */
-#coachModal .chat-toolbar,
-#coachModal .controls-grid{
-  display:grid !important;
-  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
-  gap:12px !important;
-  align-items:end;
-}
-#coachModal .ctrl{display:flex;flex-direction:column;gap:6px;min-width:0;width:100% !important}
-#coachModal .ctrl label{font-size:12px;font-weight:600;opacity:.9}
-#coachModal .ctrl select{
-  display:block !important;
-  width:100% !important;
-  min-width:0 !important;
-  height:40px !important;
-  padding:6px 10px !important;
-  font-size:14px !important;
-  border:1px solid #b9c5d6 !important;
-  border-radius:10px !important;
-  background:#fff !important;
-  color:#0b1323 !important;
-  box-sizing:border-box !important;
-}
+/* ---------- Contact form ---------- */
+.contact-form{display:grid;gap:12px}
+.contact-form .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.contact-form label{display:block;font-size:13px;font-weight:700;color:#223048;margin:0 0 6px}
+.contact-form input,.contact-form textarea{width:100%;border:1px solid #cfd8e3;border-radius:10px;padding:12px;font-size:15px;background:#fff}
+.contact-form textarea{min-height:120px;resize:vertical}
+@media (max-width:900px){.contact-form .form-row{grid-template-columns:1fr}}
 
-/* In-widget fallback (if rendered outside modal) */
-#reflectiv-widget .chat-toolbar{padding:16px;background:#0c2740;color:#fff}
-#reflectiv-widget .controls-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:end}
-#reflectiv-widget .ctrl{display:flex;flex-direction:column;gap:6px;min-width:0}
-#reflectiv-widget .ctrl label{font-size:12px;font-weight:600;opacity:.9}
-#reflectiv-widget .ctrl select{display:block;width:100%;min-width:0;height:40px;padding:6px 10px;font-size:14px;border:1px solid #b9c5d6;border-radius:10px;background:#fff;color:#0b1323;box-sizing:border-box}
-
-@media (max-width:900px){
-  #coachModal .controls-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
-  #reflectiv-widget .controls-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-@media (max-width:540px){
-  #coachModal .controls-grid{grid-template-columns:1fr !important}
-  #reflectiv-widget .controls-grid{grid-template-columns:1fr}
-}
-
-/* ================= Chat area ================= */
-#reflectiv-widget .chat-messages{min-height:260px;height:320px;max-height:50vh;overflow:auto;padding:12px 14px;background:#f7f9fc}
-#reflectiv-widget .message{margin:8px 0;display:flex}
-#reflectiv-widget .message.user{justify-content:flex-end}
-#reflectiv-widget .message.assistant{justify-content:flex-start}
-#reflectiv-widget .message .content{max-width:85%;line-height:1.45;font-size:14px;padding:10px 12px;border-radius:14px;border:1px solid #d6dbe3;color:#0f1522;background:#e9edf3}
-#reflectiv-widget .message.user .content{background:#e0e0e0;color:#000}
-#reflectiv-widget .chat-input{display:flex;gap:8px;padding:12px 14px;border-top:1px solid #e1e6ef;background:#fff}
-#reflectiv-widget .chat-input textarea{flex:1;resize:none;min-height:44px;max-height:120px;padding:10px 12px;border:1px solid #cfd6df;border-radius:10px;outline:none}
-#reflectiv-widget .chat-input .btn{min-width:86px;border:0;border-radius:999px;background:#1e2a3a;color:#fff;font-weight:600}
-#reflectiv-widget .coach-section{margin:0 14px 14px;padding:12px 14px;border:1px solid #e1e6ef;border-radius:12px;background:#fff}
-#reflectiv-widget .coach-subs .pill{display:inline-block;padding:2px 8px;margin-right:6px;font-size:12px;background:#f1f3f7;border:1px solid #d6dbe3;border-radius:999px}
-
-/* ================= Alora FAB + panel (right) ================= */
-#aloraFab{
-  position:fixed;right:22px;bottom:22px;z-index:9999;width:64px;height:64px;
-  border:none;border-radius:50%;background:#0c2740;color:#fff;
-  display:grid;place-items:center;box-shadow:0 6px 18px rgba(0,0,0,.28);cursor:pointer
-}
+/* ---------- Alora bubble ---------- */
+#aloraFab{position:fixed;right:22px;bottom:22px;z-index:9999;width:64px;height:64px;border:none;border-radius:50%;background:#0c2740;color:#fff;display:grid;place-items:center;box-shadow:0 6px 18px rgba(0,0,0,.28);cursor:pointer}
 #aloraFab svg{width:30px;height:30px;display:block}
-.alora{position:fixed;right:22px;bottom:98px;width:360px;max-width:92vw;background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:0 16px 36px rgba(0,0,0,.22);transform:translateY(18px);opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;display:flex;flex-direction:column;overflow:hidden;z-index:9999}
+.alora{position:fixed;right:22px;bottom:98px;width:360px;max-width:92vw;background:#fff;border:1px solid #e6ecf3;border-radius:16px;box-shadow:0 16px 36px rgba(0,0,0,.22);transform:translateY(18px);opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;display:flex;flex-direction:column;overflow:hidden;z-index:9999}
 .alora.open{opacity:1;transform:translateY(0);pointer-events:auto}
 .alora-head{display:flex;align-items:center;justify-content:space-between;background:#0c2740;color:#fff;padding:12px 14px}
 .alora-title{font-weight:700}
 .alora-close{appearance:none;border:none;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:4px 6px;border-radius:8px}
-.alora-close:focus{outline:2px solid #7ed9ca;outline-offset:2px}
 .alora-body{padding:12px;max-height:46vh;overflow:auto;background:#fbfdff}
 .alora-msg{padding:10px 12px;border-radius:12px;margin:8px 0;max-width:82%}
 .alora-msg.bot{background:#eef5ff;color:#0b1323}
 .alora-msg.user{background:#1e2a3a;color:#fff;margin-left:auto}
 .alora-typing{font-size:12px;color:#596a82;margin:6px 2px}
-.alora-input{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border);background:#fff}
+.alora-input{display:flex;gap:8px;padding:12px;border-top:1px solid #e6ecf3;background:#fff}
 .alora-input input{flex:1;border:1px solid #cfd8e3;border-radius:10px;padding:10px 12px;font-size:15px}
 .alora-input .btn.primary{background:#0c2740;color:#fff;border:none;border-radius:10px;padding:10px 12px}
 
-/* ================= Utilities ================= */
-.hidden{display:none !important}
-*:focus-visible{outline:2px solid #7ed9ca;outline-offset:2px}
+/* ---------- Coach modal: widen selects ---------- */
+#reflectiv-widget .chat-toolbar{padding:16px;background:#0c2740;color:#fff}
+#reflectiv-widget .controls-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+#reflectiv-widget .ctrl select{width:100%;height:40px;padding:6px 10px;font-size:16px;border:1px solid #b9c5d6;border-radius:10px;background:#fff;color:#0b1323}
+@media (max-width:900px){
+  #reflectiv-widget .controls-grid{grid-template-columns:1fr}
+}
