@@ -1,545 +1,853 @@
-/*
- * ReflectivAI Site Stylesheet (drop-in)
- * Clean layout, modern cards, modal coach, Alora bubble.
+
+/* assets/chat/widget.js
+ * ReflectivAI Chat/Coach — drop-in (coach-v2, deterministic scoring v3)
+ * Modes: emotional-assessment | product-knowledge | sales-simulation
+ *
+ * EI mode adds Persona + EI Feature dropdowns and context-aware feedback.
  */
 
-:root{
-  --navy:#0f2747;
-  --navy-2:#0b3954;
-  --teal:#20bfa9;
-  --ink:#1e2a3a;
-  --slate:#596a82;
-  --bg:#ffffff;
-  --soft:#eef4fa;
-  --card:#ecf3fb;
-  --border:#d9e3ef;
-  --shadow:0 8px 24px rgba(15,39,71,.12);
-}
-
-html{scroll-behavior:smooth}
-body{
-  margin:0;
-  font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  color:var(--ink);
-  background:var(--bg);
-  line-height:1.55;
-}
-
-/* ---------- Header / Nav ---------- */
-.site-header{position:sticky;top:0;z-index:1000;background:var(--navy);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.12)}
-.nav{max-width:1220px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;position:relative}
-.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;font-weight:800;font-size:20px}
-.brand img{width:28px;height:28px;display:block}
-.nav-links{display:flex;gap:16px;align-items:center}
-.nav-links a{color:#fff;text-decoration:none;font-weight:600;padding:8px 6px;border-radius:8px}
-.nav-links a:hover{background:rgba(255,255,255,.08)}
-.hamburger{display:none;flex-direction:column;gap:5px;width:34px;height:26px;background:transparent;border:0;cursor:pointer}
-.hamburger span{display:block;height:3px;background:#fff;border-radius:2px;transition:.2s}
-.hamburger.active span:nth-child(1){transform:translateY(9px) rotate(45deg)}
-.hamburger.active span:nth-child(2){opacity:0}
-.hamburger.active span:nth-child(3){transform:translateY(-9px) rotate(-45deg)}
-@media (max-width:900px){
-  .hamburger{display:flex}
-  .nav-links{display:none;position:absolute;left:12px;right:12px;top:100%;background:var(--navy);flex-direction:column;padding:10px;border-radius:12px;box-shadow:var(--shadow)}
-  .nav-links.active{display:flex}
-  .nav-links a{width:100%}
-}
-
-/* ---------- Hero ---------- */
-.hero{background:linear-gradient(140deg,#001d3d 0%, var(--navy-2) 42%, #1fa3a8 100%);color:#fff}
-.hero-wrap{max-width:1160px;margin:0 auto;display:grid;grid-template-columns:1.1fr .9fr;gap:26px;align-items:center;padding:78px 16px}
-.hero h1{margin:0 0 12px;font-size:clamp(32px,5vw,46px);line-height:1.06;letter-spacing:-.02em;font-weight:800}
-.hero p{margin:0 0 22px;font-size:clamp(16px,2.4vw,18px);max-width:720px;font-weight:600}
-.cta{display:flex;gap:12px;flex-wrap:wrap}
-.btn{display:inline-block;border-radius:12px;padding:12px 18px;font-weight:800;text-decoration:none}
-.btn.primary{background:#0f2747;color:#fff}
-.btn.primary:hover{filter:brightness(.95)}
-.btn.secondary{border:2px solid #0f2747;color:#fff}
-.btn.secondary:hover{background:rgba(255,255,255,.12)}
-.hero-img{border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
-.hero-img img{width:100%;height:auto;display:block}
-
-/* ---------- Why it matters strip ---------- */
-.why{background:var(--navy);color:#fff}
-.why-inner{max-width:1160px;margin:0 auto;padding:26px 16px;display:grid;grid-template-columns:auto 1fr;gap:16px 22px;align-items:center}
-.why-title{font-family:"Pacifico",cursive;font-size:26px;transform:rotate(-3deg);margin:0}
-.why-text{margin:0;font-weight:600}
-
-/* ---------- Sections ---------- */
-.section{padding:56px 16px}
-.section-inner{max-width:1160px;margin:0 auto}
-h2{font-size:clamp(26px,3.6vw,40px);margin:0 0 18px;font-weight:900;letter-spacing:-.01em;color:var(--ink)}
-.muted{color:var(--slate)}
-
-/* ---------- Cards / grids ---------- */
-.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-@media (max-width:960px){.grid-3{grid-template-columns:1fr}}
-.card{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:14px;
-  padding:18px;
-  box-shadow:0 1px 2px rgba(0,0,0,.04);
-}
-.card h3{margin:.25rem 0 .5rem;font-size:20px}
-.card p{margin:0}
-
-/* Platform modules = denser rows */
-.platform .grid-3 .card{display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:center}
-.platform .grid-3 .card h3{margin:0}
-@media (max-width:720px){.platform .grid-3 .card{grid-template-columns:1fr}}
-
-/* ---------- Split Lists (Therapeutic Area / Personas) ---------- */
-.split{
-  display:grid;
-  grid-template-columns:1fr 12px 1fr;
-  gap:18px;
-  align-items:start;
-}
-.split .divider{background:#1c2738;opacity:.9;border-radius:2px}
-.split .col h2{margin-bottom:10px}
-.chips{display:grid;gap:10px}
-.tag{
-  display:block;background:var(--card);border:1px solid var(--border);
-  padding:12px 14px;border-radius:12px;font-weight:700;color:var(--ink);
-  text-decoration:none;cursor:pointer;
-}
-.tag:hover{filter:brightness(.98)}
-
-/* ---------- Feature list (no bullets) ---------- */
-.feature-list{list-style:none;margin:0;padding:0;display:grid;gap:14px}
-.feature-list li{list-style:none}
-.feature-list li::marker{content:""}
-
-/* ---------- Analytics metric links ---------- */
-.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
-
-/* ---------- Modal (cards + coach) ---------- */
-.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(3,14,24,.55);z-index:1200}
-.modal.open{display:flex}
-.modal-box{background:#fff;border-radius:18px;box-shadow:var(--shadow);max-width:980px;width:92vw;max-height:88vh;overflow:auto}
-.modal-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);background:#f6f9fe;border-radius:18px 18px 0 0}
-.modal-title{font-weight:900}
-.modal-close{background:#e7edf6;border:0;border-radius:10px;padding:6px 10px;cursor:pointer}
-
-/* Large coach modal body sizing */
-#coachModal .modal-box{max-width:1100px;width:96vw}
-#coachBody{padding:0}
-
-/* ---------- Alora bubble ---------- */
-.alora-toggle{
-  position:fixed;left:18px;bottom:18px;width:60px;height:60px;border-radius:50%;
-  background:var(--navy);box-shadow:0 10px 24px rgba(15,39,71,.25);
-  display:grid;place-items:center;color:#fff;cursor:pointer;z-index:1100;
-}
-.alora-toggle svg{width:26px;height:26px}
-.alora{position:fixed;left:18px;bottom:90px;width:320px;max-height:60vh;background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);display:none;flex-direction:column;overflow:hidden;z-index:1100}
-.alora.open{display:flex}
-.alora-head{padding:10px 12px;background:#f6f9fe;border-bottom:1px solid var(--border);font-weight:800}
-.alora-body{padding:10px 12px;display:flex;flex-direction:column;gap:8px;overflow:auto}
-.alora-input{display:flex;gap:8px;padding:10px;border-top:1px solid var(--border)}
-.alora-input input{flex:1;border:1px solid var(--border);border-radius:10px;padding:10px}
-.alora-msg{border-radius:10px;padding:10px 12px;max-width:85%}
-.alora-msg.user{background:#eef3fa;margin-left:auto}
-.alora-msg.bot{background:#fff;border:1px solid var(--border)}
-
-
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ReflectivAI – AI Sales Enablement for Life Sciences</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20251019-1">
-<link rel="stylesheet" href="widget.css?v=9"><!-- keep original widget styles -->
-</head>
-<body>
-
-<header class="site-header">
-  <nav class="nav">
-    <a class="brand" href="#home">
-      <img src="assets/reflectiv-logo.png" alt="ReflectivAI logo">
-      <span>ReflectivAI</span>
-    </a>
-
-    <button id="navToggle" class="hamburger" aria-label="Toggle navigation" aria-expanded="false">
-      <span></span><span></span><span></span>
-    </button>
-
-    <div id="navMenu" class="nav-links">
-      <a href="#platform">Platform</a>
-      <a href="#platform-mods">Platform Modules</a>
-      <a href="#therapy">Disease States</a>
-      <a href="#personas">HCP Profiles</a>
-      <a href="#simulations">Simulations</a>
-      <a href="#analytics">Analytics</a>
-      <a href="#ethics">Ethics</a>
-      <a href="#faq">FAQ</a>
-      <a href="#contact">Contact</a>
-    </div>
-  </nav>
-</header>
-
-<!-- Hero -->
-<section id="home" class="hero">
-  <div class="hero-wrap">
-    <div>
-      <h1>Empowering Life-Sciences Teams to Connect — and Convert — with Intelligence</h1>
-      <p>ReflectivAI blends clinical accuracy, emotional intelligence, and adaptive AI coaching so every HCP conversation feels authentic, confident, and compliant.</p>
-      <div class="cta">
-        <a class="btn primary" href="#contact">Request a Demo</a>
-        <a id="openCoach" class="btn secondary" href="#simulations">Explore the Platform</a>
-      </div>
-    </div>
-    <div class="hero-img">
-      <img src="assets/hero-image.png" alt="HCP conversation with analytics overlay">
-    </div>
-  </div>
-</section>
-
-<!-- Why it matters -->
-<section class="why">
-  <div class="why-inner">
-    <h3 class="why-title">Why it matters</h3>
-    <p class="why-text">Emotional intelligence drives connection. ReflectivAI helps reps practice active listening, empathy, and tone calibration—transforming compliance into confidence and insight into influence.</p>
-  </div>
-</section>
-
-<!-- Platform Modules -->
-<section id="platform-mods" class="section platform">
-  <div class="section-inner">
-    <h2>Platform Modules</h2>
-    <div class="grid-3">
-      <article class="card"><h3>Product Knowledge</h3><p>Train on complex data and regulatory messaging with confidence and compliance built in.</p></article>
-      <article class="card"><h3>Sales Simulation</h3><p>Practice high-stakes calls in oncology, vaccines, and other therapeutic areas — anytime, anywhere.</p></article>
-      <article class="card"><h3>Relationship Intelligence</h3><p>Understand behavioral blind spots. Track empathy, tone, and conversational agility.</p></article>
-    </div>
-  </div>
-</section>
-
-<!-- Split Lists: Therapeutic Areas / Personas -->
-<section id="platform" class="section">
-  <div class="section-inner split">
-    <div class="col">
-      <h2 id="therapy">Train by Therapeutic Area</h2>
-      <div class="chips">
-        <a class="tag" data-card="HIV PrEP">HIV PrEP</a>
-        <a class="tag" data-card="Vaccines">Vaccines</a>
-        <a class="tag" data-card="Hepatitis B">Hepatitis B</a>
-        <a class="tag" data-card="Oncology">Oncology</a>
-        <a class="tag" data-card="Cardiology">Cardiology</a>
-        <a class="tag" data-card="Pulmonology">Pulmonology</a>
-      </div>
-      <p class="muted" style="margin-top:12px">Our scenario library grows continually — new therapeutic areas and objections are added with each launch.</p>
-    </div>
-
-    <div class="divider" aria-hidden="true"></div>
-
-    <div class="col">
-      <h2 id="personas">Practice with Realistic Personas</h2>
-      <div class="chips">
-        <a class="tag" data-card="Internal Medicine MD">Internal Medicine MD</a>
-        <a class="tag" data-card="Nurse Practitioner (NP)">Nurse Practitioner (NP)</a>
-        <a class="tag" data-card="Physician Assistant (PA)">Physician Assistant (PA)</a>
-        <a class="tag" data-card="Infectious Disease Specialist">Infectious Disease Specialist</a>
-        <a class="tag" data-card="Oncologist">Oncologist</a>
-        <a class="tag" data-card="Pulmonologist">Pulmonologist</a>
-        <a class="tag" data-card="Cardiologist">Cardiologist</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Simulations bullets (no left dots any more) -->
-<section id="simulations" class="section">
-  <div class="section-inner">
-    <h2>Interactive Sales Simulations</h2>
-    <ul class="feature-list">
-      <li><div class="card"><h3>AI role-play coach</h3><p>Responsive personas that adapt to your messaging, tone, and questions.</p></div></li>
-      <li><div class="card"><h3>Scenario library</h3><p>Hundreds of practice calls mapped to disease states, objections, and profiles.</p></div></li>
-      <li><div class="card"><h3>Territory scoring</h3><p>Benchmark by geography, team and rep; track certification status.</p></div></li>
-      <li><div class="card"><h3>Compliance guardrails</h3><p>Real-time checks for fair balance and regulated language.</p></div></li>
-    </ul>
-
-    <!-- The coach widget will mount into this modal when Explore is clicked -->
-  </div>
-</section>
-
-<!-- Analytics (links open cards) -->
-<section id="analytics" class="section">
-  <div class="section-inner">
-    <h2>Performance Analytics & Coaching Intelligence</h2>
-    <div class="metrics-grid">
-      <a class="tag" data-card="Empathy Index">Empathy Index</a>
-      <a class="tag" data-card="Accuracy Index">Accuracy Index</a>
-      <a class="tag" data-card="Confidence Delta">Confidence Delta</a>
-      <a class="tag" data-card="Compliance Guard">Compliance Guard</a>
-      <a class="tag" data-card="Readiness Velocity">Readiness Velocity</a>
-    </div>
-  </div>
-</section>
-
-<!-- Ethics collapsible -->
-<section id="ethics" class="section">
-  <div class="section-inner">
-    <h2>Ethics, Privacy & Governance</h2>
-    <p class="muted">ReflectivAI is built for life-sciences training. We avoid PHI by default and apply strict safeguards when customers choose to integrate real data.</p>
-
-    <details open>
-      <summary><strong>Data privacy & security</strong></summary>
-      <ul>
-        <li>PHI is off by default; training uses synthetic or de-identified data.</li>
-        <li>When a customer enables PHI, we operate under BAA, encryption in transit/at rest, role-based access, and purge on expiration.</li>
-        <li>Vendor risk management with annual reviews and right-to-audit.</li>
-      </ul>
-    </details>
-
-    <details>
-      <summary><strong>Informed consent</strong></summary>
-      <ul><li>If real patient data powers enablement, customers obtain explicit, documented consent and provide an opt-out.</li></ul>
-    </details>
-
-    <details>
-      <summary><strong>Algorithmic bias & fairness</strong></summary>
-      <ul>
-        <li>Pre-deployment bias testing and periodic re-tests.</li>
-        <li>Monitor disparate performance; publish remediation steps.</li>
-        <li>Guardrails prohibit non-clinical proxies for targeting.</li>
-      </ul>
-    </details>
-
-    <details>
-      <summary><strong>Transparency & explainability</strong></summary>
-      <ul>
-        <li>In-product recommendations include reason codes.</li>
-        <li>Model cards document data sources, limitations, cadence.</li>
-        <li>AI-generated content clearly labeled.</li>
-      </ul>
-    </details>
-
-    <details>
-      <summary><strong>Human oversight & accountability</strong></summary>
-      <ul>
-        <li>Humans curate scenarios and rubrics; escalation paths defined.</li>
-        <li>All message libraries versioned for MLR traceability.</li>
-      </ul>
-    </details>
-
-    <details>
-      <summary><strong>Doctor-patient relationship</strong></summary>
-      <ul>
-        <li>Training supports, not manipulates, HCP judgement.</li>
-        <li>Off-label promotion prohibited; risky language flagged.</li>
-      </ul>
-    </details>
-  </div>
-</section>
-
-<!-- References (collapsible list of all) -->
-<section id="refs" class="section">
-  <div class="section-inner">
-    <h2>References</h2>
-    <details>
-      <summary><strong>Show all references</strong></summary>
-      <ol>
-        <li>HIPAA Privacy Rule — HHS overview and safeguards.</li>
-        <li>NIST AI Risk Management Framework — trustworthy AI guidance.</li>
-        <li>ISO/IEC 27001 — information security management.</li>
-        <li>ISO/IEC 42001 — AI management system standard.</li>
-        <li>OECD AI Principles — trustworthy AI recommendations.</li>
-        <li>PhRMA Code — ethical interactions with HCPs.</li>
-        <li>FDA OPDP — truthful, balanced promotion guidance.</li>
-        <li>AI Adoption Survey (2025) — budgets, ROI, maturity.</li>
-        <li>AI Value & Productivity — McKinsey estimates for LS.</li>
-      </ol>
-    </details>
-  </div>
-</section>
-
-<!-- FAQ (collapsible) -->
-<section id="faq" class="section">
-  <div class="section-inner">
-    <h2>Frequently Asked Questions</h2>
-    <details>
-      <summary><strong>What sets ReflectivAI apart?</strong></summary>
-      <p>AI simulations + analytics with subtle EI coaching cues within strict compliance guardrails.</p>
-    </details>
-    <details>
-      <summary><strong>Does it replace human coaching?</strong></summary>
-      <p>No. It scales practice and insights; managers remain essential for interpretation and development.</p>
-    </details>
-    <details>
-      <summary><strong>How do you handle PHI?</strong></summary>
-      <p>PHI is off by default. When enabled, we operate under HIPAA controls and a signed BAA.</p>
-    </details>
-    <details>
-      <summary><strong>Integrations?</strong></summary>
-      <p>Export packs and APIs for Salesforce, Veeva, and major LMS platforms.</p>
-    </details>
-  </div>
-</section>
-
-<!-- Contact -->
-<section id="contact" class="section">
-  <div class="section-inner">
-    <h2>Let’s Redefine Your Sales Training</h2>
-    <form class="contact-form" onsubmit="return false;">
-      <div class="form-group"><label for="name">Name</label><input id="name" required placeholder="Your name"></div>
-      <div class="form-group"><label for="email">Email</label><input id="email" type="email" required placeholder="you@example.com"></div>
-      <div class="form-group"><label for="message">Message</label><textarea id="message" rows="4" placeholder="Tell us about your team and goals"></textarea></div>
-      <button class="btn primary" type="submit">Request Demo</button>
-    </form>
-  </div>
-</section>
-
-<!-- =================== Modals =================== -->
-<!-- Generic Card Modal -->
-<div id="cardModal" class="modal" aria-hidden="true">
-  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="cardTitle">
-    <div class="modal-head">
-      <div id="cardTitle" class="modal-title">Details</div>
-      <button class="modal-close" data-close="#cardModal">Close</button>
-    </div>
-    <div id="cardBody" style="padding:14px"></div>
-  </div>
-</div>
-
-<!-- Coach Modal (loads the existing widget) -->
-<div id="coachModal" class="modal" aria-hidden="true">
-  <div class="modal-box">
-    <div class="modal-head">
-      <div class="modal-title">Reflectiv Coach</div>
-      <button class="modal-close" data-close="#coachModal">Close</button>
-    </div>
-    <div id="coachBody">
-      <!-- Your widget mounts here -->
-      <div id="reflectiv-widget" class="reflectiv-widget">
-        <noscript>You need JavaScript to use the ReflectivAI Coach.</noscript>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ============== Alora site-help bubble ============== -->
-<button id="aloraToggle" class="alora-toggle" aria-label="Open Alora chat">
-  <!-- thinking-bubbles icon -->
-  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path fill="#fff" d="M7 4h10a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3h-2l-3 3-3-3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/>
-  </svg>
-</button>
-<div id="alora" class="alora" aria-live="polite">
-  <div class="alora-head">Alora — ReflectivAI Help</div>
-  <div id="aloraBody" class="alora-body"></div>
-  <form id="aloraForm" class="alora-input" autocomplete="off">
-    <input id="aloraInput" placeholder="Ask about ReflectivAI…">
-    <button class="btn primary" type="submit">Send</button>
-  </form>
-</div>
-
-<!-- =================== Scripts =================== -->
-<script defer src="widget.js?v=9"></script>
-<script>
-/* ---------- Mobile nav ---------- */
-const navToggle=document.getElementById('navToggle');
-const navMenu=document.getElementById('navMenu');
-if(navToggle&&navMenu){
-  navToggle.addEventListener('click',()=>{
-    const open=!navMenu.classList.contains('active');
-    navMenu.classList.toggle('active',open);
-    navToggle.classList.toggle('active',open);
-    navToggle.setAttribute('aria-expanded',open?'true':'false');
-  });
-  navMenu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{
-    navMenu.classList.remove('active');navToggle.classList.remove('active');navToggle.setAttribute('aria-expanded','false');
-  }));
-}
-
-/* ---------- Helper: open/close modal ---------- */
-function openModal(id){document.querySelector(id).classList.add('open')}
-function closeModal(id){document.querySelector(id).classList.remove('open')}
-document.querySelectorAll('.modal-close').forEach(btn=>{
-  btn.addEventListener('click',()=>closeModal(btn.getAttribute('data-close')));
-});
-document.querySelectorAll('.modal').forEach(m=>{
-  m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); });
-});
-
-/* ---------- Explore the Platform -> open Coach modal ---------- */
-document.getElementById('openCoach')?.addEventListener('click', (e)=>{
-  e.preventDefault();
-  openModal('#coachModal');    // widget.js auto-mounts into #reflectiv-widget
-});
-
-/* ---------- Clickable chips -> open content cards ---------- */
-const CARD_COPY = {
-  "HIV PrEP": "<div class='card'><h3>HIV PrEP</h3><ul><li>Urgency framing and prevention benefits</li><li>Stigma sensitivity and inclusive language</li><li>Adherence and risk reduction</li></ul></div>",
-  "Vaccines": "<div class='card'><h3>Vaccines</h3><ul><li>Address hesitancy with evidence translation</li><li>Population and community impact</li><li>Schedules, safety, eligibility</li></ul></div>",
-  "Hepatitis B": "<div class='card'><h3>Hepatitis B</h3><ul><li>Access & affordability</li><li>Resistance & safety framing</li><li>Screening & vaccination guidelines</li></ul></div>",
-  "Oncology": "<div class='card'><h3>Oncology</h3><ul><li>Complex data with compassion</li><li>Payer concerns & value</li><li>Empathy for patients & caregivers</li></ul></div>",
-  "Cardiology": "<div class='card'><h3>Cardiology</h3><ul><li>Evidence framing for new therapies</li><li>Comorbidities & patient complexity</li><li>Outcomes & guideline dialogue</li></ul></div>",
-  "Pulmonology": "<div class='card'><h3>Pulmonology</h3><ul><li>Translate respiratory advances</li><li>Adherence & inhaler technique</li><li>Access barriers & chronic mgmt</li></ul></div>",
-
-  "Internal Medicine MD":"<div class='card'><h3>Internal Medicine MD</h3><ul><li>Preventative care & chronic disease</li><li>Constraints: time, formulary</li><li>Needs: safety, comparative data</li></ul></div>",
-  "Nurse Practitioner (NP)":"<div class='card'><h3>Nurse Practitioner (NP)</h3><ul><li>Holistic education, adherence</li><li>Constraints: workload, reimbursement</li><li>Needs: dosing, side effects, resources</li></ul></div>",
-  "Physician Assistant (PA)":"<div class='card'><h3>Physician Assistant (PA)</h3><ul><li>Collaborative care, triage</li><li>Constraints: scope, admin burden</li><li>Needs: authority, samples</li></ul></div>",
-  "Infectious Disease Specialist":"<div class='card'><h3>Infectious Disease Specialist</h3><ul><li>Evidence translation</li><li>Resistance, DDI concerns</li><li>Real-world data, emerging therapies</li></ul></div>",
-  "Oncologist":"<div class='card'><h3>Oncologist</h3><ul><li>Research & precision medicine</li><li>Cost & QoL considerations</li><li>Trials, biomarkers, survivorship</li></ul></div>",
-  "Pulmonologist":"<div class='card'><h3>Pulmonologist</h3><ul><li>Optimize function, reduce readmissions</li><li>Workflow & access logistics</li><li>Eligibility, DDI, initiation timing</li></ul></div>",
-  "Cardiologist":"<div class='card'><h3>Cardiologist</h3><ul><li>CV outcomes & GDMT adherence</li><li>Polypharmacy, renal thresholds</li><li>Endpoints, CKD/HF safety</li></ul></div>",
-
-  "Empathy Index":"<div class='card'><h3>Empathy Index</h3><p>Measures emotional attunement and conversational trust with HCPs.</p></div>",
-  "Accuracy Index":"<div class='card'><h3>Accuracy Index</h3><p>Tracks medical and regulatory precision.</p></div>",
-  "Confidence Delta":"<div class='card'><h3>Confidence Delta</h3><p>Compares self-perceived vs. actual skill growth.</p></div>",
-  "Compliance Guard":"<div class='card'><h3>Compliance Guard</h3><p>Flags deviations from approved messaging and detects off-label or risky phrasing.</p></div>",
-  "Readiness Velocity":"<div class='card'><h3>Readiness Velocity</h3><p>Quantifies ramp-up speed by rep, team, or territory.</p></div>"
-};
-document.querySelectorAll('[data-card]').forEach(el=>{
-  el.addEventListener('click',()=>{
-    const title=el.getAttribute('data-card');
-    document.getElementById('cardTitle').textContent=title;
-    document.getElementById('cardBody').innerHTML=CARD_COPY[title]||'<p>No details.</p>';
-    openModal('#cardModal');
-  });
-});
-
-/* ---------- Alora site-help (mini FAQ) ---------- */
-const alora = document.getElementById('alora');
-const aloraToggle = document.getElementById('aloraToggle');
-const aloraBody = document.getElementById('aloraBody');
-const aloraForm = document.getElementById('aloraForm');
-const aloraInput = document.getElementById('aloraInput');
-
-function aloraMsg(txt,who='bot'){
-  const b=document.createElement('div'); b.className='alora-msg '+who; b.textContent=txt; aloraBody.appendChild(b); aloraBody.scrollTop=aloraBody.scrollHeight;
-}
-const KB = {
-  "pricing":"We don’t publish pricing on the site; request a demo and we’ll tailor a plan to your team size and use cases.",
-  "security":"We align to HIPAA, NIST AI RMF, ISO/IEC 27001 & 42001, and OPDP guidance. See Ethics for details.",
-  "simulate":"Open “Explore the Platform” to launch the full coach with personas, EI scoring, and scenarios.",
-  "persona":"Personas include Internal Medicine MD, NP, PA, ID, Oncology, Pulmonology and more.",
-  "ei":"Our EI mode scores empathy (0–5), stress cues, and offers phrasing tips in real time.",
-};
-aloraToggle.addEventListener('click',()=>{
-  alora.classList.toggle('open');
-  if(alora.classList.contains('open') && !aloraBody.dataset.greet){
-    aloraBody.dataset.greet = '1';
-    aloraMsg("Hi, I’m Alora! I can answer questions about ReflectivAI’s platform, EI coaching, and what’s on this page. Ask me anything.");
+(function () {
+  // ---------- safe bootstrapping ----------
+  let mount = null;
+  function onReady(fn){ if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn, { once:true }); else fn(); }
+  function waitForMount(cb){
+    const tryGet = () => {
+      mount = document.getElementById("reflectiv-widget");
+      if (mount) return cb();
+      const obs = new MutationObserver(() => {
+        mount = document.getElementById("reflectiv-widget");
+        if (mount) { obs.disconnect(); cb(); }
+      });
+      obs.observe(document.documentElement, { childList:true, subtree:true });
+      setTimeout(() => obs.disconnect(), 15000);
+    };
+    onReady(tryGet);
   }
-});
-aloraForm.addEventListener('submit',e=>{
-  e.preventDefault();
-  const q = aloraInput.value.trim(); if(!q) return;
-  aloraInput.value=''; aloraMsg(q,'user');
-  const key = Object.keys(KB).find(k=>q.toLowerCase().includes(k));
-  setTimeout(()=>aloraMsg(key?KB[key]:"I’m still learning. Try asking about “pricing”, “security”, “simulate”, “persona”, or “EI”. 😊"),300);
-});
 
-/* Start at top on load/back-forward cache */
-if('scrollRestoration' in history){history.scrollRestoration='manual'}
-window.scrollTo(0,0);window.addEventListener('pageshow',e=>{if(e.persisted)window.scrollTo(0,0)});
-</script>
-</body>
-</html>
+  // ---------- config/state ----------
+  const LC_OPTIONS = ["Emotional Intelligence","Product Knowledge","Sales Simulation"];
+  const LC_TO_INTERNAL = {
+    "Emotional Intelligence": "emotional-assessment",
+    "Product Knowledge": "product-knowledge",
+    "Sales Simulation": "sales-simulation"
+  };
+
+  let cfg = null;
+  let systemPrompt = "";
+  let scenarios = [];
+  let scenariosById = new Map();
+
+  let currentMode = "sales-simulation";
+  let currentScenarioId = null;
+  let conversation = [];
+  let coachOn = true;
+
+  // ---------- EI globals ----------
+  let personaSelectElem = null;
+  let eiFeatureSelectElem = null;
+  let feedbackDisplayElem = null;
+  let personaLabelElem = null;
+  let featureLabelElem = null;
+  let lastUserMessage = "";
+
+  // Fallbacks so dropdowns show even if config.json lacks entries
+  const DEFAULT_PERSONAS = [
+    { key: "difficult",   label: "Difficult HCP" },
+    { key: "busy",        label: "Busy HCP" },                     // added
+    { key: "engaged",     label: "Engaged HCP" },
+    { key: "indifferent", label: "Indifferent HCP" }
+  ];
+  const DEFAULT_EI_FEATURES = [
+    { key: "empathy",    label: "Empathy Rating" },
+    { key: "stress",     label: "Stress Level Indicator" },
+    { key: "listening",  label: "Active Listening Hints" },        // added
+    { key: "validation", label: "Validation & Reframing Tips" }    // added
+  ];
+
+  // ---------- utils ----------
+  async function fetchLocal(path) {
+    const r = await fetch(path, { cache: "no-store" });
+    if (!r.ok) throw new Error(`Failed to load ${path} (${r.status})`);
+    const ct = r.headers.get("content-type") || "";
+    return ct.includes("application/json") ? r.json() : r.text();
+  }
+
+  const esc = (s) =>
+    String(s || "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+
+  function sanitizeLLM(raw) {
+    let s = String(raw || "");
+    s = s.replace(/```[\s\S]*?```/g, "");
+    s = s.replace(/<pre[\s\S]*?<\/pre>/gi, "");
+    s = s.replace(/^\s*#{1,6}\s+/gm, "");
+    s = s.replace(/^\s*(hi|hello|hey)[^\n]*\n+/i, "");
+    s = s.replace(/\n{3,}/g, "\n\n").trim();
+    return s;
+  }
+
+  function md(text) {
+    if (!text) return "";
+    let s = esc(text).replace(/\r\n?/g, "\n");
+    s = s.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
+    s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+    s = s.replace(/^(?:-\s+|\*\s+).+(?:\n(?:-\s+|\*\s+).+)*/gm, (blk) => {
+      const items = blk
+        .split("\n")
+        .map((l) => l.replace(/^(?:-\s+|\*\s+)(.+)$/, "<li>$1</li>"))
+        .join("");
+      return `<ul>${items}</ul>`;
+    });
+    return s
+      .split(/\n{2,}/)
+      .map((p) => (p.startsWith("<ul>") ? p : `<p>${p.replace(/\n/g, "<br>")}</p>`))
+      .join("\n");
+  }
+
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  function extractCoach(raw) {
+    const m = String(raw || "").match(/<coach>([\s\S]*?)<\/coach>/i);
+    if (!m) return { coach: null, clean: sanitizeLLM(raw) };
+    let coach = null;
+    try { coach = JSON.parse(m[1]); } catch {}
+    const clean = sanitizeLLM(String(raw).replace(m[0], "").trim());
+    return { coach, clean };
+  }
+
+  // ---------- local scoring fallback (coach-v3 deterministic) ----------
+  function scoreReply(userText, replyText) {
+    const text = String(replyText || "");
+    const t = text.toLowerCase();
+    const words = text.split(/\s+/).filter(Boolean).length;
+    const endsWithQ = /\?\s*$/.test(text);
+    const inRange = (n, a, b) => n >= a && n <= b;
+
+    const sig = {
+      label: /(per label|fda\s*label|indication|contraindication|boxed warning|guideline|fda)/i.test(text),
+      discovery: endsWithQ || /(how|what|could you|can you|help me understand|walk me|clarify)\b/i.test(t),
+      objection: /(concern|barrier|risk|coverage|auth|denied|cost|workflow|adherence|side effect|safety)/i.test(t),
+      empathy: /(i understand|appreciate|given your time|thanks for|i hear|it sounds like)/i.test(t),
+      accuracyCue: /(renal|egfr|creatinine|bmd|resistance|ddi|interaction|efficacy|safety|adherence|formulary|access|prior auth|prep|tdf|taf|bictegravir|cabotegravir|rilpivirine|descovy|biktarvy|cabenuva)/i.test(t),
+      tooLong: words > 180,
+      idealLen: inRange(words, 45, 120)
+    };
+
+    const accuracy  = sig.accuracyCue ? (sig.label ? 5 : 4) : 3;
+    const compliance= sig.label ? 5 : 3;
+    const discovery = sig.discovery ? 4 : 2;
+    const objection_handling = sig.objection ? (sig.accuracyCue ? 4 : 3) : 2;
+    const empathy   = sig.empathy ? 3 : 2;
+    const clarity   = sig.tooLong ? 2 : (sig.idealLen ? 4 : 3);
+
+    const W = { accuracy:.26, compliance:.22, discovery:.16, objection_handling:.14, clarity:.12, empathy:.10 };
+    const toPct = v => v * 20;
+
+    let overall = (
+      toPct(accuracy)  * W.accuracy +
+      toPct(compliance)* W.compliance +
+      toPct(discovery) * W.discovery +
+      toPct(objection_handling)*W.objection_handling +
+      toPct(clarity)   * W.clarity +
+      toPct(empathy)   * W.empathy
+    );
+    if (sig.idealLen) overall += 3;
+    if (endsWithQ) overall += 3;
+    if (sig.tooLong) overall -= 6;
+    overall = Math.max(0, Math.min(100, Math.round(overall)));
+
+    const worked = [
+      sig.empathy ? "Acknowledged HCP context" : null,
+      sig.discovery ? "Closed with a clear discovery question" : null,
+      sig.label ? "Referenced label/guidelines" : null,
+      sig.accuracyCue ? "Tied points to clinical cues" : null
+    ].filter(Boolean);
+
+    const improve = [
+      sig.tooLong ? "Tighten to 3–5 sentences" : null,
+      sig.discovery ? null : "End with one specific question",
+      sig.label ? null : "Anchor claims to label or guideline",
+      clarity < 4 ? "Use one idea per sentence" : null
+    ].filter(Boolean);
+
+    const phrasing =
+      sig.discovery
+        ? "Given your criteria, which patients would be the best fit to start, and what would help you try one this month?"
+        : "Would it help to align on eligibility criteria and agree on one next step for your earliest appropriate patient?";
+
+    return {
+      overall,
+      scores: { accuracy, empathy, clarity, compliance, discovery, objection_handling },
+      feedback: "Be concise, cite label or guidelines for clinical points, ask one focused discovery question, and propose a concrete next step.",
+      worked,
+      improve,
+      phrasing,
+      context: { rep_question: String(userText || ""), hcp_reply: String(replyText || "") },
+      score: overall,
+      subscores: { accuracy, empathy, clarity, compliance, discovery, objection_handling }
+    };
+  }
+
+  // ---------- EI scoring ----------
+  function calculateEmpathyRating(personaKey, message) {
+    if (!message) return 0;
+    const text = String(message || "").toLowerCase();
+    let score = 0;
+    switch (personaKey) {
+      case "difficult": score = 1; break;
+      case "busy": score = 2; break;
+      case "engaged": score = 4; break;
+      case "indifferent": score = 2; break;
+      default: score = 3;
+    }
+    const empathyKeywords = ["understand","appreciate","concern","feel","sorry","hear","sounds like","empathize","thanks","acknowledge"];
+    empathyKeywords.forEach((kw)=>{ if (text.includes(kw)) score++; });
+    return Math.min(5, score);
+  }
+
+  function calculateStressRating(personaKey, message) {
+    if (!message) return 0;
+    const text = String(message || "").toLowerCase();
+    let score = 0;
+    switch (personaKey) {
+      case "difficult": score = 4; break;
+      case "busy": score = 5; break;
+      case "engaged": score = 2; break;
+      case "indifferent": score = 3; break;
+      default: score = 3;
+    }
+    const stressWords = ["stress","busy","overwhelmed","frustrated","tired","pressure","deadline"];
+    stressWords.forEach((kw)=>{ if (text.includes(kw)) score++; });
+    return Math.min(5, score);
+  }
+
+  // ---------- EI feedback text ----------
+  function generateDynamicFeedback(personaKey, featureKey) {
+    if (!personaKey || !featureKey) return "";
+    let feedback = "";
+
+    if (featureKey === "empathy") {
+      switch (personaKey) {
+        case "difficult":
+          feedback = "Remain calm and acknowledge frustration. Use phrases like 'I understand this is challenging' to show understanding.";
+          break;
+        case "busy":
+          feedback = "Show empathy concisely. Respect their time while acknowledging their workload.";
+          break;
+        case "engaged":
+          feedback = "Maintain a collaborative tone. Show appreciation for their engagement and ask insightful questions.";
+          break;
+        case "indifferent":
+          feedback = "Focus on patient impact to spark interest. Acknowledge concerns gently and pivot toward personal benefit.";
+          break;
+        default:
+          feedback = "Tailor your approach to the HCP's emotional needs, demonstrating genuine understanding and care.";
+      }
+    } else if (featureKey === "stress") {
+      switch (personaKey) {
+        case "difficult":
+          feedback = "The HCP may be under stress. Keep communication calm, concise, and reassuring to reduce tension.";
+          break;
+        case "busy":
+          feedback = "Time pressure likely high. Keep your delivery brief and focused on solutions.";
+          break;
+        case "engaged":
+          feedback = "Moderate stress expected. Support their curiosity with clear information and invite collaboration.";
+          break;
+        case "indifferent":
+          feedback = "Average stress level. Build rapport by emphasizing patient benefits and addressing doubts thoughtfully.";
+          break;
+        default:
+          feedback = "Adjust your communication tone to match the HCP’s stress level, offering support and clarity.";
+      }
+    } else if (featureKey === "listening") {
+      switch (personaKey) {
+        case "difficult":
+          feedback = "Use reflective listening to validate concerns. Rephrase what they say to show you understand.";
+          break;
+        case "busy":
+          feedback = "Acknowledge key points quickly and summarize their perspective to show attentiveness without delay.";
+          break;
+        case "engaged":
+          feedback = "Use affirmations and clarifying questions to deepen trust and co-create solutions.";
+          break;
+        case "indifferent":
+          feedback = "Use gentle prompts like 'I hear you' or 'That’s a fair point' to draw them into the conversation.";
+          break;
+        default:
+          feedback = "Use active listening techniques to validate, clarify, and engage.";
+      }
+    } else if (featureKey === "validation") {
+      switch (personaKey) {
+        case "difficult":
+          feedback = "Validate their frustration first, then reframe the issue around shared goals or patient outcomes.";
+          break;
+        case "busy":
+          feedback = "Acknowledge their time constraints and reframe around efficiency or impact.";
+          break;
+        case "engaged":
+          feedback = "Validate their insights and reframe to emphasize partnership and shared understanding.";
+          break;
+        case "indifferent":
+          feedback = "Acknowledge neutrality, then reframe to highlight meaningful patient benefits or success stories.";
+          break;
+        default:
+          feedback = "Validate the HCP’s perspective and reframe toward collaboration or patient-centered outcomes.";
+      }
+    } else {
+      feedback = "Select a valid EI feature to receive targeted guidance.";
+    }
+
+    return feedback;
+  }
+
+  // ---------- EI feedback render ----------
+  function generateFeedback() {
+    if (!feedbackDisplayElem) return;
+    if (currentMode !== "emotional-assessment") {
+      feedbackDisplayElem.innerHTML = "";
+      return;
+    }
+    const personaKey = personaSelectElem && personaSelectElem.value;
+    const featureKey = eiFeatureSelectElem && eiFeatureSelectElem.value;
+    if (!personaKey || !featureKey || !lastUserMessage) {
+      feedbackDisplayElem.innerHTML = `<span class="muted">Select a persona and EI feature, then send a message to see feedback.</span>`;
+      return;
+    }
+    let rating = 0;
+    if (featureKey === "empathy") rating = calculateEmpathyRating(personaKey, lastUserMessage);
+    else if (featureKey === "stress") rating = calculateStressRating(personaKey, lastUserMessage);
+
+    const featureList = (cfg?.eiFeatures && cfg.eiFeatures.length ? cfg.eiFeatures : DEFAULT_EI_FEATURES);
+    const featureObj = featureList.find(f => f.key === featureKey);
+    const featureLabel = featureObj ? featureObj.label : featureKey;
+    const feedback = generateDynamicFeedback(personaKey, featureKey, rating);
+    feedbackDisplayElem.innerHTML = `<strong>${esc(featureLabel)}: ${rating}/5</strong><br/><p>${esc(feedback)}</p>`;
+  }
+
+  // ---------- prompt preface ----------
+  function buildPreface(mode, sc) {
+    const COMMON = `
+# ReflectivAI — Output Contract
+Return exactly two parts. No code blocks. No markdown headings.
+1) Sales Guidance: short, actionable, accurate guidance.
+2) <coach>{
+     "overall": 0-100,
+     "scores": {
+       "accuracy": 0-5,
+       "empathy": 0-5,
+       "clarity": 0-5,
+       "compliance": 0-5,
+       "discovery": 0-5,
+       "objection_handling": 0-5
+     },
+     "worked": ["…"],
+     "improve": ["…"],
+     "phrasing": "…",
+     "feedback": "one concise paragraph",
+     "context": { "rep_question":"...", "hcp_reply":"..." }
+   }</coach>
+`.trim();
+
+    if (mode === "sales-simulation") {
+      return `
+# Role
+You are a virtual pharma coach responding to the sales rep’s last message and preparing them for a 30-second HCP interaction. Be direct, label-aligned, and safe.
+
+# Scenario
+${sc ? [
+  `Therapeutic Area: ${sc.therapeuticArea || "—"}`,
+  `HCP Role: ${sc.hcpRole || "—"}`,
+  `Background: ${sc.background || "—"}`,
+  `Today’s Goal: ${sc.goal || "—"}`
+].join("\n") : ""}
+
+# Style
+- 3–6 sentences and one closing question.
+- Mention only appropriate, publicly known, label-aligned facts.
+- No pricing advice or PHI. No off-label.
+
+${COMMON}`.trim();
+    }
+
+    if (mode === "product-knowledge") {
+      return `Return a concise educational overview with reputable citations. Structure: key takeaways; mechanism/indications; safety/contraindications; efficacy; access notes; references.`.trim();
+    }
+
+    return `
+Provide brief, practical self-reflection tips tied to communication with HCPs. No clinical or drug guidance.
+- 3–5 sentences, then one reflective question.
+
+${COMMON}`.trim();
+  }
+
+  // ---------- UI ----------
+  function buildUI() {
+    mount.innerHTML = "";
+    if (!mount.classList.contains("cw")) mount.classList.add("cw");
+
+    const style = document.createElement("style");
+    style.textContent = `
+      #reflectiv-widget .reflectiv-chat{ display:flex; flex-direction:column; gap:12px; border:3px solid #bfc7d4; border-radius:14px; background:#fff; overflow:hidden; }
+      #reflectiv-widget .chat-toolbar{ display:block; padding:14px 16px; background:#f6f8fb; border-bottom:1px solid #e1e6ef; }
+      #reflectiv-widget .sim-controls{ display:grid; grid-template-columns:220px 1fr 220px 1fr; gap:12px 16px; align-items:center; }
+      #reflectiv-widget .sim-controls label{ font-size:13px; font-weight:600; color:#2f3a4f; justify-self:end; white-space:nowrap; }
+      #reflectiv-widget .sim-controls select{ width:100%; height:38px; padding:6px 10px; font-size:14px; border:1px solid #cfd6df; border-radius:8px; background:#fff; }
+      #reflectiv-widget .chat-messages{ min-height:260px; height:320px; max-height:50vh; overflow:auto; padding:12px 14px; background:#fafbfd; }
+      #reflectiv-widget .message{ margin:8px 0; display:flex; }
+      #reflectiv-widget .message.user{ justify-content:flex-end; }
+      #reflectiv-widget .message.assistant{ justify-content:flex-start; }
+      #reflectiv-widget .message .content{ max-width:85%; line-height:1.45; font-size:14px; padding:10px 12px; border-radius:14px; border:1px solid #d6dbe3; color:#0f1522; background:#e9edf3; }
+      #reflectiv-widget .message.user .content{ background:#e0e0e0; color:#000; }
+      #reflectiv-widget .chat-input{ display:flex; gap:8px; padding:10px 12px; border-top:1px solid #e1e6ef; background:#fff; }
+      #reflectiv-widget .chat-input textarea{ flex:1; resize:none; min-height:44px; max-height:120px; padding:10px 12px; border:1px solid #cfd6df; border-radius:10px; outline:none; }
+      #reflectiv-widget .chat-input .btn{ min-width:86px; border:0; border-radius:999px; background:#2f3a4f; color:#fff; font-weight:600; }
+      #reflectiv-widget .coach-section{ margin-top:0; padding:12px 14px; border:1px solid #e1e6ef; border-radius:12px; background:#fffbe8; }
+      #reflectiv-widget .coach-subs .pill{ display:inline-block; padding:2px 8px; margin-right:6px; font-size:12px; background:#f1f3f7; border:1px solid #d6dbe3; border-radius:999px; text-transform:unset; }
+      #reflectiv-widget .scenario-meta .meta-card{ padding:10px 12px; background:#f7f9fc; border:1px solid #e1e6ef; border-radius:10px; }
+      @media (max-width:900px){ #reflectiv-widget .sim-controls{ grid-template-columns:1fr; gap:8px; } #reflectiv-widget .sim-controls label{ justify-self:start; } }
+      @media (max-width:520px){ #reflectiv-widget .chat-messages{ height:46vh; } }
+      #reflectiv-widget .hidden{ display:none !important; }
+    `;
+    document.head.appendChild(style);
+
+    const shell = el("div", "reflectiv-chat");
+
+    const bar = el("div", "chat-toolbar");
+    const simControls = el("div","sim-controls");
+
+    const lcLabel = el("label", "", "Learning Center");
+    lcLabel.htmlFor = "cw-mode";
+    const modeSel = el("select"); modeSel.id = "cw-mode";
+    LC_OPTIONS.forEach((name) => {
+      const o = el("option"); o.value = name; o.textContent = name;
+      modeSel.appendChild(o);
+    });
+    const initialLc = Object.keys(LC_TO_INTERNAL).find(k => LC_TO_INTERNAL[k] === (cfg?.defaultMode || "sales-simulation")) || "Sales Simulation";
+    modeSel.value = initialLc;
+    currentMode = LC_TO_INTERNAL[modeSel.value];
+
+    const coachLabel = el("label", "", "Coach");
+    coachLabel.htmlFor = "cw-coach";
+    const coachSel = el("select"); coachSel.id = "cw-coach";
+    [{v:"on",t:"Coach On"},{v:"off",t:"Coach Off"}].forEach(({v,t})=>{
+      const o = el("option"); o.value=v; o.textContent=t; coachSel.appendChild(o);
+    });
+    coachSel.value = coachOn ? "on" : "off";
+    coachSel.onchange = () => { coachOn = coachSel.value === "on"; renderCoach(); };
+
+    const diseaseLabel = el("label", "", "Disease State");
+    diseaseLabel.htmlFor = "cw-disease";
+    const diseaseSelect = el("select"); diseaseSelect.id = "cw-disease";
+
+    const hcpLabel = el("label","","HCP Profiles");
+    hcpLabel.htmlFor="cw-hcp";
+    const hcpSelect = el("select"); hcpSelect.id="cw-hcp";
+
+    // EI Persona/EI Feature
+    const personaLabel = el("label", "", "HCP Persona");
+    personaLabel.htmlFor = "cw-ei-persona";
+    const personaSelect = el("select"); personaSelect.id = "cw-ei-persona";
+    personaSelectElem = personaSelect;
+    personaLabelElem = personaLabel;
+    personaSelect.addEventListener("change", generateFeedback);
+
+    const featureLabel = el("label", "", "EI Feature");
+    featureLabel.htmlFor = "cw-ei-feature";
+    const featureSelect = el("select"); featureSelect.id = "cw-ei-feature";
+    eiFeatureSelectElem = featureSelect;
+    featureLabelElem = featureLabel;
+    featureSelect.addEventListener("change", generateFeedback);
+
+    // mount controls
+    simControls.appendChild(lcLabel);    simControls.appendChild(modeSel);
+    simControls.appendChild(coachLabel); simControls.appendChild(coachSel);
+    simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
+    simControls.appendChild(hcpLabel);     simControls.appendChild(hcpSelect);
+    simControls.appendChild(personaLabel); simControls.appendChild(personaSelect);
+    simControls.appendChild(featureLabel); simControls.appendChild(featureSelect);
+
+    bar.appendChild(simControls);
+    shell.appendChild(bar);
+
+    const meta = el("div", "scenario-meta");
+    shell.appendChild(meta);
+
+    const msgs = el("div", "chat-messages");
+    shell.appendChild(msgs);
+
+    const inp = el("div", "chat-input");
+    const ta = el("textarea"); ta.placeholder = "Type your message…";
+    ta.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send.click(); } });
+    const send = el("button", "btn", "Send");
+    send.onclick = () => { const t = ta.value.trim(); if (!t) return; sendMessage(t); ta.value = ""; };
+    inp.appendChild(ta); inp.appendChild(send);
+    shell.appendChild(inp);
+
+    mount.appendChild(shell);
+
+    const coach = el("div", "coach-section");
+    coach.innerHTML = `<h3>Coach Feedback</h3><div class="coach-body muted">Awaiting the first assistant reply…</div>`;
+    shell.appendChild(coach);
+
+    feedbackDisplayElem = el("div", "ei-feedback");
+    feedbackDisplayElem.id = "feedback-display";
+    feedbackDisplayElem.style.marginTop = "8px";
+    feedbackDisplayElem.style.padding = "8px";
+    feedbackDisplayElem.style.borderTop = "1px solid #e1e6ef";
+    feedbackDisplayElem.style.fontSize = "14px";
+    coach.appendChild(feedbackDisplayElem);
+
+    function getDiseaseStates() {
+      let ds = Array.isArray(cfg?.diseaseStates) ? cfg.diseaseStates.slice() : [];
+      if (!ds.length && Array.isArray(scenarios) && scenarios.length){
+        ds = Array.from(new Set(scenarios.map(s => (s.therapeuticArea || s.diseaseState || "").trim()))).filter(Boolean);
+      }
+      ds = ds.map(x => x.replace(/\bHiv\b/gi,"HIV"));
+      return ds;
+    }
+
+    function elOption(select, val, label) {
+      const o = document.createElement("option");
+      o.value = val; o.textContent = label;
+      select.appendChild(o);
+    }
+
+    function setSelectOptions(select, values, withPlaceholder) {
+      select.innerHTML = "";
+      if (withPlaceholder) {
+        const p = document.createElement("option");
+        p.value = ""; p.textContent = "Select…"; p.disabled = true; p.selected = true;
+        select.appendChild(p);
+      }
+      values.forEach(v => {
+        if (!v) return;
+        if (typeof v === "string") elOption(select, v, v);
+        else elOption(select, v.value || v.id || v.key || v.label, v.label || v.value || v.id || v.key);
+      });
+    }
+
+    function populateDiseases() {
+      const ds = getDiseaseStates();
+      setSelectOptions(diseaseSelect, ds, true);
+    }
+
+    function populateHcpForDisease(ds) {
+      const dsKey = (ds || "").trim();
+      const scen = scenarios.filter(s => {
+        const area = (s.therapeuticArea || s.diseaseState || "").trim();
+        return area.toLowerCase() === dsKey.toLowerCase();
+      });
+
+      if (scen.length) {
+        const opts = scen.map(s => ({ value: s.id, label: s.label || s.id }));
+        setSelectOptions(hcpSelect, opts, true);
+        hcpSelect.disabled = false;
+      } else {
+        setSelectOptions(hcpSelect, [], true);
+        hcpSelect.disabled = true;
+      }
+    }
+
+    // Populate EI dropdowns (config first, then fallback defaults)
+    function populateEIOptions() {
+      const personaList = (cfg && Array.isArray(cfg.personas) && cfg.personas.length) ? cfg.personas : DEFAULT_PERSONAS;
+      const featureList = (cfg && Array.isArray(cfg.eiFeatures) && cfg.eiFeatures.length) ? cfg.eiFeatures : DEFAULT_EI_FEATURES;
+      setSelectOptions(personaSelect, personaList.map(p => ({ value: p.key || p.id || p.label, label: p.label || p.key || p.id })), true);
+      setSelectOptions(featureSelect, featureList.map(f => ({ value: f.key || f.id || f.label, label: f.label || f.key || f.id })), true);
+    }
+
+    function applyModeVisibility() {
+      const lc = modeSel.value;
+      currentMode = LC_TO_INTERNAL[lc];
+      const pk = currentMode === "product-knowledge";
+
+      coachLabel.classList.toggle("hidden", pk);
+      coachSel.classList.toggle("hidden", pk);
+
+      if (currentMode === "sales-simulation") {
+        diseaseLabel.classList.remove("hidden");
+        diseaseSelect.classList.remove("hidden");
+        hcpLabel.classList.remove("hidden");
+        hcpSelect.classList.remove("hidden");
+        personaLabelElem.classList.add("hidden");
+        personaSelectElem.classList.add("hidden");
+        featureLabelElem.classList.add("hidden");
+        eiFeatureSelectElem.classList.add("hidden");
+        feedbackDisplayElem.innerHTML = "";
+        populateDiseases();
+      } else if (currentMode === "product-knowledge") {
+        diseaseLabel.classList.remove("hidden");
+        diseaseSelect.classList.remove("hidden");
+        hcpLabel.classList.add("hidden");
+        hcpSelect.classList.add("hidden");
+        personaLabelElem.classList.add("hidden");
+        personaSelectElem.classList.add("hidden");
+        featureLabelElem.classList.add("hidden");
+        eiFeatureSelectElem.classList.add("hidden");
+        feedbackDisplayElem.innerHTML = "";
+        populateDiseases();
+      } else {
+        diseaseLabel.classList.add("hidden");
+        diseaseSelect.classList.add("hidden");
+        hcpLabel.classList.add("hidden");
+        hcpSelect.classList.add("hidden");
+        personaLabelElem.classList.remove("hidden");
+        personaSelectElem.classList.remove("hidden");
+        featureLabelElem.classList.remove("hidden");
+        eiFeatureSelectElem.classList.remove("hidden");
+        feedbackDisplayElem.innerHTML = "";
+        currentScenarioId = null;
+        conversation = [];
+        renderMessages(); renderCoach(); renderMeta();
+      }
+
+      if (currentMode !== "sales-simulation") {
+        currentScenarioId = null;
+        conversation = [];
+        renderMessages(); renderCoach(); renderMeta();
+      }
+    }
+
+    modeSel.addEventListener("change", applyModeVisibility);
+
+    diseaseSelect.addEventListener("change", ()=>{
+      const ds = diseaseSelect.value || "";
+      if (!ds) return;
+      if (currentMode === "sales-simulation") {
+        populateHcpForDisease(ds);
+      } else if (currentMode === "product-knowledge") {
+        currentScenarioId = null;
+      }
+      conversation=[]; renderMessages(); renderCoach(); renderMeta();
+    });
+
+    hcpSelect.addEventListener("change", ()=>{
+      const sel = hcpSelect.value || "";
+      if (!sel) return;
+      const sc = scenariosById.get(sel);
+      currentScenarioId = sc ? sc.id : null;
+      conversation=[]; renderMessages(); renderCoach(); renderMeta();
+    });
+
+    function renderMeta() {
+      const sc = scenariosById.get(currentScenarioId);
+      if (!sc || !currentScenarioId || currentMode !== "sales-simulation") { meta.innerHTML = ""; return; }
+      meta.innerHTML = `
+        <div class="meta-card">
+          <div><strong>Therapeutic Area:</strong> ${esc(sc.therapeuticArea || sc.diseaseState || "—")}</div>
+          <div><strong>HCP Role:</strong> ${esc(sc.hcpRole || "—")}</div>
+          <div><strong>Background:</strong> ${esc(sc.background || "—")}</div>
+          <div><strong>Today’s Goal:</strong> ${esc(sc.goal || "—")}</div>
+        </div>`;
+    }
+
+    function renderMessages() {
+      const msgsEl = shell.querySelector(".chat-messages");
+      msgsEl.innerHTML = "";
+      for (const m of conversation) {
+        const row = el("div", `message ${m.role}`);
+        const c = el("div", "content");
+        c.innerHTML = md(m.content);
+        row.appendChild(c);
+        msgsEl.appendChild(row);
+      }
+      msgsEl.scrollTop = msgsEl.scrollHeight;
+    }
+
+    function orderedPills(scores) {
+      const order = ["accuracy","empathy","clarity","compliance","discovery","objection_handling"];
+      return order
+        .filter(k => k in (scores || {}))
+        .map(k => `<span class="pill">${esc(k)}: ${scores[k]}</span>`)
+        .join(" ");
+    }
+
+    function renderCoach() {
+      const body = coach.querySelector(".coach-body");
+      if (!coachOn || currentMode === "product-knowledge") {
+        coach.style.display = "none";
+        return;
+      }
+      coach.style.display = "";
+
+      const last = conversation[conversation.length - 1];
+      if (!(last && last.role === "assistant" && last._coach)) {
+        body.innerHTML = `<span class="muted">Awaiting the first assistant reply…</span>`;
+        return;
+      }
+      const fb = last._coach;
+      const scores = fb.scores || fb.subscores || {};
+      const workedStr = (fb.worked && fb.worked.length)
+        ? fb.worked.join(". ") + "."
+        : "—";
+      const improveStr = (fb.improve && fb.improve.length)
+        ? fb.improve.join(". ") + "."
+        : (fb.feedback || "—");
+      body.innerHTML = `
+        <div class="coach-score">Score: <strong>${fb.overall ?? fb.score ?? "—"}</strong>/100</div>
+        <div class="coach-subs">${orderedPills(scores)}</div>
+        <ul class="coach-list">
+          <li><strong>What worked:</strong> ${esc(workedStr)}</li>
+          <li><strong>What to improve:</strong> ${esc(improveStr)}</li>
+          <li><strong>Suggested phrasing:</strong> ${esc(fb.phrasing || "—")}</li>
+        </ul>`;
+    }
+
+    shell._renderMessages = renderMessages;
+    shell._renderCoach = renderCoach;
+    shell._renderMeta = renderMeta;
+
+    // Populate dropdowns and apply mode
+    populateDiseases();
+    populateEIOptions();
+    applyModeVisibility();
+  }
+
+  // ---------- transport ----------
+  async function callModel(messages) {
+    const r = await fetch((cfg?.apiBase || cfg?.workerUrl || "").trim(), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: (cfg && cfg.model) || "llama-3.1-8b-instant",
+        temperature: 0.2,
+        stream: !!cfg?.stream,
+        messages
+      })
+    });
+    if (!r.ok) {
+      const txt = await r.text().catch(() => "");
+      throw new Error(`HTTP ${r.status}: ${txt || "no body"}`);
+    }
+    const data = await r.json().catch(() => ({}));
+    return data?.content || data?.reply || data?.choices?.[0]?.message?.content || "";
+  }
+
+  // ---------- send ----------
+  async function sendMessage(userText) {
+    const shellEl = mount.querySelector(".reflectiv-chat");
+    const renderMessages = shellEl._renderMessages;
+    const renderCoach = shellEl._renderCoach;
+
+    lastUserMessage = userText;
+
+    conversation.push({ role: "user", content: userText });
+    renderMessages(); renderCoach();
+
+    if (currentMode === "emotional-assessment") generateFeedback();
+
+    const sc = scenariosById.get(currentScenarioId);
+    const preface = buildPreface(currentMode, sc);
+    const messages = [];
+    if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
+    messages.push({ role: "system", content: preface });
+    messages.push({ role: "user", content: userText });
+
+    try {
+      const raw = await callModel(messages);
+      const { coach, clean } = extractCoach(raw);
+      const computed = scoreReply(userText, clean, currentMode);
+      const finalCoach = (() => {
+        if (coach && (coach.scores || coach.subscores)) {
+          const scores = coach.scores || coach.subscores;
+          const overall = typeof coach.overall === "number" ? coach.overall : (typeof coach.score === "number" ? coach.score : undefined);
+          return {
+            overall: overall ?? computed.overall,
+            scores,
+            feedback: coach.feedback || computed.feedback,
+            worked: coach.worked && coach.worked.length ? coach.worked : computed.worked,
+            improve: coach.improve && coach.improve.length ? coach.improve : computed.improve,
+            phrasing: typeof coach.phrasing === "string" && coach.phrasing ? coach.phrasing : computed.phrasing,
+            context: coach.context || { rep_question: userText, hcp_reply: clean },
+            score: overall ?? computed.overall,
+            subscores: scores
+          };
+        }
+        return computed;
+      })();
+
+      conversation.push({ role: "assistant", content: clean, _coach: finalCoach });
+      renderMessages(); renderCoach();
+
+      if (currentMode === "emotional-assessment") generateFeedback();
+
+      if (cfg && cfg.analyticsEndpoint) {
+        fetch(cfg.analyticsEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ts: Date.now(),
+            schema: (cfg.schemaVersion || "coach-v2"),
+            mode: currentMode,
+            scenarioId: currentScenarioId,
+            turn: conversation.length,
+            context: finalCoach.context || { rep_question: userText, hcp_reply: clean },
+            overall: finalCoach.overall,
+            scores: finalCoach.scores
+          })
+        }).catch(() => {});
+      }
+    } catch (e) {
+      conversation.push({ role: "assistant", content: `Model error: ${String(e.message || e)}` });
+      renderMessages();
+    }
+  }
+
+  // ---------- scenarios loader ----------
+  async function loadScenarios() {
+    if (cfg && cfg.scenariosUrl) {
+      const payload = await fetchLocal(cfg.scenariosUrl);
+      const arr = Array.isArray(payload) ? payload : (payload.scenarios || []);
+      scenarios = arr.map((s)=>({
+        id: s.id,
+        label: s.label || s.id,
+        therapeuticArea: s.therapeuticArea || s.diseaseState || "",
+        hcpRole: s.hcpRole || "",
+        background: s.background || "",
+        goal: s.goal || ""
+      }));
+    } else if (Array.isArray(cfg?.scenarios)) {
+      scenarios = cfg.scenarios.map((s)=>({
+        id: s.id,
+        label: s.label || s.id,
+        therapeuticArea: (s.therapeuticArea||s.diseaseState||""),
+        hcpRole: s.hcpRole || "",
+        background: s.background || "",
+        goal: s.goal || ""
+      }));
+    } else {
+      scenarios = [];
+    }
+    scenarios.forEach(s => { if (/^hiv\b/i.test(s.therapeuticArea)) s.therapeuticArea = "HIV"; });
+    scenariosById = new Map(scenarios.map((s)=>[s.id,s]));
+  }
+
+  // ---------- init ----------
+  async function init() {
+    try {
+      cfg = await fetchLocal("./assets/chat/config.json");
+    } catch (e) {
+      console.error("config.json load failed:", e);
+      cfg = { defaultMode: "sales-simulation" };
+    }
+
+    try {
+      systemPrompt = await fetchLocal("./assets/chat/system.md");
+    } catch (_) {
+      systemPrompt = "";
+    }
+
+    await loadScenarios();
+    buildUI();
+  }
+
+  // ---------- start ----------
+  waitForMount(init);
+})();
