@@ -10,9 +10,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css?v=20251019-1">
-<link rel="stylesheet" href="widget.css?v=20251020"><!-- cache-bust to ensure new widget styles load -->
+<link rel="stylesheet" href="widget.css?v=10"><!-- bumped for cache -->
 
-<!-- Minimal overrides: hero revert + demo form + right FAB + Alora panel/close + Coach modal head -->
+<!-- Minimal overrides: hero revert + demo form + right FAB + Alora panel/close -->
 <style>
   /* ---- Hero revert ---- */
   .hero{background:radial-gradient(1200px 600px at 70% -10%,#1b6b88 0%,#0e2b40 45%,#0b1f30 70%,#0a1a27 100%);color:#eaf2f7;padding:72px 0 56px}
@@ -56,11 +56,6 @@
   .alora-input{display:flex;gap:8px;padding:12px;border-top:1px solid #e6ecf3;background:#fff}
   .alora-input input{flex:1;border:1px solid #cfd8e3;border-radius:10px;padding:10px 12px;font-size:15px}
   .alora-input .btn.primary{background:#0c2740;color:#fff;border:none;border-radius:10px;padding:10px 12px}
-
-  /* ---- Coach modal header color + text ---- */
-  #coachModal .modal-head{background:#0c2740 !important;color:#fff !important}
-  #coachModal .modal-head .modal-title{color:#fff !important}
-  #coachModal .modal-head .modal-close{color:#fff !important}
 </style>
 
 <!-- Endpoints for Worker (Groq behind /coach and /alora) -->
@@ -328,11 +323,12 @@
   </div>
 </div>
 
+<!-- Coach modal: keep mount id for existing widget.js -->
 <div id="coachModal" class="modal" aria-hidden="true">
   <div class="modal-box">
-    <div class="modal-head">
+    <div class="modal-head" style="background:#0c2740;color:#fff">
       <div class="modal-title">ReflectivAI Coach</div>
-      <button class="modal-close" data-close="#coachModal">Close</button>
+      <button class="modal-close" data-close="#coachModal" style="color:#fff">Close</button>
     </div>
     <div id="coachBody">
       <div id="reflectiv-widget" class="reflectiv-widget">
@@ -362,7 +358,7 @@
 </div>
 
 <!-- =================== Scripts =================== -->
-<script defer src="widget.js?v=9"></script>
+<script defer src="./widget.js?v=10"></script>
 <script>
 /* ---------- Mobile nav ---------- */
 const navToggle=document.getElementById('navToggle');
@@ -394,7 +390,7 @@ document.getElementById('openCoach')?.addEventListener('click',(e)=>{
   e.preventDefault(); openModal('#coachModal');
 });
 
-/* ---------- Site Cards (modal details) ---------- */
+/* ---------- Site Cards ---------- */
 const CARD_COPY = {
   "HIV PrEP": `<div class='card'><ul><li><strong>Objection:</strong> Stigma and patient adherence concerns.</li><li><strong>Challenge:</strong> Framing prevention urgency with empathy.</li><li><strong>Goal:</strong> Build trust and normalize discussion of prevention options.</li></ul></div>`,
   "Vaccines": `<div class='card'><ul><li><strong>Objection:</strong> Hesitancy rooted in misinformation or side-effect fears.</li><li><strong>Challenge:</strong> Translating population data into relatable patient outcomes.</li><li><strong>Goal:</strong> Reinforce confidence in safety, efficacy, and community protection.</li></ul></div>`,
@@ -409,7 +405,7 @@ const CARD_COPY = {
   "Oncologist": `<div class='card'><ul><li><strong>Challenge:</strong> Keeping up with biomarkers and trials.</li><li><strong>Objection:</strong> Cost, QoL trade-offs, coverage barriers.</li><li><strong>Goal:</strong> Position value with empathy for patient impact.</li></ul></div>`,
   "Pulmonologist": `<div class='card'><ul><li><strong>Challenge:</strong> Coordinating multi-therapy regimens.</li><li><strong>Objection:</strong> Device complexity and inhaler confusion.</li><li><strong>Goal:</strong> Reinforce education on correct use and tracking.</li></ul></div>`,
   "Cardiologist": `<div class='card'><ul><li><strong>Objection:</strong> Limited differentiation vs SOC.</li><li><strong>Challenge:</strong> Communicating endpoint nuance quickly.</li><li><strong>Goal:</strong> Emphasize outcome improvements and workflow simplicity.</li></ul></div>`,
-  "Empathy Index": `<div class='card'><ul><li><strong>Purpose:</strong> Measures emotional attunement and rapport during HCP interactions.</li><li><strong>Goal:</strong> Help reps adjust tone and phrasing to strengthen trust.</li></ul></div>`,
+  "Empathy Index": `<div class='card'><ul><li><strong>Purpose:</strong> Measures emotional attunement and rapport.</li><li><strong>Goal:</strong> Help reps adjust tone and phrasing to strengthen trust.</li></ul></div>`,
   "Accuracy Index": `<div class='card'><ul><li><strong>Purpose:</strong> Evaluates factual precision and regulatory alignment.</li><li><strong>Goal:</strong> Reinforce consistent, compliant scientific messaging.</li></ul></div>`,
   "Confidence Delta": `<div class='card'><ul><li><strong>Purpose:</strong> Compares self-perceived versus demonstrated skill growth.</li><li><strong>Goal:</strong> Visualize mindset improvement across coaching sessions.</li></ul></div>`,
   "Compliance Guard": `<div class='card'><ul><li><strong>Purpose:</strong> Detects off-label or risky phrasing in simulations.</li><li><strong>Goal:</strong> Maintain fair balance and protect brand integrity.</li></ul></div>`,
@@ -424,7 +420,7 @@ document.querySelectorAll('[data-card]').forEach(el=>{
   });
 });
 
-/* ---------- Alora: open/close + typing + Worker fetch fallback ---------- */
+/* ---------- Alora ---------- */
 const aloraFab=document.getElementById('aloraFab');
 const alora=document.getElementById('alora');
 const aloraClose=document.getElementById('aloraClose');
