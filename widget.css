@@ -2,10 +2,16 @@
    ReflectivAI Chat Widget Styles
    ===================================================== */
 
+/* Optional font import to match Poppins usage in this file */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap");
+
 .cw, .reflectiv-chat {
-  font-family: "Poppins", sans-serif;
+  font-family: "Poppins", Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   color: #0f1522;
 }
+
+/* utility */
+.hidden { display: none !important; }
 
 /* ---------- Widget Shell ---------- */
 .reflectiv-chat {
@@ -21,7 +27,7 @@
 /* ---------- Toolbar ---------- */
 .chat-toolbar {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 8px;
   align-items: end;
   padding: 10px;
@@ -43,9 +49,10 @@
   color: #2f3a4f;
 }
 
-.sim-controls .select {
-  height: 36px;
-  padding: 6px 8px;
+/* was `.sim-controls .select` — change to target native <select> */
+.sim-controls select {
+  height: 38px;
+  padding: 6px 10px;
   border-radius: 8px;
   border: 1px solid #cfd6df;
   background: #fff;
@@ -68,13 +75,8 @@
   display: flex;
 }
 
-.message.user {
-  justify-content: flex-end;
-}
-
-.message.assistant {
-  justify-content: flex-start;
-}
+.message.user { justify-content: flex-end; }
+.message.assistant { justify-content: flex-start; }
 
 .message .content {
   max-width: 85%;
@@ -110,8 +112,16 @@
   border: 1px solid #cfd6df;
   border-radius: 10px;
   outline: none;
-  font-family: "Poppins", sans-serif;
+  font-family: "Poppins", Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   font-size: 14px;
+}
+
+/* focus states */
+.sim-controls select:focus,
+.chat-input textarea:focus,
+.chat-input .btn:focus {
+  outline: 2px solid #7ed9ca;
+  outline-offset: 2px;
 }
 
 .chat-input .btn {
@@ -124,9 +134,7 @@
   cursor: pointer;
 }
 
-.chat-input .btn:hover {
-  background: #394768;
-}
+.chat-input .btn:hover { background: #394768; }
 
 /* ---------- Meta (Scenario Background) ---------- */
 .scenario-meta .meta-card {
@@ -153,10 +161,7 @@
   color: #2f3a4f;
 }
 
-.coach-score {
-  margin-bottom: 8px;
-  font-weight: 600;
-}
+.coach-score { margin-bottom: 8px; font-weight: 600; }
 
 .coach-subs .pill {
   display: inline-block;
@@ -174,19 +179,11 @@
   color: #0f1522;
 }
 
-.coach-list li {
-  margin-bottom: 4px;
-}
+.coach-list li { margin-bottom: 4px; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 520px) {
-  .chat-messages {
-    height: 46vh;
-  }
-  .chat-toolbar {
-    grid-template-columns: 1fr;
-  }
-  .sim-controls {
-    grid-template-columns: 1fr;
-  }
+  .chat-messages { height: 46vh; }
+  .chat-toolbar { grid-template-columns: 1fr; }
+  .sim-controls { grid-template-columns: 1fr; }
 }
