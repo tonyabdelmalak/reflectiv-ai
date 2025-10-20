@@ -1,66 +1,131 @@
-/* ===== /assets/chat/widget.css — ReflectivAI Coach (matches site) ===== */
+/* =====================================================
+   ReflectivAI Coach — modal widget styles
+   Palette matches site: navy / gray / white
+   ===================================================== */
 
-/* Overlay + modal placement */
-.coach-open #coachOverlay{display:block}
-#coachOverlay{position:fixed;inset:0;background:rgba(3,15,24,.52);backdrop-filter:saturate(120%) blur(2px);z-index:9997;display:none}
-#coachModal{position:fixed;inset:auto 50% 8vh;transform:translateX(-50%);width:min(920px,92vw);background:#fff;border:1px solid #e5e9f0;border-radius:14px;box-shadow:0 18px 42px rgba(5,20,30,.28);z-index:9998;overflow:hidden}
-
-/* Header */
-.coach-head{display:flex;align-items:center;justify-content:space-between;background:#0b2633;color:#fff;padding:12px 14px}
-.coach-title{font-weight:800}
-.head-actions{display:flex;align-items:center;gap:12px}
-.rubric-link{color:#cfe7f3;text-decoration:underline}
-.coach-close{appearance:none;border:0;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:4px 8px}
-
-/* Body */
-.coach-body{padding:12px 12px 14px;background:#fbfdff}
-
-/* Toolbar */
-.toolbar{background:#f6f8fb;border:1px solid #e1e6ef;border-radius:10px;padding:10px}
-.grid{display:grid;grid-template-columns:220px 1fr 220px 1fr;gap:12px 16px;align-items:end}
-.grid label{font-size:12px;font-weight:700;color:#2f3a4f}
-.grid select{height:38px;border:1px solid #cfd6df;border-radius:8px;padding:6px 10px;font-size:14px;background:#fff;color:#0f1522}
-.info::after{content:" ⓘ";color:#60788a;font-weight:800}
-.hidden{display:none!important}
-@media (max-width:900px){.grid{grid-template-columns:1fr;gap:8px}}
-
-/* Scenario meta */
-.scenario-meta{margin:10px 0 8px}
-.scenario-meta .meta-card{padding:10px 12px;background:#f7f9fc;border:1px solid #e1e6ef;border-radius:10px;font-size:13px}
-
-/* Chat area */
-.chat-area{}
-.chat-messages{min-height:240px;height:320px;max-height:50vh;overflow:auto;padding:12px 14px;background:#fafbfd;border:1px solid #e1e6ef;border-radius:10px}
-.message{margin:8px 0;display:flex}
-.message .content{max-width:85%;line-height:1.45;font-size:14px;padding:10px 12px;border-radius:14px;border:1px solid #d6dbe3;color:#0f1522;background:#e9edf3}
-.message.user{justify-content:flex-end}
-.message.user .content{background:#e0e0e0;color:#000}
-
-/* Input row */
-.chat-input{display:flex;gap:8px;padding:10px 0}
-.chat-input textarea{flex:1;resize:none;min-height:46px;max-height:120px;padding:10px 12px;border:1px solid #cfd6df;border-radius:10px;outline:none;font:14px Inter,system-ui}
-.chat-input .btn{min-width:86px;border:0;border-radius:999px;background:#153445;color:#fff;font-weight:700}
-.chat-input .btn:hover{background:#0f2835}
-
-/* Coach panel (always visible under input) */
-.coach-section{margin-top:8px;padding:12px 14px;border:1px solid #e1e6ef;border-radius:12px;background:#fffbe8}
-.coach-section h3{margin:0 0 6px;font-size:15px;color:#2f3a4f}
-.coach-score{margin-bottom:6px;font-weight:800}
-.coach-subs .pill{display:inline-block;background:#f1f3f7;border:1px solid #d6dbe3;border-radius:999px;padding:2px 8px;margin-right:6px;font-size:12px}
-.coach-list{padding-left:18px;font-size:13px}
-.coach-list li{margin:4px 0}
-
-/* Rubric drawer */
-.rubric{position:fixed;inset:auto 50% 10vh;transform:translateX(-50%);width:min(560px,92vw);background:#fff;border:1px solid #e5e9f0;border-radius:12px;box-shadow:0 18px 42px rgba(5,20,30,.28);padding:12px;z-index:9999}
-.rubric.hidden{display:none}
-.rubric h4{margin:2px 0 8px;font-weight:800;color:#243646}
-.rubric ul{margin:0;padding-left:18px;color:#334155}
-.rubric-close{position:absolute;right:8px;top:6px;border:0;background:transparent;font-size:22px;cursor:pointer}
-
-/* Ensure no overlap with Alora bubble (bottom-right ~84px) */
-@media (max-width:520px){
-  #coachModal{bottom:96px}
+:root{
+  --navy:#0c2740;
+  --teal:#20bfa9;
+  --ink:#0f1522;
+  --text:#1b2738;
+  --muted:#596a82;
+  --line:#e5e9f0;
+  --panel:#f7f9fc;
+  --white:#fff;
 }
 
-/* Accessibility helpers */
-.muted{color:#5b6b79}
+/* Modal shell */
+#reflectiv-coach-overlay{
+  position:fixed; inset:0; background:rgba(15,21,34,.52);
+  display:none; align-items:center; justify-content:center;
+  z-index:10000; /* above Alora */
+}
+#reflectiv-coach-overlay.open{ display:flex; }
+
+/* Modal */
+#reflectiv-coach{
+  width:min(960px,92vw);
+  background:var(--white);
+  border-radius:16px;
+  box-shadow:0 24px 64px rgba(0,0,0,.24);
+  overflow:hidden;
+  display:flex; flex-direction:column;
+  font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+}
+
+/* Header */
+#reflectiv-coach .header{
+  display:flex; align-items:center; justify-content:space-between;
+  background:var(--navy); color:#fff; padding:12px 16px;
+}
+#reflectiv-coach .header .title{ font-weight:700; }
+#reflectiv-coach .header .close{
+  appearance:none; border:0; background:transparent; color:#fff;
+  font-size:22px; line-height:1; padding:6px 8px; cursor:pointer;
+  border-radius:8px;
+}
+#reflectiv-coach .header .close:focus{ outline:2px solid var(--teal); outline-offset:2px; }
+
+/* Toolbar / controls */
+#reflectiv-coach .toolbar{
+  background:var(--panel); border-bottom:1px solid var(--line);
+  padding:12px 16px;
+}
+#reflectiv-coach .controls{
+  display:grid; gap:12px 16px; align-items:end;
+  grid-template-columns:180px 1fr 180px 1fr;
+}
+#reflectiv-coach label{ font-size:12px; font-weight:600; color:var(--ink); }
+#reflectiv-coach select{
+  height:38px; border:1px solid #cfd6df; border-radius:8px; background:#fff;
+  padding:6px 10px; font-size:14px; color:var(--ink);
+}
+#reflectiv-coach .hint{ font-size:12px; color:var(--muted); }
+
+/* Body */
+#reflectiv-coach .body{
+  display:grid; grid-template-rows:1fr auto auto; min-height:420px;
+}
+
+/* Chat area */
+#reflectiv-coach .messages{
+  background:#fbfdff; padding:14px; overflow:auto; max-height:44vh; min-height:220px;
+  border-bottom:1px solid var(--line);
+}
+#reflectiv-coach .msg{ display:flex; margin:8px 0; }
+#reflectiv-coach .msg.user{ justify-content:flex-end; }
+#reflectiv-coach .bubble{
+  max-width:78%; padding:10px 12px; border-radius:14px; line-height:1.45;
+  border:1px solid #d6dbe3; background:#e9edf3; color:var(--ink); font-size:14px;
+}
+#reflectiv-coach .msg.user .bubble{ background:#e0e0e0; color:#000; }
+
+/* Input row */
+#reflectiv-coach .input{
+  display:flex; gap:10px; padding:12px 14px; background:#fff; border-bottom:1px solid var(--line);
+}
+#reflectiv-coach textarea{
+  flex:1; resize:none; min-height:44px; max-height:128px;
+  border:1px solid #cfd6df; border-radius:10px; padding:10px 12px; font-size:14px; outline:0;
+}
+#reflectiv-coach .btn{
+  min-width:92px; border-radius:999px; border:0; background:var(--navy); color:#fff; font-weight:700; cursor:pointer; padding:10px 16px;
+}
+#reflectiv-coach .btn:hover{ background:#183553; }
+
+/* Coach feedback panel */
+#reflectiv-coach .coach{
+  background:#fffbe8; border-top:1px solid var(--line);
+  padding:12px 14px;
+}
+#reflectiv-coach .coach h4{ margin:0 0 6px; font-size:15px; color:var(--ink); }
+#reflectiv-coach .score{ font-weight:700; margin-right:8px; }
+#reflectiv-coach .pills{ margin:6px 0 8px; }
+#reflectiv-coach .pill{
+  display:inline-block; font-size:12px; padding:2px 8px; margin-right:6px;
+  background:#f1f3f7; border:1px solid #d6dbe3; border-radius:999px;
+}
+#reflectiv-coach details{ margin-top:6px; }
+#reflectiv-coach summary{ cursor:pointer; font-weight:600; }
+
+/* Tooltip for EI descriptors */
+.tooltip{
+  position:relative; display:inline-block; cursor:help;
+}
+.tooltip .tip{
+  position:absolute; left:50%; transform:translateX(-50%);
+  bottom:140%; width:220px; background:#0f1522; color:#fff; padding:8px 10px; border-radius:8px;
+  font-size:12px; line-height:1.35; opacity:0; pointer-events:none; transition:opacity .15s ease;
+  box-shadow:0 8px 18px rgba(0,0,0,.22);
+}
+.tooltip:hover .tip{ opacity:1; }
+.tooltip .tip:after{
+  content:""; position:absolute; left:50%; transform:translateX(-50%);
+  top:100%; border:8px solid transparent; border-top-color:#0f1522;
+}
+
+/* Responsive */
+@media (max-width:900px){
+  #reflectiv-coach .controls{ grid-template-columns:1fr; }
+  #reflectiv-coach .messages{ max-height:46vh; }
+}
