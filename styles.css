@@ -1,12 +1,12 @@
 /*
  * ReflectivAI Site Stylesheet (drop-in)
- * Clean layout, modern cards, modal coach, Alora FAB + panel.
+ * Clean layout, modern cards, coach modal, Alora FAB.
  */
 
+/* ============== Tokens ============== */
 :root{
   --navy:#1e2a3a;
   --navy-2:#0b1f30;
-  --teal:#20bfa9;
   --ink:#0b1323;
   --slate:#596a82;
   --bg:#ffffff;
@@ -14,6 +14,16 @@
   --card:#fbfdff;
   --border:#e6ecf3;
   --shadow:0 8px 24px rgba(15,24,36,.12);
+
+  /* CTN chips */
+  --chip-bg:#6b7280;    /* medium gray */
+  --chip-text:#ffffff;
+  --chip-border:#ffffff;
+
+  /* CTA buttons */
+  --cta-bg:#0c2740;
+  --cta-text:#ffffff;
+  --cta-border:#ffffff;
 }
 
 html{scroll-behavior:smooth}
@@ -25,7 +35,7 @@ body{
   line-height:1.55;
 }
 
-/* ---------- Header / Nav ---------- */
+/* ============== Header / Nav ============== */
 .site-header{position:sticky;top:0;z-index:1000;background:var(--navy);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.12)}
 .nav{max-width:1120px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:10px clamp(16px,4vw,28px);position:relative}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none}
@@ -49,14 +59,21 @@ body{
   .nav-links a{width:100%}
 }
 
-/* ---------- Buttons ---------- */
-.btn{display:inline-block;border-radius:12px;padding:12px 16px;font-weight:800;text-decoration:none;border:2px solid transparent}
-.btn.primary{background:#0c2740;color:#fff;border:none}
-.btn.primary:hover{filter:brightness(.96)}
-.btn.secondary{background:#0c2740;color:#fff;border:none}
-.btn.secondary:hover{filter:brightness(.98)}
+/* ============== Buttons ============== */
+.btn{
+  display:inline-block;border-radius:12px;padding:13px 18px;
+  font-weight:800;text-decoration:none;border:2px solid var(--cta-border);
+  transition:transform .06s ease, filter .15s ease;
+}
+.btn.primary{background:var(--cta-bg);color:var(--cta-text)}
+.btn.secondary{background:transparent;color:var(--cta-text)}
+.btn:hover{filter:brightness(.98)}
+.btn:active{transform:scale(.98)}
 
-/* ---------- Hero ---------- */
+/* Hero CTA size bump ~10% */
+.hero .btn{padding:15px 20px;font-size:1.06rem;border:2px solid var(--cta-border)}
+
+/* ============== Hero ============== */
 .hero{
   background:radial-gradient(1200px 600px at 70% -10%,#1b6b88 0%,#0e2b40 45%,#0b1f30 70%,#0a1a27 100%);
   color:#eaf2f7; padding:72px 0 56px
@@ -73,102 +90,112 @@ body{
   .hero-img img{height:220px}
 }
 
-/* ---------- Why it matters strip ---------- */
+/* ============== Why strip ============== */
 .why{background:#0c2740;color:#fff}
 .why-inner{max-width:1120px;margin:0 auto;padding:36px clamp(16px,4vw,28px)}
-.why-title{margin:0 0 8px;font-weight:300;letter-spacing:.2px;font-size:clamp(20px,3.2vw,28px)}
-.why-text{margin:0;font:400 15px/1.6 "Inter",system-ui,sans-serif;color:#eaf2f7}
+.why-title{margin:0 0 8px;font-weight:700;font-size:clamp(20px,3.2vw,28px)}
+.why-text{margin:0;color:#eaf2f7}
 
-/* ---------- Sections ---------- */
+/* ============== Sections ============== */
 .section{padding:56px clamp(16px,4vw,28px)}
 .section-inner{max-width:1120px;margin:0 auto}
 h2{font-size:clamp(26px,3.6vw,40px);margin:0 0 18px;font-weight:900;letter-spacing:-.01em;color:var(--ink)}
 .muted{color:var(--slate)}
 
-/* ---------- Cards / grids ---------- */
+/* ============== Cards / grids ============== */
 .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 @media (max-width:960px){.grid-3{grid-template-columns:1fr}}
 .card{
-  background:#fff;
-  border:1px solid var(--border);
-  border-radius:14px;
-  padding:16px;
-  box-shadow:0 1px 2px rgba(0,0,0,.04);
+  background:#fff;border:1px solid var(--border);border-radius:14px;
+  padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04);
 }
 .card h3{margin:.25rem 0 .5rem;font-size:20px}
 .card p{margin:0}
 
-/* Platform modules = denser rows */
+/* modules layout */
 .platform .grid-3 .card{display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:center}
 .platform .grid-3 .card h3{margin:0}
 @media (max-width:720px){.platform .grid-3 .card{grid-template-columns:1fr}}
 
-/* ---------- Split Lists (Therapeutic Area / Personas) ---------- */
+/* ============== Split Lists alignment fix ============== */
 .split{
   display:grid;
-  grid-template-columns:1fr 12px 1fr;
-  gap:18px;
+  grid-template-columns:1fr 1px 1fr;   /* clean divider */
+  gap:24px;
   align-items:start;
 }
-.split .divider{background:#e6ecf3;border-radius:2px}
-.split .col h2{margin-bottom:10px}
+.split .divider{background:var(--border);border-radius:1px;align-self:stretch}
+.split .col{min-width:0}
+.split .col h2{margin-bottom:12px}
+
+/* CTN chips — medium gray bg, white text, white border */
 .chips{display:flex;flex-wrap:wrap;gap:10px}
 .tag{
-  display:inline-block;background:#eef5ff;border:1px solid #d6e6ff;
-  padding:10px 14px;border-radius:12px;font-weight:700;color:var(--ink);
-  text-decoration:none;cursor:pointer;
+  display:inline-block;background:var(--chip-bg);color:var(--chip-text);
+  border:1px solid var(--chip-border);padding:10px 14px;border-radius:999px;
+  font-weight:700;text-decoration:none;cursor:pointer;white-space:nowrap;
 }
-.tag:hover{background:#e6f0ff}
+.tag:hover{filter:brightness(.95)}
 
-/* ---------- Feature list (no bullets) ---------- */
+/* ============== Feature list ============== */
 .feature-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
 @media (max-width:900px){.feature-list{grid-template-columns:1fr}}
 .feature-list li{list-style:none}
 
-/* ---------- Analytics metric links ---------- */
+/* ============== Metrics pills (reuse CTN) ============== */
 .metrics-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.metrics-grid .tag{background:var(--chip-bg);color:var(--chip-text);border:1px solid var(--chip-border)}
 
-/* ---------- Modal (cards + coach) ---------- */
+/* ============== Modal ============== */
 .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(6,12,20,.45);z-index:1200}
 .modal.open{display:flex}
 .modal-box{background:#fff;border-radius:16px;box-shadow:var(--shadow);max-width:min(980px,92vw);width:100%;max-height:88vh;overflow:auto;border:1px solid var(--border)}
 .modal-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);background:#f9fbff;border-radius:16px 16px 0 0}
 .modal-title{font-weight:900}
 .modal-close{background:#1e2a3a;color:#fff;border:0;border-radius:10px;padding:6px 10px;cursor:pointer}
-
-/* Large coach modal body sizing */
 #coachModal .modal-box{max-width:1100px;width:96vw}
 #coachBody{padding:0}
 
-/* ---------- Reflectiv widget toolbar layout (4-up, full width) ---------- */
-#coachModal .chat-toolbar{
-  display:grid !important;
-  grid-template-columns:repeat(4, minmax(0,1fr)) !important;
-  gap:12px !important;
-  align-items:end;
-}
-#coachModal .chat-toolbar > *{width:100%}
-#coachModal .chat-toolbar select,
-#coachModal .chat-toolbar button,
-#coachModal .chat-toolbar .btn,
-#coachModal .chat-toolbar .cw-select{width:100%}
-
-/* In-widget version for embedded toolbar (defensive) */
+/* ============== Coach toolbar — WIDER selects ============== */
+/* Force four equal columns and make selects expand fully */
 #reflectiv-widget .chat-toolbar{padding:16px;background:#0c2740;color:#fff}
 #reflectiv-widget .controls-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:end}
-#reflectiv-widget .ctrl{display:flex;flex-direction:column;gap:6px}
+#reflectiv-widget .ctrl{display:flex;flex-direction:column;gap:6px;min-width:0}
 #reflectiv-widget .ctrl label{font-size:12px;font-weight:600;opacity:.9}
-#reflectiv-widget .ctrl select{width:100%;height:40px;padding:6px 10px;font-size:14px;border:1px solid #b9c5d6;border-radius:10px;background:#fff;color:#0b1323}
+#reflectiv-widget .ctrl select{
+  width:100% !important; min-width:0; height:40px;
+  padding:6px 10px; font-size:14px; border:1px solid #b9c5d6;
+  border-radius:10px; background:#fff; color:#0b1323;
+}
+#coachModal .chat-toolbar,
+#coachModal .controls-grid{display:grid !important;grid-template-columns:repeat(4,minmax(0,1fr)) !important;gap:12px !important;align-items:end}
+#coachModal .ctrl{min-width:0}
+#coachModal .ctrl select{width:100% !important;min-width:0;height:40px;padding:6px 10px;font-size:14px;border:1px solid #b9c5d6;border-radius:10px;background:#fff;color:#0b1323}
+#coachModal .chat-toolbar > *{width:100%}
+
 @media (max-width:900px){
-  #coachModal .chat-toolbar{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
   #reflectiv-widget .controls-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #coachModal .controls-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
 }
 @media (max-width:540px){
-  #coachModal .chat-toolbar{grid-template-columns:1fr !important}
   #reflectiv-widget .controls-grid{grid-template-columns:1fr}
+  #coachModal .controls-grid{grid-template-columns:1fr !important}
 }
 
-/* ---------- Alora FAB + panel (right) ---------- */
+/* ============== Chat area ============== */
+#reflectiv-widget .chat-messages{min-height:260px;height:320px;max-height:50vh;overflow:auto;padding:12px 14px;background:#f7f9fc}
+#reflectiv-widget .message{margin:8px 0;display:flex}
+#reflectiv-widget .message.user{justify-content:flex-end}
+#reflectiv-widget .message.assistant{justify-content:flex-start}
+#reflectiv-widget .message .content{max-width:85%;line-height:1.45;font-size:14px;padding:10px 12px;border-radius:14px;border:1px solid #d6dbe3;color:#0f1522;background:#e9edf3}
+#reflectiv-widget .message.user .content{background:#e0e0e0;color:#000}
+#reflectiv-widget .chat-input{display:flex;gap:8px;padding:12px 14px;border-top:1px solid #e1e6ef;background:#fff}
+#reflectiv-widget .chat-input textarea{flex:1;resize:none;min-height:44px;max-height:120px;padding:10px 12px;border:1px solid #cfd6df;border-radius:10px;outline:none}
+#reflectiv-widget .chat-input .btn{min-width:86px;border:0;border-radius:999px;background:#1e2a3a;color:#fff;font-weight:600}
+#reflectiv-widget .coach-section{margin:0 14px 14px;padding:12px 14px;border:1px solid #e1e6ef;border-radius:12px;background:#fff}
+#reflectiv-widget .coach-subs .pill{display:inline-block;padding:2px 8px;margin-right:6px;font-size:12px;background:#f1f3f7;border:1px solid #d6dbe3;border-radius:999px}
+
+/* ============== Alora FAB + panel (right) ============== */
 #aloraFab{
   position:fixed;right:22px;bottom:22px;z-index:9999;width:64px;height:64px;
   border:none;border-radius:50%;background:#0c2740;color:#fff;
@@ -190,6 +217,6 @@ h2{font-size:clamp(26px,3.6vw,40px);margin:0 0 18px;font-weight:900;letter-spaci
 .alora-input input{flex:1;border:1px solid #cfd8e3;border-radius:10px;padding:10px 12px;font-size:15px}
 .alora-input .btn.primary{background:#0c2740;color:#fff;border:none;border-radius:10px;padding:10px 12px}
 
-/* ---------- Utilities ---------- */
+/* ============== Utilities ============== */
 .hidden{display:none !important}
 *:focus-visible{outline:2px solid #7ed9ca;outline-offset:2px}
