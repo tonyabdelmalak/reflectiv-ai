@@ -51,6 +51,17 @@
 #coach-summary {
   display: none !important;
 }
+/* Absolute kill: any orphaned Reflectiv Coach modal or banner */
+div[role="dialog"],
+div[class*="coach"],
+div[id*="coach"],
+div[class*="reflectiv"],
+div[id*="reflectiv"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
 
   
 }
