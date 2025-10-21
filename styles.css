@@ -194,6 +194,15 @@ h2{font-size:clamp(28px,3.8vw,44px);margin:0 0 18px;font-weight:900;letter-spaci
   border-radius:16px;
   border:1px solid var(--border);
   box-shadow:var(--shadow);
+
+  /* Align site palette with uniform pink pills and navy accents */
+:root{ --navy:#0c2740; --pill:#ffeaf1; --pill-border:#0c2740; }
+.tag, .chip, .pill{
+  background:var(--pill)!important;
+  border:1px solid var(--pill-border)!important;
+  color:var(--navy)!important;
+}
+
 }
 
 /* Do not hide or gate the Reflectiv Coach from global CSS */
