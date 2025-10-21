@@ -434,21 +434,22 @@ const PERSONAS_ALL =
     ? cfg.eiProfiles
     : DEFAULT_PERSONAS;
 
-// Try multiple keys; normalize strings -> {key,label}
-const FEATURES_ALL_RAW =
-  (Array.isArray(cfg?.eiFeatures) && cfg.eiFeatures.length && cfg.eiFeatures) ||
-  (Array.isArray(cfg?.features) && cfg.features.length && cfg.features) ||
-  DEFAULT_EI_FEATURES;
-
-const FEATURES_ALL = FEATURES_ALL_RAW.map(f =>
-  typeof f === "string"
-    ? { key: f.toLowerCase().replace(/\s+/g, "-"), label: f }
-    : f
-);
+// Ensure features come from config if present; normalize and never empty
+const FEATURES_ALL = (() => {
+  const raw =
+    (Array.isArray(cfg?.eiFeatures) && cfg.eiFeatures.length && cfg.eiFeatures) ||
+    (Array.isArray(cfg?.features) && cfg.features.length && cfg.features) ||
+    [];
+  const list = raw.map(f =>
+    typeof f === "string" ? { key: f.toLowerCase().replace(/\s+/g, "-"), label: f } : f
+  );
+  return list.length ? list : DEFAULT_EI_FEATURES;
+})();
 
 // Rebuild EI selects with full lists
 function hydrateEISelects() {
   if (!personaSelectElem || !eiFeatureSelectElem) return;
+
   personaSelectElem.innerHTML = "";
   eiFeatureSelectElem.innerHTML = "";
   personaSelectElem.disabled = false;
@@ -464,25 +465,25 @@ function hydrateEISelects() {
 
   // Personas
   PERSONAS_ALL.forEach(p => {
-    const o = document.createElement("option");
     const val = p.key || p.value || p.id || String(p).toLowerCase().replace(/\s+/g, "-");
     const lab = p.label || p.name || p.title || String(p);
+    const o = document.createElement("option");
     o.value = val; o.textContent = lab;
     personaSelectElem.appendChild(o);
   });
 
   // Features
   FEATURES_ALL.forEach(f => {
-    const o = document.createElement("option");
     const val = f.key || f.value || f.id || String(f).toLowerCase().replace(/\s+/g, "-");
     const lab = f.label || f.name || f.title || String(f);
+    const o = document.createElement("option");
     o.value = val; o.textContent = lab;
     eiFeatureSelectElem.appendChild(o);
   });
 
-  // Debug aid
-  if (!FEATURES_ALL.length)
+  if (!FEATURES_ALL.length) {
     console.warn("EI features list is empty; check config keys (eiFeatures/features).");
+  }
 }
 
 hydrateEISelects();
@@ -583,57 +584,61 @@ shell.appendChild(bar);
 }
 
     function applyModeVisibility() {
-      const lc = modeSel.value;
-      currentMode = LC_TO_INTERNAL[lc];
-      const pk = currentMode === "product-knowledge";
+  const lc = modeSel.value;
+  currentMode = LC_TO_INTERNAL[lc];
+  const pk = currentMode === "product-knowledge";
 
-      coachLabel.classList.toggle("hidden", pk);
-      coachSel.classList.toggle("hidden", pk);
+  coachLabel.classList.toggle("hidden", pk);
+  coachSel.classList.toggle("hidden", pk);
 
-      if (currentMode === "sales-simulation") {
-        diseaseLabel.classList.remove("hidden");
-        diseaseSelect.classList.remove("hidden");
-        hcpLabel.classList.remove("hidden");
-        hcpSelect.classList.remove("hidden");
-        personaLabelElem.classList.add("hidden");
-        personaSelectElem.classList.add("hidden");
-        featureLabelElem.classList.add("hidden");
-        eiFeatureSelectElem.classList.add("hidden");
-        feedbackDisplayElem.innerHTML = "";
-        populateDiseases();
-      } else if (currentMode === "product-knowledge") {
-        diseaseLabel.classList.remove("hidden");
-        diseaseSelect.classList.remove("hidden");
-        hcpLabel.classList.add("hidden");
-        hcpSelect.classList.add("hidden");
-        personaLabelElem.classList.add("hidden");
-        personaSelectElem.classList.add("hidden");
-        featureLabelElem.classList.add("hidden");
-        eiFeatureSelectElem.classList.add("hidden");
-        feedbackDisplayElem.innerHTML = "";
-        populateDiseases();
-      } else {
-        diseaseLabel.classList.add("hidden");
-        diseaseSelect.classList.add("hidden");
-        hcpLabel.classList.add("hidden");
-        hcpSelect.classList.add("hidden");
-        personaLabelElem.classList.remove("hidden");
-        personaSelectElem.classList.remove("hidden");
-        featureLabelElem.classList.remove("hidden");
-        eiFeatureSelectElem.classList.remove("hidden");
-        feedbackDisplayElem.innerHTML = "";
-        currentScenarioId = null;
-        conversation = [];
-        renderMessages(); renderCoach(); renderMeta();
-      }
+  if (currentMode === "sales-simulation") {
+    // Show disease + HCP selects. Hide EI selects.
+    diseaseLabel.classList.remove("hidden");
+    diseaseSelect.classList.remove("hidden");
+    hcpLabel.classList.remove("hidden");
+    hcpSelect.classList.remove("hidden");
+    personaLabelElem.classList.add("hidden");
+    personaSelectElem.classList.add("hidden");
+    featureLabelElem.classList.add("hidden");
+    eiFeatureSelectElem.classList.add("hidden");
+    feedbackDisplayElem.innerHTML = "";
+    populateDiseases();
+  } else if (currentMode === "product-knowledge") {
+    // Show disease only. Hide HCP and EI selects.
+    diseaseLabel.classList.remove("hidden");
+    diseaseSelect.classList.remove("hidden");
+    hcpLabel.classList.add("hidden");
+    hcpSelect.classList.add("hidden");
+    personaLabelElem.classList.add("hidden");
+    personaSelectElem.classList.add("hidden");
+    featureLabelElem.classList.add("hidden");
+    eiFeatureSelectElem.classList.add("hidden");
+    feedbackDisplayElem.innerHTML = "";
+    populateDiseases();
+  } else {
+    // Emotional Intelligence mode. Hide disease/HCP. Show EI selects and re-hydrate.
+    diseaseLabel.classList.add("hidden");
+    diseaseSelect.classList.add("hidden");
+    hcpLabel.classList.add("hidden");
+    hcpSelect.classList.add("hidden");
+    personaLabelElem.classList.remove("hidden");
+    personaSelectElem.classList.remove("hidden");
+    featureLabelElem.classList.remove("hidden");
+    eiFeatureSelectElem.classList.remove("hidden");
+    feedbackDisplayElem.innerHTML = "";
+    currentScenarioId = null;
+    conversation = [];
+    hydrateEISelects(); // ensure full lists populate
+    renderMessages(); renderCoach(); renderMeta();
+  }
 
-      if (currentMode !== "sales-simulation") {
-        currentScenarioId = null;
-        conversation = [];
-        renderMessages(); renderCoach(); renderMeta();
-      }
-    }
-
+  if (currentMode !== "sales-simulation") {
+    currentScenarioId = null;
+    conversation = [];
+    renderMessages(); renderCoach(); renderMeta();
+  }
+}
+    
     modeSel.addEventListener("change", applyModeVisibility);
 
     diseaseSelect.addEventListener("change", ()=>{
