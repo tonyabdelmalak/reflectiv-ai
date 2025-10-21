@@ -10,6 +10,7 @@
 
   <!-- Tailwind for the Highspot-aligned mockup utilities -->
   <script src="https://cdn.tailwindcss.com"></script>
+  
   <style>
     /* Tailwind theme tweaks used by the mockup */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
@@ -27,14 +28,16 @@
   <!-- Site CSS (kept) -->
   <link rel="stylesheet" href="styles.css?v=20251021B">
 
-  <!-- Coach styles + pinned JS (kept) -->
-  <link rel="stylesheet" href="widget.css?v=af269804">
+  <!-- Coach styles + pinned JS -->
+  <link rel="stylesheet" href="widget.css?v=20251021-3">
   <script>
     window.WORKER_URL = 'https://my-chat-agent-v2.tonyabdelmalak.workers.dev';
     window.COACH_ENDPOINT = window.WORKER_URL + '/chat';
     window.ALORA_ENDPOINT = window.WORKER_URL + '/chat';
   </script>
-  <script defer src="widget.js?v=af269804"></script>
+
+  <!-- Cache-busted JS -->
+  <script defer src="widget.js?v=20251021-3"></script>
 
   <!-- Ensure Alora stays on top -->
   <style>#aloraFab{z-index:10001;pointer-events:auto}.alora{z-index:10001}</style>
