@@ -191,4 +191,29 @@ h2{font-size:clamp(28px,3.8vw,44px);margin:0 0 18px;font-weight:900;letter-spaci
 /* ---------- Helpers ---------- */
 .section .section-inner > img.slab-img{
   width:100%;height:auto;border-radius:16px;border:1px solid var(--border);box-shadow:var(--shadow)
+/* --- Reflectiv Coach hard guard --- */
+#reflectiv-widget,
+#reflectiv-coach,
+.reflectiv-coach,
+.coach-modal {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#reflectiv-widget.is-open,
+#reflectiv-coach.is-open,
+.reflectiv-coach.is-open,
+.coach-modal.is-open {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* belt-and-suspenders: kill any stray banner/toast */
+.cw-banner,
+.cw-toast {
+  display: none !important;
+}
+ 
 }
