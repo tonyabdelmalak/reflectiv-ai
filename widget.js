@@ -553,11 +553,9 @@ shell.appendChild(bar);
     }
 
     function populateEIOptions() {
-      const personaList = (cfg && Array.isArray(cfg.personas) && cfg.personas.length) ? cfg.personas : DEFAULT_PERSONAS;
-      const featureList = (cfg && Array.isArray(cfg.eiFeatures) && cfg.eiFeatures.length) ? cfg.eiFeatures : DEFAULT_EI_FEATURES;
-      setSelectOptions(personaSelect, personaList.map(p => ({ value: p.key || p.id || p.label, label: p.label || p.key || p.id })), true);
-      setSelectOptions(featureSelect, featureList.map(f => ({ value: f.key || f.id || f.label, label: f.label || f.key || f.id })), true);
-    }
+  // Delegate to the uncapped hydrator that uses cfg.eiProfiles / cfg.eiFeatures
+  hydrateEISelects();
+}
 
     function applyModeVisibility() {
       const lc = modeSel.value;
