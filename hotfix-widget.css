@@ -1,15 +1,16 @@
-/* ===== ReflectivAI Coach — z-index fix + layout (2025-10-20-6) ===== */
+/* ===== ReflectivAI Coach — layout + z-index + modal hide (2025-10-20-7) ===== */
+
+#reflectiv-modal[hidden]{display:none!important}
 
 .reflectiv-chat,
-#reflectiv-widget .reflectiv-chat {
+#reflectiv-widget .reflectiv-chat{
   --navy:#0f2236; --navy-2:#17314e; --slab:#f6f8fb; --stroke:#d8e0ea;
   --text:#0f1522; --muted:#6b7a90;
   font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
   color:var(--text); background:#fff; border:1px solid var(--stroke);
   border-radius:14px; box-shadow:0 20px 40px rgba(12,24,40,.18);
   width:min(1120px,96vw); max-height:78vh; overflow:hidden;
-  position:relative;           /* ensure above backdrop */
-  z-index:1;
+  position:relative; z-index:1;
 }
 
 /* Title bars */
@@ -52,8 +53,11 @@
 /* Right metrics */
 .reflectiv-chat .metrics-slab{background:#fff;border:1px solid var(--stroke);border-radius:12px;
   padding:10px;display:flex;flex-direction:column;gap:8px}
+.reflectiv-chat .metric{border:1px solid #e5ecf4;border-radius:12px;padding:10px;background:#fbfdff}
+.reflectiv-chat .metric h5{margin:0 0 4px 0;font-size:12px;font-weight:900;color:var(--navy)}
+.reflectiv-chat .metric .value{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:#111827}
 
-/* Backdrop + modal stacking (fix) */
+/* Backdrop + modal stacking */
 #reflectiv-modal{position:fixed;inset:0;display:grid;place-items:center;padding:24px;z-index:9999}
 #reflectiv-modal-backdrop{position:absolute;inset:0;z-index:0;background:rgba(3,13,24,.55);backdrop-filter:saturate(120%) blur(2px)}
 #reflectiv-modal .reflectiv-chat{z-index:1}
