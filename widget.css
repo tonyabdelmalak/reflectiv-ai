@@ -279,3 +279,28 @@
 
 /* 4) Defensive: reset any global Tailwind utilities leaking in */
 #reflectiv-widget * { box-sizing:border-box; }
+
+/* ---------- OVERRIDES ADDED TO FIX CLIPPING AND MAKE BODY SCROLL ---------- */
+
+/* Make modal content a flex column so body can scroll, footer stays visible */
+#coachModal .modal-box {
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+/* Scroll the body area only */
+#coachBody {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0;
+}
+
+/* Let the widget message area size naturally; modal controls height */
+#reflectiv-widget .chat-messages {
+  min-height: 220px;
+  height: auto;
+  max-height: none;
+}
