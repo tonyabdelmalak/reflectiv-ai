@@ -13,21 +13,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
 
-  <!-- Core site + widget styles -->
-  <link rel="stylesheet" href="styles.css?v=20251020-7">
-  <link rel="stylesheet" href="widget.css?v=20251020-7">
-  <link rel="stylesheet" href="hotfix-widget.css?v=20251020-7"><!-- must load last -->
+  <!-- Core styles -->
+  <link rel="stylesheet" href="styles.css?v=20251020-5">
+  <link rel="stylesheet" href="widget.css?v=20251020-5">
 
-  <!-- Cloudflare Worker endpoints -->
-  <script>
-    // Replace with your actual Worker or routed domain
-    window.WORKER_URL = 'https://reflectivai-agent.YOURACCOUNT.workers.dev';
-    window.COACH_ENDPOINT = window.WORKER_URL + '/chat';
-    window.ALORA_ENDPOINT = window.WORKER_URL + '/chat';
-  </script>
-
-  <!-- ReflectivAI Coach widget -->
-  <script defer src="widget.js?v=20251020-7"></script>
+  <!-- Modal/layout overrides (must load last) -->
+  <link rel="stylesheet" href="hotfix-widget.css?v=20251020-5">
 
   <!-- HERO + FORM + ALORA quick overrides -->
   <style>
@@ -67,6 +58,17 @@
     .alora-input input{flex:1;border:1px solid #cfd8e3;border-radius:10px;padding:10px 12px;font-size:15px}
     .alora-input .btn.primary{background:#0c2740;color:#fff;border:none;border-radius:10px;padding:10px 12px}
   </style>
+
+  <!-- Worker endpoints -->
+  <script>
+    // set your Worker URL here once; widget.js reads these
+    window.WORKER_URL = 'https://YOUR-WORKER-NAME.YOUR-ACCOUNT.workers.dev';
+    window.COACH_ENDPOINT = window.WORKER_URL + '/chat';
+    window.ALORA_ENDPOINT = window.WORKER_URL + '/chat';
+  </script>
+
+  <!-- ReflectivAI widget bootstrap -->
+  <script defer src="widget.js?v=20251020-5"></script>
 </head>
 <body>
 
