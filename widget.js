@@ -429,37 +429,62 @@ featureLabelElem = featureLabel;
 featureSelect.addEventListener("change", generateFeedback);
 
 // ---------- EI option sources (no demo caps) ----------
-const PERSONAS_ALL = (cfg?.eiProfiles && cfg.eiProfiles.length ? cfg.eiProfiles : DEFAULT_PERSONAS);
-const FEATURES_ALL = (cfg?.eiFeatures && cfg.eiFeatures.length ? cfg.eiFeatures : DEFAULT_EI_FEATURES);
+const PERSONAS_ALL =
+  Array.isArray(cfg?.eiProfiles) && cfg.eiProfiles.length
+    ? cfg.eiProfiles
+    : DEFAULT_PERSONAS;
+
+// Try multiple keys; normalize strings -> {key,label}
+const FEATURES_ALL_RAW =
+  (Array.isArray(cfg?.eiFeatures) && cfg.eiFeatures.length && cfg.eiFeatures) ||
+  (Array.isArray(cfg?.features) && cfg.features.length && cfg.features) ||
+  DEFAULT_EI_FEATURES;
+
+const FEATURES_ALL = FEATURES_ALL_RAW.map(f =>
+  typeof f === "string"
+    ? { key: f.toLowerCase().replace(/\s+/g, "-"), label: f }
+    : f
+);
 
 // Rebuild EI selects with full lists
 function hydrateEISelects() {
   if (!personaSelectElem || !eiFeatureSelectElem) return;
-  personaSelectElem.innerHTML = '';
-  eiFeatureSelectElem.innerHTML = '';
+  personaSelectElem.innerHTML = "";
+  eiFeatureSelectElem.innerHTML = "";
+  personaSelectElem.disabled = false;
+  eiFeatureSelectElem.disabled = false;
 
-  const opt = (txt, val = '') => {
-    const o = document.createElement('option');
+  const opt = (txt, val = "") => {
+    const o = document.createElement("option");
     o.value = val; o.textContent = txt;
     return o;
   };
-  personaSelectElem.appendChild(opt('Select...', ''));
-  eiFeatureSelectElem.appendChild(opt('Select...', ''));
+  personaSelectElem.appendChild(opt("Select...", ""));
+  eiFeatureSelectElem.appendChild(opt("Select...", ""));
 
+  // Personas
   PERSONAS_ALL.forEach(p => {
-    const o = document.createElement('option');
-    o.value = p.key || p.value || p.id || String(p).toLowerCase().replace(/\s+/g, '-');
-    o.textContent = p.label || p.name || p.title || String(p);
+    const o = document.createElement("option");
+    const val = p.key || p.value || p.id || String(p).toLowerCase().replace(/\s+/g, "-");
+    const lab = p.label || p.name || p.title || String(p);
+    o.value = val; o.textContent = lab;
     personaSelectElem.appendChild(o);
   });
 
+  // Features
   FEATURES_ALL.forEach(f => {
-    const o = document.createElement('option');
-    o.value = f.key || f.value || f.id || String(f).toLowerCase().replace(/\s+/g, '-');
-    o.textContent = f.label || f.name || f.title || String(f);
+    const o = document.createElement("option");
+    const val = f.key || f.value || f.id || String(f).toLowerCase().replace(/\s+/g, "-");
+    const lab = f.label || f.name || f.title || String(f);
+    o.value = val; o.textContent = lab;
     eiFeatureSelectElem.appendChild(o);
   });
+
+  // Debug aid
+  if (!FEATURES_ALL.length)
+    console.warn("EI features list is empty; check config keys (eiFeatures/features).");
 }
+
 hydrateEISelects();
 
 // mount controls
