@@ -1,4 +1,3 @@
-
 /* ReflectivAI Chat/Coach — compact drop-in (coach-v2, UI v20251020-5) */
 
 (function(){
