@@ -41,4 +41,16 @@
   overflow:hidden;
   position:relative;
   z-index:1;
+/* Kill stray hero coach banner */
+.bg-navy details,
+.bg-navy details summary,
+.coach-cta,
+.coach-banner,
+#coach-inline,
+#coach-banner,
+#coach-summary {
+  display: none !important;
+}
+
+  
 }
