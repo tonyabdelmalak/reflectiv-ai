@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -90,7 +89,7 @@
 </section>
 
 <!-- ===== Why ===== -->
-<section class="py-16 border-t border-gray-200 text-white" style="background-color:#0f2747;">
+<section id="why-it-matters" class="py-16 border-t border-gray-200 text-white" style="background-color:#0f2747;">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
     <h2 class="text-3xl font-bold mb-4">Why Emotional Intelligence Matters in Sales</h2>
     <div class="w-20 mx-auto section-separator" style="background-color:#20bfa9;"></div>
@@ -174,7 +173,7 @@
 </section>
 
 <!-- ===== Therapeutic Areas & Personas (chips) ===== -->
-<section class="py-16 bg-white">
+<section id="therapeutic-areas" class="py-16 bg-white">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12">
     <!-- Therapeutic Areas -->
     <div class="text-center md:text-left">
@@ -485,7 +484,7 @@
   </div>
 </div>
 
-<!-- ===== Alora button and panel (unchanged) ===== -->
+<!-- ===== Alora button and panel ===== -->
 <button id="aloraFab" aria-label="Open Alora chat" title="Open Alora">
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path fill="#fff" d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9.4L5 19.9V16H5a2 2 0 0 1-2-2V5z"/></svg>
 </button>
@@ -495,7 +494,7 @@
   <form id="aloraForm" class="alora-input" autocomplete="off"><input id="aloraInput" placeholder="Ask about ReflectivAI…"><button class="btn primary" type="submit">Send</button></form>
 </div>
 
-<!-- ===== Robust JS bootstrap (kept; does not alter Alora logic) ===== -->
+<!-- ===== Robust JS bootstrap + Enhanced Alora Persona ===== -->
 <script>
 (function(){
   const onReady=(fn)=>{if(document.readyState!=='loading')fn();else document.addEventListener('DOMContentLoaded',fn);};
@@ -509,7 +508,7 @@
     /* Coach open */
     document.getElementById('openCoach')?.addEventListener('click',e=>{e.preventDefault();openModal('#coachModal')});
 
-    /* Alora init (unchanged behavior) */
+    /* Alora init */
     try{
       const aloraFab=document.getElementById('aloraFab');
       const alora=document.getElementById('alora');
@@ -530,19 +529,209 @@
           return null;
         }catch{return null}
       }
-      function respondLocal(q){
-        const s=q.toLowerCase();
-        if(/^(hi|hello|hey|yo)\b/.test(s))return"Hey there 👋. I can help you navigate the site and Coach.";
-        if(/\bprice|pricing|cost\b/.test(s))return"Pricing scales by team size and modules. Use Request Demo to get a quote.";
-        if(/\bsecurity|privacy|hipaa|compliance\b/.test(s))return"HIPAA safeguards, NIST AI RMF, ISO 27001/42001. PHI off by default; BAA when enabled.";
-        if(/\b(simulate|simulation|coach|practice)\b/.test(s))return"Launch the Coach from the hero or Simulations. You’ll get empathy and compliance feedback.";
-        if(/\bpersona|hcp\b/.test(s))return"Personas include Internal Medicine MDs, NPs, PAs, Oncologists, and more.";
-        if(/\bei|emotional intelligence|empathy\b/.test(s))return"EI mode measures Empathy, Accuracy, Tone, and Clarity with coaching tips.";
-        if(/\bintegration|crm|lms|salesforce|veeva\b/.test(s))return"Integrates with Salesforce, Veeva, and major LMS platforms.";
-        return"I can cover platform, analytics, governance, FAQs, and launching the Coach.";
+
+      /* ===== Enhanced Alora persona: interactive site guide (v3.2) ===== */
+
+      // Small DOM helpers
+      const $ = (sel, root=document) => root.querySelector(sel);
+      const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+      function scrollToId(id){
+        const el = document.getElementById(id) || $(`[data-anchor='${id}']`) || $(`[href='#${id}']`);
+        if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); return true; }
+        return false;
       }
-      function aloraOpen(){alora.classList.add('open');alora.setAttribute('aria-hidden','false');if(!aloraBody.dataset.greeted){bot("Hi, I’m Alora. How can I help?");aloraBody.dataset.greeted='1';}}
-      function aloraHide(){alora.classList.remove('open');alora.setAttribute('aria-hidden','true')}
+      function clickAny(selectors){
+        for(const s of selectors){
+          const el = $(s);
+          if(el){ el.click(); return true; }
+        }
+        return false;
+      }
+      function focusAny(selectors){
+        for(const s of selectors){
+          const el = $(s);
+          if(el){ el.focus(); return true; }
+        }
+        return false;
+      }
+
+      // Quick actions Alora can trigger
+      function aloraAction(cmd){
+        const c = String(cmd||"").toLowerCase();
+        if(c==="open-coach"){
+          return clickAny(["#openCoach",".open-coach","[data-open='coach']"]) || openModal('#coachModal') || scrollToId("platform");
+        }
+        if(c==="request-demo"){ return scrollToId("contact"); }
+        if(c==="see-personas"){ return scrollToId("therapeutic-areas"); }
+        if(c==="see-platform"){ return scrollToId("platform"); }
+        if(c==="see-ei"){ return scrollToId("why-it-matters"); }
+        if(c==="see-ethics"){ return scrollToId("ethics"); }
+        if(c==="see-analytics"){ return scrollToId("analytics"); }
+        if(c==="search"){ const ok = focusAny(["#site-search","input[type='search']"]); if(!ok) scrollToId("home"); return ok; }
+        if(c==="nav-demo"){ location.hash="#contact"; return true; }
+        return false;
+      }
+
+      // Suggestion chips inside Alora panel
+      function aloraSuggest(labelsAndCmds){
+        if(!window.aloraBody) return;
+        let wrap = $(".alora-suggest", aloraBody);
+        if(!wrap){
+          wrap = document.createElement("div");
+          wrap.className = "alora-suggest";
+          aloraBody.appendChild(wrap);
+        }
+        wrap.innerHTML = "";
+        (labelsAndCmds||[]).forEach(([label, cmd])=>{
+          const b = document.createElement("button");
+          b.type="button";
+          b.className="alora-chip";
+          b.textContent = label;
+          b.onclick = ()=>{ aloraAction(cmd); };
+          wrap.appendChild(b);
+        });
+      }
+
+      // Minimal styles for chips
+      (function(){
+        const css = `
+          .alora-suggest{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 0}
+          .alora-chip{border:1px solid #0f2747;border-radius:999px;padding:6px 10px;
+            background:#fff;color:#0f2747;font:600 12px/1.1 Inter,system-ui;cursor:pointer}
+          .alora-chip:hover{background:#eef4fa}
+        `;
+        const style = document.createElement("style");
+        style.textContent = css; document.head.appendChild(style);
+      })();
+
+      // Rich knowledge router
+      function respondLocalRich(q){
+        const s = String(q||"").toLowerCase().trim();
+        const SUGG_DEFAULT = [
+          ["Open Coach","open-coach"],
+          ["Request Demo","request-demo"],
+          ["See Personas","see-personas"],
+          ["Why EI","see-ei"]
+        ];
+        const intents = [
+          [/^(hi|hello|hey|yo|hiya|howdy)\b/,{
+            text:"Hi, I’m Alora. I can guide you on the platform, simulations, EI, pricing, integrations, and compliance.",
+            suggest:SUGG_DEFAULT
+          }],
+          [/\b(what\s+is|tell\s+me\s+about|about)\s+(reflectiv|reflectivai)\b|^reflectiv(ai)?\b/,{
+            text:"ReflectivAI is an AI sales-enablement platform for life sciences. It blends human coaching with simulations and EI feedback to lift real HCP conversations.",
+            suggest:[["See Platform","see-platform"],["Open Coach","open-coach"],["Request Demo","request-demo"]]
+          }],
+          [/\b(request|book|schedule)\b.*\b(demo|walkthrough|tour)\b|\bcontact\b/,{
+            text:"Use “Request a Demo.” We tailor the walkthrough to your team size, modules, and compliance needs.",
+            suggest:[["Request Demo","request-demo"],["See Platform","see-platform"],["Analytics","see-analytics"]]
+          }],
+          [/\b(price|pricing|cost|quote|subscription|license|licen[cs]ing)\b/,{
+            text:"Pricing scales by team size and selected modules: Product Knowledge, Sales Simulation, EI Mode, and Analytics.",
+            suggest:[["Request Demo","request-demo"],["Open Coach","open-coach"],["Analytics","see-analytics"]]
+          }],
+          [/\b(why|what)\b.*\b(ei|emotional intelligence|empathy)\b/,{
+            text:"EI improves trust and outcomes. We score Empathy, Tone, Clarity, Discovery, Objection Handling, and Compliance to target coaching where it matters.",
+            suggest:[["Why EI","see-ei"],["Open Coach","open-coach"],["Request Demo","request-demo"]]
+          }],
+          [/\bei\s?mode\b|\bempathy\s?index\b|\btone\b|\bclarity\b/,{
+            text:"EI Mode gives instant feedback with score deltas and one actionable fix each turn. Teams see trends and lift over time.",
+            suggest:[["Open Coach","open-coach"],["Analytics","see-analytics"],["Why EI","see-ei"]]
+          }],
+          [/\b(module|feature|capabilit(y|ies)|include|offer)\b/,{
+            text:"Modules: Product Knowledge Q&A, Sales Simulation, EI Mode coaching, and Analytics. Optional integrations: LMS/CRM and SSO.",
+            suggest:[["See Platform","see-platform"],["Open Coach","open-coach"],["Request Demo","request-demo"]]
+          }],
+          [/\b(simulate|simulation|coach|practice|role-?play|scenario|playback)\b/,{
+            text:"Launch the Coach to role-play with HCP personas. You get live coaching on empathy, objection handling, and compliance.",
+            action:"open-coach",
+            suggest:[["Open Coach","open-coach"],["See Personas","see-personas"],["Request Demo","request-demo"]]
+          }],
+          [/\b(persona|hcp|doctor|physician|np\b|pa\b|oncologist|internal medicine|im\b)\b/,{
+            text:"Personas include Internal Medicine MD, NP, PA, Oncologist, and others. Each carries realistic goals, constraints, and objections.",
+            suggest:[["See Personas","see-personas"],["Open Coach","open-coach"],["Request Demo","request-demo"]]
+          }],
+          [/\b(therapeutic|disease|oncology|vaccine|vaccines|hiv|prep|cardio|cardiology|hepatitis|pulmonology|pulmonary)\b/,{
+            text:"Scenarios span Oncology, Vaccines, HIV PrEP, Cardiology, Hepatitis B, and Pulmonology. We add areas per client roadmap.",
+            suggest:[["Open Coach","open-coach"],["Request Demo","request-demo"],["See Personas","see-personas"]]
+          }],
+          [/\b(analytics|dashboard|metric|metrics|report|kpi|insight|leaderboard)\b/,{
+            text:"Dashboards track Empathy Index, Readiness Velocity, Behavioral Blind Spots, and Content Accuracy, with team and coach views.",
+            suggest:[["Analytics","see-analytics"],["Request Demo","request-demo"],["Open Coach","open-coach"]]
+          }],
+          [/\b(integration|integrat|api|lms|crm|sso|okta|saml|salesforce|veeva|cornerstone|workday)\b/,{
+            text:"Integrates with Salesforce, Veeva, major LMS, and SSO. Data export via CSV or API. Mapping aligns to common fields.",
+            suggest:[["Request Demo","request-demo"],["See Platform","see-platform"],["Open Coach","open-coach"]]
+          }],
+          [/\b(security|privacy|hipaa|phi|compliance|governance|gdpr|iso|nist|soc)\b/,{
+            text:"HIPAA safeguards with PHI off by default; BAA available when enabled. Controls align with NIST AI RMF and ISO 27001/42001. Audit logs and least-data use.",
+            suggest:[["Request Demo","request-demo"],["Ethics & Governance","see-ethics"],["Analytics","see-analytics"]]
+          }],
+          [/\b(data|store|storage|retain|retention|logs|delete|erase|export|anonymi[sz]e)\b/,{
+            text:"Default: no PHI, minimal retention for skill analytics. Admins can configure retention, deletion, and exports.",
+            suggest:[["Request Demo","request-demo"],["Analytics","see-analytics"],["Ethics & Governance","see-ethics"]]
+          }],
+          [/\b(trial|pilot|poc|proof|evaluation)\b/,{
+            text:"Short pilots measure skill lift and adoption before scale. We align KPIs and success criteria up front.",
+            suggest:[["Request Demo","request-demo"],["Open Coach","open-coach"],["Analytics","see-analytics"]]
+          }],
+          [/\b(a11y|accessibility|screen\s?reader|contrast|keyboard)\b/,{
+            text:"Keyboard nav and high-contrast styles available. We can align to WCAG during onboarding.",
+            suggest:[["Request Demo","request-demo"],["See Platform","see-platform"]]
+          }],
+          [/\b(status|outage|down|slow|latency|performance)\b/,{
+            text:"If performance dips, refresh and relaunch the Coach. For SLAs or incidents, add notes in your demo request.",
+            suggest:[["Request Demo","request-demo"],["Open Coach","open-coach"]]
+          }],
+          [/\b(brand|logo|asset|style\s?guide|colors|palette)\b/,{
+            text:"Brand palette: navy, teal, white. A compact brand kit is available during onboarding.",
+            suggest:[["Request Demo","request-demo"],["See Platform","see-platform"]]
+          }],
+          [/\b(career|job|hire|partner|partnership|reseller)\b/,{
+            text:"We collaborate with enablement leaders and select partners. Note “careers” or “partnership” in your demo request.",
+            suggest:[["Request Demo","request-demo"],["See Platform","see-platform"]]
+          }],
+          [/\b(faq|common questions|help)\b/,{
+            text:"Ask about modules, EI, analytics, pricing, integrations, or compliance. I answer in one line and link you to the right section.",
+            suggest:SUGG_DEFAULT
+          }],
+          [/.*/,{
+            text:"I cover platform, simulations, EI, analytics, integrations, and compliance. Ask a question or request a demo for a walkthrough.",
+            suggest:SUGG_DEFAULT
+          }],
+        ];
+        for(const [pattern, out] of intents){ if(pattern.test(s)) return out; }
+        return { text:"How can I help?", suggest:SUGG_DEFAULT };
+      }
+
+      // Backward-compatible text responder
+      function respondLocal(q){
+        const r = respondLocalRich(q);
+        window.__aloraLast = r;
+        try{ if(alora?.classList?.contains("open")) aloraSuggest(r.suggest); }catch(e){}
+        if(r.action) try{ aloraAction(r.action); }catch(e){}
+        return r.text;
+      }
+
+      function aloraOpen(){
+        alora.classList.add('open');
+        alora.setAttribute('aria-hidden','false');
+        if(!aloraBody.dataset.greeted){
+          bot("Hi, I’m Alora. I can guide you on the platform, simulations, EI, analytics, integrations, and compliance. What do you want to see?");
+          aloraSuggest([
+            ["Open Coach","open-coach"],
+            ["Request Demo","request-demo"],
+            ["See Personas","see-personas"],
+            ["Why EI","see-ei"]
+          ]);
+          aloraBody.dataset.greeted='1';
+        }
+      }
+      function aloraHide(){
+        alora.classList.remove('open');
+        alora.setAttribute('aria-hidden','true');
+      }
 
       aloraFab.addEventListener('click',aloraOpen);
       aloraFab.setAttribute('tabindex','0');
