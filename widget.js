@@ -1,20 +1,17 @@
-/* ReflectivAI Chat/Coach — compact drop-in (coach-v2, UI v20251020-5) */
+/* ReflectivAI Chat/Coach — drop-in widget (v20251020-7) */
+/* No auto-open. Esc/backdrop close. Worker optional (stub fallback). */
 
 (function(){
-  // ---------- mount ----------
   function onReady(fn){ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",fn,{once:true}); else fn(); }
+  const WORKER = window.WORKER_URL || '';                                // set in index.html
+  const CHAT_ENDPOINT = window.COACH_ENDPOINT || (WORKER ? WORKER+'/chat' : '');
 
-  // worker endpoints
-  const WORKER = window.WORKER_URL || 'https://YOUR-WORKER-NAME.YOUR-ACCOUNT.workers.dev';
-  window.COACH_ENDPOINT = window.COACH_ENDPOINT || (WORKER + '/chat');
-  window.ALORA_ENDPOINT = window.ALORA_ENDPOINT || (WORKER + '/chat');
-
-  // ---------- UI builders ----------
   function el(tag, cls, txt){ const n=document.createElement(tag); if(cls) n.className=cls; if(txt!=null) n.textContent=txt; return n; }
 
   function buildModal(){
     let modal = document.getElementById('reflectiv-modal');
     if(modal) return modal;
+
     modal = el('div'); modal.id='reflectiv-modal'; modal.hidden=true;
 
     const backdrop = el('div'); backdrop.id='reflectiv-modal-backdrop';
@@ -23,7 +20,7 @@
     const title = el('div','coach-titlebar');
     title.append(el('div','', 'Reflectiv Coach'));
     const closeBtn = el('button','close-btn','Close');
-    closeBtn.onclick = () => modal.hidden = true;
+    closeBtn.onclick = () => close();
     title.append(closeBtn);
 
     const sub = el('div','coach-subbar','ReflectivAI Coach');
@@ -71,7 +68,6 @@
     const input = document.createElement('textarea'); input.placeholder = 'Type your message...';
     const send = el('button','send-btn','Send');
     composer.append(input, send);
-
     chatSlab.append(brief, transcript, composer);
 
     // right metrics
@@ -87,7 +83,7 @@
     body.append(controls, chatSlab, metrics);
     chat.append(title, sub, body);
 
-    // coach feedback panel
+    // coach feedback
     const panel = el('div','coach-panel');
     panel.innerHTML = `<h6>Coach Feedback</h6><ul id="coach-tips"><li>Start with a single-value opener.</li><li>Ask one needs question.</li></ul>`;
     chatSlab.append(panel);
@@ -95,20 +91,21 @@
     modal.append(backdrop, chat);
     document.body.appendChild(modal);
 
-    // sizing guard
+    // close mechanics
+    function close(){ modal.hidden = true; }
+    backdrop.addEventListener('click', close);
+    document.addEventListener('keydown', (e)=>{ if(!modal.hidden && e.key==='Escape') close(); });
+
+    // height guard
     const setH=()=>{ chat.style.maxHeight=Math.floor(window.innerHeight*0.78)+'px'; };
     setH(); window.addEventListener('resize', setH, { passive:true });
 
-    // handlers
+    // brief updater
     function updateBrief(){
       const mode = document.getElementById('cw-mode').value;
       const disease = document.getElementById('cw-disease').value;
       const profile = document.getElementById('cw-hcp').value;
-      const bgMap = {
-        Oncology:'Practical, time-constrained.',
-        HIV:'Evidence-seeking, cautious.',
-        Vaccines:'Community-minded, throughput-focused.'
-      };
+      const bgMap = { Oncology:'Practical, time-constrained.', HIV:'Evidence-seeking, cautious.', Vaccines:'Community-minded, throughput-focused.' };
       const goalMap = {
         'Role Play w/ AI Agent':'Practice concise value, ask 1 needs question.',
         'Product Knowledge':'State one on-label benefit accurately.',
@@ -123,11 +120,22 @@
     });
     updateBrief();
 
+    // chat helpers
     function pushBubble(text, who){
       const b = el('div','bubble '+(who==='user'?'user':'bot'));
       b.textContent = text; transcript.append(b); transcript.scrollTop = transcript.scrollHeight;
     }
-
+    function pushCoachTips(tips){
+      const list=document.getElementById('coach-tips'); if(!list) return;
+      list.innerHTML = tips.map(t=>`<li>${t}</li>`).join('');
+    }
+    function deriveTips(userMsg, respText){
+      const t=[]; if(!/question\??/i.test(userMsg)) t.push('Ask a single needs question to invite dialogue.');
+      if(userMsg.length>220) t.push('Tighten your opener to <15s. Lead with value.');
+      if(!/on[- ]label|indication|safety|isi/i.test(respText)) t.push('Anchor to on-label language and safety context.');
+      if(t.length===0) t.push('Good pacing. Confirm understanding, then propose a short follow-up.');
+      return t;
+    }
     function setMetrics(obj){
       const set=(id,v)=>{ const n=document.getElementById(id); if(n) n.textContent=String(v ?? '—'); };
       set('m-empathy', obj.empathy);
@@ -137,23 +145,10 @@
       set('m-readiness', obj.readiness);
     }
 
-    function pushCoachTips(tips){
-      const list=document.getElementById('coach-tips'); if(!list) return;
-      list.innerHTML = tips.map(t=>`<li>${t}</li>`).join('');
-    }
-
-    function deriveTips(userMsg, respText){
-      const tips=[];
-      if(!/question\??/i.test(userMsg)) tips.push('Ask a single needs question to invite dialogue.');
-      if(userMsg.length>220) tips.push('Tighten your opener to <15s. Lead with value.');
-      if(!/on[- ]label|indication|safety|isi/i.test(respText)) tips.push('Anchor to on-label language and safety context.');
-      if(tips.length===0) tips.push('Good pacing. Confirm understanding, then propose a short follow-up.');
-      return tips;
-    }
-
     async function callCoach(messages){
+      if(!CHAT_ENDPOINT){ return { role:'assistant', content:'[Stub] No worker endpoint configured.' }; }
       try{
-        const r = await fetch(window.COACH_ENDPOINT, {
+        const r = await fetch(CHAT_ENDPOINT, {
           method:'POST',
           headers:{'content-type':'application/json'},
           body: JSON.stringify({ site:'reflectivai', messages, model:'llama-3.1-8b-instant', temperature:0.5 }),
@@ -168,24 +163,21 @@
     }
 
     async function sendNow(){
-      const msg = (input.value || '').trim();
-      if(!msg) return;
-      pushBubble(msg,'user');
-      input.value='';
+      const input = composer.querySelector('textarea');
+      const msg = (input.value || '').trim(); if(!msg) return;
+      pushBubble(msg,'user'); input.value='';
 
       const ctx = updateBrief();
-      const baseSys = [
+      const sys = [
         { role:'system', content:'You are ReflectivAI, a Life Sciences Sales Coach. Keep responses concise and compliant.' },
         { role:'system', content:`Context: Mode=${ctx.mode}; Disease=${ctx.disease}; HCP=${ctx.profile}.` }
       ];
 
-      const resp = await callCoach(baseSys.concat([{ role:'user', content: msg }]));
+      const resp = await callCoach(sys.concat([{ role:'user', content: msg }]));
       const text = resp && resp.content ? String(resp.content) : 'No response.';
-
       pushBubble(text,'bot');
       pushCoachTips(deriveTips(msg, text));
 
-      // simple deterministic sample scoring
       const scores = {
         empathy: 70 + (msg.match(/feel|concern|understand/i)?10:0),
         accuracy: 60,
@@ -197,20 +189,19 @@
     }
 
     send.addEventListener('click', sendNow);
-    input.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendNow(); }});
+    composer.querySelector('textarea').addEventListener('keydown', (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendNow(); }});
 
     // public API
-    window.ReflectivCoach = {
-      open(){ modal.hidden=false; setTimeout(()=>input.focus(), 0); },
-      close(){ modal.hidden=true; }
-    };
+    function open(){ modal.hidden=false; setTimeout(()=>composer.querySelector('textarea').focus(),0); }
+    function close(){ modal.hidden=true; }
 
+    window.ReflectivCoach = { open, close };
     return modal;
   }
 
-  // expose a launcher if a button with data-coach exists
   onReady(()=>{
-    buildModal();
+    buildModal();                           // builds, does not open
+    // Optional launcher support: any element with data-coach-launch
     const trigger = document.querySelector('[data-coach-launch]');
     if(trigger) trigger.addEventListener('click', ()=>window.ReflectivCoach.open());
   });
