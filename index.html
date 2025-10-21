@@ -179,16 +179,73 @@
     <!-- Therapeutic Areas -->
     <div class="text-center md:text-left">
       <h3 class="text-3xl font-bold text-gray-900 mb-3">Train by Therapeutic Area</h3>
-      <div class="w-20 mx-auto md:mx-0 h-1 rounded section-separator" style="background-color:#20bfa9;"></div>
+      <div class="w-20 mx-auto md:mx-0 h-1 rounded" style="background-color:#20bfa9;"></div>
 
       <div class="mt-6 flex flex-wrap gap-3 md:gap-4 justify-center md:justify-start">
-        <span class="inline-flex h-10 items-center px-4 rounded-full border border-[#20bfa9]/30 bg-[#20bfa9]/10 text-[#20bfa9] text-sm font-medium hover:bg-[#20bfa9]/15 transition">Oncology</span>
-        <span class="inline-flex h-10 items-center px-4 rounded-full border border-[#20bfa9]/30 bg-[#20bfa9]/10 text-[#20bfa9] text-sm font-medium hover:bg-[#20bfa9]/15 transition">Vaccines</span>
-        <span class="inline-flex h-10 items-center px-4 rounded-full border border-[#20bfa9]/30 bg-[#20bfa9]/10 text-[#20bfa9] text-sm font-medium hover:bg-[#20bfa9]/15 transition">HIV PrEP</span>
-        <span class="inline-flex h-10 items-center px-4 rounded-full border border-[#20bfa9]/30 bg-[#20bfa9]/10 text-[#20bfa9] text-sm font-medium hover:bg-[#20bfa9]/15 transition">Cardiology</span>
-        <span class="inline-flex h-10 items-center px-4 rounded-full border border-[#20bfa9]/30 bg-[#20bfa9]/10 text-[#20bfa9] text-sm font-medium hover:bg-[#20bfa9]/15 transition">Pulmonology</span>
-        <span class="inline-flex h-10 items-center px-4 rounded-full border border-[#20bfa9]/30 bg-[#20bfa9]/10 text-[#20bfa9] text-sm font-medium hover:bg-[#20bfa9]/15 transition">Hepatitis B</span>
-        <span class="inline-flex h-10 items-center px-4 rounded-full border border-gray-300 bg-gray-100 text-gray-800 text-sm font-medium hover:bg-gray-200 transition">+ Custom Scenarios</span>
+        <!-- Each pill: add data-* for modal content -->
+        <button type="button"
+          class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
+          data-title="Oncology"
+          data-challenge="Complex regimens, strict rules"
+          data-objective="Clarify label-compliant points"
+          data-goal="Confident, accurate dialogue">
+          Oncology
+        </button>
+
+        <button type="button"
+          class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
+          data-title="Vaccines"
+          data-challenge="Hesitancy, timing windows"
+          data-objective="Address key objections"
+          data-goal="Improve uptake intent">
+          Vaccines
+        </button>
+
+        <button type="button"
+          class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
+          data-title="HIV PrEP"
+          data-challenge="Stigma, adherence gaps"
+          data-objective="Navigate eligibility safely"
+          data-goal="Drive appropriate starts">
+          HIV PrEP
+        </button>
+
+        <button type="button"
+          class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
+          data-title="Cardiology"
+          data-challenge="Risk tradeoffs, polypharm"
+          data-objective="Align on risk reduction"
+          data-goal="Guideline-consistent choices">
+          Cardiology
+        </button>
+
+        <!-- New row starts naturally -->
+        <button type="button"
+          class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
+          data-title="Pulmonology"
+          data-challenge="Variable control, access"
+          data-objective="Clarify step-up criteria"
+          data-goal="Better control outcomes">
+          Pulmonology
+        </button>
+
+        <button type="button"
+          class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
+          data-title="Hepatitis B"
+          data-challenge="Chronic course, stigma"
+          data-objective="Reinforce monitoring plan"
+          data-goal="Sustained engagement">
+          Hepatitis B
+        </button>
+
+        <button type="button"
+          class="inline-flex h-10 items-center px-5 rounded-full border-2 border-gray-400 bg-gray-100 text-gray-800 text-sm font-semibold hover:bg-gray-200 transition"
+          data-title="Custom Scenarios"
+          data-challenge="Org-specific objections"
+          data-objective="Map to your playbook"
+          data-goal="Faster rep readiness">
+          + Custom Scenarios
+        </button>
       </div>
     </div>
 
@@ -198,16 +255,125 @@
       <div class="w-20 mx-auto md:mx-0 h-1 rounded" style="background-color:#20bfa9;"></div>
 
       <div class="mt-6 flex flex-wrap gap-3 md:gap-4 justify-center md:justify-start">
-        <span class="inline-flex h-10 items-center px-4 rounded-full border border-[#0f2747]/25 bg-[#0f2747]/8 text-[#0f2747] text-sm font-medium hover:bg-[#0f2747]/12 transition">Internal Medicine MD</span>
-        <span class="inline-flex h-10 items-center px-4 rounded-full border border-[#0f2747]/25 bg-[#0f2747]/8 text-[#0f2747] text-sm font-medium hover:bg-[#0f2747]/12 transition">Oncologist</span>
-        <span class="inline-flex h-10 items-center px-4 rounded-full border border-[#0f2747]/25 bg-[#0f2747]/8 text-[#0f2747] text-sm font-medium hover:bg-[#0f2747]/12 transition">Nurse Practitioner (NP)</span>
-        <span class="inline-flex h-10 items-center px-4 rounded-full border border-[#0f2747]/25 bg-[#0f2747]/8 text-[#0f2747] text-sm font-medium hover:bg-[#0f2747]/12 transition">Infectious Disease Specialist</span>
-        <span class="inline-flex h-10 items-center px-4 rounded-full border border-[#0f2747]/25 bg-[#0f2747]/8 text-[#0f2747] text-sm font-medium hover:bg-[#0f2747]/12 transition">Cardiologist</span>
-        <span class="inline-flex h-10 items-center px-4 rounded-full border border-[#0f2747]/25 bg-[#0f2747]/8 text-[#0f2747] text-sm font-medium hover:bg-[#0f2747]/12 transition">Physician Assistant (PA)</span>
+        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
+          data-title="Internal Medicine MD"
+          data-challenge="Time pressure, breadth"
+          data-objective="Be concise, relevant"
+          data-goal="Earn next minute">
+          Internal Medicine MD
+        </button>
+
+        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
+          data-title="Oncologist"
+          data-challenge="Evidence depth, safety"
+          data-objective="Lead with outcomes"
+          data-goal="Advance informed choice">
+          Oncologist
+        </button>
+
+        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
+          data-title="Nurse Practitioner (NP)"
+          data-challenge="Workflow, access paths"
+          data-objective="Simplify next steps"
+          data-goal="Smooth initiation">
+          Nurse Practitioner (NP)
+        </button>
+
+        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
+          data-title="Infectious Disease Specialist"
+          data-challenge="Resistance, guidelines"
+          data-objective="Anchor to evidence"
+          data-goal="Appropriate selection">
+          Infectious Disease Specialist
+        </button>
+
+        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
+          data-title="Cardiologist"
+          data-challenge="Risk-benefit nuance"
+          data-objective="Quantify absolute risk"
+          data-goal="Shared decisions">
+          Cardiologist
+        </button>
+
+        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
+          data-title="Physician Assistant (PA)"
+          data-challenge="Protocol adherence"
+          data-objective="Clarify guardrails"
+          data-goal="Safe, quick actions">
+          Physician Assistant (PA)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reusable modal -->
+  <div id="pill-modal" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+    <div class="absolute inset-0 bg-black/40"></div>
+    <div class="relative mx-auto mt-24 w-[92%] max-w-lg rounded-2xl bg-white shadow-xl">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+        <h4 id="pill-modal-title" class="text-xl font-semibold text-[#0f2747]">Title</h4>
+        <button id="pill-modal-close" class="p-2 rounded-full text-gray-500 hover:bg-gray-100" aria-label="Close">✕</button>
+      </div>
+      <div class="px-6 py-5">
+        <ul class="space-y-3 text-sm text-gray-800">
+          <li><span class="font-semibold text-[#0f2747]">Challenge:</span> <span id="pill-challenge">Placeholder</span></li>
+          <li><span class="font-semibold text-[#0f2747]">Objective:</span> <span id="pill-objective">Placeholder</span></li>
+          <li><span class="font-semibold text-[#0f2747]">Goal:</span> <span id="pill-goal">Placeholder</span></li>
+        </ul>
+      </div>
+      <div class="px-6 py-4 border-t border-gray-200 text-right">
+        <button id="pill-modal-ok" class="inline-flex h-10 items-center px-5 rounded-full bg-[#0f2747] text-white text-sm font-semibold hover:opacity-90 transition">OK</button>
       </div>
     </div>
   </div>
 </section>
+
+<script>
+  (function () {
+    const modal = document.getElementById('pill-modal');
+    const titleEl = document.getElementById('pill-modal-title');
+    const chEl = document.getElementById('pill-challenge');
+    const obEl = document.getElementById('pill-objective');
+    const goEl = document.getElementById('pill-goal');
+    const closeBtns = [document.getElementById('pill-modal-close'), document.getElementById('pill-modal-ok')];
+
+    function openModal(data) {
+      titleEl.textContent = data.title || '';
+      chEl.textContent = data.challenge || '';
+      obEl.textContent = data.objective || '';
+      goEl.textContent = data.goal || '';
+      modal.classList.remove('hidden');
+      modal.setAttribute('aria-hidden', 'false');
+    }
+    function closeModal() {
+      modal.classList.add('hidden');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    // Open handlers for all pills in this section
+    document.currentScript.previousElementSibling
+      .querySelectorAll('button[data-title]')
+      .forEach(btn => {
+        btn.addEventListener('click', () => {
+          openModal({
+            title: btn.dataset.title,
+            challenge: btn.dataset.challenge,
+            objective: btn.dataset.objective,
+            goal: btn.dataset.goal
+          });
+        });
+      });
+
+    // Close handlers
+    closeBtns.forEach(b => b.addEventListener('click', closeModal));
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal(); // click backdrop
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
+    });
+  })();
+</script>
 
 <!-- ===== Ethics ===== -->
 <section id="ethics" class="py-16 md:py-24 bg-gray-50 border-t border-gray-200">
