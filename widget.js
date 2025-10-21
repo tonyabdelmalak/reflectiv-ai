@@ -2,12 +2,17 @@
 
 (function(){
   // ---------- mount ----------
-  function onReady(fn){ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",fn,{once:true}); else fn(); }
+  function onReady(fn){
+    if (document.readyState === "loading")
+      document.addEventListener("DOMContentLoaded", fn, { once: true });
+    else fn();
+  }
 
-  // worker endpoints
-  const WORKER = window.WORKER_URL || 'https://YOUR-WORKER-NAME.YOUR-ACCOUNT.workers.dev';
-  window.COACH_ENDPOINT = window.COACH_ENDPOINT || (WORKER + '/chat');
-  window.ALORA_ENDPOINT = window.ALORA_ENDPOINT || (WORKER + '/chat');
+  // ---------- worker endpoints ----------
+  const WORKER = 'https://my-chat-agent-v2.tonyabdelmalak.workers.dev';
+  window.WORKER_URL = WORKER;
+  window.COACH_ENDPOINT = WORKER + '/chat';
+  window.ALORA_ENDPOINT = WORKER + '/chat';
 
   // ---------- UI builders ----------
   function el(tag, cls, txt){ const n=document.createElement(tag); if(cls) n.className=cls; if(txt!=null) n.textContent=txt; return n; }
