@@ -282,28 +282,48 @@
 
 /* ---------- OVERRIDES ADDED TO FIX CLIPPING AND MAKE BODY SCROLL ---------- */
 
-/* Make modal content a flex column so body can scroll, footer stays visible */
+/* Make modal content a flex column so body can scroll internally */
 #coachModal .modal-box {
   display: flex;
   flex-direction: column;
   max-height: 90vh;
-  overflow: hidden;
+  overflow: hidden; /* prevents the whole modal from scrolling */
 }
 
-/* Scroll the body area only */
+/* Contain the body; prevent double scrollbars */
 #coachBody {
   flex: 1 1 auto;
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden;
   padding: 0;
 }
 
 /* Let the widget message area size naturally; modal controls height and allow full scroll */
-#reflectiv-widget .chat-messages {
-  min-height: 220px;
-  height: auto !important;       /* beats inline style from widget.js */
-  max-height: none !important;   /* remove cap */
-  overflow-y: auto !important;   /* ensure scrolling */
+#reflectiv-widget,
+#coachBody > #reflectiv-widget { height: 100%; }
+
+#reflectiv-widget .reflectiv-chat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
+#reflectiv-widget .chat-messages {
+  flex: 1 1 auto;
+  min-height: 220px;
+  height: auto !important;       /* override inline 320px */
+  max-height: none !important;   /* remove cap */
+  overflow-y: auto !important;   /* scroll only message area */
+}
 
+/* Keep the feedback footer fixed within the widget */
+#reflectiv-widget .coach-section {
+  flex: 0 0 auto;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: #fffbe8;
+  border-top: 1px solid var(--line);
+  padding: 12px 16px;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.04);
+}
