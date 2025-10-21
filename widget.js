@@ -1,5 +1,3 @@
-
-
 /* widget.js
  * ReflectivAI Chat/Coach — drop-in (coach-v2, deterministic scoring v3)
  * Modes: emotional-assessment | product-knowledge | sales-simulation
@@ -111,13 +109,38 @@
     return e;
   }
 
+  // --- robust extractor: tolerates missing </coach> and truncation
   function extractCoach(raw) {
-    const m = String(raw || "").match(/<coach>([\s\S]*?)<\/coach>/i);
-    if (!m) return { coach: null, clean: sanitizeLLM(raw) };
+    const s = String(raw || "");
+    const openIdx = s.indexOf("<coach>");
+    if (openIdx === -1) return { coach: null, clean: sanitizeLLM(s) };
+
+    const cleanText = sanitizeLLM(s.slice(0, openIdx).trim());
+    let tail = s.slice(openIdx + "<coach>".length);
+
+    // Prefer explicit close if present
+    const closeIdx = tail.indexOf("</coach>");
+    let block = closeIdx >= 0 ? tail.slice(0, closeIdx) : tail;
+
+    const braceStart = block.indexOf("{");
+    if (braceStart === -1) return { coach: null, clean: cleanText };
+
+    // Walk braces to find matching end
+    let depth = 0, end = -1;
+    for (let i = braceStart; i < block.length; i++) {
+      const ch = block[i];
+      if (ch === "{") depth++;
+      if (ch === "}") { depth--; if (depth === 0) { end = i; break; } }
+    }
+    if (end === -1) return { coach: null, clean: cleanText };
+
+    let jsonTxt = block.slice(braceStart, end + 1)
+      .replace(/[“”]/g, '"')
+      .replace(/[‘’]/g, "'");
+
     let coach = null;
-    try { coach = JSON.parse(m[1]); } catch {}
-    const clean = sanitizeLLM(String(raw).replace(m[0], "").trim());
-    return { coach, clean };
+    try { coach = JSON.parse(jsonTxt); } catch {}
+    return { coach, clean: cleanText };
   }
 
   // ---------- local scoring (deterministic v3) ----------
@@ -202,7 +225,7 @@
       case "difficult": score = 1; break;
       case "busy": score = 2; break;
       case "engaged": score = 4; break;
-      case "indifferent": score = 2; break;
+      case "indifferent": score = 3; break;
       default: score = 3;
     }
     const empathyKeywords = ["understand","appreciate","concern","feel","sorry","hear","sounds like","empathize","thanks","acknowledge"];
@@ -362,7 +385,7 @@ ${COMMON}`.trim();
         #reflectiv-widget .sim-controls{display:grid;grid-template-columns:220px 1fr 220px 1fr;gap:12px 16px;align-items:center}
         #reflectiv-widget .sim-controls label{font-size:13px;font-weight:600;color:#2f3a4f;justify-self:end;white-space:nowrap}
         #reflectiv-widget .sim-controls select{width:100%;height:38px;padding:6px 10px;font-size:14px;border:1px solid #cfd6df;border-radius:8px;background:#fff}
-        #reflectiv-widget .chat-messages{min-height:260px;height:320px;max-height:50vh;overflow:auto;padding:12px 14px;background:#fafbfd}
+        #reflectiv-widget .chat-messages{min-height:220px;height:auto;max-height:none;overflow:auto;padding:12px 14px;background:#fafbfd}
         #reflectiv-widget .message{margin:8px 0;display:flex}
         #reflectiv-widget .message.user{justify-content:flex-end}
         #reflectiv-widget .message.assistant{justify-content:flex-start}
