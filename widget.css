@@ -298,9 +298,12 @@
   padding: 0;
 }
 
-/* Let the widget message area size naturally; modal controls height */
+/* Let the widget message area size naturally; modal controls height and allow full scroll */
 #reflectiv-widget .chat-messages {
   min-height: 220px;
-  height: auto;
-  max-height: none;
+  height: auto !important;       /* beats inline style from widget.js */
+  max-height: none !important;   /* remove cap */
+  overflow-y: auto !important;   /* ensure scrolling */
 }
+
+
