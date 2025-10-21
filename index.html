@@ -1,129 +1,33 @@
-/* ===== ReflectivAI Coach — layout hotfix (2025-10-20) =====
-   Locks the modal to a 3-column grid: Controls | Chat | Metrics
-   Aligns with navy/white system, rounded slabs, consistent paddings.
-*/
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0c2740">
+  <title>ReflectivAI – AI Sales Enablement for Life Sciences</title>
 
-/* Shell */
-.reflectiv-chat,
-#reflectiv-widget .reflectiv-chat {
-  --navy:#0f2236;          /* site dark */
-  --navy-2:#17314e;        /* toolbar */
-  --slab:#f6f8fb;          /* slab bg */
-  --stroke:#d8e0ea;
-  --text:#0f1522;
-  --muted:#6b7a90;
+  <link rel="icon" href="assets/favicon.ico">
 
-  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-  color: var(--text);
-  background: #fff;
-  border: 1px solid var(--stroke);
-  border-radius: 14px;
-  box-shadow: 0 20px 40px rgba(12,24,40,.18);
-  width: min(1120px, 92vw);
-  max-height: 78vh;
-  overflow: hidden;
-}
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
 
-/* Top title bar */
-.reflectiv-chat .coach-titlebar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 14px;
-  background: var(--navy-2);
-  color: #fff;
-  font-weight: 700;
-  font-size: 14px;
-}
-.reflectiv-chat .coach-titlebar .close-btn{
-  appearance:none; border:0; background:#0b1d2f; color:#fff;
-  padding:6px 10px; border-radius:8px; cursor:pointer; font-weight:600;
-}
+  <!-- Core styles -->
+  <link rel="stylesheet" href="styles.css?v=20251020-5">
+  <link rel="stylesheet" href="widget.css?v=20251020-5">
 
-/* Secondary bar */
-.reflectiv-chat .coach-subbar{
-  padding: 8px 14px;
-  background: #eaf1f9;
-  color: #0b1d2f;
-  border-bottom:1px solid #d5deea;
-  font-weight:700; font-size:13px;
-}
+  <!-- Modal/layout overrides (must load last) -->
+  <link rel="stylesheet" href="hotfix-widget.css?v=20251020-5">
 
-/* Core grid */
-.reflectiv-chat .coach-body{
-  display:grid;
-  grid-template-columns: 280px 1fr 260px;
-  gap: 14px;
-  padding: 14px;
-  background: var(--slab);
-}
+  <!-- Worker endpoints -->
+  <script>
+    window.WORKER_URL = 'https://my-chat-agent-v2.tonyabdelmalak.workers.dev';
+    window.COACH_ENDPOINT = window.WORKER_URL + '/chat';
+    window.ALORA_ENDPOINT = window.WORKER_URL + '/chat';
+  </script>
 
-/* Left controls slab */
-.reflectiv-chat .controls-slab{
-  background:#fff; border:1px solid var(--stroke); border-radius:12px;
-  padding:12px; display:flex; flex-direction:column; gap:10px;
-}
-.reflectiv-chat .controls-slab .label{
-  font-size:12px; font-weight:700; color:var(--muted);
-  margin-bottom:4px;
-}
-.reflectiv-chat select,
-.reflectiv-chat .select{
-  width:100%; height:40px; padding:0 10px; border-radius:10px;
-  border:1px solid #cfd8e3; background:#fff; color:#0f1522; font-size:14px;
-}
-
-/* Center chat slab */
-.reflectiv-chat .chat-slab{
-  background:#fff; border:1px solid var(--stroke); border-radius:12px;
-  display:flex; flex-direction:column;
-}
-.reflectiv-chat .chat-slab .transcript{
-  flex:1; overflow:auto; padding:12px;
-}
-.reflectiv-chat .chat-slab .composer{
-  display:flex; gap:10px; border-top:1px solid var(--stroke);
-  padding:10px; align-items:center;
-}
-.reflectiv-chat textarea{
-  height:44px; resize:none; flex:1; padding:10px 12px;
-  border:1px solid #cfd8e3; border-radius:10px; font-size:14px;
-}
-.reflectiv-chat .send-btn{
-  height:44px; min-width:72px; padding:0 14px; border-radius:10px;
-  background: var(--navy); color:#fff; border:0; cursor:pointer; font-weight:700;
-}
-
-/* Right metrics slab */
-.reflectiv-chat .metrics-slab{
-  background:#fff; border:1px solid var(--stroke); border-radius:12px;
-  padding:12px; display:flex; flex-direction:column; gap:10px;
-}
-.reflectiv-chat .metric{
-  border:1px solid #e5ecf4; border-radius:12px; padding:10px 12px;
-  background:#fbfdff;
-}
-.reflectiv-chat .metric h5{
-  margin:0 0 6px 0; font-size:12px; font-weight:800; color:var(--navy);
-  letter-spacing:.02em;
-}
-.reflectiv-chat .metric .value{
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size:13px; color:#111827;
-}
-
-/* Modal positioning + backdrop (in case overlay CSS regressed) */
-#reflectiv-modal-backdrop{
-  position:fixed; inset:0; background:rgba(3,13,24,.55); backdrop-filter:saturate(120%) blur(2px);
-}
-#reflectiv-modal{
-  position:fixed; inset:0; display:grid; place-items:center; padding:24px;
-  z-index: 9999;
-}
-#reflectiv-modal .reflectiv-chat{ width:min(1120px, 96vw); }
-
-/* Mobile */
-@media (max-width: 960px){
-  .reflectiv-chat .coach-body{ grid-template-columns:1fr; }
-  .reflectiv-chat .metrics-slab{ order:3; }
-  .reflectiv-chat .controls-slab{ order:1; }
-  .reflectiv-chat .chat-slab{ order:2; }
-}
+  <!-- Widget bootstrap -->
+  <script defer src="widget.js?v=20251020-5"></script>
+</head>
+<body>
