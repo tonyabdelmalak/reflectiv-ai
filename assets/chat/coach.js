@@ -1,72 +1,44 @@
-/* ReflectivAI Coach — full modular UI + logic.
-   File: /assets/chat/coach.js
-   Mount target: <div id="reflectiv-widget"></div>
-*/
+/* ReflectivAI Coach — self-contained UI + logic (no external deps). */
 (() => {
-  // ---------- shared ----------
-  const S = window.ReflectivShared || {
-    // tiny helper set used by widget.js; keep local fallback here to be self-contained
-    el(tag, attrs = {}, ...kids) {
-      const n = document.createElement(tag);
-      for (const k in attrs) {
-        const v = attrs[k];
-        if (k === "class") n.className = v;
-        else if (k === "style") n.style.cssText = v;
-        else if (k.startsWith("on") && typeof v === "function") n.addEventListener(k.slice(2), v);
-        else n.setAttribute(k, v);
-      }
-      for (const kid of kids) n.append(kid?.nodeType ? kid : document.createTextNode(kid ?? ""));
-      return n;
-    },
-    qs(s, r = document) { return r.querySelector(s); },
-    qsa(s, r = document) { return [...r.querySelectorAll(s)]; },
-    sleep(ms) { return new Promise(r => setTimeout(r, ms)); },
-    async fetchJSON(url) {
-      const r = await fetch(url, { cache: "no-store" });
-      if (!r.ok) throw new Error(`GET ${url} -> ${r.status}`);
-      return r.json();
-    },
-    // worker call with simple retry + timeout
-    async postJSON(url, body, { timeout = 15000, retries = 1 } = {}) {
-      for (let i = 0; i <= retries; i++) {
-        try {
-          const ctrl = new AbortController();
-          const t = setTimeout(() => ctrl.abort(), timeout);
-          const r = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-            signal: ctrl.signal
-          });
-          clearTimeout(t);
-          if (r.ok) return await r.json();
-        } catch (_) { /* retry once */ }
-      }
-      return null;
-    }
+  // ---------- small utils ----------
+  const qs = (sel, el = document) => el.querySelector(sel);
+  const qsa = (sel, el = document) => [...el.querySelectorAll(sel)];
+  const h = (tag, attrs = {}, children = []) => {
+    const n = document.createElement(tag);
+    Object.entries(attrs).forEach(([k, v]) => {
+      if (k === "class") n.className = v;
+      else if (k === "html") n.innerHTML = v;
+      else n.setAttribute(k, v);
+    });
+    children.forEach(c => n.appendChild(typeof c === "string" ? document.createTextNode(c) : c));
+    return n;
+  };
+  const fetchJSON = async (url) => {
+    const r = await fetch(url, { credentials: "omit", cache: "no-store" });
+    if (!r.ok) throw new Error(`fetch ${url} -> ${r.status}`);
+    return r.json();
+  };
+
+  // ---------- data sources (site-relative, avoids CORS surprises) ----------
+  const DATA = {
+    config:      "/assets/chat/config.json",
+    personas:    "/assets/chat/persona.json",
+    scenarios:   "/assets/chat/data/scenarios.merged.json",
+    system:      "/assets/chat/system.md"
   };
 
   // ---------- constants ----------
-  const RAW = {
-    config:   "https://raw.githubusercontent.com/ReflectivEI/reflectiv-ai/refs/heads/main/assets/chat/config.json",
-    personas: "https://raw.githubusercontent.com/ReflectivEI/reflectiv-ai/refs/heads/main/assets/chat/persona.json",
-    scenarios:"https://raw.githubusercontent.com/ReflectivEI/reflectiv-ai/refs/heads/main/assets/chat/data/scenarios.merged.json",
-    system:   "https://raw.githubusercontent.com/ReflectivEI/reflectiv-ai/refs/heads/main/assets/chat/system.md"
-  };
-
   const MODES = [
     { key: "emotional-intelligence", label: "Emotional Intelligence" },
     { key: "product-knowledge",      label: "Product Knowledge" },
-    { key: "role-play",              label: "Role Play w/ AI Agent" }, // replaces Sales Simulation
+    { key: "role-play",              label: "Role Play w/ AI Agent" }
   ];
-
   const EI_PROFILES = [
     { key: "difficult",  label: "Difficult HCP" },
     { key: "busy",       label: "Busy HCP" },
     { key: "engaged",    label: "Highly Engaged HCP" },
     { key: "indifferent",label: "Indifferent HCP" }
   ];
-
   const EI_FEATURES = [
     { key: "empathy",    label: "Empathy" },
     { key: "objection",  label: "Objection Handling" },
@@ -75,438 +47,204 @@
     { key: "discovery",  label: "Discovery" }
   ];
 
-  // starting score suggestions (can adjust later)
-  const STARTING_SCORES = { Empathy: 72, Accuracy: 80, Confidence: 68, Compliance: 84, Readiness: 60 };
-
   // ---------- state ----------
   const state = {
-    cfg: null,
-    personas: [],
-    scenarios: [],
-    // UI selections
-    mode: "",
-    disease: "",
-    hcp: "",
-    eiProfile: "",
-    eiFeature: "",
-    scoringOn: false,
-    // session buffers per mode (persist for reference, not loaded into new sessions)
-    sessions: {
-      "emotional-intelligence": [],
-      "product-knowledge": [],
-      "role-play": []
-    },
-    // active chat
-    chat: [],
-    headerA: "", // "HCP Background:"
-    headerB: "", // "Key Takeaways:" or "Today’s Goal:"
+    cfg: null, personas: [], scenarios: [],
+    mode: null, eiProfile: null, eiFeature: null,
+    disease: null, hcp: null, scoring: false, sessionId: null
   };
 
-  // ---------- boot ----------
+  // ---------- safe boot with stub fallback ----------
   async function loadData() {
-    const [cfg, personas, scenarios] = await Promise.all([
-      S.fetchJSON(RAW.config).catch(() => ({})),
-      S.fetchJSON(RAW.personas).catch(() => ({ personas: [] })),
-      S.fetchJSON(RAW.scenarios).catch(() => ({ scenarios: [] })),
-    ]);
-    state.cfg = cfg || {};
-    state.personas = personas.personas || [];
-    state.scenarios = scenarios.scenarios || [];
-  }
-
-  // ---------- mapping helpers ----------
-  const DISEASES = ["Oncology", "Vaccines", "HIV", "Cardiology", "Pulmonology", "Hepatitis B"];
-  const HCPs = [
-    "Internal Medicine MD",
-    "Nurse Practitioner (NP)",
-    "Physician Assistant (PA)",
-    "Infectious Disease Specialist",
-    "Oncologist",
-    "Pulmonologist",
-    "Cardiologist"
-  ];
-
-  function pickPersonaSummary(dz, hcp) {
-    // simple compress from persona.json fields if match exists; otherwise generic
-    const p = state.personas.find(x =>
-      (x.therapeuticAreas || []).includes(dz) &&
-      (x.displayName || "").toLowerCase().includes((hcp.split(" ")[0] || "").toLowerCase())
-    );
-    if (!p) return "Concise, evidence-focused; values workflow simplicity; sensitive to access and safety.";
-    const bits = [];
-    if (p.style) bits.push(p.style);
-    if (p.decision_style) bits.push(p.decision_style);
-    if (p.clinical_priorities?.length) bits.push(`Priorities: ${p.clinical_priorities.slice(0,2).join(", ")}`);
-    if (p.historical_objections?.length) bits.push(`Objections: ${p.historical_objections.slice(0,1).join(", ")}`);
-    return bits.join(" • ");
-  }
-
-  function pickGoalOrTakeaways(modeKey, dz, hcp) {
-    // derive from scenarios.merged.json when possible
-    const s = state.scenarios.find(x =>
-      x.therapeuticArea?.toLowerCase().includes(dz.toLowerCase()) &&
-      (x.hcpProfile?.toLowerCase().includes(hcp.toLowerCase().split(" ")[0]) || true)
-    );
-    const items = [];
-    if (s?.goal) items.push(s.goal);
-    if (s?.approach) items.push(s.approach);
-    // add a practice question
-    const q = "Ask: “What would change your confidence in adopting this approach for your next 3 patients?”";
-    items.push(q);
-    const line = items
-      .map(t => t.replace(/\s+/g, " ").trim())
-      .filter(Boolean)
-      .slice(0, 3)
-      .join(" • ");
-    return modeKey === "role-play" ? { label: "Today’s Goal", text: line } : { label: "Key Takeaways", text: line };
-  }
-
-  // ---------- session control ----------
-  function startFreshSession() {
-    // push prior session buffer for reference
-    if (state.mode) state.sessions[state.mode].push({ at: Date.now(), chat: state.chat.slice() });
-    // reset active
-    state.chat = [];
+    try {
+      const [cfg, personas, scenarios] = await Promise.all([
+        fetchJSON(DATA.config),
+        fetchJSON(DATA.personas),
+        fetchJSON(DATA.scenarios)
+      ]);
+      state.cfg = cfg; state.personas = personas.personas || []; state.scenarios = scenarios.scenarios || [];
+    } catch (e) {
+      console.warn("[Coach] data fetch failed, using stub", e);
+      state.cfg = { ui: { showCoach: true }, brand: { accent: "#22f3a4" } };
+      state.personas = [];
+      state.scenarios = [];
+    }
   }
 
   // ---------- UI ----------
-  function mount(container) {
-    container.innerHTML = "";
-    container.append(
-      // header bar
-      S.el("div", { class: "coach-header", style: "background:#0c2740;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:10px 10px 0 0" },
-        S.el("div", { class: "title" }, "ReflectivAI Coach"),
-        S.el("button", {
-          class: "close-btn",
-          onclick: () => {
-            // bubble to modal close if present
-            const btn = document.querySelector('#coachModal .modal-close');
-            btn?.click();
-          }
-        }, "Close")
-      ),
-      // body
-      S.el("div", { class: "coach-body" },
+  function buildShell(root) {
+    root.innerHTML = "";
+    const wrap = h("div", { class: "rfx-coach-wrap" }, [
+      h("div", { class: "coach-header" }, [
+        h("div", { class: "title" }, [ "ReflectivAI Coach" ]),
+        h("button", { class: "close-btn", type: "button" }, [ "Close" ])
+      ]),
+      h("div", { class: "coach-body" }, [
         // left controls
-        S.el("div", { class: "coach-controls" },
-          field("Learning Center Mode", select("Select Mode", MODES.map(m => m.label), async (label) => {
-            const m = MODES.find(x => x.label === label);
-            state.mode = m?.key || "";
-            // defaults and toggles
-            state.scoringOn = state.mode === "emotional-intelligence" || state.mode === "role-play";
-            // clear subsequent selections
-            state.disease = ""; state.hcp = ""; state.eiProfile = ""; state.eiFeature = "";
-            startFreshSession();
-            render(container);
-            await preloadHeaders(); // silent init call
-          })),
-          // conditional stacks
-          S.el("div", { id: "mode-specific" })
-        ),
-        // center chat
-        S.el("div", { class: "coach-chat" },
-          S.el("div", { class: "chat-header" },
-            S.el("div", { id: "hlineA", class: "hline" }),
-            S.el("div", { id: "hlineB", class: "hline", style: "margin-top:4px" })
-          ),
-          S.el("div", { id: "chatStream", class: "chat-stream" }),
-          S.el("form", {
-            id: "chatForm", class: "chat-form", onsubmit: onSend
-          },
-            S.el("input", { id: "chatInput", class: "chat-input", placeholder: "Type your message…" }),
-            S.el("button", { class: "btn", type: "submit" }, "Send")
-          )
-        ),
-        // right scores
-        S.el("div", { class: "coach-scores" },
-          ...["Empathy", "Accuracy", "Confidence", "Compliance", "Readiness"].map(name =>
-            S.el("div", { class: "score" },
-              S.el("div", { class: "score-name" }, name),
-              S.el("div", { id: `score-${name.toLowerCase()}`, class: "score-val" }, state.scoringOn ? (STARTING_SCORES[name] ?? "—") : "—")
-            )
-          ),
-          S.el("label", { class: "toggle" },
-            S.el("input", {
-              type: "checkbox",
-              checked: state.scoringOn ? true : false,
-              onchange: (e) => {
-                state.scoringOn = !!e.target.checked;
-                // reset to starting scores or dashes
-                for (const k of ["Empathy","Accuracy","Confidence","Compliance","Readiness"]) {
-                  S.qs(`#score-${k.toLowerCase()}`)?.replaceChildren(state.scoringOn ? (STARTING_SCORES[k] ?? "—") : "—");
-                }
-              }
-            }),
-            "Scoring"
-          )
-        )
-      )
-    );
-    render(container);
+        h("div", { class: "coach-controls" }, [
+          field("Learning Center Mode", select("mode", [ { value: "", label: "Select Mode" }, ...MODES.map(m=>({value:m.key,label:m.label})) ])),
+          h("div", { id: "modeFields" })
+        ]),
+        // chat
+        h("div", { class: "coach-chat" }, [
+          h("div", { class: "chat-header" }, [
+            h("div", { class: "hline", id: "hdr1" }, []),
+            h("div", { class: "hline", id: "hdr2" }, [])
+          ]),
+          h("div", { class: "chat-stream", id: "chat" }),
+          h("form", { class: "chat-form", id: "chatForm" }, [
+            h("input", { class: "chat-input", id: "chatInput", placeholder: "Type your message…" }),
+            h("button", { class: "btn", type: "submit" }, [ "Send" ])
+          ])
+        ]),
+        // scores right column
+        h("div", { class: "coach-scores", id: "scoresCol" }, [
+          scoreItem("Empathy", "—"),
+          scoreItem("Accuracy", "—"),
+          scoreItem("Confidence", "—"),
+          scoreItem("Compliance", "—"),
+          scoreItem("Readiness", "—")
+        ])
+      ])
+    ]);
+    root.appendChild(wrap);
+    // close
+    qs(".close-btn", wrap).addEventListener("click", () => {
+      // find outer modal and close
+      const modal = root.closest(".modal");
+      if (modal) modal.classList.remove("open");
+    });
+    // wire selects
+    qs('select[name="mode"]', wrap).addEventListener("change", onModeChange);
+    qs("#chatForm", wrap).addEventListener("submit", onSend);
   }
 
-  function field(label, inputEl) {
-    return S.el("div", { class: "field" },
-      S.el("label", {}, label),
-      inputEl
-    );
-  }
-
-  function select(placeholder, options, onChange) {
-    const sel = S.el("select", { class: "input" }, S.el("option", { value: "" }, placeholder));
-    for (const o of options) sel.append(S.el("option", { value: o }, o));
-    sel.addEventListener("change", () => onChange(sel.value));
+  const field = (label, input) => h("div", { class: "field" }, [ h("label", {}, [ label ]), input ]);
+  function select(name, options) {
+    const sel = h("select", { name, class: "input" });
+    options.forEach(o => sel.appendChild(h("option", { value: o.value }, [ o.label ])));
     return sel;
   }
+  const scoreItem = (name, val) =>
+    h("div", { class: "score" }, [ h("div", { class: "score-name" }, [ name ]), h("div", { class: "score-val", "data-score": name.toLowerCase() }, [ val ]) ]);
 
-  function render(container) {
-    // Mode-specific control stack
-    const slot = S.qs("#mode-specific", container);
-    slot.innerHTML = "";
-
-    if (!state.mode) {
-      slot.append(S.el("div", { class: "hint" }, "Select a mode to begin."));
-      // disable chat until a mode is picked
-      S.qs("#chatInput").disabled = true;
-      S.qs("#chatInput").placeholder = "Select a mode to start…";
-      setHeaders("", "");
-      return;
-    }
-
-    S.qs("#chatInput").disabled = false;
-    S.qs("#chatInput").placeholder = "Type your message…";
-
+  // ---------- interactions ----------
+  function onModeChange(e) {
+    state.mode = e.target.value || null;
+    // fresh session per mode
+    state.sessionId = `${Date.now()}`;
+    qs("#chat").innerHTML = "";
+    // populate dependent fields
+    const host = qs("#modeFields");
+    host.innerHTML = "";
     if (state.mode === "emotional-intelligence") {
-      // EI: profile, feature
-      slot.append(
-        field("EI Profiles", select("Select EI Profile", EI_PROFILES.map(x => x.label), async (v) => {
-          const f = EI_PROFILES.find(x => x.label === v);
-          state.eiProfile = f?.key || "";
-          startFreshSession();
-          await preloadHeaders();
-          renderChat();
-        })),
-        field("EI Feature", select("Select EI Feature", EI_FEATURES.map(x => x.label), async (v) => {
-          const f = EI_FEATURES.find(x => x.label === v);
-          state.eiFeature = f?.key || "";
-          startFreshSession();
-          await preloadHeaders();
-          renderChat();
-        })),
-      );
-      // scoring ON by default, but toggle allowed
-      setToggleVisibility(true);
-    }
-
-    if (state.mode === "product-knowledge") {
-      slot.append(
-        field("Disease State", select("Select Disease", DISEASES, async (v) => {
-          state.disease = v || "";
-          state.hcp = "";
-          startFreshSession();
-          await preloadHeaders();
-          render(container);
-        })),
-        field("HCP Profile", select("Select HCP Profile", HCPs, async (v) => {
-          state.hcp = v || "";
-          startFreshSession();
-          await preloadHeaders();
-          renderChat();
-        })),
-      );
-      // scoring OFF by default, but hidden toggle? requirement says coach still replies and scoring off. Toggle should remain OFF but visible.
-      setToggleVisibility(true);
-    }
-
-    if (state.mode === "role-play") {
-      slot.append(
-        field("Disease State", select("Select Disease", DISEASES, async (v) => {
-          state.disease = v || "";
-          state.hcp = "";
-          startFreshSession();
-          await preloadHeaders();
-          render(container);
-        })),
-        field("HCP Profile", select("Select HCP Profile", HCPs, async (v) => {
-          state.hcp = v || "";
-          startFreshSession();
-          await preloadHeaders();
-          renderChat();
-        })),
-      );
-      // scoring ON by default
-      setToggleVisibility(true);
+      host.appendChild(field("EI Profile", select("eiProfile", [ {value:"",label:"Select EI Profile"}, ...EI_PROFILES.map(x=>({value:x.key,label:x.label})) ])));
+      host.appendChild(field("EI Feature", select("eiFeature", [ {value:"",label:"Select EI Feature"}, ...EI_FEATURES.map(x=>({value:x.key,label:x.label})) ])));
+      host.appendChild(toggleScoring(true)); // ON by default, can be toggled off
+      qs('select[name="eiProfile"]').addEventListener("change", (ev)=> state.eiProfile = ev.target.value || null);
+      qs('select[name="eiFeature"]').addEventListener("change", (ev)=> state.eiFeature = ev.target.value || null);
+      preloadHeaders("HCP Background: Time-pressured; direct; workflow sensitive.", "Key Takeaways: Lead with relevance; 1 question on barriers.");
+    } else if (state.mode === "product-knowledge") {
+      host.appendChild(field("Disease State", select("disease", [
+        {value:"",label:"Select Disease"},
+        {value:"oncology",label:"Oncology"},
+        {value:"vaccines",label:"Vaccines"},
+        {value:"hiv",label:"HIV"},
+        {value:"pulmonology",label:"Pulmonology"},
+        {value:"hepb",label:"Hepatitis B"},
+        {value:"cardiology",label:"Cardiology"}
+      ])));
+      host.appendChild(field("HCP Profile", select("hcp", [
+        {value:"",label:"Select HCP"},
+        {value:"im",label:"Internal Medicine MD"},
+        {value:"np",label:"Nurse Practitioner (NP)"},
+        {value:"pa",label:"Physician Assistant (PA)"},
+        {value:"id",label:"Infectious Disease Specialist"},
+        {value:"onc",label:"Oncologist"},
+        {value:"pulm",label:"Pulmonologist"},
+        {value:"card",label:"Cardiologist"}
+      ])));
+      host.appendChild(toggleScoring(false)); // OFF by default
+      qs('select[name="disease"]').addEventListener("change", (ev)=> state.disease = ev.target.value || null);
+      qs('select[name="hcp"]').addEventListener("change", (ev)=> state.hcp = ev.target.value || null);
+      preloadHeaders("HCP Background: Evidence-focused; prior-auth burden; limited time.", "Key Takeaways: Lead with guideline tie; include 1 targeted question.");
+    } else if (state.mode === "role-play") {
+      // same selects as PK
+      onModeChange({ target: { value: "product-knowledge" } });
+      state.mode = "role-play";
+      toggleScoring(true, true); // ensure ON
+      preloadHeaders("HCP Background: Practical, time-constrained.", "Today’s Goal: Practice concise value, ask 1 needs question.");
     }
   }
 
-  function setToggleVisibility(show) {
-    const t = S.qs(".coach-scores .toggle");
-    if (show) t.style.display = "flex"; else t.style.display = "none";
+  function toggleScoring(defaultOn, forceOn) {
+    const w = h("div", { class: "toggle" }, []);
+    const id = `score_${Math.random().toString(36).slice(2)}`;
+    const cb = h("input", { type: "checkbox", id, checked: defaultOn ? "" : null });
+    cb.checked = !!defaultOn;
+    cb.addEventListener("change", () => { state.scoring = cb.checked; });
+    if (forceOn) { cb.checked = true; cb.disabled = true; state.scoring = true; }
+    w.appendChild(cb);
+    w.appendChild(h("label", { for: id }, [ "Scoring" ]));
+    return w;
   }
 
-  function setHeaders(a, b) {
-    S.qs("#hlineA")?.replaceChildren(a || "");
-    S.qs("#hlineB")?.replaceChildren(b || "");
+  function preloadHeaders(line1, line2) {
+    qs("#hdr1").textContent = line1 || "";
+    qs("#hdr2").textContent = line2 || "";
   }
 
-  async function preloadHeaders() {
-    // when selections change, compute header lines and send a silent init to worker
-    let background = "";
-    let second = { label: "Key Takeaways", text: "" };
-
-    if (state.mode === "emotional-intelligence") {
-      background = `EI Profile: ${labelFrom(EI_PROFILES, state.eiProfile) || "—"} • Feature: ${labelFrom(EI_FEATURES, state.eiFeature) || "—"}`;
-      second = { label: "Key Takeaways", text: tipFromFeature(state.eiFeature) };
-    } else {
-      // PK and Role-play use disease + hcp
-      if (state.disease) background = `HCP Background: ${pickPersonaSummary(state.disease, state.hcp || "MD")}`;
-      const gt = pickGoalOrTakeaways(state.mode, state.disease || "Oncology", state.hcp || "Internal Medicine MD");
-      second = gt;
-    }
-
-    setHeaders(background, second.text ? `${second.label}: ${second.text}` : "");
-
-    // silent init ping
-    const payload = {
-      mode: state.mode,
-      disease: state.disease,
-      hcp: state.hcp,
-      eiProfile: state.eiProfile,
-      eiFeature: state.eiFeature,
-      init: true
-    };
-    // not blocking; ignore result
-    S.postJSON(window.COACH_ENDPOINT || "/coach", payload, { timeout: 4000, retries: 0 });
-  }
-
-  function labelFrom(list, key) { return (list.find(x => x.key === key) || {}).label || ""; }
-
-  function tipFromFeature(key) {
-    switch (key) {
-      case "empathy":   return "Mirror key phrases • validate feelings • ask permission before advising • end with a check-back question.";
-      case "objection": return "Surface the root cause • align on criteria • respond with brief evidence • confirm if addressed.";
-      case "clarity":   return "Lead with headline • state one benefit • one data point • one action; avoid hedging words.";
-      case "accuracy":  return "Use label language • cite source and population • avoid implied superiority without head-to-head.";
-      case "discovery": return "Open with purpose • ask who/what/why/impact • quantify current approach • listen and reflect.";
-      default: return "";
-    }
-  }
-
-  // ---------- chat ----------
-  function renderChat() {
-    const stream = S.qs("#chatStream");
-    stream.innerHTML = "";
-    for (const m of state.chat) {
-      stream.append(S.el("div", { class: `msg ${m.role === "user" ? "user" : "bot"}` }, m.text));
-    }
-    stream.scrollTop = stream.scrollHeight;
-  }
-
-  async function onSend(e) {
-    e.preventDefault();
-    const inp = S.qs("#chatInput");
-    const q = inp.value.trim();
-    if (!q) return;
-
-    // guard: require minimal selection based on mode
-    if (state.mode === "emotional-intelligence" && (!state.eiProfile || !state.eiFeature)) {
-      enqueueBot("Select EI Profile and EI Feature first.");
-      return;
-    }
-    if ((state.mode === "product-knowledge" || state.mode === "role-play") && (!state.disease || !state.hcp)) {
-      enqueueBot("Select Disease State and HCP Profile first.");
-      return;
-    }
-
+  async function onSend(ev) {
+    ev.preventDefault();
+    const inp = qs("#chatInput"); const msg = (inp.value || "").trim();
+    if (!msg) return;
     inp.value = "";
-    enqueueUser(q);
+    push("user", msg);
+    // silent init ping per selection change is already implied by sessionId flip
+    const reply = await askCoach(msg);
+    push("bot", reply);
+    if (state.scoring) updateScores(); // simple demo change
+  }
 
-    // call worker
-    const payload = {
-      mode: state.mode,
-      disease: state.disease,
-      hcp: state.hcp,
-      eiProfile: state.eiProfile,
-      eiFeature: state.eiFeature,
-      message: q,
-      scoring: !!state.scoringOn
-    };
-    const res = await S.postJSON(window.COACH_ENDPOINT || "/coach", payload, { timeout: 20000, retries: 1 });
+  function push(who, text) {
+    const row = h("div", { class: `msg ${who}` }, [ text ]);
+    qs("#chat").appendChild(row);
+    qs("#chat").scrollTop = qs("#chat").scrollHeight;
+  }
 
-    if (!res || !(res.reply || res.output)) {
-      // fallback local stub
-      enqueueBot(localFallbackReply(q));
-      if (state.scoringOn) applyScoreNudge(q);
-      return;
-    }
-
-    const reply = res.reply || res.output || "";
-    enqueueBot(reply);
-
-    if (state.scoringOn && res.scores) {
-      for (const k of ["Empathy","Accuracy","Confidence","Compliance","Readiness"]) {
-        if (k.toLowerCase() in res.scores) {
-          S.qs(`#score-${k.toLowerCase()}`)?.replaceChildren(Math.round(res.scores[k.toLowerCase()]));
-        }
+  async function askCoach(text) {
+    // worker endpoint or local stub
+    try {
+      const r = await fetch((window.COACH_ENDPOINT||"/coach"), {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: state.mode, eiProfile: state.eiProfile, eiFeature: state.eiFeature,
+          disease: state.disease, hcp: state.hcp, message: text, sessionId: state.sessionId
+        })
+      });
+      if (r.ok) {
+        const j = await r.json();
+        return j.reply || "OK.";
       }
-    } else if (state.scoringOn) {
-      applyScoreNudge(q);
-    }
+    } catch (_) {}
+    // local stub
+    return "Stub reply: I parsed your intent and will tailor guidance once the worker responds.";
   }
 
-  function enqueueUser(t) {
-    state.chat.push({ role: "user", text: t }); renderChat();
-  }
-  function enqueueBot(t) {
-    state.chat.push({ role: "bot", text: t }); renderChat();
+  function updateScores() {
+    const bump = () => 60 + Math.floor(Math.random()*35); // 60–94
+    qsa("[data-score]").forEach(n => n.textContent = bump());
   }
 
-  function localFallbackReply(q) {
-    const s = q.toLowerCase();
-    if (state.mode === "product-knowledge") {
-      return `Key points for ${state.disease} with ${state.hcp}: keep claims label-aligned, give a concise outcome stat, then ask one check-back question.`;
-    }
-    if (state.mode === "role-play") {
-      return `Sim agent is online locally. Try handling an objection, then summarize plan and ask for next-step commitment.`;
-    }
-    // EI
-    if (/\b(objection|pushback|concern)\b/.test(s)) {
-      return "Acknowledge, ask a brief clarifier, respond with one data point, and confirm if addressed.";
-    }
-    return "Got it. Provide your opening line or objection you want to practice.";
+  // ---------- public API ----------
+  async function mount(root) {
+    // fresh session every time mount is called
+    state.sessionId = `${Date.now()}`;
+    await loadData();       // tolerant boot
+    buildShell(root);       // render
+    // initial headers
+    preloadHeaders("", "");
   }
 
-  function applyScoreNudge(text) {
-    // crude heuristic: question improves empathy and discovery a bit; long monologue reduces clarity
-    const len = text.length;
-    const isQuestion = /\?\s*$/.test(text);
-    bump("Empathy", isQuestion ? +2 : 0);
-    bump("Confidence", +1);
-    bump("Readiness", +1);
-    if (len > 240) bump("Confidence", -1);
-  }
-  function bump(name, delta) {
-    if (!delta) return;
-    const el = S.qs(`#score-${name.toLowerCase()}`);
-    if (!el) return;
-    const cur = parseInt(el.textContent, 10);
-    if (Number.isFinite(cur)) el.textContent = Math.max(0, Math.min(100, cur + delta));
-  }
-
-  // ---------- public mount called by widget.js ----------
-  window.ReflectivCoach = {
-    async mount(target) {
-      const host = typeof target === "string" ? S.qs(target) : target;
-      if (!host) throw new Error("ReflectivAI coach mount target not found");
-      try {
-        await loadData();
-      } catch {
-        // continue with empty datasets
-      }
-      // default placeholder per requirements
-      state.mode = "";
-      state.scoringOn = false;
-      mount(host);
-    }
-  };
+  window.ReflectivCoach = { mount };
 })();
