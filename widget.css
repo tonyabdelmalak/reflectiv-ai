@@ -1,83 +1,161 @@
-/* =====================================================
-   ReflectivAI Chat Widget — Stabilized Layout v2
-   Matches af269804 JS + current main visual system
-   ===================================================== */
+/* =========================================================
+   ReflectivAI Coach / Chat — Stable CSS (paired with af269804 JS)
+   Safe: layout only. No selector renames JS relies on.
+   ========================================================= */
 
-/* ---------- Widget Shell ---------- */
-.reflectiv-chat {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  border: 1px solid #d6dbe3;
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(15,39,71,.12);
-  font-family: "Inter","Poppins",sans-serif;
+/* ---------- Shell ---------- */
+.reflectiv-chat,
+.reflectiv-coach,
+#reflectiv-coach,
+#reflectiv-widget {
+  font-family: "Inter","Poppins",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   color: #1e2a3a;
+}
+
+.coach-modal {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: start center;
+  padding: 32px 12px;
+  background: rgba(10,18,28,0.35);
+  z-index: 9999;
+}
+
+.coach-panel {
+  width: min(980px, 96vw);
+  background: #fff;
+  border: 1px solid #d6dbe3;
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(15,39,71,.18);
   overflow: hidden;
 }
 
-/* ---------- Toolbar ---------- */
-.chat-toolbar {
-  display: grid;
-  grid-template-columns: repeat(auto-fit,minmax(160px,1fr));
-  gap: 10px;
-  align-items: end;
+/* ---------- Header ---------- */
+.coach-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 12px 16px;
   background: #f7f9fc;
   border-bottom: 1px solid #e5e9f0;
 }
 
-.chat-toolbar label {
-  font-size: 13px;
-  font-weight: 600;
+.coach-title {
+  font-weight: 800;
+  font-size: 18px;
   color: #0f2747;
 }
 
-.chat-toolbar select {
-  padding: 6px 8px;
-  border-radius: 6px;
+.coach-close {
+  appearance: none;
   border: 1px solid #d9e3ef;
   background: #fff;
-  font-size: 13px;
+  color: #1e2a3a;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---------- Toolbar / Controls ---------- */
+.chat-toolbar,
+.sim-controls {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 12px;
+  align-items: end;
+  padding: 14px 16px;
+  background: #f7f9fc;
+  border-bottom: 1px solid #e5e9f0;
+}
+
+@media (max-width: 900px) {
+  .chat-toolbar,
+  .sim-controls { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 520px) {
+  .chat-toolbar,
+  .sim-controls { grid-template-columns: 1fr; }
+}
+
+.sim-field label,
+.chat-toolbar label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f2747;
+  margin-bottom: 6px;
+}
+
+.sim-field select,
+.chat-toolbar select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #d9e3ef;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
   color: #1e2a3a;
 }
 
-/* ---------- Scenario Area ---------- */
-.simulation {
-  padding: 14px 18px;
+/* ---------- Scenario / Brief ---------- */
+.simulation,
+.scenario-brief {
+  padding: 16px 18px;
   background: #ffffff;
   border-bottom: 1px solid #e5e9f0;
   line-height: 1.5;
 }
 
-.simulation strong {
+.scenario-brief strong {
   display: block;
   margin-bottom: 4px;
   color: #0b3954;
-  font-weight: 700;
+  font-weight: 800;
 }
 
-/* ---------- Chat Messages ---------- */
+/* ---------- Guidance Card ---------- */
+.guidance,
+.brief-card {
+  margin: 16px;
+  padding: 14px 16px;
+  background: #ecf3fb;
+  border: 1px solid #d9e3ef;
+  border-radius: 12px;
+  color: #1e2a3a;
+}
+.guidance h4,
+.brief-card h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: #0b3954;
+}
+
+/* ---------- Messages ---------- */
 .chat-messages {
-  flex: 1;
-  padding: 16px 18px;
+  max-height: 48vh;
   overflow-y: auto;
-  background: #fdfdfd;
+  padding: 16px 18px;
+  background: #ffffff;
 }
 
 .chat-message {
-  margin-bottom: 12px;
-  line-height: 1.4;
+  margin: 0 0 12px 0;
+  line-height: 1.45;
+  color: #1e2a3a;
 }
 
 .chat-message.user { text-align: right; color: #0b3954; }
-.chat-message.bot  { text-align: left; color: #1e2a3a; }
+.chat-message.bot  { text-align: left;  color: #1e2a3a; }
 
-/* ---------- Input ---------- */
+/* ---------- Input row ---------- */
 .chat-input {
   display: flex;
-  gap: 8px;
+  gap: 10px;
+  align-items: stretch;
   padding: 14px 16px;
   border-top: 1px solid #e5e9f0;
   background: #f9fbfe;
@@ -85,59 +163,74 @@
 
 .chat-input textarea {
   flex: 1;
+  min-height: 44px;
   resize: none;
-  border-radius: 8px;
   border: 1px solid #d9e3ef;
-  padding: 8px 10px;
+  border-radius: 10px;
+  padding: 10px 12px;
   font-size: 14px;
-  min-height: 40px;
 }
 
+.chat-input .send-btn,
 .chat-input button {
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   background: #20bfa9;
   color: #fff;
-  font-weight: 600;
-  padding: 8px 14px;
+  font-weight: 800;
+  padding: 10px 16px;
   cursor: pointer;
 }
+.chat-input .send-btn:hover,
 .chat-input button:hover { background: #17a895; }
 
-/* ---------- Coach Feedback ---------- */
-.scoring-panel {
-  background: #f4f8fc;
-  border-top: 1px solid #d9e3ef;
-  padding: 12px 16px;
-  font-size: 13px;
+@media (max-width: 520px) {
+  .chat-input { flex-direction: column; }
+  .chat-input .send-btn,
+  .chat-input button { width: 100%; }
+}
+
+/* ---------- Coach Feedback / Scoring ---------- */
+.scoring-panel,
+.coach-feedback {
+  background: #fff7d8;
+  border-top: 1px solid #eadfbb;
+  padding: 14px 16px 16px 16px;
   color: #1e2a3a;
 }
 
-.scoring-panel h4 {
+.scoring-panel h4,
+.coach-feedback h4 {
   margin: 0 0 8px 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: #1f2a44;
+}
+
+.score-row {
+  margin: 4px 0 10px 0;
   font-size: 14px;
-  font-weight: 700;
-  color: #0b3954;
 }
 
 .score-badges {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 8px;
+  margin: 6px 0 10px 0;
 }
 
 .score-badges span {
-  background: #ecf3fb;
-  border-radius: 6px;
+  display: inline-block;
   padding: 3px 8px;
   font-size: 12px;
-  color: #0b3954;
+  border-radius: 999px;
   border: 1px solid #d9e3ef;
+  background: #ecf3fb;
+  color: #0b3954;
 }
 
-/* ---------- Responsive ---------- */
-@media (max-width: 600px) {
-  .chat-toolbar { grid-template-columns: 1fr; }
-  .chat-input { flex-direction: column; }
-}
+/* ---------- Utilities ---------- */
+.hidden { display: none !important; }
+.mono   { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,"Liberation Mono","Courier New",monospace; }
+.small  { font-size: 12px; }
+
