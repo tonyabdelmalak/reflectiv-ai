@@ -1,102 +1,208 @@
 /*
- * ReflectivAI Site Stylesheet (20251021E)
- * Highspot-style layout. Navy band, flip metrics, uniform pink pills.
+ * ReflectivAI Site Stylesheet (drop-in, slab + navy breaks)
+ * Clean layout, modern slabs, rounded cards, high contrast.
  */
 
 :root{
   --navy:#0c2740;
-  --navy-2:#0b3954;
-  --teal:#06B6D4;
-  --ink:#1e2a3a;
+  --navy-2:#0b2034;
+  --ink:#0b1323;
   --slate:#5b6b85;
-  --bg:#ffffff;
-  --soft:#f8fafc;
-  --border:#d9e3ef;
+
+  /* slab + pills */
+  --slab:#f3f8ff;          /* very light blue slab */
+  --slab-2:#eef4ff;
+  --pill:#ffeaf1;          /* faint pink for CTNs */
+  --pill-border:#ffd3e3;
+
+  --card:#ffffff;
+  --border:#dde6f2;
   --shadow:0 10px 28px rgba(12,39,64,.12);
-  --pill:#ffeaf1;
-  --pill-border:#0c2740;
 }
 
-/* -------- Global -------- */
 html{scroll-behavior:smooth}
-body{margin:0;font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}
-a{color:var(--teal);text-decoration:none}a:hover{text-decoration:underline}
+body{
+  margin:0;
+  font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color:var(--ink);
+  background:#ffffff;
+  line-height:1.55;
+}
 
-/* -------- Header -------- */
-header{position:fixed;top:0;left:0;width:100%;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.08);z-index:999}
-header .nav a{color:var(--navy);font-weight:600;margin:0 12px}header .nav a:hover{color:var(--teal)}
+/* ---------- Header / Nav ---------- */
+.site-header{position:sticky;top:0;z-index:1000;background:var(--navy);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.14)}
+.nav{max-width:1220px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;position:relative}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;font-weight:800;font-size:20px}
+.brand img{width:28px;height:28px;display:block}
+.nav-links{display:flex;gap:16px;align-items:center}
+.nav-links a{color:#fff;text-decoration:none;font-weight:600;padding:8px 6px;border-radius:8px}
+.nav-links a:hover{background:rgba(255,255,255,.08)}
+.hamburger{display:none;flex-direction:column;gap:5px;width:34px;height:26px;background:transparent;border:0;cursor:pointer}
+.hamburger span{display:block;height:3px;background:#fff;border-radius:2px;transition:.2s}
+.hamburger.active span:nth-child(1){transform:translateY(9px) rotate(45deg)}
+.hamburger.active span:nth-child(2){opacity:0}
+.hamburger.active span:nth-child(3){transform:translateY(-9px) rotate(-45deg)}
+@media (max-width:900px){
+  .hamburger{display:flex}
+  .nav-links{display:none;position:absolute;left:12px;right:12px;top:100%;background:var(--navy);flex-direction:column;padding:10px;border-radius:12px;box-shadow:var(--shadow)}
+  .nav-links.active{display:flex}
+  .nav-links a{width:100%}
+}
 
-/* -------- Hero -------- */
-.hero{padding:116px 20px 56px;background:#fff}
-.hero h1{margin:0 0 12px;font-weight:900;color:var(--navy);font-size:clamp(32px,5vw,56px)}
-.hero p{margin:0 0 24px;color:var(--slate);font-size:clamp(16px,2.2vw,20px)}
-.hero .btn{display:inline-block;border-radius:999px;padding:12px 26px;font-weight:800}
-.hero .btn.primary{background:var(--navy);color:#fff}
-.hero .btn.secondary{background:#fff;color:var(--navy);border:2px solid var(--navy)}
-.hero .btn:hover{filter:brightness(1.04)}
+/* ---------- Hero ---------- */
+.hero{background:radial-gradient(1200px 600px at 70% -10%,#1b6b88 0%,#0e2b40 45%,#0b1f30 70%,#0a1a27 100%);color:#eaf2f7;padding:72px 0 56px}
+.hero-wrap{max-width:1120px;margin:0 auto;padding:0 20px;display:grid;grid-template-columns:1.2fr .8fr;gap:28px;align-items:center}
+.hero h1{margin:0 0 14px;font-weight:900;line-height:1.06;color:#fff;font-size:clamp(32px,5.2vw,56px)}
+.hero p{margin:0 0 22px;font-size:clamp(16px,2.5vw,20px);color:#e5eff6}
+.cta{display:flex;gap:14px;flex-wrap:wrap}
+.btn{display:inline-block;border-radius:14px;padding:14px 22px;font-weight:900;text-decoration:none;transition:transform .05s ease}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:transparent;color:#fff;border:2px solid #fff}
+.btn.secondary{background:transparent;color:#fff;border:2px solid #fff;opacity:.92}
+.btn.primary,.btn.secondary{font-size:1.06em}
+.hero-img img{width:100%;height:320px;border-radius:18px;object-fit:cover;box-shadow:0 12px 30px rgba(0,0,0,.35);outline:1px solid rgba(255,255,255,.12)}
+@media (max-width:900px){.hero{padding:56px 0 40px}.hero-wrap{grid-template-columns:1fr}.hero-img img{height:220px}}
 
-/* -------- Navy analytics band -------- */
-.band-navy{background:#0c2740;color:#fff}
-.analytics{padding:72px 20px 64px;text-align:center}
-.analytics h2{margin:0 0 6px;font-weight:900;letter-spacing:-.01em}
-.analytics p{color:#cfe6ff;margin:8px auto 28px;max-width:720px}
-.section-separator{display:block;width:80px;height:4px;margin:0 auto 18px;border-radius:999px;background:var(--teal)}
+/* ---------- Navy breaks / slab sections ---------- */
+.bg-navy{background:var(--navy-2);color:#fff}
+.bg-navy h2,.bg-navy h3,.bg-navy p,.bg-navy .muted{color:#fff}
+.slab{background:var(--slab)}
+.slab-2{background:var(--slab-2)}
 
-/* Metric flip cards */
-.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:18px}
-@media(max-width:1100px){.metrics{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:720px){.metrics{grid-template-columns:repeat(2,1fr)}}
-.metric{height:120px;perspective:1000px}
-.metric-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .5s}
-.metric:hover .metric-inner{transform:rotateY(180deg)}
-.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.22);box-shadow:0 6px 20px rgba(0,0,0,.15);display:flex;flex-direction:column;align-items:center;justify-content:center}
-.back{transform:rotateY(180deg);padding:14px 12px;color:#dbeafe;text-align:center;font-size:.95rem;line-height:1.3}
-.metric .value{font-weight:900;font-size:30px;color:#3fd4ea;margin-bottom:4px}
-.metric .label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#d6e6ff}
+/* ---------- Generic sections ---------- */
+.section{padding:64px 16px}
+.section-inner{max-width:1160px;margin:0 auto}
+h2{font-size:clamp(28px,3.8vw,44px);margin:0 0 18px;font-weight:900;letter-spacing:-.01em}
+.muted{color:var(--slate)}
 
-/* -------- Pink pills -------- */
-.tag,.chip,.pill{
+/* ---------- Why strip ---------- */
+.why{background:var(--navy-2);color:#fff}
+.why-inner{max-width:1160px;margin:0 auto;padding:26px 16px}
+.why-title{font-family:"Pacifico",cursive;font-size:28px;margin:0 0 6px}
+
+/* ---------- Slab cards ---------- */
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media (max-width:960px){.grid-3{grid-template-columns:1fr}}
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:22px;
+  box-shadow:var(--shadow);
+}
+.card h3{margin:.25rem 0 .5rem;font-size:20px}
+.card p{margin:0}
+
+/* platform modules live on a light-blue slab */
+.platform.section{background:var(--slab)}
+
+/* ---------- Split lists with pills ---------- */
+.split{
+  display:grid;
+  grid-template-columns:1fr 18px 1fr;
+  gap:18px;
+  align-items:start;
+}
+.split .divider{background:#cfd8e6;border-radius:3px}
+.split .col h2{margin-bottom:14px}
+.chips{display:flex;gap:12px;flex-direction:column}
+.tag{
   display:inline-block;
-  padding:.55rem .95rem;
+  background:var(--pill);
+  color:var(--ink);
+  border:1px solid var(--pill-border);
   border-radius:999px;
+  padding:14px 18px;
   font-weight:800;
-  font-size:.95rem;
+  font-size:16px;
+  text-decoration:none;
+  cursor:pointer;
+  box-shadow:0 6px 18px rgba(255,96,148,.06);
+}
+.tag:hover{filter:brightness(.98)}
+
+/* ---------- Feature list ---------- */
+.feature-list{list-style:none;margin:0;padding:0;display:grid;gap:16px}
+.feature-list li{list-style:none}
+
+/* ---------- Analytics metric chips on one line ---------- */
+.metrics-grid{
+  display:flex;
+  gap:12px;
+  flex-wrap:nowrap;
+  overflow:auto;
+  padding-bottom:6px;
+}
+.metrics-grid .tag{white-space:nowrap}
+
+/* ---------- Modal shell ---------- */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(3,14,24,.55);z-index:1200}
+.modal.open{display:flex}
+.modal-box{background:#fff;border-radius:18px;box-shadow:var(--shadow);max-width:980px;width:92vw;max-height:88vh;overflow:auto}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);background:#f6f9fe;border-radius:18px 18px 0 0}
+.modal-title{font-weight:900}
+.modal-close{background:#e7edf6;border:0;border-radius:10px;padding:6px 10px;cursor:pointer}
+#coachModal .modal-box{max-width:1100px;width:96vw}
+#coachBody{padding:0}
+
+/* ---------- Contact (slab) ---------- */
+#contact.section{background:var(--slab)}
+.contact-form{display:grid;gap:12px;background:#fff;border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
+.contact-form .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.contact-form label{display:block;font-size:13px;font-weight:700;color:var(--ink);margin:0 0 6px}
+.contact-form input,.contact-form textarea{width:100%;border:1px solid #cfd8e3;border-radius:12px;padding:12px;font-size:15px;color:var(--ink);background:#fff}
+.contact-form textarea{min-height:140px;resize:vertical}
+.contact-form .btn.primary{background:var(--navy);color:#fff;border:0;border-radius:12px}
+@media (max-width:900px){.contact-form .form-row{grid-template-columns:1fr}}
+
+/* ---------- FAQ / Ethics inside navy breaks ---------- */
+.bg-navy details summary{
+  background:#fafcff;
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:12px 16px;
+  margin:10px 0;
+  color:var(--ink);
+}
+.bg-navy details[open] summary{border-bottom-left-radius:12px;border-bottom-right-radius:12px}
+.bg-navy details{background:#fff;border-radius:16px;margin:12px 0;border:1px solid var(--border);box-shadow:var(--shadow)}
+.bg-navy details > *:not(summary){padding:12px 16px;color:var(--ink)}
+
+/* ---------- Alora FAB (right) ---------- */
+#aloraFab{position:fixed;right:22px;bottom:22px;z-index:9999;width:64px;height:64px;border:none;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;box-shadow:0 6px 18px rgba(0,0,0,.28);cursor:pointer}
+#aloraFab svg{width:30px;height:30px;display:block}
+
+/* ---------- Alora slide-in ---------- */
+.alora{position:fixed;right:22px;bottom:98px;width:360px;max-width:92vw;background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:0 16px 36px rgba(0,0,0,.22);transform:translateY(18px);opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;display:flex;flex-direction:column;overflow:hidden;z-index:9999}
+.alora.open{opacity:1;transform:translateY(0);pointer-events:auto}
+.alora-head{display:flex;align-items:center;justify-content:space-between;background:var(--navy);color:#fff;padding:12px 14px}
+.alora-title{font-weight:800}
+.alora-close{appearance:none;border:none;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:4px 6px;border-radius:8px}
+.alora-body{padding:12px;max-height:46vh;overflow:auto;background:#fbfdff}
+.alora-msg{padding:10px 12px;border-radius:12px;margin:8px 0;max-width:82%}
+.alora-msg.bot{background:#eef5ff;color:#0b1323}
+.alora-msg.user{background:#1e2a3a;color:#fff;margin-left:auto}
+.alora-typing{font-size:12px;color:#596a82;margin:6px 2px}
+.alora-input{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border);background:#fff}
+.alora-input input{flex:1;border:1px solid #cfd8e3;border-radius:10px;padding:10px 12px;font-size:15px;color:var(--ink)}
+.alora-input .btn.primary{background:var(--navy);color:#fff;border:none;border-radius:10px;padding:10px 12px}
+
+/* ---------- Helpers ---------- */
+.section .section-inner > img.slab-img{
+  width:100%;
+  height:auto;
+  border-radius:16px;
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
+
+  /* Align site palette with uniform pink pills and navy accents */
+:root{ --navy:#0c2740; --pill:#ffeaf1; --pill-border:#0c2740; }
+.tag, .chip, .pill{
   background:var(--pill)!important;
   border:1px solid var(--pill-border)!important;
-  color:var(--pill-border)!important;
-  box-shadow:none;
-}
-.tag:hover,.chip:hover,.pill:hover{filter:brightness(.98)}
-/* Force Pulmonology to new line after Cardiology on wide screens */
-.wrap-break{flex-basis:100%;height:0}
-
-/* -------- Ethics cards -------- */
-.ethics{padding:64px 20px;background:#f7f9fc;border-top:1px solid #e8eef6}
-.ethics-card{background:#fff;border-radius:12px;box-shadow:var(--shadow);border-top:4px solid var(--teal);padding:22px}
-.ethics-card h4{margin:0 0 6px}
-
-/* -------- Contact -------- */
-.contact{padding:64px 20px;background:#fff}
-.contact form{background:#fff;border:1px solid #e6edf6;border-radius:14px;box-shadow:var(--shadow);padding:24px}
-.contact input,.contact textarea{width:100%;border:1px solid #d2dae4;border-radius:10px;padding:12px 14px;font-size:15px}
-.contact button{background:var(--navy);color:#fff;border:0;border-radius:999px;padding:12px 22px;font-weight:800}
-
-/* -------- Footer -------- */
-footer{background:#111827;color:#fff;text-align:center;padding:22px 0;font-size:.9rem}
-
-/* -------- Coach / Alora visibility -------- */
-#aloraFab{position:fixed;right:22px;bottom:22px;z-index:10001;width:64px;height:64px;border:0;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;box-shadow:0 6px 18px rgba(0,0,0,.28);cursor:pointer}
-.alora{z-index:10001}
-#reflectiv-widget{position:relative;z-index:1000}
-
-/* -------- Images in slabs -------- */
-.section .section-inner>img.slab-img{
-  width:100%;height:auto;border-radius:16px;border:1px solid var(--border);box-shadow:var(--shadow)
+  color:var(--navy)!important;
 }
 
-/* -------- Responsive tweaks -------- */
-@media(max-width:900px){
-  .hero{padding-top:96px}
 }
 
-/* -------- End -------- */
+/* Do not hide or gate the Reflectiv Coach from global CSS */
