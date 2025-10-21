@@ -413,31 +413,64 @@ ${COMMON}`.trim();
     const hcpSelect = el("select"); hcpSelect.id="cw-hcp";
 
     // EI Persona/EI Feature
-    const personaLabel = el("label", "", "HCP Persona");
-    personaLabel.htmlFor = "cw-ei-persona";
-    const personaSelect = el("select"); personaSelect.id = "cw-ei-persona";
-    personaSelectElem = personaSelect;
-    personaLabelElem = personaLabel;
-    personaSelect.addEventListener("change", generateFeedback);
+const personaLabel = el("label", "", "HCP Persona");
+personaLabel.htmlFor = "cw-ei-persona";
+const personaSelect = el("select"); personaSelect.id = "cw-ei-persona";
+personaSelectElem = personaSelect;
+personaLabelElem = personaLabel;
+personaSelect.addEventListener("change", generateFeedback);
 
-    const featureLabel = el("label", "", "EI Feature");
-    featureLabel.htmlFor = "cw-ei-feature";
-    const featureSelect = el("select"); featureSelect.id = "cw-ei-feature";
-    eiFeatureSelectElem = featureSelect;
-    featureLabelElem = featureLabel;
-    featureSelect.addEventListener("change", generateFeedback);
+const featureLabel = el("label", "", "EI Feature");
+featureLabel.htmlFor = "cw-ei-feature";
+const featureSelect = el("select"); featureSelect.id = "cw-ei-feature";
+eiFeatureSelectElem = featureSelect;
+featureLabelElem = featureLabel;
+featureSelect.addEventListener("change", generateFeedback);
 
-    // mount controls
-    simControls.appendChild(lcLabel);    simControls.appendChild(modeSel);
-    simControls.appendChild(coachLabel); simControls.appendChild(coachSel);
-    simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
-    simControls.appendChild(hcpLabel);     simControls.appendChild(hcpSelect);
-    simControls.appendChild(personaLabel); simControls.appendChild(personaSelect);
-    simControls.appendChild(featureLabel); simControls.appendChild(featureSelect);
+// ---------- EI option sources (no demo caps) ----------
+const PERSONAS_ALL = (cfg?.eiProfiles && cfg.eiProfiles.length ? cfg.eiProfiles : DEFAULT_PERSONAS);
+const FEATURES_ALL = (cfg?.eiFeatures && cfg.eiFeatures.length ? cfg.eiFeatures : DEFAULT_EI_FEATURES);
 
-    bar.appendChild(simControls);
-    shell.appendChild(bar);
+// Rebuild EI selects with full lists
+function hydrateEISelects() {
+  if (!personaSelectElem || !eiFeatureSelectElem) return;
+  personaSelectElem.innerHTML = '';
+  eiFeatureSelectElem.innerHTML = '';
 
+  const opt = (txt, val = '') => {
+    const o = document.createElement('option');
+    o.value = val; o.textContent = txt;
+    return o;
+  };
+  personaSelectElem.appendChild(opt('Select...', ''));
+  eiFeatureSelectElem.appendChild(opt('Select...', ''));
+
+  PERSONAS_ALL.forEach(p => {
+    const o = document.createElement('option');
+    o.value = p.key || p.value || p.id || String(p).toLowerCase().replace(/\s+/g, '-');
+    o.textContent = p.label || p.name || p.title || String(p);
+    personaSelectElem.appendChild(o);
+  });
+
+  FEATURES_ALL.forEach(f => {
+    const o = document.createElement('option');
+    o.value = f.key || f.value || f.id || String(f).toLowerCase().replace(/\s+/g, '-');
+    o.textContent = f.label || f.name || f.title || String(f);
+    eiFeatureSelectElem.appendChild(o);
+  });
+}
+hydrateEISelects();
+
+// mount controls
+simControls.appendChild(lcLabel);      simControls.appendChild(modeSel);
+simControls.appendChild(coachLabel);   simControls.appendChild(coachSel);
+simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
+simControls.appendChild(hcpLabel);     simControls.appendChild(hcpSelect);
+simControls.appendChild(personaLabel); simControls.appendChild(personaSelect);
+simControls.appendChild(featureLabel); simControls.appendChild(featureSelect);
+
+bar.appendChild(simControls);
+shell.appendChild(bar);
     const meta = el("div", "scenario-meta");
     shell.appendChild(meta);
 
