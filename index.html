@@ -14,11 +14,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
 
   <!-- Core styles -->
-  <link rel="stylesheet" href="styles.css?v=20251020-3">
-  <link rel="stylesheet" href="widget.css?v=20251020-3">
+  <link rel="stylesheet" href="styles.css?v=20251020-5">
+  <link rel="stylesheet" href="widget.css?v=20251020-5">
 
   <!-- Modal/layout overrides (must load last) -->
-  <link rel="stylesheet" href="hotfix-widget.css?v=20251020-3">
+  <link rel="stylesheet" href="hotfix-widget.css?v=20251020-5">
 
   <!-- HERO + FORM + ALORA quick overrides -->
   <style>
@@ -61,14 +61,15 @@
 
   <!-- Worker endpoints -->
   <script>
-    window.COACH_ENDPOINT = '/coach';
-    window.ALORA_ENDPOINT = '/alora';
+    // set your Worker URL here once; widget.js reads these
+    window.WORKER_URL = 'https://YOUR-WORKER-NAME.YOUR-ACCOUNT.workers.dev';
+    window.COACH_ENDPOINT = window.WORKER_URL + '/chat';
+    window.ALORA_ENDPOINT = window.WORKER_URL + '/chat';
   </script>
 
   <!-- ReflectivAI widget bootstrap -->
-  <script defer src="widget.js?v=20251020-3"></script>
+  <script defer src="widget.js?v=20251020-5"></script>
 </head>
-
 <body>
 
 <header class="site-header">
