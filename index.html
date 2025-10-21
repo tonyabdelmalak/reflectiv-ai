@@ -17,8 +17,8 @@
   <link rel="stylesheet" href="styles.css?v=20251020-2">
   <link rel="stylesheet" href="widget.css?v=20251020-2">
 
-  <!-- Modal/layout overrides (must load last) -->
-  <link rel="stylesheet" href="hotfix-widget.css?v=20251020-3">
+  <!-- Hotfix must load last -->
+  <link rel="stylesheet" href="hotfix-widget.css?v=20251020-5">
 
   <!-- Worker endpoints -->
   <script>
@@ -27,8 +27,8 @@
     window.ALORA_ENDPOINT = window.WORKER_URL + '/chat';
   </script>
 
-  <!-- ReflectivAI widget bootstrap -->
-  <script defer src="widget.js?v=20251020-2"></script>
+  <!-- Widget -->
+  <script defer src="widget.js?v=20251020-5"></script>
 </head>
 
 <body>
@@ -224,9 +224,6 @@
   <div id="aloraBody" class="alora-body"></div>
   <form id="aloraForm" class="alora-input" autocomplete="off"><input id="aloraInput" placeholder="Ask about ReflectivAI…"><button class="btn primary" type="submit">Send</button></form>
 </div>
-
-<!-- core widget loader -->
-<script defer src="widget.js?v=11"></script>
 
 <script>
 /* nav */
