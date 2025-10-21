@@ -494,261 +494,230 @@
   <form id="aloraForm" class="alora-input" autocomplete="off"><input id="aloraInput" placeholder="Ask about ReflectivAI…"><button class="btn primary" type="submit">Send</button></form>
 </div>
 
-<!-- ===== Robust JS bootstrap + Enhanced Alora Persona ===== -->
+<!-- ===== Robust JS bootstrap + Enhanced Alora Persona (v4) ===== -->
 <script>
 (function(){
-  const onReady=(fn)=>{if(document.readyState!=='loading')fn();else document.addEventListener('DOMContentLoaded',fn);};
+  const onReady=(fn)=>{document.readyState!=='loading'?fn():document.addEventListener('DOMContentLoaded',fn);};
   onReady(()=>{
-    /* Modals */
+
+    /* ---------- modal + coach bootstrap ---------- */
     function openModal(id){const el=document.querySelector(id);if(el)el.classList.add('open')}
     function closeModal(id){const el=document.querySelector(id);if(el)el.classList.remove('open')}
-    document.querySelectorAll('.modal-close').forEach(btn=>btn.addEventListener('click',()=>closeModal(btn.getAttribute('data-close'))));
-    document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
-
-    /* Coach open */
+    document.querySelectorAll('.modal-close').forEach(b=>b.addEventListener('click',()=>closeModal(b.getAttribute('data-close'))));
+    document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal('#'+m.id)}));
     document.getElementById('openCoach')?.addEventListener('click',e=>{e.preventDefault();openModal('#coachModal')});
 
-    /* Alora init */
-    try{
-      const aloraFab=document.getElementById('aloraFab');
-      const alora=document.getElementById('alora');
-      const aloraClose=document.getElementById('aloraClose');
-      const aloraBody=document.getElementById('aloraBody');
-      const aloraForm=document.getElementById('aloraForm');
-      const aloraInput=document.getElementById('aloraInput');
+    /* ---------- Alora wiring ---------- */
+    const aloraFab=document.getElementById('aloraFab');
+    const alora=document.getElementById('alora');
+    const aloraClose=document.getElementById('aloraClose');
+    window.aloraBody=document.getElementById('aloraBody');
+    const aloraForm=document.getElementById('aloraForm');
+    const aloraInput=document.getElementById('aloraInput');
 
-      if(!aloraFab||!alora||!aloraClose||!aloraBody||!aloraForm||!aloraInput){console.warn('Alora elements missing');return;}
+    if(!aloraFab||!alora||!aloraClose||!aloraBody||!aloraForm||!aloraInput){console.warn('Alora elements missing');return;}
 
-      function bot(t){const d=document.createElement('div');d.className='alora-msg bot';d.textContent=t;aloraBody.appendChild(d);aloraBody.scrollTop=aloraBody.scrollHeight}
-      function user(t){const d=document.createElement('div');d.className='alora-msg user';d.textContent=t;aloraBody.appendChild(d);aloraBody.scrollTop=aloraBody.scrollHeight}
-      function typing(show){if(show){const t=document.createElement('div');t.className='alora-typing';t.id='aloraTyping';let i=0;t.textContent='Alora is typing';aloraBody.appendChild(t);t._timer=setInterval(()=>{i=(i+1)%4;t.textContent='Alora is typing'+'.'.repeat(i)},300);aloraBody.scrollTop=aloraBody.scrollHeight}else{const t=document.getElementById('aloraTyping');if(t){clearInterval(t._timer);t.remove()}}}
-      async function askAlora(q){
-        try{
-          const r=await fetch((window.ALORA_ENDPOINT||''),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({role:'alora',site:'reflectivai',message:q})});
-          if(r.ok){const j=await r.json();return j.reply||null}
-          return null;
-        }catch{return null}
-      }
+    function bot(t){const d=document.createElement('div');d.className='alora-msg bot';d.textContent=t;aloraBody.appendChild(d);aloraBody.scrollTop=aloraBody.scrollHeight}
+    function user(t){const d=document.createElement('div');d.className='alora-msg user';d.textContent=t;aloraBody.appendChild(d);aloraBody.scrollTop=aloraBody.scrollHeight}
+    function typing(show){if(show){const t=document.createElement('div');t.className='alora-typing';t.id='aloraTyping';let i=0;t.textContent='Alora is typing';aloraBody.appendChild(t);t._timer=setInterval(()=>{i=(i+1)%4;t.textContent='Alora is typing'+'.'.repeat(i)},300);aloraBody.scrollTop=aloraBody.scrollHeight}else{const t=document.getElementById('aloraTyping');if(t){clearInterval(t._timer);t.remove()}}}
 
-      /* ===== Enhanced Alora persona: interactive site guide (v3.2) ===== */
-
-      // Small DOM helpers
-      const $ = (sel, root=document) => root.querySelector(sel);
-      const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-
-      function scrollToId(id){
-        const el = document.getElementById(id) || $(`[data-anchor='${id}']`) || $(`[href='#${id}']`);
-        if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); return true; }
-        return false;
-      }
-      function clickAny(selectors){
-        for(const s of selectors){
-          const el = $(s);
-          if(el){ el.click(); return true; }
-        }
-        return false;
-      }
-      function focusAny(selectors){
-        for(const s of selectors){
-          const el = $(s);
-          if(el){ el.focus(); return true; }
-        }
-        return false;
-      }
-
-      // Quick actions Alora can trigger
-      function aloraAction(cmd){
-        const c = String(cmd||"").toLowerCase();
-        if(c==="open-coach"){
-          return clickAny(["#openCoach",".open-coach","[data-open='coach']"]) || openModal('#coachModal') || scrollToId("platform");
-        }
-        if(c==="request-demo"){ return scrollToId("contact"); }
-        if(c==="see-personas"){ return scrollToId("therapeutic-areas"); }
-        if(c==="see-platform"){ return scrollToId("platform"); }
-        if(c==="see-ei"){ return scrollToId("why-it-matters"); }
-        if(c==="see-ethics"){ return scrollToId("ethics"); }
-        if(c==="see-analytics"){ return scrollToId("analytics"); }
-        if(c==="search"){ const ok = focusAny(["#site-search","input[type='search']"]); if(!ok) scrollToId("home"); return ok; }
-        if(c==="nav-demo"){ location.hash="#contact"; return true; }
-        return false;
-      }
-
-      // Suggestion chips inside Alora panel
-      function aloraSuggest(labelsAndCmds){
-        if(!window.aloraBody) return;
-        let wrap = $(".alora-suggest", aloraBody);
-        if(!wrap){
-          wrap = document.createElement("div");
-          wrap.className = "alora-suggest";
-          aloraBody.appendChild(wrap);
-        }
-        wrap.innerHTML = "";
-        (labelsAndCmds||[]).forEach(([label, cmd])=>{
-          const b = document.createElement("button");
-          b.type="button";
-          b.className="alora-chip";
-          b.textContent = label;
-          b.onclick = ()=>{ aloraAction(cmd); };
-          wrap.appendChild(b);
+    async function askAlora(q){
+      try{
+        const r=await fetch((window.ALORA_ENDPOINT||''),{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({role:'alora',site:'reflectivai',message:q})
         });
-      }
+        if(r.ok){const j=await r.json();return j.reply||null}
+      }catch{}
+      return null;
+    }
 
-      // Minimal styles for chips
-      (function(){
-        const css = `
-          .alora-suggest{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 0}
-          .alora-chip{border:1px solid #0f2747;border-radius:999px;padding:6px 10px;
-            background:#fff;color:#0f2747;font:600 12px/1.1 Inter,system-ui;cursor:pointer}
-          .alora-chip:hover{background:#eef4fa}
-        `;
-        const style = document.createElement("style");
-        style.textContent = css; document.head.appendChild(style);
-      })();
+    /* ==========================================================
+       Alora persona v4 — friendly, professional, knowledgeable
+       Logic: keyword scoring + intent rules + smart fallbacks
+       Adds: richer answers, unique value, personas, EI rationale,
+             quick action chips, and section scrolling.
+       ========================================================== */
 
-      // Rich knowledge router
-      function respondLocalRich(q){
-        const s = String(q||"").toLowerCase().trim();
-        const SUGG_DEFAULT = [
-          ["Open Coach","open-coach"],
-          ["Request Demo","request-demo"],
-          ["See Personas","see-personas"],
-          ["Why EI","see-ei"]
-        ];
-        const intents = [
-          [/^(hi|hello|hey|yo|hiya|howdy)\b/,{
-            text:"Hi, I’m Alora. I can guide you on the platform, simulations, EI, pricing, integrations, and compliance.",
-            suggest:SUGG_DEFAULT
-          }],
-          [/\b(what\s+is|tell\s+me\s+about|about)\s+(reflectiv|reflectivai)\b|^reflectiv(ai)?\b/,{
-            text:"ReflectivAI is an AI sales-enablement platform for life sciences. It blends human coaching with simulations and EI feedback to lift real HCP conversations.",
-            suggest:[["See Platform","see-platform"],["Open Coach","open-coach"],["Request Demo","request-demo"]]
-          }],
-          [/\b(request|book|schedule)\b.*\b(demo|walkthrough|tour)\b|\bcontact\b/,{
-            text:"Use “Request a Demo.” We tailor the walkthrough to your team size, modules, and compliance needs.",
-            suggest:[["Request Demo","request-demo"],["See Platform","see-platform"],["Analytics","see-analytics"]]
-          }],
-          [/\b(price|pricing|cost|quote|subscription|license|licen[cs]ing)\b/,{
-            text:"Pricing scales by team size and selected modules: Product Knowledge, Sales Simulation, EI Mode, and Analytics.",
-            suggest:[["Request Demo","request-demo"],["Open Coach","open-coach"],["Analytics","see-analytics"]]
-          }],
-          [/\b(why|what)\b.*\b(ei|emotional intelligence|empathy)\b/,{
-            text:"EI improves trust and outcomes. We score Empathy, Tone, Clarity, Discovery, Objection Handling, and Compliance to target coaching where it matters.",
-            suggest:[["Why EI","see-ei"],["Open Coach","open-coach"],["Request Demo","request-demo"]]
-          }],
-          [/\bei\s?mode\b|\bempathy\s?index\b|\btone\b|\bclarity\b/,{
-            text:"EI Mode gives instant feedback with score deltas and one actionable fix each turn. Teams see trends and lift over time.",
-            suggest:[["Open Coach","open-coach"],["Analytics","see-analytics"],["Why EI","see-ei"]]
-          }],
-          [/\b(module|feature|capabilit(y|ies)|include|offer)\b/,{
-            text:"Modules: Product Knowledge Q&A, Sales Simulation, EI Mode coaching, and Analytics. Optional integrations: LMS/CRM and SSO.",
-            suggest:[["See Platform","see-platform"],["Open Coach","open-coach"],["Request Demo","request-demo"]]
-          }],
-          [/\b(simulate|simulation|coach|practice|role-?play|scenario|playback)\b/,{
-            text:"Launch the Coach to role-play with HCP personas. You get live coaching on empathy, objection handling, and compliance.",
-            action:"open-coach",
-            suggest:[["Open Coach","open-coach"],["See Personas","see-personas"],["Request Demo","request-demo"]]
-          }],
-          [/\b(persona|hcp|doctor|physician|np\b|pa\b|oncologist|internal medicine|im\b)\b/,{
-            text:"Personas include Internal Medicine MD, NP, PA, Oncologist, and others. Each carries realistic goals, constraints, and objections.",
-            suggest:[["See Personas","see-personas"],["Open Coach","open-coach"],["Request Demo","request-demo"]]
-          }],
-          [/\b(therapeutic|disease|oncology|vaccine|vaccines|hiv|prep|cardio|cardiology|hepatitis|pulmonology|pulmonary)\b/,{
-            text:"Scenarios span Oncology, Vaccines, HIV PrEP, Cardiology, Hepatitis B, and Pulmonology. We add areas per client roadmap.",
-            suggest:[["Open Coach","open-coach"],["Request Demo","request-demo"],["See Personas","see-personas"]]
-          }],
-          [/\b(analytics|dashboard|metric|metrics|report|kpi|insight|leaderboard)\b/,{
-            text:"Dashboards track Empathy Index, Readiness Velocity, Behavioral Blind Spots, and Content Accuracy, with team and coach views.",
-            suggest:[["Analytics","see-analytics"],["Request Demo","request-demo"],["Open Coach","open-coach"]]
-          }],
-          [/\b(integration|integrat|api|lms|crm|sso|okta|saml|salesforce|veeva|cornerstone|workday)\b/,{
-            text:"Integrates with Salesforce, Veeva, major LMS, and SSO. Data export via CSV or API. Mapping aligns to common fields.",
-            suggest:[["Request Demo","request-demo"],["See Platform","see-platform"],["Open Coach","open-coach"]]
-          }],
-          [/\b(security|privacy|hipaa|phi|compliance|governance|gdpr|iso|nist|soc)\b/,{
-            text:"HIPAA safeguards with PHI off by default; BAA available when enabled. Controls align with NIST AI RMF and ISO 27001/42001. Audit logs and least-data use.",
-            suggest:[["Request Demo","request-demo"],["Ethics & Governance","see-ethics"],["Analytics","see-analytics"]]
-          }],
-          [/\b(data|store|storage|retain|retention|logs|delete|erase|export|anonymi[sz]e)\b/,{
-            text:"Default: no PHI, minimal retention for skill analytics. Admins can configure retention, deletion, and exports.",
-            suggest:[["Request Demo","request-demo"],["Analytics","see-analytics"],["Ethics & Governance","see-ethics"]]
-          }],
-          [/\b(trial|pilot|poc|proof|evaluation)\b/,{
-            text:"Short pilots measure skill lift and adoption before scale. We align KPIs and success criteria up front.",
-            suggest:[["Request Demo","request-demo"],["Open Coach","open-coach"],["Analytics","see-analytics"]]
-          }],
-          [/\b(a11y|accessibility|screen\s?reader|contrast|keyboard)\b/,{
-            text:"Keyboard nav and high-contrast styles available. We can align to WCAG during onboarding.",
-            suggest:[["Request Demo","request-demo"],["See Platform","see-platform"]]
-          }],
-          [/\b(status|outage|down|slow|latency|performance)\b/,{
-            text:"If performance dips, refresh and relaunch the Coach. For SLAs or incidents, add notes in your demo request.",
-            suggest:[["Request Demo","request-demo"],["Open Coach","open-coach"]]
-          }],
-          [/\b(brand|logo|asset|style\s?guide|colors|palette)\b/,{
-            text:"Brand palette: navy, teal, white. A compact brand kit is available during onboarding.",
-            suggest:[["Request Demo","request-demo"],["See Platform","see-platform"]]
-          }],
-          [/\b(career|job|hire|partner|partnership|reseller)\b/,{
-            text:"We collaborate with enablement leaders and select partners. Note “careers” or “partnership” in your demo request.",
-            suggest:[["Request Demo","request-demo"],["See Platform","see-platform"]]
-          }],
-          [/\b(faq|common questions|help)\b/,{
-            text:"Ask about modules, EI, analytics, pricing, integrations, or compliance. I answer in one line and link you to the right section.",
-            suggest:SUGG_DEFAULT
-          }],
-          [/.*/,{
-            text:"I cover platform, simulations, EI, analytics, integrations, and compliance. Ask a question or request a demo for a walkthrough.",
-            suggest:SUGG_DEFAULT
-          }],
-        ];
-        for(const [pattern, out] of intents){ if(pattern.test(s)) return out; }
-        return { text:"How can I help?", suggest:SUGG_DEFAULT };
-      }
-
-      // Backward-compatible text responder
-      function respondLocal(q){
-        const r = respondLocalRich(q);
-        window.__aloraLast = r;
-        try{ if(alora?.classList?.contains("open")) aloraSuggest(r.suggest); }catch(e){}
-        if(r.action) try{ aloraAction(r.action); }catch(e){}
-        return r.text;
-      }
-
-      function aloraOpen(){
-        alora.classList.add('open');
-        alora.setAttribute('aria-hidden','false');
-        if(!aloraBody.dataset.greeted){
-          bot("Hi, I’m Alora. I can guide you on the platform, simulations, EI, analytics, integrations, and compliance. What do you want to see?");
-          aloraSuggest([
-            ["Open Coach","open-coach"],
-            ["Request Demo","request-demo"],
-            ["See Personas","see-personas"],
-            ["Why EI","see-ei"]
-          ]);
-          aloraBody.dataset.greeted='1';
-        }
-      }
-      function aloraHide(){
-        alora.classList.remove('open');
-        alora.setAttribute('aria-hidden','true');
-      }
-
-      aloraFab.addEventListener('click',aloraOpen);
-      aloraFab.setAttribute('tabindex','0');
-      aloraFab.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();aloraOpen();}});
-      aloraClose.addEventListener('click',aloraHide);
-
-      aloraForm.addEventListener('submit',async e=>{
-        e.preventDefault();
-        const q=aloraInput.value.trim(); if(!q) return;
-        aloraInput.value=''; user(q); typing(true);
-        const remote=await askAlora(q); typing(false);
-        bot(remote||respondLocal(q));
+    // Small DOM helpers + quick actions
+    const $=(s,root=document)=>root.querySelector(s);
+    function scrollToId(id){
+      const el=document.getElementById(id)||$(`[data-anchor='${id}']`)||$(`[href='#${id}']`);
+      if(el){el.scrollIntoView({behavior:'smooth',block:'start'});return true}
+      return false;
+    }
+    function aloraAction(cmd){
+      const c=String(cmd||'').toLowerCase();
+      if(c==='open-coach') return openModal('#coachModal'),true;
+      if(c==='request-demo') return scrollToId('contact');
+      if(c==='see-platform') return scrollToId('platform');
+      if(c==='see-analytics') return scrollToId('analytics');
+      if(c==='see-ei') return scrollToId('why-it-matters');
+      if(c==='see-ethics') return scrollToId('ethics');
+      if(c==='see-personas') return scrollToId('therapeutic-areas');
+      return false;
+    }
+    function renderChips(pairs){
+      let wrap=$('.alora-suggest',aloraBody);
+      if(!wrap){wrap=document.createElement('div');wrap.className='alora-suggest';aloraBody.appendChild(wrap)}
+      wrap.innerHTML='';
+      (pairs||[]).forEach(([label,cmd])=>{
+        const b=document.createElement('button');
+        b.type='button'; b.className='alora-chip'; b.textContent=label;
+        b.onclick=()=>aloraAction(cmd);
+        wrap.appendChild(b);
       });
-    }catch(e){console.error('Alora init error',e)}
+    }
+    // chip styles
+    (function(){
+      const css=`
+        .alora-suggest{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 0}
+        .alora-chip{border:1px solid #0f2747;border-radius:999px;padding:6px 10px;background:#fff;color:#0f2747;font:600 12px/1.1 Inter,system-ui;cursor:pointer}
+        .alora-chip:hover{background:#eef4fa}
+      `;
+      const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
+    })();
 
+    // Canonical chips
+    const CHIPS_BASE=[
+      ['Open Coach','open-coach'],
+      ['Request Demo','request-demo'],
+      ['See Personas','see-personas'],
+      ['Why EI','see-ei']
+    ];
+
+    // Persona catalogue (for better answers)
+    const PERSONAS=[
+      {id:'im',name:'Internal Medicine MD',need:'concise relevance',objection:'time pressure'},
+      {id:'onco',name:'Oncologist',need:'evidence depth + safety',objection:'outcomes and risk'},
+      {id:'np',name:'Nurse Practitioner',need:'workflow clarity',objection:'access steps'},
+      {id:'pa',name:'Physician Assistant',need:'protocol alignment',objection:'guardrails'},
+      {id:'id',name:'Infectious Disease Specialist',need:'guidelines + resistance',objection:'appropriateness'},
+      {id:'card',name:'Cardiologist',need:'absolute risk delta',objection:'tradeoffs'}
+    ];
+
+    // Keyword bins
+    const BIN={
+      unique:['unique','different','why choose','stand out','what makes','better than','value prop'],
+      price:['price','pricing','cost','quote','license','subscription'],
+      demo:['demo','request','book','schedule','contact','talk'],
+      sim:['simulate','simulation','coach','practice','roleplay','scenario'],
+      ei:['ei','emotional intelligence','empathy','tone','clarity'],
+      analytics:['analytics','dashboard','kpi','metrics','insight','leaderboard'],
+      integ:['integration','integrate','api','lms','crm','sso','okta','saml','salesforce','veeva','workday','cornerstone'],
+      sec:['security','privacy','hipaa','phi','gdpr','iso','nist','compliance','governance'],
+      persona:['persona','hcp','doctor','physician','oncologist','internal medicine','np','pa','cardiologist','infectious'],
+      therapy:['oncology','vaccine','vaccines','hiv','prep','cardio','cardiology','hepatitis','pulmonology','pulmonary'],
+      status:['status','outage','down','slow','latency','performance'],
+      brand:['brand','logo','colors','palette','style guide'],
+      faq:['faq','help','question','how to','where do i']
+    };
+
+    function scoreBins(q){
+      const s=(' '+q.toLowerCase()+' ').replace(/\s+/g,' ');
+      const out={}; for(const k in BIN){out[k]=0; BIN[k].forEach(w=>{ if(s.includes(w)) out[k]+=1; });}
+      return out;
+    }
+
+    // Answer book
+    function answer(q){
+      const s=q.trim();
+      const b=scoreBins(s);
+
+      if(/^(hi|hello|hey|yo|hiya|howdy)\b/i.test(s)){
+        return {text:"Hi, I’m Alora. I can guide you around the platform, simulations, EI, analytics, integrations, and compliance.",chips:CHIPS_BASE};
+      }
+      if(b.unique>0){
+        const txt="What makes ReflectivAI unique: 1) Human coaching + AI simulations tied to EI signals. 2) Compliance-aware feedback that flags and rewrites risky lines. 3) Role-specific HCP personas by therapeutic area. 4) Analytics like Empathy Index and Readiness Velocity to prove lift. 5) Integrations with LMS/CRM and SSO for real rollout.";
+        return {text:txt,chips:[['See Platform','see-platform'],['Open Coach','open-coach'],['Request Demo','request-demo']]};
+      }
+      if(b.price>0){
+        return {text:"Pricing scales by team size and modules you select: Product Knowledge, Sales Simulation, EI Mode, and Analytics. We quote during a short demo.",chips:[['Request Demo','request-demo'],['See Analytics','see-analytics'],['Open Coach','open-coach']]};
+      }
+      if(b.demo>0){
+        return {text:"Tap Request a Demo. We tailor the walkthrough to your roles, disease areas, and compliance needs.",chips:[['Request Demo','request-demo'],['See Personas','see-personas'],['Why EI','see-ei']]};
+      }
+      if(b.sim>0){
+        return {text:"Open the Coach to role-play with HCP personas. You get live tips and scores for Empathy, Objection Handling, and Compliance after each turn.",chips:[['Open Coach','open-coach'],['See Personas','see-personas'],['See Platform','see-platform']],action:'open-coach'};
+      }
+      if(b.ei>0){
+        return {text:"EI is core here. We score Empathy, Tone, Clarity, Discovery, and Objection Handling. You see why the score moved and one practical fix to try next.",chips:[['Why EI','see-ei'],['Open Coach','open-coach'],['See Analytics','see-analytics']]};
+      }
+      if(b.analytics>0){
+        return {text:"Dashboards track Empathy Index, Readiness Velocity, Behavioral Blind Spots, and Content Accuracy. Coach and team views show trend lift.",chips:[['See Analytics','see-analytics'],['Request Demo','request-demo'],['Open Coach','open-coach']]};
+      }
+      if(b.integ>0){
+        return {text:"We integrate with Salesforce, Veeva, major LMS, and SSO (Okta/SAML). Data export via CSV or API with common field mapping.",chips:[['Request Demo','request-demo'],['See Platform','see-platform']]};
+      }
+      if(b.sec>0){
+        return {text:"HIPAA safeguards with PHI off by default; BAA when enabled. Controls align to NIST AI RMF and ISO 27001/42001. Least-data use and audit logs.",chips:[['Ethics & Governance','see-ethics'],['Request Demo','request-demo']]};
+      }
+      if(b.persona>0){
+        const list=PERSONAS.map(p=>p.name).join(', ');
+        return {text:`Personas: ${list}. Each has goals, common objections, and realistic constraints so practice feels like real calls.`,chips:[['See Personas','see-personas'],['Open Coach','open-coach']]};
+      }
+      if(b.therapy>0){
+        return {text:"Therapeutic libraries include Oncology, Vaccines, HIV PrEP, Cardiology, Hepatitis B, and Pulmonology. We add org-specific scenarios on request.",chips:[['See Personas','see-personas'],['Request Demo','request-demo']]};
+      }
+      if(b.status>0){
+        return {text:"If something feels slow, refresh and relaunch the Coach. For SLAs or incidents, note it in your demo request.",chips:[['Request Demo','request-demo'],['Open Coach','open-coach']]};
+      }
+      if(b.brand>0){
+        return {text:"Brand palette is navy, teal, white. A compact brand kit is shared during onboarding.",chips:[['Request Demo','request-demo'],['See Platform','see-platform']]};
+      }
+      if(b.faq>0){
+        return {text:"I can answer about modules, EI, pricing, integrations, analytics, and governance. Ask a topic or jump to a section.",chips:CHIPS_BASE};
+      }
+
+      if(/what.*(do|does).*reflectiv/i.test(s)) return {text:"ReflectivAI blends Product Knowledge, Sales Simulation, EI Mode, and Analytics to improve real HCP conversations.",chips:[['See Platform','see-platform'],['Open Coach','open-coach']]};
+      if(/make(s)? it (special|better|different|stand ?out)/i.test(s)) return {text:"Unique mix of EI-scored coaching, compliance guardrails, realistic HCP personas, and measurable lift in dashboards.",chips:[['See Analytics','see-analytics'],['Why EI','see-ei']]};
+
+      return {text:"I cover platform, simulations, EI, analytics, integrations, and compliance. Ask a question or request a demo for a focused walkthrough.",chips:CHIPS_BASE};
+    }
+
+    // Backward compatible responder used by UI
+    function respondLocal(q){
+      const r=answer(q||'');
+      window.__aloraLast=r;
+      try{ if(alora.classList.contains('open')) renderChips(r.chips); }catch(e){}
+      if(r.action) aloraAction(r.action);
+      return r.text;
+    }
+
+    // Open/close
+    function aloraOpen(){
+      alora.classList.add('open'); alora.setAttribute('aria-hidden','false');
+      if(!aloraBody.dataset.greeted){
+        bot("Hi, I’m Alora. Ask me about the platform, simulations, EI, pricing, integrations, or governance.");
+        renderChips([
+          ['What makes it unique?','see-platform'],
+          ['Open Coach','open-coach'],
+          ['See Analytics','see-analytics'],
+          ['Request Demo','request-demo']
+        ]);
+        aloraBody.dataset.greeted='1';
+      }
+    }
+    function aloraHide(){alora.classList.remove('open');alora.setAttribute('aria-hidden','true')}
+
+    aloraFab.addEventListener('click',aloraOpen);
+    aloraFab.setAttribute('tabindex','0');
+    aloraFab.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();aloraOpen();}});
+    aloraClose.addEventListener('click',aloraHide);
+
+    // Form submit
+    aloraForm.addEventListener('submit',async e=>{
+      e.preventDefault();
+      const q=aloraInput.value.trim(); if(!q) return;
+      aloraInput.value=''; user(q); typing(true);
+      const remote=await askAlora(q); typing(false);
+      bot(remote || respondLocal(q));
+    });
+
+    // page restore
     if('scrollRestoration'in history){history.scrollRestoration='manual'}
     window.addEventListener('pageshow',e=>{if(e.persisted)window.scrollTo(0,0)})
+
   });
 })();
 </script>
