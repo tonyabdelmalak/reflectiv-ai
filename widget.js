@@ -1,3 +1,5 @@
+
+
 /* widget.js
  * ReflectivAI Chat/Coach — drop-in (coach-v2, deterministic scoring v3)
  * Modes: emotional-assessment | product-knowledge | sales-simulation
@@ -285,9 +287,9 @@
     if (featureKey === "empathy") rating = calculateEmpathyRating(personaKey, lastUserMessage);
     else if (featureKey === "stress") rating = calculateStressRating(personaKey, lastUserMessage);
 
-    const featureList = (Array.isArray(cfg?.eiFeatures) && cfg.eiFeatures.length ? cfg.eiFeatures : DEFAULT_EI_FEATURES);
-    const featureObj = featureList.find(f => (f.key || f)?.toString().toLowerCase().includes(featureKey));
-    const featureLabel = featureObj ? (featureObj.label || featureKey) : featureKey;
+    const featureList = (cfg?.eiFeatures && cfg.eiFeatures.length ? cfg.eiFeatures : DEFAULT_EI_FEATURES);
+    const featureObj = featureList.find(f => f.key === featureKey);
+    const featureLabel = featureObj ? featureObj.label : featureKey;
     const feedback = generateDynamicFeedback(personaKey, featureKey);
 
     feedbackDisplayElem.innerHTML = rating == null
@@ -413,99 +415,108 @@ ${COMMON}`.trim();
     const hcpSelect = el("select"); hcpSelect.id="cw-hcp";
 
     // EI Persona/EI Feature
-    const personaLabel = el("label", "", "HCP Persona");
-    personaLabel.htmlFor = "cw-ei-persona";
-    const personaSelect = el("select"); personaSelect.id = "cw-ei-persona";
-    personaSelectElem = personaSelect;
-    personaLabelElem = personaLabel;
-    personaSelect.addEventListener("change", generateFeedback);
+const personaLabel = el("label", "", "HCP Persona");
+personaLabel.htmlFor = "cw-ei-persona";
+const personaSelect = el("select"); personaSelect.id = "cw-ei-persona";
+personaSelectElem = personaSelect;
+personaLabelElem = personaLabel;
+personaSelect.addEventListener("change", generateFeedback);
 
-    const featureLabel = el("label", "", "EI Feature");
-    featureLabel.htmlFor = "cw-ei-feature";
-    const featureSelect = el("select"); featureSelect.id = "cw-ei-feature";
-    eiFeatureSelectElem = featureSelect;
-    featureLabelElem = featureLabel;
-    featureSelect.addEventListener("change", generateFeedback);
+const featureLabel = el("label", "", "EI Feature");
+featureLabel.htmlFor = "cw-ei-feature";
+const featureSelect = el("select"); featureSelect.id = "cw-ei-feature";
+eiFeatureSelectElem = featureSelect;
+featureLabelElem = featureLabel;
+featureSelect.addEventListener("change", generateFeedback);
 
-    // ---------- EI option sources (hardened) ----------
-    const PERSONAS_ALL =
-      Array.isArray(cfg?.eiProfiles) && cfg.eiProfiles.length
-        ? cfg.eiProfiles
-        : DEFAULT_PERSONAS;
+// ---------- EI option sources (no demo caps) ----------
+const PERSONAS_ALL =
+  Array.isArray(cfg?.eiProfiles) && cfg.eiProfiles.length
+    ? cfg.eiProfiles
+    : DEFAULT_PERSONAS;
 
-    function normalizeFeatureList() {
-      const raw = Array.isArray(cfg?.eiFeatures) && cfg.eiFeatures.length
-        ? cfg.eiFeatures
-        : (Array.isArray(cfg?.features) && cfg.features.length ? cfg.features : []);
-      const list = raw.map(f =>
-        typeof f === "string" ? { key: f.toLowerCase().replace(/\s+/g, "-"), label: f } : f
-      ).filter(Boolean);
-      // Fallback to defaults if malformed or short
-      if (!list.length || list.length < 4) return DEFAULT_EI_FEATURES.slice(0, 4);
-      return list;
-    }
+// Try multiple keys; normalize strings -> {key,label}
+const FEATURES_ALL_RAW =
+  (Array.isArray(cfg?.eiFeatures) && cfg.eiFeatures.length && cfg.eiFeatures) ||
+  (Array.isArray(cfg?.features) && cfg.features.length && cfg.features) ||
+  DEFAULT_EI_FEATURES;
 
-    let FEATURES_ALL = normalizeFeatureList();
+const FEATURES_ALL = FEATURES_ALL_RAW.map(f =>
+  typeof f === "string"
+    ? { key: f.toLowerCase().replace(/\s+/g, "-"), label: f }
+    : f
+);
 
-    // Rebuild EI selects with full lists
-    function hydrateEISelects() {
-      if (!personaSelectElem || !eiFeatureSelectElem) return;
+// Rebuild EI selects with full lists
+function hydrateEISelects() {
+  if (!personaSelectElem || !eiFeatureSelectElem) return;
+  personaSelectElem.innerHTML = "";
+  eiFeatureSelectElem.innerHTML = "";
+  personaSelectElem.disabled = false;
+  eiFeatureSelectElem.disabled = false;
 
-      personaSelectElem.innerHTML = "";
-      eiFeatureSelectElem.innerHTML = "";
-      personaSelectElem.disabled = false;
-      eiFeatureSelectElem.disabled = false;
+  const opt = (txt, val = "") => {
+    const o = document.createElement("option");
+    o.value = val; o.textContent = txt;
+    return o;
+  };
+  personaSelectElem.appendChild(opt("Select...", ""));
+  eiFeatureSelectElem.appendChild(opt("Select...", ""));
 
-      const opt = (txt, val = "") => {
-        const o = document.createElement("option");
-        o.value = val; o.textContent = txt;
-        return o;
-      };
-      personaSelectElem.appendChild(opt("Select...", ""));
-      eiFeatureSelectElem.appendChild(opt("Select...", ""));
+  // Personas
+  PERSONAS_ALL.forEach(p => {
+    const o = document.createElement("option");
+    const val = p.key || p.value || p.id || String(p).toLowerCase().replace(/\s+/g, "-");
+    const lab = p.label || p.name || p.title || String(p);
+    o.value = val; o.textContent = lab;
+    personaSelectElem.appendChild(o);
+  });
 
-      // Personas
-      PERSONAS_ALL.forEach(p => {
-        const val = p.key || p.value || p.id || String(p).toLowerCase().replace(/\s+/g, "-");
-        const lab = p.label || p.name || p.title || String(p);
-        const o = document.createElement("option");
-        o.value = val; o.textContent = lab;
-        personaSelectElem.appendChild(o);
-      });
+  // Features
+  FEATURES_ALL.forEach(f => {
+    const o = document.createElement("option");
+    const val = f.key || f.value || f.id || String(f).toLowerCase().replace(/\s+/g, "-");
+    const lab = f.label || f.name || f.title || String(f);
+    o.value = val; o.textContent = lab;
+    eiFeatureSelectElem.appendChild(o);
+  });
 
-      // Features
-      FEATURES_ALL.forEach(f => {
-        const val = f.key || f.value || f.id || String(f).toLowerCase().replace(/\s+/g, "-");
-        const lab = f.label || f.name || f.title || String(f);
-        if (!val || !lab) return;
-        const o = document.createElement("option");
-        o.value = val; o.textContent = lab;
-        eiFeatureSelectElem.appendChild(o);
-      });
+  // Debug aid
+  if (!FEATURES_ALL.length)
+    console.warn("EI features list is empty; check config keys (eiFeatures/features).");
+}
 
-      // Final guard: ensure four visible items
-      if (eiFeatureSelectElem.options.length <= 1) {
-        FEATURES_ALL = DEFAULT_EI_FEATURES.slice(0, 4);
-        DEFAULT_EI_FEATURES.forEach(f => {
-          const o = document.createElement("option");
-          o.value = f.key; o.textContent = f.label;
-          eiFeatureSelectElem.appendChild(o);
-        });
-      }
-    }
+hydrateEISelects();
 
-    // mount controls
+// mount controls
+simControls.appendChild(lcLabel);      simControls.appendChild(modeSel);
+simControls.appendChild(coachLabel);   simControls.appendChild(coachSel);
+simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
+simControls.appendChild(hcpLabel);     simControls.appendChild(hcpSelect);
+simControls.appendChild(personaLabel); simControls.appendChild(personaSelect);
+simControls.appendChild(featureLabel); simControls.appendChild(featureSelect);
+
+bar.appendChild(simControls);
+shell.appendChild(bar);
     const meta = el("div", "scenario-meta");
+    shell.appendChild(meta);
+
     const msgs = el("div", "chat-messages");
+    shell.appendChild(msgs);
+
     const inp = el("div", "chat-input");
     const ta = el("textarea"); ta.placeholder = "Type your message…";
     ta.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send.click(); } });
     const send = el("button", "btn", "Send");
     send.onclick = () => { const t = ta.value.trim(); if (!t) return; sendMessage(t); ta.value = ""; };
     inp.appendChild(ta); inp.appendChild(send);
+    shell.appendChild(inp);
+
+    mount.appendChild(shell);
 
     const coach = el("div", "coach-section");
     coach.innerHTML = `<h3>Coach Feedback</h3><div class="coach-body muted">Awaiting the first assistant reply…</div>`;
+    shell.appendChild(coach);
 
     feedbackDisplayElem = el("div", "ei-feedback");
     feedbackDisplayElem.id = "feedback-display";
@@ -568,8 +579,9 @@ ${COMMON}`.trim();
     }
 
     function populateEIOptions() {
-      hydrateEISelects();
-    }
+  // Delegate to the uncapped hydrator that uses cfg.eiProfiles / cfg.eiFeatures
+  hydrateEISelects();
+}
 
     function applyModeVisibility() {
       const lc = modeSel.value;
@@ -602,7 +614,6 @@ ${COMMON}`.trim();
         feedbackDisplayElem.innerHTML = "";
         populateDiseases();
       } else {
-        // Emotional Intelligence mode
         diseaseLabel.classList.add("hidden");
         diseaseSelect.classList.add("hidden");
         hcpLabel.classList.add("hidden");
@@ -611,14 +622,6 @@ ${COMMON}`.trim();
         personaSelectElem.classList.remove("hidden");
         featureLabelElem.classList.remove("hidden");
         eiFeatureSelectElem.classList.remove("hidden");
-        // Always re-normalize and re-hydrate to avoid empty lists
-        FEATURES_ALL = normalizeFeatureList();
-        hydrateEISelects();
-        // If still empty, force defaults
-        if (eiFeatureSelectElem.options.length <= 1) {
-          FEATURES_ALL = DEFAULT_EI_FEATURES.slice(0, 4);
-          hydrateEISelects();
-        }
         feedbackDisplayElem.innerHTML = "";
         currentScenarioId = null;
         conversation = [];
@@ -632,20 +635,26 @@ ${COMMON}`.trim();
       }
     }
 
-    // mount controls in order
-    simControls.appendChild(lcLabel);      simControls.appendChild(modeSel);
-    simControls.appendChild(coachLabel);   simControls.appendChild(coachSel);
-    simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
-    simControls.appendChild(hcpLabel);     simControls.appendChild(hcpSelect);
-    simControls.appendChild(personaLabel); simControls.appendChild(personaSelect);
-    simControls.appendChild(featureLabel); simControls.appendChild(featureSelect);
+    modeSel.addEventListener("change", applyModeVisibility);
 
-    bar.appendChild(simControls);
-    shell.appendChild(bar);
-    shell.appendChild(meta);
-    shell.appendChild(msgs);
-    shell.appendChild(inp);
-    shell.appendChild(coach);
+    diseaseSelect.addEventListener("change", ()=>{
+      const ds = diseaseSelect.value || "";
+      if (!ds) return;
+      if (currentMode === "sales-simulation") {
+        populateHcpForDisease(ds);
+      } else if (currentMode === "product-knowledge") {
+        currentScenarioId = null;
+      }
+      conversation=[]; renderMessages(); renderCoach(); renderMeta();
+    });
+
+    hcpSelect.addEventListener("change", ()=>{
+      const sel = hcpSelect.value || "";
+      if (!sel) return;
+      const sc = scenariosById.get(sel);
+      currentScenarioId = sc ? sc.id : null;
+      conversation=[]; renderMessages(); renderCoach(); renderMeta();
+    });
 
     function renderMeta() {
       const sc = scenariosById.get(currentScenarioId);
@@ -719,18 +728,6 @@ ${COMMON}`.trim();
     populateDiseases();
     populateEIOptions();
     applyModeVisibility();
-
-    // Safety: if EI mode is default and features failed to load, force defaults
-    if (currentMode === "emotional-assessment" && eiFeatureSelectElem.options.length <= 1) {
-      FEATURES_ALL = DEFAULT_EI_FEATURES.slice(0, 4);
-      hydrateEISelects();
-    }
-
-    // Expose for debugging
-    shell._debug = {
-      getFeatureCount: () => eiFeatureSelectElem?.options?.length || 0,
-      getPersonaCount: () => personaSelectElem?.options?.length || 0
-    };
   }
 
   // ---------- transport ----------
