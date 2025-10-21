@@ -1,32 +1,39 @@
-/* ===== ReflectivAI Coach — layout + typography (2025-10-20-5) ===== */
+/* ReflectivAI Coach — layout + z-index + modal hide (v20251020-8) */
 
+#reflectiv-modal[hidden]{display:none!important}
+
+/* Backdrop + modal container */
+#reflectiv-modal{position:fixed;inset:0;display:grid;place-items:center;padding:24px;z-index:9999}
+#reflectiv-modal-backdrop{position:absolute;inset:0;z-index:0;background:rgba(3,13,24,.55);backdrop-filter:saturate(120%) blur(2px)}
+
+/* Shell */
 .reflectiv-chat,
-#reflectiv-widget .reflectiv-chat {
+#reflectiv-widget .reflectiv-chat{
   --navy:#0f2236; --navy-2:#17314e; --slab:#f6f8fb; --stroke:#d8e0ea;
   --text:#0f1522; --muted:#6b7a90;
   font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
   color:var(--text); background:#fff; border:1px solid var(--stroke);
   border-radius:14px; box-shadow:0 20px 40px rgba(12,24,40,.18);
-  width:min(1120px,96vw); max-height:78vh; overflow:hidden;
+  width:min(1120px,96vw); max-height:78vh; overflow:hidden; position:relative; z-index:1;
 }
 
 /* Title bars */
 .reflectiv-chat .coach-titlebar{display:flex;align-items:center;justify-content:space-between;
   padding:10px 14px;background:var(--navy-2);color:#fff;font-weight:800;font-size:15px}
-.reflectiv-chat .coach-subbar{padding:8px 14px;background:#eaf1f9;color:#0b1d2f;
-  border-bottom:1px solid #d5deea;font-weight:800;font-size:13px}
+.reflectiv-chat .coach-subbar{padding:8px 14px;background:#eaf1f9;color:#0b1d2f;border-bottom:1px solid #d5deea;
+  font-weight:800;font-size:13px}
 .reflectiv-chat .close-btn{appearance:none;border:0;background:#0b1d2f;color:#fff;
   padding:6px 10px;border-radius:8px;cursor:pointer;font-weight:700}
 
 /* Grid: Controls | Chat | Metrics */
 .reflectiv-chat .coach-body{
-  display:grid; grid-template-columns:300px 1fr 220px; gap:14px; padding:14px; background:var(--slab);
+  display:grid; grid-template-columns:280px 1fr 200px; gap:14px; padding:14px; background:var(--slab);
 }
 
 /* Left controls */
 .reflectiv-chat .controls-slab{background:#fff;border:1px solid var(--stroke);border-radius:12px;
   padding:12px;display:flex;flex-direction:column;gap:12px}
-.reflectiv-chat .controls-slab .label{font-size:12px;font-weight:800;color:var(--muted);margin-bottom:4px}
+.reflectiv-chat .controls-slab .label{font-size:12px;font-weight:900;color:var(--muted);margin-bottom:4px}
 .reflectiv-chat select{width:100%;height:40px;padding:0 10px;border-radius:10px;border:1px solid #cfd8e3;font-size:14px}
 
 /* Center chat */
@@ -34,7 +41,7 @@
 .reflectiv-chat .brief{padding:12px;border-bottom:1px solid var(--stroke);background:#fbfdff}
 .reflectiv-chat .brief .row{margin:6px 0}
 .reflectiv-chat .brief .row strong{font-weight:900;color:#0b1d2f}
-.reflectiv-chat .transcript{flex:1;overflow:auto;padding:12px;min-height:340px}
+.reflectiv-chat .transcript{flex:1;overflow:auto;padding:12px;min-height:360px}
 .reflectiv-chat .bubble{max-width:78%;padding:10px 12px;border-radius:12px;margin:8px 0}
 .reflectiv-chat .bubble.user{background:#0f2236;color:#fff;margin-left:auto}
 .reflectiv-chat .bubble.bot{background:#eaf2ff;color:#0b1323}
@@ -53,11 +60,6 @@
 .reflectiv-chat .metric{border:1px solid #e5ecf4;border-radius:12px;padding:10px;background:#fbfdff}
 .reflectiv-chat .metric h5{margin:0 0 4px 0;font-size:12px;font-weight:900;color:var(--navy)}
 .reflectiv-chat .metric .value{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:#111827}
-
-/* Backdrop + modal */
-#reflectiv-modal-backdrop{position:fixed;inset:0;background:rgba(3,13,24,.55);backdrop-filter:saturate(120%) blur(2px)}
-#reflectiv-modal{position:fixed;inset:0;display:grid;place-items:center;padding:24px;z-index:9999}
-#reflectiv-modal .reflectiv-chat{width:min(1120px,96vw)}
 
 /* Mobile */
 @media (max-width: 960px){
