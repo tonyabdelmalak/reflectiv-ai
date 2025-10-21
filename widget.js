@@ -208,9 +208,21 @@
 
     // Public API
     window.ReflectivCoach = {
-      open(){ modal.hidden = false; setTimeout(()=>input.focus(), 0); },
-      close(){ modal.hidden = true; }
-    };
+    open(){
+    const m = document.getElementById('reflectiv-modal');
+    if (!m) return;
+    m.hidden = false;
+    m.classList.add('open');
+    const ta = m.querySelector('textarea');
+    if (ta) setTimeout(()=>ta.focus(),0);
+  },
+  close(){
+    const m = document.getElementById('reflectiv-modal');
+    if (!m) return;
+    m.classList.remove('open');
+    m.hidden = true;
+  }
+};
 
     return modal;
   }
