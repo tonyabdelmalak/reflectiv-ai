@@ -1,67 +1,46 @@
-/* ReflectivAI Coach — layout + z-index + modal hide (v20251020-8b) */
+/* hotfix-widget.css — ReflectivAI hard fixes
+ * Version: 20251020-5
+ */
 
-/* visibility control */
-#reflectiv-modal[hidden]{display:none!important}
-#reflectiv-modal{display:none}
-#reflectiv-modal.open{display:grid!important}
-
-/* Backdrop + modal container */
-#reflectiv-modal{
-  position:fixed;
-  inset:0;
-  place-items:center;
-  padding:24px;
-  z-index:9999;
-}
-#reflectiv-modal-backdrop{
-  position:absolute;
-  inset:0;
-  z-index:0;
-  background:rgba(3,13,24,.55);
-  backdrop-filter:saturate(120%) blur(2px);
-}
-
-/* Shell */
-.reflectiv-chat,
-#reflectiv-widget .reflectiv-chat {
-  --navy:#0f2236;
-  --navy-2:#17314e;
-  --slab:#f6f8fb;
-  --stroke:#d8e0ea;
-  --text:#0f1522;
-  --muted:#6b7a90;
-  font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-  color:var(--text);
-  background:#fff;
-  border:1px solid var(--stroke);
-  border-radius:14px;
-  box-shadow:0 20px 40px rgba(12,24,40,.18);
-  width:min(1120px,96vw);
-  max-height:78vh;
-  overflow:hidden;
-  position:relative;
-  z-index:1;
-/* Kill stray hero coach banner */
-.bg-navy details,
-.bg-navy details summary,
-.coach-cta,
+/* 1) Nuke any stray coach banner/toast lines */
+.cw-banner,
+.cw-toast,
 .coach-banner,
-#coach-inline,
 #coach-banner,
+#coach-inline,
 #coach-summary {
   display: none !important;
 }
-/* Absolute kill: any orphaned Reflectiv Coach modal or banner */
-div[role="dialog"],
-div[class*="coach"],
-div[id*="coach"],
-div[class*="reflectiv"],
-div[id*="reflectiv"] {
+
+/* 2) Hide any auto-injected top-of-page dialog from legacy coach */
+body > div[role="dialog"] {
   display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
 }
 
-  
+/* 3) Modals: hidden by default, only visible when .open is set */
+.modal {
+  display: none !important;
+}
+.modal.open {
+  display: block !important;
+}
+
+/* 4) Belt-and-suspenders: remove borders/shadows that could render as a thin white line */
+#coachModal .modal-head,
+#reflectiv-widget .modal-head,
+#reflectiv-widget [class*="header"],
+#reflectiv-widget [class*="banner"] {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* 5) Optional polish for the coach modal container */
+#coachModal .modal-box {
+  width: min(92vw, 900px);
+  max-height: 85vh;
+  overflow: hidden;
+}
+#coachBody {
+  max-height: 70vh;
+  overflow: auto;
 }
