@@ -1,4 +1,4 @@
-/* ===== ReflectivAI Coach — layout + typography hotfix (2025-10-20-4) ===== */
+/* ===== ReflectivAI Coach — layout + typography (2025-10-20-5) ===== */
 
 .reflectiv-chat,
 #reflectiv-widget .reflectiv-chat {
@@ -18,7 +18,7 @@
 .reflectiv-chat .close-btn{appearance:none;border:0;background:#0b1d2f;color:#fff;
   padding:6px 10px;border-radius:8px;cursor:pointer;font-weight:700}
 
-/* 3-col grid: Controls | Chat | Metrics */
+/* Grid: Controls | Chat | Metrics */
 .reflectiv-chat .coach-body{
   display:grid; grid-template-columns:300px 1fr 220px; gap:14px; padding:14px; background:var(--slab);
 }
@@ -29,18 +29,16 @@
 .reflectiv-chat .controls-slab .label{font-size:12px;font-weight:800;color:var(--muted);margin-bottom:4px}
 .reflectiv-chat select{width:100%;height:40px;padding:0 10px;border-radius:10px;border:1px solid #cfd8e3;font-size:14px}
 
-/* Center chat slab */
+/* Center chat */
 .reflectiv-chat .chat-slab{background:#fff;border:1px solid var(--stroke);border-radius:12px;display:flex;flex-direction:column}
-.reflectiv-chat .brief{
-  padding:12px;border-bottom:1px solid var(--stroke);background:#fbfdff
-}
+.reflectiv-chat .brief{padding:12px;border-bottom:1px solid var(--stroke);background:#fbfdff}
 .reflectiv-chat .brief .row{margin:6px 0}
 .reflectiv-chat .brief .row strong{font-weight:900;color:#0b1d2f}
-.reflectiv-chat .transcript{flex:1;overflow:auto;padding:12px;min-height:320px}
+.reflectiv-chat .transcript{flex:1;overflow:auto;padding:12px;min-height:340px}
 .reflectiv-chat .bubble{max-width:78%;padding:10px 12px;border-radius:12px;margin:8px 0}
 .reflectiv-chat .bubble.user{background:#0f2236;color:#fff;margin-left:auto}
 .reflectiv-chat .bubble.bot{background:#eaf2ff;color:#0b1323}
-.reflectiv-chat .coach-panel{margin:8px 0 0 0;padding:10px 12px;border-left:3px solid #0f2236;background:#f5f9ff;border-radius:8px}
+.reflectiv-chat .coach-panel{margin:8px 12px 12px 12px;padding:10px 12px;border-left:3px solid #0f2236;background:#f5f9ff;border-radius:8px}
 .reflectiv-chat .coach-panel h6{margin:0 0 6px 0;font-size:12px;font-weight:900;color:#0f2236;letter-spacing:.02em}
 .reflectiv-chat .coach-panel ul{margin:0;padding-left:18px}
 .reflectiv-chat .coach-panel li{font-size:13px;margin:2px 0}
@@ -49,12 +47,17 @@
 .reflectiv-chat textarea{height:44px;resize:none;flex:1;padding:10px 12px;border:1px solid #cfd8e3;border-radius:10px;font-size:14px}
 .reflectiv-chat .send-btn{height:44px;min-width:72px;padding:0 14px;border-radius:10px;background:var(--navy);color:#fff;border:0;cursor:pointer;font-weight:800}
 
-/* Right metrics (narrowed) */
+/* Right metrics */
 .reflectiv-chat .metrics-slab{background:#fff;border:1px solid var(--stroke);border-radius:12px;
   padding:10px;display:flex;flex-direction:column;gap:8px}
 .reflectiv-chat .metric{border:1px solid #e5ecf4;border-radius:12px;padding:10px;background:#fbfdff}
 .reflectiv-chat .metric h5{margin:0 0 4px 0;font-size:12px;font-weight:900;color:var(--navy)}
 .reflectiv-chat .metric .value{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:#111827}
+
+/* Backdrop + modal */
+#reflectiv-modal-backdrop{position:fixed;inset:0;background:rgba(3,13,24,.55);backdrop-filter:saturate(120%) blur(2px)}
+#reflectiv-modal{position:fixed;inset:0;display:grid;place-items:center;padding:24px;z-index:9999}
+#reflectiv-modal .reflectiv-chat{width:min(1120px,96vw)}
 
 /* Mobile */
 @media (max-width: 960px){
