@@ -1,28 +1,29 @@
 /* =====================================================
-   ReflectivAI Chat Widget – Unified Stable Version
-   Combines working JS structure (af269804) with modern
-   visual layout and colors from main branch
+   ReflectivAI Chat Widget — Stabilized Layout v2
+   Matches af269804 JS + current main visual system
    ===================================================== */
 
+/* ---------- Widget Shell ---------- */
 .reflectiv-chat {
   display: flex;
   flex-direction: column;
+  gap: 12px;
   border: 1px solid #d6dbe3;
   border-radius: 14px;
-  background: #ffffff;
-  box-shadow: 0 8px 24px rgba(15,39,71,0.12);
-  font-family: "Poppins", "Inter", sans-serif;
-  color: #0f1522;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15,39,71,.12);
+  font-family: "Inter","Poppins",sans-serif;
+  color: #1e2a3a;
   overflow: hidden;
 }
 
 /* ---------- Toolbar ---------- */
 .chat-toolbar {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit,minmax(160px,1fr));
   gap: 10px;
   align-items: end;
-  padding: 12px;
+  padding: 12px 16px;
   background: #f7f9fc;
   border-bottom: 1px solid #e5e9f0;
 }
@@ -30,7 +31,7 @@
 .chat-toolbar label {
   font-size: 13px;
   font-weight: 600;
-  color: #1e2a3a;
+  color: #0f2747;
 }
 
 .chat-toolbar select {
@@ -39,14 +40,30 @@
   border: 1px solid #d9e3ef;
   background: #fff;
   font-size: 13px;
+  color: #1e2a3a;
 }
 
-/* ---------- Chat Window ---------- */
+/* ---------- Scenario Area ---------- */
+.simulation {
+  padding: 14px 18px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e9f0;
+  line-height: 1.5;
+}
+
+.simulation strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #0b3954;
+  font-weight: 700;
+}
+
+/* ---------- Chat Messages ---------- */
 .chat-messages {
   flex: 1;
-  padding: 14px;
+  padding: 16px 18px;
   overflow-y: auto;
-  background: #ffffff;
+  background: #fdfdfd;
 }
 
 .chat-message {
@@ -54,21 +71,14 @@
   line-height: 1.4;
 }
 
-.chat-message.user {
-  text-align: right;
-  color: #0b3954;
-}
+.chat-message.user { text-align: right; color: #0b3954; }
+.chat-message.bot  { text-align: left; color: #1e2a3a; }
 
-.chat-message.bot {
-  text-align: left;
-  color: #1e2a3a;
-}
-
-/* ---------- Input Panel ---------- */
+/* ---------- Input ---------- */
 .chat-input {
   display: flex;
   gap: 8px;
-  padding: 12px;
+  padding: 14px 16px;
   border-top: 1px solid #e5e9f0;
   background: #f9fbfe;
 }
@@ -76,49 +86,58 @@
 .chat-input textarea {
   flex: 1;
   resize: none;
-  border-radius: 6px;
+  border-radius: 8px;
   border: 1px solid #d9e3ef;
-  padding: 8px;
+  padding: 8px 10px;
   font-size: 14px;
   min-height: 40px;
 }
 
 .chat-input button {
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   background: #20bfa9;
   color: #fff;
   font-weight: 600;
   padding: 8px 14px;
   cursor: pointer;
 }
+.chat-input button:hover { background: #17a895; }
 
-.chat-input button:hover {
-  background: #17a895;
-}
-
-/* ---------- Scoring / Panel ---------- */
+/* ---------- Coach Feedback ---------- */
 .scoring-panel {
-  background: #ecf3fb;
+  background: #f4f8fc;
   border-top: 1px solid #d9e3ef;
-  padding: 10px 12px;
+  padding: 12px 16px;
   font-size: 13px;
   color: #1e2a3a;
 }
 
 .scoring-panel h4 {
-  margin: 0 0 4px 0;
-  font-size: 13px;
+  margin: 0 0 8px 0;
+  font-size: 14px;
   font-weight: 700;
   color: #0b3954;
 }
 
+.score-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.score-badges span {
+  background: #ecf3fb;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 12px;
+  color: #0b3954;
+  border: 1px solid #d9e3ef;
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 600px) {
-  .chat-toolbar {
-    grid-template-columns: 1fr;
-  }
-  .chat-input {
-    flex-direction: column;
-  }
+  .chat-toolbar { grid-template-columns: 1fr; }
+  .chat-input { flex-direction: column; }
 }
