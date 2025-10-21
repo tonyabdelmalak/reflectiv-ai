@@ -1,3 +1,4 @@
+
 /* widget.js
  * ReflectivAI Chat/Coach — drop-in (coach-v2, deterministic scoring v3)
  * Modes: emotional-assessment | product-knowledge | sales-simulation
