@@ -1,235 +1,255 @@
 /* =========================================================
-   ReflectivAI Coach / Chat — Stable CSS (paired with af269804 JS)
-   Safe: layout only. No selector renames JS relies on.
+   ReflectivAI — Coach Widget (Highspot-aligned)
+   SAFE with widget.js @ af269804. No selector renames.
+   Palette: Navy #0c2740, Teal #20bfa9, Ink #1e2a3a, Soft #ecf3fb, Lines #d9e3ef
    ========================================================= */
 
-/* ---------- Shell ---------- */
+/* ---------- Vars ---------- */
+:root{
+  --navy:#0c2740;
+  --ink:#1e2a3a;
+  --slate:#596a82;
+  --teal:#20bfa9;
+  --teal-2:#17a895;
+  --soft:#ecf3fb;
+  --soft-2:#f7f9fc;
+  --line:#d9e3ef;
+  --warn:#fff7d8;
+  --danger:#ffebe8;
+  --card:#ffffff;
+  --shadow-sm:0 4px 14px rgba(12,39,64,.10);
+  --shadow:0 12px 28px rgba(12,39,64,.14);
+  --radius:12px;
+  --radius-lg:16px;
+  --pad:14px;
+}
+
+/* ---------- Scope text defaults for mounts ---------- */
 .reflectiv-chat,
 .reflectiv-coach,
 #reflectiv-coach,
 #reflectiv-widget {
-  font-family: "Inter","Poppins",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  color: #1e2a3a;
+  font-family:"Inter","Poppins",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
 }
 
-.coach-modal {
-  position: fixed;
-  inset: 0;
-  display: grid;
-  place-items: start center;
-  padding: 32px 12px;
-  background: rgba(10,18,28,0.35);
-  z-index: 9999;
+/* =================================================================
+   MODAL + PANEL
+   ================================================================= */
+.coach-modal{
+  position:fixed;inset:0;
+  display:none;place-items:start center;
+  padding:32px 12px;
+  background:rgba(10,18,28,.38);
+  z-index:9999;
+}
+.coach-modal.open,.coach-modal.is-open{display:grid}
+.coach-panel{
+  width:min(980px,96vw);
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow);
+  overflow:hidden;
 }
 
-.coach-panel {
-  width: min(980px, 96vw);
-  background: #fff;
-  border: 1px solid #d6dbe3;
-  border-radius: 16px;
-  box-shadow: 0 16px 40px rgba(15,39,71,.18);
-  overflow: hidden;
+/* Header */
+.coach-header{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:12px 16px;background:var(--soft-2);
+  border-bottom:1px solid var(--line);
+}
+.coach-title{font:800 18px/1 "Inter";color:var(--navy)}
+.coach-close{
+  appearance:none;border:1px solid var(--line);background:#fff;color:var(--ink);
+  border-radius:999px;padding:6px 12px;font-weight:700;cursor:pointer;
+}
+.coach-close:hover{background:#f9fbfe}
+
+/* =================================================================
+   TOOLBAR / CONTROLS
+   ================================================================= */
+.chat-toolbar,.sim-controls{
+  display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));
+  gap:10px;align-items:end;padding:12px 16px;background:var(--soft-2);
+  border-bottom:1px solid var(--line);
+}
+@media (max-width:900px){.chat-toolbar,.sim-controls{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:520px){.chat-toolbar,.sim-controls{grid-template-columns:1fr}}
+
+.chat-toolbar label,.sim-controls label{
+  display:block;margin:0 0 6px;color:var(--navy);
+  font:700 12px/1.2 "Inter";
+}
+.chat-toolbar select,.sim-controls select{
+  width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;
+  background:#fff;font:400 14px/1.2 "Inter";color:var(--ink);
+}
+.chat-toolbar .hint{font:600 12px/1.2 "Inter";color:var(--slate)}
+
+/* =================================================================
+   SCENARIO / BRIEF / GUIDANCE
+   ================================================================= */
+.simulation,.scenario-brief{
+  padding:16px 18px;background:#fff;border-bottom:1px solid var(--line);line-height:1.5;
+}
+.simulation strong,.scenario-brief strong{display:block;margin-bottom:4px;color:#0b3954;font-weight:800}
+
+.guidance,.brief-card{
+  margin:14px 16px;background:var(--soft);
+  border:1px solid var(--line);border-radius:12px;
+  padding:12px 14px;color:var(--ink);
+}
+.guidance h4,.brief-card h4{margin:0 0 6px;font:800 14px/1.2 "Inter";color:#0b3954}
+
+/* Collapsible rubric (if JS injects it) */
+.rubric{margin:10px 16px;border:1px dashed var(--line);border-radius:10px;background:#fcfdff}
+.rubric summary{cursor:pointer;padding:8px 10px;font:700 13px/1.2 "Inter";color:#0b3954}
+.rubric div{padding:8px 10px 10px;font:400 13px/1.5 "Inter";color:var(--ink)}
+
+/* =================================================================
+   MESSAGES
+   ================================================================= */
+.chat-messages{
+  max-height:48vh;overflow:auto;padding:16px 18px;background:#fff;
+}
+.chat-message{margin:0 0 12px;line-height:1.45;color:var(--ink)}
+.chat-message.user{text-align:right;color:#0b3954}
+.chat-message.bot{text-align:left;color:var(--ink)}
+
+/* Inline code and quotes inside messages */
+.chat-message code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+  font-size:.92em;background:#f6f8fb;border:1px solid var(--line);padding:2px 6px;border-radius:6px;
+}
+.chat-message blockquote{
+  margin:6px 0;padding:6px 10px;border-left:3px solid var(--line);background:#fbfdff;border-radius:6px;
 }
 
-/* ---------- Header ---------- */
-.coach-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 12px 16px;
-  background: #f7f9fc;
-  border-bottom: 1px solid #e5e9f0;
+/* Bot cards (optional, if JS prints) */
+.msg-card{
+  border:1px solid var(--line);border-radius:12px;background:#fff;padding:10px 12px;box-shadow:var(--shadow-sm);
 }
 
-.coach-title {
-  font-weight: 800;
-  font-size: 18px;
-  color: #0f2747;
+/* =================================================================
+   INPUT
+   ================================================================= */
+.chat-input{
+  display:flex;gap:10px;align-items:stretch;
+  padding:14px 16px;border-top:1px solid var(--line);background:#f9fbfe;
+}
+.chat-input textarea{
+  flex:1;min-height:44px;resize:none;border:1px solid var(--line);border-radius:12px;
+  padding:10px 12px;font:400 14px/1.3 "Inter";color:var(--ink);
+}
+.chat-input .send-btn,.chat-input button{
+  border:0;border-radius:12px;background:var(--teal);color:#fff;
+  font:800 14px/1 "Inter";padding:10px 16px;cursor:pointer;
+}
+.chat-input .send-btn:hover,.chat-input button:hover{background:var(--teal-2)}
+@media (max-width:520px){.chat-input{flex-direction:column}.chat-input .send-btn,.chat-input button{width:100%}}
+
+/* Disabled state */
+.chat-input button[disabled]{opacity:.6;cursor:not-allowed}
+
+/* =================================================================
+   FEEDBACK / SCORING
+   ================================================================= */
+.scoring-panel,.coach-feedback{
+  background:#fff;border-top:1px solid var(--line);
+  padding:12px 16px 14px;color:var(--ink);
+}
+.scoring-panel h4,.coach-feedback h4{
+  margin:0 0 8px;font:800 14px/1.2 "Inter";color:var(--navy)
+}
+.score-row{margin:2px 0 8px;font:600 13px/1.35 "Inter";color:#0b3954}
+
+/* Badges line */
+.score-badges{
+  display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 4px;
+}
+.score-badges span{
+  display:inline-block;background:var(--soft);border:1px solid var(--line);color:#0b3954;
+  padding:3px 8px;font:700 12px/1 "Inter";border-radius:999px;white-space:nowrap;
 }
 
-.coach-close {
-  appearance: none;
-  border: 1px solid #d9e3ef;
-  background: #fff;
-  color: #1e2a3a;
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-weight: 600;
-  cursor: pointer;
+/* Optional progress bar */
+.progress{
+  height:8px;border-radius:6px;background:#eef3f9;border:1px solid var(--line);overflow:hidden;margin:8px 0 0;
+}
+.progress > i{display:block;height:100%;width:0;background:var(--teal);transition:width .25s ease}
+
+/* =================================================================
+   TABLES / LISTS (if bot outputs summaries)
+   ================================================================= */
+.table{
+  width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--line);
+  border-radius:12px;overflow:hidden;background:#fff;
+}
+.table th,.table td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left}
+.table thead th{background:var(--soft-2);font-weight:800;color:var(--navy)}
+.table tr:last-child td{border-bottom:none}
+
+/* =================================================================
+   TOAST / BANNER (defensive: style if something emits them)
+   ================================================================= */
+.cw-banner,.cw-toast{
+  position:relative;display:block;margin:10px 16px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);
+  background:#fbfdff;color:var(--ink);box-shadow:var(--shadow-sm);
+}
+.cw-banner.warn,.cw-toast.warn{background:var(--warn);border-color:#eadfbb}
+.cw-banner.error,.cw-toast.error{background:var(--danger);border-color:#e3b4ad}
+
+/* =================================================================
+   BUTTONS / TAGS (utility for content inside bot replies)
+   ================================================================= */
+.btn-pill{
+  display:inline-block;border-radius:999px;padding:6px 12px;border:1px solid var(--line);
+  background:#fff;color:var(--ink);font:700 12px/1 "Inter";text-decoration:none;
+}
+.btn-pill.primary{background:var(--teal);color:#fff;border-color:var(--teal)}
+.btn-pill.primary:hover{filter:brightness(.96)}
+.kbd{
+  display:inline-block;padding:2px 6px;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;background:#fff;font:600 11px/1 "Inter"
 }
 
-/* ---------- Toolbar / Controls ---------- */
-.chat-toolbar,
-.sim-controls {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(160px, 1fr));
-  gap: 12px;
-  align-items: end;
-  padding: 14px 16px;
-  background: #f7f9fc;
-  border-bottom: 1px solid #e5e9f0;
+/* =================================================================
+   LOADER DOTS (if JS toggles .is-loading on send button)
+   ================================================================= */
+.is-loading::after{
+  content:"";display:inline-block;vertical-align:middle;margin-left:8px;
+  width:4px;height:4px;border-radius:50%;
+  box-shadow:10px 0 0 0 currentColor,20px 0 0 0 currentColor,30px 0 0 0 currentColor;
+  animation:coach-dots 1s infinite steps(3,start);
+}
+@keyframes coach-dots{
+  0% {box-shadow:10px 0 0 0 transparent,20px 0 0 0 transparent,30px 0 0 0 currentColor}
+  33%{box-shadow:10px 0 0 0 currentColor,20px 0 0 0 transparent,30px 0 0 0 transparent}
+  66%{box-shadow:10px 0 0 0 transparent,20px 0 0 0 currentColor,30px 0 0 0 transparent}
+  100%{box-shadow:10px 0 0 0 transparent,20px 0 0 0 transparent,30px 0 0 0 currentColor}
 }
 
-@media (max-width: 900px) {
-  .chat-toolbar,
-  .sim-controls { grid-template-columns: repeat(2, 1fr); }
+/* =================================================================
+   CARDS INSIDE BOT OUTPUT (recommendations, do/don’t, etc.)
+   ================================================================= */
+.tip-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media (max-width:680px){.tip-grid{grid-template-columns:1fr}}
+.tip{
+  border:1px solid var(--line);border-radius:12px;background:#fff;padding:10px 12px;box-shadow:var(--shadow-sm)
 }
-@media (max-width: 520px) {
-  .chat-toolbar,
-  .sim-controls { grid-template-columns: 1fr; }
-}
+.tip h5{margin:0 0 6px;font:800 13px/1.2 "Inter";color:var(--navy)}
+.tip.good{border-color:#bfe7df;background:#f3fcfa}
+.tip.bad{border-color:#f3c9c3;background:#fff3f1}
 
-.sim-field label,
-.chat-toolbar label {
-  display: block;
-  font-size: 12px;
-  font-weight: 700;
-  color: #0f2747;
-  margin-bottom: 6px;
-}
-
-.sim-field select,
-.chat-toolbar select {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid #d9e3ef;
-  border-radius: 8px;
-  background: #fff;
-  font-size: 14px;
-  color: #1e2a3a;
-}
-
-/* ---------- Scenario / Brief ---------- */
-.simulation,
-.scenario-brief {
-  padding: 16px 18px;
-  background: #ffffff;
-  border-bottom: 1px solid #e5e9f0;
-  line-height: 1.5;
-}
-
-.scenario-brief strong {
-  display: block;
-  margin-bottom: 4px;
-  color: #0b3954;
-  font-weight: 800;
-}
-
-/* ---------- Guidance Card ---------- */
-.guidance,
-.brief-card {
-  margin: 16px;
-  padding: 14px 16px;
-  background: #ecf3fb;
-  border: 1px solid #d9e3ef;
-  border-radius: 12px;
-  color: #1e2a3a;
-}
-.guidance h4,
-.brief-card h4 {
-  margin: 0 0 8px 0;
-  font-size: 14px;
-  font-weight: 800;
-  color: #0b3954;
-}
-
-/* ---------- Messages ---------- */
-.chat-messages {
-  max-height: 48vh;
-  overflow-y: auto;
-  padding: 16px 18px;
-  background: #ffffff;
-}
-
-.chat-message {
-  margin: 0 0 12px 0;
-  line-height: 1.45;
-  color: #1e2a3a;
-}
-
-.chat-message.user { text-align: right; color: #0b3954; }
-.chat-message.bot  { text-align: left;  color: #1e2a3a; }
-
-/* ---------- Input row ---------- */
-.chat-input {
-  display: flex;
-  gap: 10px;
-  align-items: stretch;
-  padding: 14px 16px;
-  border-top: 1px solid #e5e9f0;
-  background: #f9fbfe;
-}
-
-.chat-input textarea {
-  flex: 1;
-  min-height: 44px;
-  resize: none;
-  border: 1px solid #d9e3ef;
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-size: 14px;
-}
-
-.chat-input .send-btn,
-.chat-input button {
-  border: none;
-  border-radius: 12px;
-  background: #20bfa9;
-  color: #fff;
-  font-weight: 800;
-  padding: 10px 16px;
-  cursor: pointer;
-}
-.chat-input .send-btn:hover,
-.chat-input button:hover { background: #17a895; }
-
-@media (max-width: 520px) {
-  .chat-input { flex-direction: column; }
-  .chat-input .send-btn,
-  .chat-input button { width: 100%; }
-}
-
-/* ---------- Coach Feedback / Scoring ---------- */
-.scoring-panel,
-.coach-feedback {
-  background: #fff7d8;
-  border-top: 1px solid #eadfbb;
-  padding: 14px 16px 16px 16px;
-  color: #1e2a3a;
-}
-
-.scoring-panel h4,
-.coach-feedback h4 {
-  margin: 0 0 8px 0;
-  font-size: 15px;
-  font-weight: 800;
-  color: #1f2a44;
-}
-
-.score-row {
-  margin: 4px 0 10px 0;
-  font-size: 14px;
-}
-
-.score-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 6px 0 10px 0;
-}
-
-.score-badges span {
-  display: inline-block;
-  padding: 3px 8px;
-  font-size: 12px;
-  border-radius: 999px;
-  border: 1px solid #d9e3ef;
-  background: #ecf3fb;
-  color: #0b3954;
-}
-
-/* ---------- Utilities ---------- */
-.hidden { display: none !important; }
-.mono   { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,"Liberation Mono","Courier New",monospace; }
-.small  { font-size: 12px; }
+/* =================================================================
+   UTILS
+   ================================================================= */
+.hidden{display:none !important}
+.small{font-size:12px}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+.center{display:grid;place-items:center}
+.pad{padding:var(--pad)}
+.round{border-radius:var(--radius)}
+.shadow{box-shadow:var(--shadow-sm)}
