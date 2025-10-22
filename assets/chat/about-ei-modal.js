@@ -1,4 +1,4 @@
-<script>
+
 /* About-EI Modal loader — zero-dep, non-destructive
  * Loads /assets/chat/about-ei.md and renders to a modal.
  * Works even if your page has no frameworks.
@@ -72,4 +72,4 @@
   document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') hide(); });
 
 })();
-</script>
+
