@@ -803,6 +803,9 @@ ${COMMON}`).trim();
     messages.push({ role: "user", content: userText });
 
     try {
+      // ---- Load EI context and inject into system prompt ----
+      const sys = await EIContext.getSystemExtras();
+      if (sys) messages.unshift({ role: "system", content: sys });
       const raw = await callModel(messages);
       const { coach, clean } = extractCoach(raw);
       const computed = scoreReply(userText, clean, currentMode);
