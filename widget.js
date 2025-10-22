@@ -76,26 +76,35 @@
 
   function sanitizeLLM(raw) {
     let s = String(raw || "");
+    // strip code fences and pre blocks
     s = s.replace(/```[\s\S]*?```/g, "");
     s = s.replace(/<pre[\s\S]*?<\/pre>/gi, "");
+    // strip h1-h6 markdown prefixes
     s = s.replace(/^\s*#{1,6}\s+/gm, "");
+    // strip opening salutations
     s = s.replace(/^\s*(hi|hello|hey)[^\n]*\n+/i, "");
+    // collapse excess newlines
     s = s.replace(/\n{3,}/g, "\n\n").trim();
     return s;
   }
 
   function md(text) {
     if (!text) return "";
-    let s = esc(text).replace(/\r\n?/g, "\n");
+    let s = esc(String(text)).replace(/\r\n?/g, "\n");
+    // bold
     s = s.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
-    s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
-    s = s.replace(/^(?:-\s+|\*\s+).+(?:\n(?:-\s+|\*\s+).+)*/gm, (blk) => {
-      const items = blk
-        .split("\n")
-        .map((l) => l.replace(/^(?:-\s+|\*\s+)(.+)$/, "<li>$1</li>"))
-        .join("");
-      return `<ul>${items}</ul>`;
-    });
+    // bullets
+    s = s.replace(
+      /^(?:-\s+|\*\s+).+(?:\n(?:-\s+|\*\s+).+)*/gm,
+      (blk) => {
+        const items = blk
+          .split("\n")
+          .map((l) => l.replace(/^(?:-\s+|\*\s+)(.+)$/, "<li>$1</li>"))
+          .join("");
+        return `<ul>${items}</ul>`;
+      }
+    );
+    // paragraphs
     return s
       .split(/\n{2,}/)
       .map((p) => (p.startsWith("<ul>") ? p : `<p>${p.replace(/\n/g, "<br>")}</p>`))
@@ -311,19 +320,19 @@
     else if (featureKey === "stress") rating = calculateStressRating(personaKey, lastUserMessage);
 
     const featureList = (cfg?.eiFeatures && cfg.eiFeatures.length ? cfg.eiFeatures : DEFAULT_EI_FEATURES);
-    const featureObj = featureList.find(f => f.key === featureKey);
-    const featureLabel = featureObj ? featureObj.label : featureKey;
+    const featureObj = featureList.find(f => f.key === featureKey || f.value === featureKey || f.id === featureKey);
+    const featureLabel = featureObj ? (featureObj.label || featureKey) : featureKey;
     const feedback = generateDynamicFeedback(personaKey, featureKey);
 
-    feedbackDisplayElem.innerHTML = rating == null
+    feedbackDisplayElem.innerHTML = (rating == null)
       ? `<strong>${esc(featureLabel)}</strong><br><p>${esc(feedback)}</p>`
       : `<strong>${esc(featureLabel)}: ${rating}/5</strong><br><p>${esc(feedback)}</p>`;
   }
 
   // ---------- prompt preface ----------
   function buildPreface(mode, sc) {
-    const COMMON = `
-# ReflectivAI — Output Contract
+    const COMMON =
+`# ReflectivAI — Output Contract
 Return exactly two parts. No code blocks. No markdown headings.
 1) Sales Guidance: short, actionable, accurate guidance.
 2) <coach>{
@@ -334,12 +343,11 @@ Return exactly two parts. No code blocks. No markdown headings.
      "phrasing": "…",
      "feedback": "one concise paragraph",
      "context": { "rep_question":"...", "hcp_reply":"..." }
-   }</coach>
-`.trim();
+   }</coach>`.trim();
 
     if (mode === "sales-simulation") {
-      return `
-# Role
+      return (
+`# Role
 You are a virtual pharma coach. Be direct, label-aligned, and safe.
 
 # Scenario
@@ -355,18 +363,18 @@ ${sc ? [
 - Only appropriate, publicly known, label-aligned facts.
 - No pricing advice or PHI. No off-label.
 
-${COMMON}`.trim();
+${COMMON}`).trim();
     }
 
     if (mode === "product-knowledge") {
       return `Return a concise educational overview with reputable citations. Structure: key takeaways; mechanism/indications; safety/contraindications; efficacy; access notes; references.`.trim();
     }
 
-    return `
-Provide brief self-reflection tips tied to HCP communication.
+    return (
+`Provide brief self-reflection tips tied to HCP communication.
 - 3–5 sentences, then one reflective question.
 
-${COMMON}`.trim();
+${COMMON}`).trim();
   }
 
   // ---------- UI ----------
@@ -380,26 +388,26 @@ ${COMMON}`.trim();
       style = document.createElement("style");
       style.id = STYLE_ID;
       style.textContent = `
-        #reflectiv-widget .reflectiv-chat{display:flex;flex-direction:column;gap:12px;border:3px solid #bfc7d4;border-radius:14px;background:#fff;overflow:hidden}
-        #reflectiv-widget .chat-toolbar{display:block;padding:14px 16px;background:#f6f8fb;border-bottom:1px solid #e1e6ef}
-        #reflectiv-widget .sim-controls{display:grid;grid-template-columns:220px 1fr 220px 1fr;gap:12px 16px;align-items:center}
-        #reflectiv-widget .sim-controls label{font-size:13px;font-weight:600;color:#2f3a4f;justify-self:end;white-space:nowrap}
-        #reflectiv-widget .sim-controls select{width:100%;height:38px;padding:6px 10px;font-size:14px;border:1px solid #cfd6df;border-radius:8px;background:#fff}
-        #reflectiv-widget .chat-messages{min-height:220px;height:auto;max-height:none;overflow:auto;padding:12px 14px;background:#fafbfd}
-        #reflectiv-widget .message{margin:8px 0;display:flex}
-        #reflectiv-widget .message.user{justify-content:flex-end}
-        #reflectiv-widget .message.assistant{justify-content:flex-start}
-        #reflectiv-widget .message .content{max-width:85%;line-height:1.45;font-size:14px;padding:10px 12px;border-radius:14px;border:1px solid #d6dbe3;color:#0f1522;background:#e9edf3}
-        #reflectiv-widget .message.user .content{background:#e0e0e0;color:#000}
-        #reflectiv-widget .chat-input{display:flex;gap:8px;padding:10px 12px;border-top:1px solid #e1e6ef;background:#fff}
-        #reflectiv-widget .chat-input textarea{flex:1;resize:none;min-height:44px;max-height:120px;padding:10px 12px;border:1px solid #cfd6df;border-radius:10px;outline:none}
-        #reflectiv-widget .chat-input .btn{min-width:86px;border:0;border-radius:999px;background:#2f3a4f;color:#fff;font-weight:600}
-        #reflectiv-widget .coach-section{margin-top:0;padding:12px 14px;border:1px solid #e1e6ef;border-radius:12px;background:#fffbe8}
-        #reflectiv-widget .coach-subs .pill{display:inline-block;padding:2px 8px;margin-right:6px;font-size:12px;background:#f1f3f7;border:1px solid #d6dbe3;border-radius:999px}
-        #reflectiv-widget .scenario-meta .meta-card{padding:10px 12px;background:#f7f9fc;border:1px solid #e1e6ef;border-radius:10px}
-        #reflectiv-widget .hidden{display:none!important}
-        @media (max-width:900px){#reflectiv-widget .sim-controls{grid-template-columns:1fr;gap:8px}#reflectiv-widget .sim-controls label{justify-self:start}}
-        @media (max-width:520px){#reflectiv-widget .chat-messages{height:46vh}}
+#reflectiv-widget .reflectiv-chat{display:flex;flex-direction:column;gap:12px;border:3px solid #bfc7d4;border-radius:14px;background:#fff;overflow:hidden}
+#reflectiv-widget .chat-toolbar{display:block;padding:14px 16px;background:#f6f8fb;border-bottom:1px solid #e1e6ef}
+#reflectiv-widget .sim-controls{display:grid;grid-template-columns:220px 1fr 220px 1fr;gap:12px 16px;align-items:center}
+#reflectiv-widget .sim-controls label{font-size:13px;font-weight:600;color:#2f3a4f;justify-self:end;white-space:nowrap}
+#reflectiv-widget .sim-controls select{width:100%;height:38px;padding:6px 10px;font-size:14px;border:1px solid #cfd6df;border-radius:8px;background:#fff}
+#reflectiv-widget .chat-messages{min-height:220px;height:auto;max-height:none;overflow:auto;padding:12px 14px;background:#fafbfd}
+#reflectiv-widget .message{margin:8px 0;display:flex}
+#reflectiv-widget .message.user{justify-content:flex-end}
+#reflectiv-widget .message.assistant{justify-content:flex-start}
+#reflectiv-widget .message .content{max-width:85%;line-height:1.45;font-size:14px;padding:10px 12px;border-radius:14px;border:1px solid #d6dbe3;color:#0f1522;background:#e9edf3}
+#reflectiv-widget .message.user .content{background:#e0e0e0;color:#000}
+#reflectiv-widget .chat-input{display:flex;gap:8px;padding:10px 12px;border-top:1px solid #e1e6ef;background:#fff}
+#reflectiv-widget .chat-input textarea{flex:1;resize:none;min-height:44px;max-height:120px;padding:10px 12px;border:1px solid #cfd6df;border-radius:10px;outline:none}
+#reflectiv-widget .chat-input .btn{min-width:86px;border:0;border-radius:999px;background:#2f3a4f;color:#fff;font-weight:600}
+#reflectiv-widget .coach-section{margin-top:0;padding:12px 14px;border:1px solid #e1e6ef;border-radius:12px;background:#fffbe8}
+#reflectiv-widget .coach-subs .pill{display:inline-block;padding:2px 8px;margin-right:6px;font-size:12px;background:#f1f3f7;border:1px solid #d6dbe3;border-radius:999px}
+#reflectiv-widget .scenario-meta .meta-card{padding:10px 12px;background:#f7f9fc;border:1px solid #e1e6ef;border-radius:10px}
+#reflectiv-widget .hidden{display:none!important}
+@media (max-width:900px){#reflectiv-widget .sim-controls{grid-template-columns:1fr;gap:8px}#reflectiv-widget .sim-controls label{justify-self:start}}
+@media (max-width:520px){#reflectiv-widget .chat-messages{height:46vh}}
       `;
       document.head.appendChild(style);
     }
@@ -438,89 +446,87 @@ ${COMMON}`.trim();
     const hcpSelect = el("select"); hcpSelect.id="cw-hcp";
 
     // EI Persona/EI Feature
-const personaLabel = el("label", "", "HCP Persona");
-personaLabel.htmlFor = "cw-ei-persona";
-const personaSelect = el("select"); personaSelect.id = "cw-ei-persona";
-personaSelectElem = personaSelect;
-personaLabelElem = personaLabel;
-personaSelect.addEventListener("change", generateFeedback);
+    const personaLabel = el("label", "", "HCP Persona");
+    personaLabel.htmlFor = "cw-ei-persona";
+    const personaSelect = el("select"); personaSelect.id = "cw-ei-persona";
+    personaSelectElem = personaSelect;
+    personaLabelElem = personaLabel;
+    personaSelect.addEventListener("change", generateFeedback);
 
-const featureLabel = el("label", "", "EI Feature");
-featureLabel.htmlFor = "cw-ei-feature";
-const featureSelect = el("select"); featureSelect.id = "cw-ei-feature";
-eiFeatureSelectElem = featureSelect;
-featureLabelElem = featureLabel;
-featureSelect.addEventListener("change", generateFeedback);
+    const featureLabel = el("label", "", "EI Feature");
+    featureLabel.htmlFor = "cw-ei-feature";
+    const featureSelect = el("select"); featureSelect.id = "cw-ei-feature";
+    eiFeatureSelectElem = featureSelect;
+    featureLabelElem = featureLabel;
+    featureSelect.addEventListener("change", generateFeedback);
 
-// ---------- EI option sources (no demo caps) ----------
-const PERSONAS_ALL =
-  Array.isArray(cfg?.eiProfiles) && cfg.eiProfiles.length
-    ? cfg.eiProfiles
-    : DEFAULT_PERSONAS;
+    // ---------- EI option sources ----------
+    const PERSONAS_ALL =
+      Array.isArray(cfg?.eiProfiles) && cfg.eiProfiles.length
+        ? cfg.eiProfiles
+        : DEFAULT_PERSONAS;
 
-// Try multiple keys; normalize strings -> {key,label}
-const FEATURES_ALL_RAW =
-  (Array.isArray(cfg?.eiFeatures) && cfg.eiFeatures.length && cfg.eiFeatures) ||
-  (Array.isArray(cfg?.features) && cfg.features.length && cfg.features) ||
-  DEFAULT_EI_FEATURES;
+    const FEATURES_ALL_RAW =
+      (Array.isArray(cfg?.eiFeatures) && cfg.eiFeatures.length && cfg.eiFeatures) ||
+      (Array.isArray(cfg?.features) && cfg.features.length && cfg.features) ||
+      DEFAULT_EI_FEATURES;
 
-const FEATURES_ALL = FEATURES_ALL_RAW.map(f =>
-  typeof f === "string"
-    ? { key: f.toLowerCase().replace(/\s+/g, "-"), label: f }
-    : f
-);
+    const FEATURES_ALL = FEATURES_ALL_RAW.map(f =>
+      typeof f === "string"
+        ? { key: f.toLowerCase().replace(/\s+/g, "-"), label: f }
+        : f
+    );
 
-// Rebuild EI selects with full lists
-function hydrateEISelects() {
-  if (!personaSelectElem || !eiFeatureSelectElem) return;
-  personaSelectElem.innerHTML = "";
-  eiFeatureSelectElem.innerHTML = "";
-  personaSelectElem.disabled = false;
-  eiFeatureSelectElem.disabled = false;
+    // Rebuild EI selects with full lists
+    function hydrateEISelects() {
+      if (!personaSelectElem || !eiFeatureSelectElem) return;
+      personaSelectElem.innerHTML = "";
+      eiFeatureSelectElem.innerHTML = "";
+      personaSelectElem.disabled = false;
+      eiFeatureSelectElem.disabled = false;
 
-  const opt = (txt, val = "") => {
-    const o = document.createElement("option");
-    o.value = val; o.textContent = txt;
-    return o;
-  };
-  personaSelectElem.appendChild(opt("Select...", ""));
-  eiFeatureSelectElem.appendChild(opt("Select...", ""));
+      const opt = (txt, val = "") => {
+        const o = document.createElement("option");
+        o.value = val; o.textContent = txt;
+        return o;
+      };
+      personaSelectElem.appendChild(opt("Select...", ""));
+      eiFeatureSelectElem.appendChild(opt("Select...", ""));
 
-  // Personas
-  PERSONAS_ALL.forEach(p => {
-    const o = document.createElement("option");
-    const val = p.key || p.value || p.id || String(p).toLowerCase().replace(/\s+/g, "-");
-    const lab = p.label || p.name || p.title || String(p);
-    o.value = val; o.textContent = lab;
-    personaSelectElem.appendChild(o);
-  });
+      // Personas
+      PERSONAS_ALL.forEach(p => {
+        const o = document.createElement("option");
+        const val = p.key || p.value || p.id || String(p).toLowerCase().replace(/\s+/g, "-");
+        const lab = p.label || p.name || p.title || String(p);
+        o.value = val; o.textContent = lab;
+        personaSelectElem.appendChild(o);
+      });
 
-  // Features
-  FEATURES_ALL.forEach(f => {
-    const o = document.createElement("option");
-    const val = f.key || f.value || f.id || String(f).toLowerCase().replace(/\s+/g, "-");
-    const lab = f.label || f.name || f.title || String(f);
-    o.value = val; o.textContent = lab;
-    eiFeatureSelectElem.appendChild(o);
-  });
+      // Features
+      FEATURES_ALL.forEach(f => {
+        const o = document.createElement("option");
+        const val = f.key || f.value || f.id || String(f).toLowerCase().replace(/\s+/g, "-");
+        const lab = f.label || f.name || f.title || String(f);
+        o.value = val; o.textContent = lab;
+        eiFeatureSelectElem.appendChild(o);
+      });
 
-  // Debug aid
-  if (!FEATURES_ALL.length)
-    console.warn("EI features list is empty; check config keys (eiFeatures/features).");
-}
+      if (!FEATURES_ALL.length)
+        console.warn("EI features list is empty; check config keys (eiFeatures/features).");
+    }
 
-hydrateEISelects();
+    hydrateEISelects();
 
-// mount controls
-simControls.appendChild(lcLabel);      simControls.appendChild(modeSel);
-simControls.appendChild(coachLabel);   simControls.appendChild(coachSel);
-simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
-simControls.appendChild(hcpLabel);     simControls.appendChild(hcpSelect);
-simControls.appendChild(personaLabel); simControls.appendChild(personaSelect);
-simControls.appendChild(featureLabel); simControls.appendChild(featureSelect);
+    // mount controls
+    simControls.appendChild(lcLabel);      simControls.appendChild(modeSel);
+    simControls.appendChild(coachLabel);   simControls.appendChild(coachSel);
+    simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
+    simControls.appendChild(hcpLabel);     simControls.appendChild(hcpSelect);
+    simControls.appendChild(personaLabel); simControls.appendChild(personaSelect);
+    simControls.appendChild(featureLabel); simControls.appendChild(featureSelect);
 
-bar.appendChild(simControls);
-shell.appendChild(bar);
+    bar.appendChild(simControls);
+    shell.appendChild(bar);
     const meta = el("div", "scenario-meta");
     shell.appendChild(meta);
 
@@ -602,9 +608,9 @@ shell.appendChild(bar);
     }
 
     function populateEIOptions() {
-  // Delegate to the uncapped hydrator that uses cfg.eiProfiles / cfg.eiFeatures
-  hydrateEISelects();
-}
+      // explicit entry point kept for compatibility; uses full hydrate
+      hydrateEISelects();
+    }
 
     function applyModeVisibility() {
       const lc = modeSel.value;
@@ -637,6 +643,7 @@ shell.appendChild(bar);
         feedbackDisplayElem.innerHTML = "";
         populateDiseases();
       } else {
+        // emotional-assessment
         diseaseLabel.classList.add("hidden");
         diseaseSelect.classList.add("hidden");
         hcpLabel.classList.add("hidden");
