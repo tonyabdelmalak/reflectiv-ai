@@ -2,6 +2,13 @@
  * ReflectivAI Chat/Coach — drop-in (coach-v2, deterministic scoring v3)
  * Modes: emotional-assessment | product-knowledge | sales-simulation
  * EI mode adds Persona + EI Feature dropdowns and context-aware feedback.
+ * Updates in this build:
+ * - Navy banner with centered white dropdowns
+ * - Title: "ReflectivAI Coach"
+ * - Internal chat scrolling; page scroll unaffected
+ * - Coach Feedback stays visible (sticky) when on
+ * - Persistent "References" link, updated per disease or API refs
+ * - EI Mode exposes two additional features: Tone Calibration, Question Strategy
  */
 (function () {
   // ---------- safe bootstrapping ----------
@@ -58,7 +65,10 @@
     { key: "empathy",    label: "Empathy Rating" },
     { key: "stress",     label: "Stress Level Indicator" },
     { key: "listening",  label: "Active Listening Hints" },
-    { key: "validation", label: "Validation & Reframing Tips" }
+    { key: "validation", label: "Validation & Reframing Tips" },
+    // Added per request:
+    { key: "tone",       label: "Tone Calibration" },
+    { key: "questions",  label: "Question Strategy" }
   ];
 
   // ---------- utils ----------
@@ -286,6 +296,22 @@
         case "indifferent": feedback = "Validate neutrality. Reframe to meaningful benefits for a typical patient."; break;
         default:            feedback = "Validate perspective and reframe to collaboration and patient value.";
       }
+    } else if (featureKey === "tone") {
+      switch (personaKey) {
+        case "difficult":   feedback = "Lower intensity and slow cadence. Use neutral descriptors and avoid stacking claims."; break;
+        case "busy":        feedback = "Use crisp, confident tone. Deliver the outcome first, then one supporting fact."; break;
+        case "engaged":     feedback = "Warm, collaborative tone. Invite a quick co-decision."; break;
+        case "indifferent": feedback = "Neutral and patient-centered. Tie tone to one meaningful benefit."; break;
+        default:            feedback = "Match tone to HCP affect. Keep delivery simple and even.";
+      }
+    } else if (featureKey === "questions") {
+      switch (personaKey) {
+        case "difficult":   feedback = "Ask one choice-based question that reduces effort. Avoid multi-part prompts."; break;
+        case "busy":        feedback = "Ask a binary or scale question to move quickly."; break;
+        case "engaged":     feedback = "Use one open question to deepen context, then close with a next step."; break;
+        case "indifferent": feedback = "Ask a patient-impact question that surfaces relevance."; break;
+        default:            feedback = "Use one focused question aligned to the HCP’s context.";
+      }
     } else {
       feedback = "Select a valid EI feature for targeted guidance.";
     }
@@ -379,35 +405,50 @@ ${COMMON}`.trim();
     if (!style) {
       style = document.createElement("style");
       style.id = STYLE_ID;
-      style.textContent = `
-        #reflectiv-widget .reflectiv-chat{display:flex;flex-direction:column;gap:12px;border:3px solid #bfc7d4;border-radius:14px;background:#fff;overflow:hidden}
-        #reflectiv-widget .chat-toolbar{display:block;padding:14px 16px;background:#f6f8fb;border-bottom:1px solid #e1e6ef}
-        #reflectiv-widget .sim-controls{display:grid;grid-template-columns:220px 1fr 220px 1fr;gap:12px 16px;align-items:center}
-        #reflectiv-widget .sim-controls label{font-size:13px;font-weight:600;color:#2f3a4f;justify-self:end;white-space:nowrap}
-        #reflectiv-widget .sim-controls select{width:100%;height:38px;padding:6px 10px;font-size:14px;border:1px solid #cfd6df;border-radius:8px;background:#fff}
-        #reflectiv-widget .chat-messages{min-height:220px;height:auto;max-height:none;overflow:auto;padding:12px 14px;background:#fafbfd}
-        #reflectiv-widget .message{margin:8px 0;display:flex}
-        #reflectiv-widget .message.user{justify-content:flex-end}
-        #reflectiv-widget .message.assistant{justify-content:flex-start}
-        #reflectiv-widget .message .content{max-width:85%;line-height:1.45;font-size:14px;padding:10px 12px;border-radius:14px;border:1px solid #d6dbe3;color:#0f1522;background:#e9edf3}
-        #reflectiv-widget .message.user .content{background:#e0e0e0;color:#000}
-        #reflectiv-widget .chat-input{display:flex;gap:8px;padding:10px 12px;border-top:1px solid #e1e6ef;background:#fff}
-        #reflectiv-widget .chat-input textarea{flex:1;resize:none;min-height:44px;max-height:120px;padding:10px 12px;border:1px solid #cfd6df;border-radius:10px;outline:none}
-        #reflectiv-widget .chat-input .btn{min-width:86px;border:0;border-radius:999px;background:#2f3a4f;color:#fff;font-weight:600}
-        #reflectiv-widget .coach-section{margin-top:0;padding:12px 14px;border:1px solid #e1e6ef;border-radius:12px;background:#fffbe8}
-        #reflectiv-widget .coach-subs .pill{display:inline-block;padding:2px 8px;margin-right:6px;font-size:12px;background:#f1f3f7;border:1px solid #d6dbe3;border-radius:999px}
-        #reflectiv-widget .scenario-meta .meta-card{padding:10px 12px;background:#f7f9fc;border:1px solid #e1e6ef;border-radius:10px}
-        #reflectiv-widget .hidden{display:none!important}
-        @media (max-width:900px){#reflectiv-widget .sim-controls{grid-template-columns:1fr;gap:8px}#reflectiv-widget .sim-controls label{justify-self:start}}
-        @media (max-width:520px){#reflectiv-widget .chat-messages{height:46vh}}
-      `;
       document.head.appendChild(style);
     }
+
+    // CSS updated: navy banner, centered white controls, internal scroll, sticky feedback
+    style.textContent = `
+      #reflectiv-widget { max-width: 980px; margin: 0 auto; }
+      #reflectiv-widget .reflectiv-chat{display:flex;flex-direction:column;gap:12px;border:3px solid #bfc7d4;border-radius:14px;background:#fff;overflow:hidden}
+      /* Navy banner with centered, white controls */
+      #reflectiv-widget .chat-toolbar{display:block;padding:14px 16px;background:#0f2747;color:#fff;border-bottom:1px solid #20324a}
+      #reflectiv-widget .coach-title{font-weight:800;letter-spacing:.2px;text-align:center;margin:0 0 8px}
+      #reflectiv-widget .sim-controls{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px}
+      #reflectiv-widget .sim-controls label{font-size:13px;font-weight:600;color:#fff;white-space:nowrap}
+      #reflectiv-widget .sim-controls select{height:38px;padding:6px 10px;font-size:14px;border:1px solid rgba(255,255,255,.35);border-radius:999px;background:transparent;color:#fff}
+      #reflectiv-widget .sim-controls select option{color:#000;background:#fff}
+      #reflectiv-widget .refs-link{color:#fff;text-decoration:underline;text-underline-offset:2px;font-weight:700}
+
+      /* Chat scrolls internally; coach feedback stays visible (sticky) */
+      #reflectiv-widget .chat-messages{min-height:220px;max-height:calc(78vh - 260px);overflow:auto;padding:12px 14px;background:#fafbfd}
+      #reflectiv-widget .coach-section{position:sticky;top:14px;margin-top:0;padding:12px 14px;border:1px solid #e1e6ef;border-radius:12px;background:#fffbe8;max-height:calc(78vh - 56px);overflow:auto}
+      #reflectiv-widget .coach-subs .pill{display:inline-block;padding:2px 8px;margin-right:6px;font-size:12px;background:#f1f3f7;border:1px solid #d6dbe3;border-radius:999px}
+
+      #reflectiv-widget .message{margin:8px 0;display:flex}
+      #reflectiv-widget .message.user{justify-content:flex-end}
+      #reflectiv-widget .message.assistant{justify-content:flex-start}
+      #reflectiv-widget .message .content{max-width:85%;line-height:1.45;font-size:14px;padding:10px 12px;border-radius:14px;border:1px solid #d6dbe3;color:#0f1522;background:#e9edf3}
+      #reflectiv-widget .message.user .content{background:#e0e0e0;color:#000}
+
+      #reflectiv-widget .chat-input{display:flex;gap:8px;padding:10px 12px;border-top:1px solid #e1e6ef;background:#fff}
+      #reflectiv-widget .chat-input textarea{flex:1;resize:none;min-height:44px;max-height:120px;padding:10px 12px;border:1px solid #cfd6df;border-radius:10px;outline:none}
+      #reflectiv-widget .chat-input .btn{min-width:86px;border:0;border-radius:999px;background:#2f3a4f;color:#fff;font-weight:600}
+
+      #reflectiv-widget .hidden{display:none!important}
+      @media (max-width:900px){#reflectiv-widget .sim-controls{flex-direction:column}}
+      @media (max-width:520px){#reflectiv-widget .chat-messages{max-height:46vh}}
+    `;
 
     const shell = el("div", "reflectiv-chat");
 
     const bar = el("div", "chat-toolbar");
     const simControls = el("div","sim-controls");
+
+    // Banner title per request
+    const title = el("div","coach-title","ReflectivAI Coach");
+    bar.appendChild(title);
 
     const lcLabel = el("label", "", "Learning Center");
     lcLabel.htmlFor = "cw-mode";
@@ -438,94 +479,109 @@ ${COMMON}`.trim();
     const hcpSelect = el("select"); hcpSelect.id="cw-hcp";
 
     // EI Persona/EI Feature
-const personaLabel = el("label", "", "HCP Persona");
-personaLabel.htmlFor = "cw-ei-persona";
-const personaSelect = el("select"); personaSelect.id = "cw-ei-persona";
-personaSelectElem = personaSelect;
-personaLabelElem = personaLabel;
-personaSelect.addEventListener("change", generateFeedback);
+    const personaLabel = el("label", "", "HCP Persona");
+    personaLabel.htmlFor = "cw-ei-persona";
+    const personaSelect = el("select"); personaSelect.id = "cw-ei-persona";
+    personaSelectElem = personaSelect;
+    personaLabelElem = personaLabel;
+    personaSelect.addEventListener("change", generateFeedback);
 
-const featureLabel = el("label", "", "EI Feature");
-featureLabel.htmlFor = "cw-ei-feature";
-const featureSelect = el("select"); featureSelect.id = "cw-ei-feature";
-eiFeatureSelectElem = featureSelect;
-featureLabelElem = featureLabel;
-featureSelect.addEventListener("change", generateFeedback);
+    const featureLabel = el("label", "", "EI Feature");
+    featureLabel.htmlFor = "cw-ei-feature";
+    const featureSelect = el("select"); featureSelect.id = "cw-ei-feature";
+    eiFeatureSelectElem = featureSelect;
+    featureLabelElem = featureLabel;
+    featureSelect.addEventListener("change", generateFeedback);
 
-// ---------- EI option sources (no demo caps) ----------
-const PERSONAS_ALL =
-  Array.isArray(cfg?.eiProfiles) && cfg.eiProfiles.length
-    ? cfg.eiProfiles
-    : DEFAULT_PERSONAS;
+    // ---------- EI option sources (no demo caps) ----------
+    const PERSONAS_ALL =
+      Array.isArray(cfg?.eiProfiles) && cfg.eiProfiles.length
+        ? cfg.eiProfiles
+        : DEFAULT_PERSONAS;
 
-// Try multiple keys; normalize strings -> {key,label}
-const FEATURES_ALL_RAW =
-  (Array.isArray(cfg?.eiFeatures) && cfg.eiFeatures.length && cfg.eiFeatures) ||
-  (Array.isArray(cfg?.features) && cfg.features.length && cfg.features) ||
-  DEFAULT_EI_FEATURES;
+    // Try multiple keys; normalize strings -> {key,label}
+    const FEATURES_ALL_RAW =
+      (Array.isArray(cfg?.eiFeatures) && cfg.eiFeatures.length && cfg.eiFeatures) ||
+      (Array.isArray(cfg?.features) && cfg.features.length && cfg.features) ||
+      DEFAULT_EI_FEATURES;
 
-const FEATURES_ALL = FEATURES_ALL_RAW.map(f =>
-  typeof f === "string"
-    ? { key: f.toLowerCase().replace(/\s+/g, "-"), label: f }
-    : f
-);
+    const FEATURES_ALL = FEATURES_ALL_RAW.map(f =>
+      typeof f === "string"
+        ? { key: f.toLowerCase().replace(/\s+/g, "-"), label: f }
+        : f
+    );
 
-// Rebuild EI selects with full lists
-function hydrateEISelects() {
-  if (!personaSelectElem || !eiFeatureSelectElem) return;
-  personaSelectElem.innerHTML = "";
-  eiFeatureSelectElem.innerHTML = "";
-  personaSelectElem.disabled = false;
-  eiFeatureSelectElem.disabled = false;
+    // Rebuild EI selects with full lists
+    function hydrateEISelects() {
+      if (!personaSelectElem || !eiFeatureSelectElem) return;
+      personaSelectElem.innerHTML = "";
+      eiFeatureSelectElem.innerHTML = "";
+      personaSelectElem.disabled = false;
+      eiFeatureSelectElem.disabled = false;
 
-  const opt = (txt, val = "") => {
-    const o = document.createElement("option");
-    o.value = val; o.textContent = txt;
-    return o;
-  };
-  personaSelectElem.appendChild(opt("Select...", ""));
-  eiFeatureSelectElem.appendChild(opt("Select...", ""));
+      const opt = (txt, val = "") => {
+        const o = document.createElement("option");
+        o.value = val; o.textContent = txt;
+        return o;
+      };
+      personaSelectElem.appendChild(opt("Select...", ""));
+      eiFeatureSelectElem.appendChild(opt("Select...", ""));
 
-  // Personas
-  PERSONAS_ALL.forEach(p => {
-    const o = document.createElement("option");
-    const val = p.key || p.value || p.id || String(p).toLowerCase().replace(/\s+/g, "-");
-    const lab = p.label || p.name || p.title || String(p);
-    o.value = val; o.textContent = lab;
-    personaSelectElem.appendChild(o);
-  });
+      // Personas
+      PERSONAS_ALL.forEach(p => {
+        const o = document.createElement("option");
+        const val = p.key || p.value || p.id || String(p).toLowerCase().replace(/\s+/g, "-");
+        const lab = p.label || p.name || p.title || String(p);
+        o.value = val; o.textContent = lab;
+        personaSelectElem.appendChild(o);
+      });
 
-  // Features
-  FEATURES_ALL.forEach(f => {
-    const o = document.createElement("option");
-    const val = f.key || f.value || f.id || String(f).toLowerCase().replace(/\s+/g, "-");
-    const lab = f.label || f.name || f.title || String(f);
-    o.value = val; o.textContent = lab;
-    eiFeatureSelectElem.appendChild(o);
-  });
+      // Features
+      FEATURES_ALL.forEach(f => {
+        const o = document.createElement("option");
+        const val = f.key || f.value || f.id || String(f).toLowerCase().replace(/\s+/g, "-");
+        const lab = f.label || f.name || f.title || String(f);
+        o.value = val; o.textContent = lab;
+        eiFeatureSelectElem.appendChild(o);
+      });
 
-  // Debug aid
-  if (!FEATURES_ALL.length)
-    console.warn("EI features list is empty; check config keys (eiFeatures/features).");
-}
+      // Debug aid
+      if (!FEATURES_ALL.length)
+        console.warn("EI features list is empty; check config keys (eiFeatures/features).");
+    }
 
-hydrateEISelects();
+    hydrateEISelects();
 
-// mount controls
-simControls.appendChild(lcLabel);      simControls.appendChild(modeSel);
-simControls.appendChild(coachLabel);   simControls.appendChild(coachSel);
-simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
-simControls.appendChild(hcpLabel);     simControls.appendChild(hcpSelect);
-simControls.appendChild(personaLabel); simControls.appendChild(personaSelect);
-simControls.appendChild(featureLabel); simControls.appendChild(featureSelect);
+    // mount controls
+    simControls.appendChild(lcLabel);      simControls.appendChild(modeSel);
+    simControls.appendChild(coachLabel);   simControls.appendChild(coachSel);
+    simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
+    simControls.appendChild(hcpLabel);     simControls.appendChild(hcpSelect);
+    simControls.appendChild(personaLabel); simControls.appendChild(personaSelect);
+    simControls.appendChild(featureLabel); simControls.appendChild(featureSelect);
 
-bar.appendChild(simControls);
-shell.appendChild(bar);
+    // Persistent References link
+    const refsLink = el("a","refs-link","References");
+    refsLink.target = "_blank"; refsLink.rel = "noopener";
+    refsLink.style.marginLeft = "8px";
+    simControls.appendChild(refsLink);
+
+    const REF_MAP = {
+      "HIV":"https://clinicalinfo.hiv.gov/en/guidelines",
+      "Oncology":"https://www.nccn.org/guidelines/guidelines-detail",
+      "Vaccines":"https://www.cdc.gov/vaccines/hcp/acip-recs/index.html",
+      "Cardiology":"https://www.ahajournals.org/",
+      "Hepatitis B":"https://www.cdc.gov/hepatitis/hbv/index.htm",
+      "Pulmonology":"https://ginasthma.org/"
+    };
+    function updateRefs(){ refsLink.href = REF_MAP[diseaseSelect.value] || "#"; }
+    diseaseSelect.addEventListener("change", updateRefs);
+    setTimeout(updateRefs,0);
+
+    bar.appendChild(simControls);
     const meta = el("div", "scenario-meta");
-    shell.appendChild(meta);
 
     const msgs = el("div", "chat-messages");
-    shell.appendChild(msgs);
 
     const inp = el("div", "chat-input");
     const ta = el("textarea"); ta.placeholder = "Type your message…";
@@ -533,13 +589,9 @@ shell.appendChild(bar);
     const send = el("button", "btn", "Send");
     send.onclick = () => { const t = ta.value.trim(); if (!t) return; sendMessage(t); ta.value = ""; };
     inp.appendChild(ta); inp.appendChild(send);
-    shell.appendChild(inp);
-
-    mount.appendChild(shell);
 
     const coach = el("div", "coach-section");
     coach.innerHTML = `<h3>Coach Feedback</h3><div class="coach-body muted">Awaiting the first assistant reply…</div>`;
-    shell.appendChild(coach);
 
     feedbackDisplayElem = el("div", "ei-feedback");
     feedbackDisplayElem.id = "feedback-display";
@@ -548,6 +600,17 @@ shell.appendChild(bar);
     feedbackDisplayElem.style.borderTop = "1px solid #e1e6ef";
     feedbackDisplayElem.style.fontSize = "14px";
     coach.appendChild(feedbackDisplayElem);
+
+    // Compose shell order: toolbar, meta, messages, input, coach feedback
+    const shell = document.createDocumentFragment();
+    shell.appendChild(bar);
+    shell.appendChild(meta);
+    shell.appendChild(msgs);
+    shell.appendChild(inp);
+    shell.appendChild(coach);
+    const container = el("div","reflectiv-chat");
+    container.appendChild(shell);
+    mount.appendChild(container);
 
     // helpers
     function getDiseaseStates() {
@@ -602,9 +665,9 @@ shell.appendChild(bar);
     }
 
     function populateEIOptions() {
-  // Delegate to the uncapped hydrator that uses cfg.eiProfiles / cfg.eiFeatures
-  hydrateEISelects();
-}
+      // Delegate to the uncapped hydrator that uses cfg.eiProfiles / cfg.eiFeatures
+      hydrateEISelects();
+    }
 
     function applyModeVisibility() {
       const lc = modeSel.value;
@@ -683,7 +746,7 @@ shell.appendChild(bar);
       const sc = scenariosById.get(currentScenarioId);
       if (!sc || !currentScenarioId || currentMode !== "sales-simulation") { meta.innerHTML = ""; return; }
       meta.innerHTML = `
-        <div class="meta-card">
+        <div class="meta-card" style="padding:10px 12px;background:#f7f9fc;border:1px solid #e1e6ef;border-radius:10px">
           <div><strong>Therapeutic Area:</strong> ${esc(sc.therapeuticArea || sc.diseaseState || "—")}</div>
           <div><strong>HCP Role:</strong> ${esc(sc.hcpRole || "—")}</div>
           <div><strong>Background:</strong> ${esc(sc.background || "—")}</div>
@@ -692,7 +755,7 @@ shell.appendChild(bar);
     }
 
     function renderMessages() {
-      const msgsEl = shell.querySelector(".chat-messages");
+      const msgsEl = mount.querySelector(".chat-messages");
       msgsEl.innerHTML = "";
       for (const m of conversation) {
         const row = el("div", `message ${m.role}`);
@@ -743,9 +806,9 @@ shell.appendChild(bar);
         </ul>`;
     }
 
-    shell._renderMessages = renderMessages;
-    shell._renderCoach = renderCoach;
-    shell._renderMeta = renderMeta;
+    container._renderMessages = renderMessages;
+    container._renderCoach = renderCoach;
+    container._renderMeta = renderMeta;
 
     // Populate dropdowns and apply mode
     populateDiseases();
@@ -822,6 +885,17 @@ shell.appendChild(bar);
       renderMessages(); renderCoach();
 
       if (currentMode === "emotional-assessment") generateFeedback();
+
+      // Sync top References link with first API ref if present
+      try {
+        const last = conversation[conversation.length - 1];
+        const fb = last && last._coach;
+        const refs = fb && (fb.refs || fb.references || []);
+        if (refs && refs[0] && refs[0].url) {
+          const link = document.querySelector("#reflectiv-widget .refs-link");
+          if (link) link.href = refs[0].url;
+        }
+      } catch {}
 
       if (cfg && cfg.analyticsEndpoint) {
         fetch(cfg.analyticsEndpoint, {
