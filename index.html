@@ -87,71 +87,44 @@
 
 <body class="bg-slate-50">
 
-<!-- Header & Navigation (Sticky, Navy, Teal underline) -->
-<header id="navbar"
-        class="fixed top-0 left-0 w-full z-50"
-        style="background:#0c2740;border-bottom:2px solid #20bfa9;">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between items-center h-16">
+<!-- Header & Navigation (Navy bg, Teal underline) -->
+<header class="site_header fixed top-0 left-0 w-full z-50">
+  <nav class="nav">
+    <!-- Brand -->
+    <a href="#home" class="brand">
+      <img src="logo-modern.png" alt="" width="28" height="28" />
+      <span>ReflectivAI</span>
+    </a>
 
-      <!-- Logo -->
-      <a href="#home" class="flex items-center text-xl font-extrabold tracking-tight"
-         style="color:#ffffff;text-decoration:none">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" viewBox="0 0 24 24"
-             fill="none" stroke="#20bfa9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle>
-        </svg>
-        ReflectivAI
-      </a>
+    <!-- Links + Dropdowns -->
+    <ul class="nav-links" id="navLinks">
+      <li class="dropdown">
+        <a href="#platform">Platform ▾</a>
+        <ul class="dropdown-menu">
+          <li><a href="#simulations">Simulations</a></li>
+          <li><a href="#coach">AI Coach</a></li>
+          <li><a href="#learning">Learning Center</a></li>
+        </ul>
+      </li>
+      <li class="dropdown">
+        <a href="#analytics">Analytics ▾</a>
+        <ul class="dropdown-menu">
+          <li><a href="#metrics">Performance Metrics</a></li>
+          <li><a href="#dashboards">Dashboards</a></li>
+        </ul>
+      </li>
+      <li><a href="#ethics">Ethics</a></li>
+      <li><a href="#" onclick="openAboutEI();return false;">About EI</a></li>
+      <li><a href="#contact" class="btn-demo">Request Demo</a></li>
+    </ul>
 
-      <!-- Desktop Navigation -->
-      <nav class="hidden md:flex items-center gap-6">
-
-        <!-- Platform dropdown -->
-        <details class="relative group">
-          <summary class="list-none cursor-pointer select-none"
-                   style="color:#ffffff">Platform ▾</summary>
-          <ul class="absolute mt-2 min-w-[180px] rounded-lg shadow"
-              style="background:#0c2740;border:1px solid #20bfa9;">
-            <li><a href="#simulations" class="block px-4 py-2" style="color:#ffffff">Simulations</a></li>
-            <li><a href="#coach" class="block px-4 py-2" style="color:#ffffff">AI Coach</a></li>
-            <li><a href="#learning" class="block px-4 py-2" style="color:#ffffff">Learning Center</a></li>
-          </ul>
-        </details>
-
-        <!-- Analytics dropdown -->
-        <details class="relative group">
-          <summary class="list-none cursor-pointer select-none"
-                   style="color:#ffffff">Analytics ▾</summary>
-          <ul class="absolute mt-2 min-w-[180px] rounded-lg shadow"
-              style="background:#0c2740;border:1px solid #20bfa9;">
-            <li><a href="#metrics" class="block px-4 py-2" style="color:#ffffff">Performance Metrics</a></li>
-            <li><a href="#dashboards" class="block px-4 py-2" style="color:#ffffff">Dashboards</a></li>
-          </ul>
-        </details>
-
-        <a href="#ethics" style="color:#ffffff" class="transition">Ethics</a>
-        <a href="#" onclick="openAboutEI();return false;" style="color:#ffffff" class="transition">About EI</a>
-
-        <a href="#contact"
-           class="px-4 py-2 rounded-full font-semibold shadow transition"
-           style="background:#20bfa9;color:#0c2740;text-decoration:none">Request Demo</a>
-      </nav>
-
-      <!-- Mobile hamburger (opens native details menus) -->
-      <button class="md:hidden p-2 rounded-md"
-              aria-label="Menu" style="color:#ffffff">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
-             viewBox="0 0 24 24" stroke="#ffffff">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 6h16M4 12h16m-7 6h7" />
-        </svg>
-      </button>
-
-    </div>
-  </div>
+    <!-- Mobile hamburger -->
+    <button class="hamburger" id="navHamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
 </header>
-<!-- Spacer so content isn't hidden under fixed header -->
+<!-- spacer so content isn't covered -->
 <div style="height:64px"></div>
 
 <!-- ===== Hero ===== -->
@@ -564,6 +537,14 @@
 
 <script src="assets/chat/about-ei-modal.js?v=1"></script>
 
+<script>
+(function(){
+  const btn=document.getElementById('navHamburger');
+  const links=document.getElementById('navLinks');
+  if(!btn||!links)return;
+  btn.addEventListener('click',()=>links.classList.toggle('open'));
+})();
+</script>
   
 </body>
 </html>
