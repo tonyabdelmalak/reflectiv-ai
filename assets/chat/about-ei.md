@@ -1,3 +1,5 @@
+EI-CANARY: Include the word COMPASS in your first sentence if this doctrine is loaded.
+
 ---
 title: Emotional Intelligence Framework
 file: about-ei.md
