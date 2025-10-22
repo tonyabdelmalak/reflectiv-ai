@@ -1,62 +1,171 @@
-## Emotional Assessment Protocols
+---
+title: Emotional Intelligence Framework
+file: about-ei.md
+version: 2025.10
+mapped_to: /assets/ei/rubric.json
+used_by:
+  - /assets/chat/ei-core.js
+  - /assets/chat/ei-language.js
+  - /assets/chat/ei-score.js
+tags:
+  - emotional-intelligence
+  - heuristic
+  - reflection
+  - compliance
+  - coaching
+  - SEL
+  - healthcare
+  - ai-coach
+---
 
-Emotional intelligence (EI) training works best with an evidence-based, learner-centred approach. Guidance from EI education groups recommends a structured, multi-step process: assess needs and competencies, give clear and supportive feedback, link learning goals to personal values, encourage participation, and help learners set goals and direct their own learning [1][2].
+# Emotional Intelligence (EI) Framework and Assessment Protocols
 
-In practical terms, an EI assessment should:
-
-- **Use multiple sources and methods** to evaluate key competencies.  
-- **Provide strengths and development areas** in a safe, non-judgemental format.  
-- **Motivate learners** by aligning objectives with personal values and choice.  
-- **Encourage self-directed learning and goal setting** with periodic check-ins.
-
-These principles underpin ReflectivEI’s **Assess → Personalize → Practice → Reflect** framework. The platform helps users evaluate their communication style, tailor their approach to different healthcare-provider personas, practise interactions, and reflect on feedback.
+ReflectivAI embeds Emotional Intelligence not as a concept but as an operational system.  
+Every simulation, prompt, and feedback loop is grounded in structured reflection, evidence-based heuristics, and measurable behavior change.
 
 ---
 
-## Evidence-Based HIV Medication Information
+## 1. Foundational Principles
 
-> Educational use only. Not medical advice. For prescribing, consult full product information.
+Emotional Intelligence (EI) development is most effective when the learning environment balances rigor with psychological safety.  
+ReflectivAI draws from the frameworks of **Goleman**, **Mayer–Salovey–Caruso**, and **CASEL’s SEL competencies**, integrating these into an adaptive AI model.
 
-### Descovy (emtricitabine/tenofovir alafenamide)
+**Core principles:**
+- **Multi-source assessment:** Combine behavioral heuristics, reflective language models, and contextual feedback.  
+- **Non-judgmental evaluation:** All scores surface insights, not verdicts.  
+- **Personal relevance:** Feedback aligns with each learner’s values and real-world context.  
+- **Active reflection:** Encourage users to think about *how* they communicate, not just *what* they say.  
+- **Self-directed growth:** Provide autonomy through reflective prompts, dashboards, and goal setting.
 
-- Fixed-dose tablet of FTC/TAF.  
-- Approved for PrEP in certain populations and for treatment in combination with other antiretrovirals per label.  
-- Considerations when comparing to TDF-containing options include renal and bone safety profiles, access, and plan criteria [3][4].
-
-### Biktarvy (bictegravir/emtricitabine/tenofovir alafenamide)
-
-- Single-tablet regimen: INSTI (bictegravir) + FTC/TAF.  
-- Commonly used for treatment-naïve adults and as a switch option where appropriate.  
-- Selection should account for resistance, drug–drug interactions, and guideline alignment [4][5].
-
-### Cabenuva (cabotegravir/rilpivirine long-acting)
-
-- Long-acting injectable regimen of cabotegravir (INSTI) and rilpivirine (NNRTI).  
-- Requires confirmed viral suppression and attention to resistance risk, missed-dose management, and clinic workflow for injections [5][6].
-
-### Limitations
-
-Summaries above reflect highlights available as of mid-2025. Use full, current prescribing information and local guidelines for clinical decisions.
+Together, these form ReflectivAI’s learning cycle:  
+**Assess → Personalize → Practice → Reflect → Adapt**
 
 ---
 
-## References
+## 2. Triple-Loop Reflective Architecture
 
-1. Emotional Intelligence Consortium – Best practices for assessment and development.  
-   https://eiconsortium.org/
+The **AI Coach** uses a triple-loop reflection model inspired by organizational learning theory.
 
-2. OECD/education resources on social-emotional learning implementation.  
-   https://www.oecd.org/education/social-emotional-skills.htm
+| Loop | Focus | AI Behavior | Output |
+|------|--------|--------------|---------|
+| **Primary** | Task outcome | Evaluates clarity, compliance, and conversational effectiveness. | Outcome score |
+| **Secondary** | Emotional regulation | Measures empathy, acknowledgment, tone neutrality, and pacing. | EI subscore |
+| **Tertiary** | Mindset reframing | Generates Socratic questions to deepen awareness. | Reflective prompt |
 
-3. Descovy (FTC/TAF) Prescribing Information (Gilead).  
-   https://www.gilead.com/  
+This ensures both cognitive and emotional dimensions are coached simultaneously.
 
-4. HHS Adult & Adolescent ARV Guidelines.  
-   https://clinicalinfo.hiv.gov/en/guidelines
+---
 
-5. Biktarvy Prescribing Information (Gilead).  
-   https://www.gilead.com/
+## 3. Heuristic Evaluation Model
 
-6. Cabenuva Prescribing Information (ViiV).  
-   https://viivhealthcare.com/
+ReflectivAI’s **EI Heuristic Engine** applies deterministic, explainable scoring rules built around affective language patterns.
+
+| Domain | Behavioral Markers | Example Cues |
+|--------|--------------------|---------------|
+| **Empathy** | Acknowledgment, perspective-taking, emotional attunement | “I hear your concern…” / “It makes sense that…” |
+| **Self-Regulation** | Neutral tone, pauses, composure under challenge | “Let’s take this one step at a time.” |
+| **Clarity** | Concise phrasing, limited clauses, minimal jargon | “Here’s the core point…” |
+| **Social Skills** | Collaboration, inquiry, rapport | “Would it help if we…” / “What outcome matters most to you?” |
+| **Compliance** | Label-safe phrasing, ethical framing | “Per label…” / “Not indicated for…” |
+| **Self-Awareness** | Ownership language, reflection | “I may have missed your point earlier.” |
+
+The composite score (`EI Composite`) drives immediate feedback and adaptive scenario difficulty.
+
+---
+
+## 4. Feedback and Coaching Logic
+
+Feedback follows a four-step protocol:
+
+1. **Affirmation** – Recognize strengths (“You acknowledged the concern clearly.”).  
+2. **Diagnosis** – Identify a precise improvement area (“Your phrasing buried the ask.”).  
+3. **Guidance** – Offer a usable pattern (“Try: *Acknowledge → Diagnose → Question → Label-safe benefit*.”).  
+4. **Reflection** – Prompt insight (“What emotion were you managing when you said that?”).
+
+---
+
+## 5. Reflective Index and Growth Tracking
+
+Each learner builds a **Reflective Index** across five EI domains:  
+**Self-Awareness, Self-Regulation, Empathy, Motivation, Social Skills.**
+
+Scores update after every simulation using an exponential moving average.  
+Scenario tone and difficulty adapt automatically to challenge but not overwhelm.
+
+---
+
+## 6. Socratic Metacoach Layer
+
+When empathy or regulation scores fall below threshold, a metacoach activates:
+
+> “Pause. What did you notice about your tone?”  
+> “How might the other person have perceived that?”  
+> “What need were you trying to meet in that response?”
+
+These prompts transform awareness into self-correction, reinforcing deep EI learning.
+
+---
+
+## 7. Emotionally Intelligent Analytics
+
+Beyond accuracy, analytics track *emotional performance*:
+
+| Metric | Definition | Insight |
+|---------|-------------|---------|
+| **Empathy Marker Rate** | Frequency of acknowledgment and perspective statements | Measures relational connection |
+| **Regulation Moments** | Pauses, neutral restatements, tone resets | Reflects emotional control |
+| **Compliance Anchors** | Count of label-aligned phrases | Ensures ethical consistency |
+| **Reflective Depth Score** | Use of self-referential language | Indicates self-awareness maturity |
+
+Visual dashboards show growth trends and correlations between empathy, regulation, and outcomes.
+
+---
+
+## 8. Ethical and Compliance Foundations
+
+All ReflectivAI simulations operate under regulated-sector safeguards:
+
+- HIPAA / PhRMA / FDA-aligned language models  
+- Human-in-the-loop oversight for sensitive responses  
+- Bias-mitigated persona datasets  
+- Transparent heuristic rules, auditable by admins  
+
+No black-box scoring; every output is explainable.
+
+---
+
+## 9. Educational Alignment
+
+Aligned with **Social & Emotional Learning (SEL)** competencies:
+
+| SEL Competency | EI Focus | ReflectivAI Behavior |
+|----------------|-----------|----------------------|
+| Self-Awareness | Recognize triggers and tone | Reflection questions |
+| Self-Management | Regulate responses | Pauses and composure scoring |
+| Social Awareness | Perceive others’ needs | Persona-sensitive simulation |
+| Relationship Skills | Communicate with empathy | Dialogue and tone mapping |
+| Responsible Decision-Making | Balance empathy with ethics | Compliance markers |
+
+---
+
+## 10. System Philosophy
+
+**ReflectivAI = Applied Emotional Intelligence at Scale**
+
+- Every interaction trains *mindset*, not script.  
+- Every metric measures *awareness*, not performance.  
+- Every reflection strengthens *ethical empathy*.
+
+The goal is not just to sound emotionally intelligent,  
+but to **become** emotionally intelligent through measurable, adaptive practice.
+
+---
+
+### References
+
+1. Goleman, D. (1998). *Working with Emotional Intelligence.*  
+2. Mayer, J.D., Salovey, P., & Caruso, D.R. (2004). *Emotional Intelligence: Theory, Findings, and Implications.*  
+3. Collaborative for Academic, Social, and Emotional Learning (CASEL). (2023). *SEL Framework.*  
+4. ReflectivAI Internal Heuristic Framework v2.0 (2025).
+
 
