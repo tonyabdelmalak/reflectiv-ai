@@ -5,47 +5,89 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0c2740">
   <title>ReflectivAI – AI Sales Enablement for Life Sciences</title>
-
   <link rel="icon" href="assets/favicon.ico">
 
-  <!-- Tailwind for the Highspot-aligned mockup utilities -->
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
+
+  <!-- Type + quick utilities -->
   <style>
-    /* Tailwind theme tweaks used by the mockup */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
-    body{font-family:'Inter',system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+    :root{
+      --navy:#0f2747; --navy-2:#0b3954; --teal:#20bfa9; --ink:#1e2a3a; --soft:#eef4fa;
+      --card:#ffffff; --line:#d9e3ef; --shadow:0 12px 28px rgba(12,39,64,.14);
+    }
+    html{scroll-behavior:smooth}
+    body{font-family:'Inter',system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:#f8fafc;color:#0f172a}
     .primary-dark{background-color:#1E3A8A}
     .text-primary-dark{color:#1E3A8A}
     .accent-teal{background-color:#06B6D4}
     .text-accent-teal{color:#06B6D4}
+    .section-separator{width:80px;height:4px;margin-bottom:24px;border-radius:9999px;background-color:#06B6D4}
     .sticky-header{transition:all .3s ease-in-out}
-    .section-separator{content:"";display:block;width:80px;height:4px;margin-bottom:24px;border-radius:9999px;background-color:#06B6D4}
     .grid-mobile-center{text-align:center}
     @media (min-width:768px){.grid-mobile-center{text-align:left}}
+
+    /* -------- Modal system (self-contained) -------- */
+    .modal{position:fixed;inset:0;z-index:10000;display:none}
+    .modal.open{display:block}
+    .modal::before{content:"";position:absolute;inset:0;background:rgba(0,0,0,.4)}
+    .modal-box{position:relative;background:#fff;border-radius:16px;box-shadow:var(--shadow);width:min(920px,92vw);margin:8vh auto 0;overflow:hidden}
+    .modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #e5e7eb}
+    .modal-title{font-weight:800;color:#0f2747}
+    .modal-close{border:0;background:transparent;padding:6px 10px;border-radius:10px;color:#475569;cursor:pointer}
+    .modal-close:hover{background:#f1f5f9}
+
+    /* -------- Coach container shell -------- */
+    #coachBody{padding:0;background:#fff}
+    #reflectiv-widget{min-height:520px}
+
+    /* -------- Alora FAB + panel (self-contained) -------- */
+    #aloraFab{position:fixed;right:20px;bottom:20px;width:56px;height:56px;border-radius:999px;border:none;background:#0f2747;color:#fff;box-shadow:0 12px 24px rgba(15,39,71,.25);cursor:pointer;z-index:10001}
+    #aloraFab svg{width:28px;height:28px}
+    .alora{position:fixed;right:20px;bottom:92px;width:min(380px,92vw);max-height:min(72vh,820px);display:flex;flex-direction:column;border:1px solid #e5e7eb;border-radius:16px;background:#fff;box-shadow:var(--shadow);overflow:hidden;opacity:0;pointer-events:none;transform:translateY(8px);transition:.18s ease-out;z-index:10001}
+    .alora.open{opacity:1;pointer-events:auto;transform:translateY(0)}
+    .alora-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #e5e7eb;background:#0f2747;color:#fff}
+    .alora-title{font-weight:700}
+    .alora-close{border:0;background:transparent;color:#fff;font-size:18px;cursor:pointer;padding:4px 8px;border-radius:8px}
+    .alora-close:hover{background:rgba(255,255,255,.12)}
+    .alora-body{padding:12px;height:340px;overflow:auto;background:#fafbff}
+    .alora-msg{margin:8px 0;padding:10px 12px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;font-size:14px}
+    .alora-msg.user{margin-left:auto;background:#0f2747;color:#fff;border-color:#0f2747}
+    .alora-typing{font-size:12px;color:#475569;margin:6px 2px}
+    .alora-input{display:flex;gap:8px;padding:10px;border-top:1px solid #e5e7eb;background:#fff}
+    .alora-input input{flex:1;border:1px solid #e5e7eb;border-radius:999px;padding:10px 14px;font-size:14px}
+    .alora-input .btn.primary{border:0;border-radius:999px;padding:10px 14px;background:#20bfa9;color:#083344;cursor:pointer;font-weight:700}
+    .alora-input .btn.primary:hover{filter:brightness(.95)}
+    /* chips injected by JS */
+    .alora-suggest{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 0}
+    .alora-chip{border:1px solid #0f2747;border-radius:999px;padding:6px 10px;background:#fff;color:#0f2747;font:600 12px/1.1 Inter,system-ui;cursor:pointer}
+    .alora-chip:hover{background:#eef4fa}
   </style>
 
-  <!-- Site CSS (kept) -->
+  <!-- Site CSS (keep external if you want broader styles) -->
   <link rel="stylesheet" href="styles.css?v=20251021B">
 
-  <!-- Coach styles + pinned JS -->
-  <link rel="stylesheet" href="widget.css?v=20251021-3">
+  <!-- Coach styles (keep if you rely on widget.css visuals) -->
+  <link rel="stylesheet" href="widget.css?v=20251021-4">
+
+  <!-- Endpoints -->
   <script>
     window.WORKER_URL = 'https://my-chat-agent-v2.tonyabdelmalak.workers.dev';
     window.COACH_ENDPOINT = window.WORKER_URL + '/chat';
     window.ALORA_ENDPOINT = window.WORKER_URL + '/chat';
   </script>
 
-  <!-- Cache-busted JS -->
-  <script defer src="widget.js?v=20251021-3"></script>
+  <!-- Coach script -->
+  <script defer src="widget.js?v=20251021-4"></script>
 
-  <!-- Ensure Alora stays on top -->
+  <!-- Ensure Alora sits on top -->
   <style>#aloraFab{z-index:10001;pointer-events:auto}.alora{z-index:10001}</style>
 </head>
 
 <body class="bg-slate-50">
 
-<!-- ===== Header (Tailwind) ===== -->
+<!-- ===== Header ===== -->
 <header id="navbar" class="sticky-header fixed top-0 left-0 w-full z-50 bg-white shadow-md">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between items-center h-16">
@@ -67,7 +109,7 @@
 </header>
 <div class="pt-16" id="home"></div>
 
-<!-- ===== Hero (Tailwind) ===== -->
+<!-- ===== Hero ===== -->
 <section class="py-16 md:py-24 bg-white">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12 items-center">
     <div class="grid-mobile-center">
@@ -76,7 +118,6 @@
       <p class="text-lg sm:text-xl text-gray-600 mb-8">ReflectivAI blends clinical accuracy, emotional intelligence, and adaptive AI coaching so every HCP conversation feels authentic, confident, and compliant.</p>
       <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
         <a href="#contact" class="px-8 py-3 rounded-full primary-dark text-white font-bold shadow-xl hover:bg-indigo-900 transition transform hover:scale-[1.02] text-center">Request a Demo</a>
-        <!-- Keep coach trigger id -->
         <a id="openCoach" href="#simulations" class="px-8 py-3 rounded-full bg-white text-primary-dark border-2 border-primary-dark font-bold hover:bg-gray-50 transition text-center">Try a Simulation</a>
       </div>
       <ul class="mt-6 space-y-2 text-gray-700">
@@ -137,7 +178,7 @@
   </div>
 </section>
 
-<!-- ===== Analytics (primary block) ===== -->
+<!-- ===== Analytics ===== -->
 <section id="analytics" class="py-16 md:py-24 text-white" style="background-color:#0f2747;">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="text-center mb-12">
@@ -151,22 +192,18 @@
         <div class="text-2xl font-bold text-accent-teal mb-2">94%</div>
         <p class="text-sm font-semibold uppercase text-indigo-100">Accuracy Index</p>
       </div>
-
       <div class="bg-white/10 p-6 rounded-xl shadow-lg border border-white/20">
         <div class="text-2xl font-bold text-accent-teal mb-2">1.4x</div>
         <p class="text-sm font-semibold uppercase text-indigo-100">Readiness Velocity</p>
       </div>
-
       <div class="bg-white/10 p-6 rounded-xl shadow-lg border border-white/20">
         <div class="text-2xl font-bold text-accent-teal mb-2">Empathy</div>
         <p class="text-sm font-semibold uppercase text-indigo-100">Coaching Index</p>
       </div>
-
       <div class="bg-white/10 p-6 rounded-xl shadow-lg border border-white/20">
         <div class="text-2xl font-bold text-accent-teal mb-2">Compliance</div>
         <p class="text-sm font-semibold uppercase text-indigo-100">Guardrails</p>
       </div>
-
       <div class="bg-white/10 p-6 rounded-xl shadow-lg border border-white/20">
         <div class="text-2xl font-bold text-accent-teal mb-2">Confidence</div>
         <p class="text-sm font-semibold uppercase text-indigo-100">Delta</p>
@@ -175,79 +212,21 @@
   </div>
 </section>
 
-<!-- ===== Therapeutic Areas & Personas (chips) ===== -->
+<!-- ===== Therapeutic Areas & Personas ===== -->
 <section id="therapeutic-areas" class="py-16 bg-white">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12">
-    <!-- Therapeutic Areas -->
+    <!-- Areas -->
     <div class="text-center md:text-left">
       <h3 class="text-3xl font-bold text-gray-900 mb-3">Train by Therapeutic Area</h3>
       <div class="w-20 mx-auto md:mx-0 h-1 rounded" style="background-color:#20bfa9;"></div>
-
       <div class="mt-6 flex flex-wrap gap-3 md:gap-4 justify-center md:justify-start">
-        <!-- Each pill: add data-* for modal content -->
-        <button type="button"
-          class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
-          data-title="Oncology"
-          data-challenge="Complex regimens, strict rules"
-          data-objective="Clarify label-compliant points"
-          data-goal="Confident, accurate dialogue">
-          Oncology
-        </button>
-
-        <button type="button"
-          class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
-          data-title="Vaccines"
-          data-challenge="Hesitancy, timing windows"
-          data-objective="Address key objections"
-          data-goal="Improve uptake intent">
-          Vaccines
-        </button>
-
-        <button type="button"
-          class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
-          data-title="HIV PrEP"
-          data-challenge="Stigma, adherence gaps"
-          data-objective="Navigate eligibility safely"
-          data-goal="Drive appropriate starts">
-          HIV PrEP
-        </button>
-
-        <button type="button"
-          class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
-          data-title="Cardiology"
-          data-challenge="Risk tradeoffs, polypharm"
-          data-objective="Align on risk reduction"
-          data-goal="Guideline-consistent choices">
-          Cardiology
-        </button>
-
-        <!-- New row starts naturally -->
-        <button type="button"
-          class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
-          data-title="Pulmonology"
-          data-challenge="Variable control, access"
-          data-objective="Clarify step-up criteria"
-          data-goal="Better control outcomes">
-          Pulmonology
-        </button>
-
-        <button type="button"
-          class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
-          data-title="Hepatitis B"
-          data-challenge="Chronic course, stigma"
-          data-objective="Reinforce monitoring plan"
-          data-goal="Sustained engagement">
-          Hepatitis B
-        </button>
-
-        <button type="button"
-          class="inline-flex h-10 items-center px-5 rounded-full border-2 border-gray-400 bg-gray-100 text-gray-800 text-sm font-semibold hover:bg-gray-200 transition"
-          data-title="Custom Scenarios"
-          data-challenge="Org-specific objections"
-          data-objective="Map to your playbook"
-          data-goal="Faster rep readiness">
-          + Custom Scenarios
-        </button>
+        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition" data-title="Oncology" data-challenge="Complex regimens, strict rules" data-objective="Clarify label-compliant points" data-goal="Confident, accurate dialogue">Oncology</button>
+        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition" data-title="Vaccines" data-challenge="Hesitancy, timing windows" data-objective="Address key objections" data-goal="Improve uptake intent">Vaccines</button>
+        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition" data-title="HIV PrEP" data-challenge="Stigma, adherence gaps" data-objective="Navigate eligibility safely" data-goal="Drive appropriate starts">HIV PrEP</button>
+        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition" data-title="Cardiology" data-challenge="Risk tradeoffs, polypharm" data-objective="Align on risk reduction" data-goal="Guideline-consistent choices">Cardiology</button>
+        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition" data-title="Pulmonology" data-challenge="Variable control, access" data-objective="Clarify step-up criteria" data-goal="Better control outcomes">Pulmonology</button>
+        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition" data-title="Hepatitis B" data-challenge="Chronic course, stigma" data-objective="Reinforce monitoring plan" data-goal="Sustained engagement">Hepatitis B</button>
+        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-gray-400 bg-gray-100 text-gray-800 text-sm font-semibold hover:bg-gray-200 transition" data-title="Custom Scenarios" data-challenge="Org-specific objections" data-objective="Map to your playbook" data-goal="Faster rep readiness">+ Custom Scenarios</button>
       </div>
     </div>
 
@@ -255,127 +234,37 @@
     <div class="text-center md:text-left">
       <h3 class="text-3xl font-bold text-gray-900 mb-3">Practice with Realistic Personas</h3>
       <div class="w-20 mx-auto md:mx-0 h-1 rounded" style="background-color:#20bfa9;"></div>
-
       <div class="mt-6 flex flex-wrap gap-3 md:gap-4 justify-center md:justify-start">
-        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
-          data-title="Internal Medicine MD"
-          data-challenge="Time pressure, breadth"
-          data-objective="Be concise, relevant"
-          data-goal="Earn next minute">
-          Internal Medicine MD
-        </button>
-
-        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
-          data-title="Oncologist"
-          data-challenge="Evidence depth, safety"
-          data-objective="Lead with outcomes"
-          data-goal="Advance informed choice">
-          Oncologist
-        </button>
-
-        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
-          data-title="Nurse Practitioner (NP)"
-          data-challenge="Workflow, access paths"
-          data-objective="Simplify next steps"
-          data-goal="Smooth initiation">
-          Nurse Practitioner (NP)
-        </button>
-
-        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
-          data-title="Infectious Disease Specialist"
-          data-challenge="Resistance, guidelines"
-          data-objective="Anchor to evidence"
-          data-goal="Appropriate selection">
-          Infectious Disease Specialist
-        </button>
-
-        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
-          data-title="Cardiologist"
-          data-challenge="Risk-benefit nuance"
-          data-objective="Quantify absolute risk"
-          data-goal="Shared decisions">
-          Cardiologist
-        </button>
-
-        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition"
-          data-title="Physician Assistant (PA)"
-          data-challenge="Protocol adherence"
-          data-objective="Clarify guardrails"
-          data-goal="Safe, quick actions">
-          Physician Assistant (PA)
-        </button>
+        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition" data-title="Internal Medicine MD" data-challenge="Time pressure, breadth" data-objective="Be concise, relevant" data-goal="Earn next minute">Internal Medicine MD</button>
+        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition" data-title="Oncologist" data-challenge="Evidence depth, safety" data-objective="Lead with outcomes" data-goal="Advance informed choice">Oncologist</button>
+        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition" data-title="Nurse Practitioner (NP)" data-challenge="Workflow, access paths" data-objective="Simplify next steps" data-goal="Smooth initiation">Nurse Practitioner (NP)</button>
+        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition" data-title="Infectious Disease Specialist" data-challenge="Resistance, guidelines" data-objective="Anchor to evidence" data-goal="Appropriate selection">Infectious Disease Specialist</button>
+        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition" data-title="Cardiologist" data-challenge="Risk-benefit nuance" data-objective="Quantify absolute risk" data-goal="Shared decisions">Cardiologist</button>
+        <button type="button" class="inline-flex h-10 items-center px-5 rounded-full border-2 border-[#0f2747] bg-white text-[#0f2747] text-sm font-semibold hover:bg-[#0f2747] hover:text-white transition" data-title="Physician Assistant (PA)" data-challenge="Protocol adherence" data-objective="Clarify guardrails" data-goal="Safe, quick actions">Physician Assistant (PA)</button>
       </div>
     </div>
   </div>
 
-  <!-- Reusable modal -->
-  <div id="pill-modal" class="fixed inset-0 z-50 hidden" aria-hidden="true">
-    <div class="absolute inset-0 bg-black/40"></div>
-    <div class="relative mx-auto mt-24 w-[92%] max-w-lg rounded-2xl bg-white shadow-xl">
-      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-        <h4 id="pill-modal-title" class="text-xl font-semibold text-[#0f2747]">Title</h4>
-        <button id="pill-modal-close" class="p-2 rounded-full text-gray-500 hover:bg-gray-100" aria-label="Close">✕</button>
+  <!-- Reusable pill modal -->
+  <div id="pill-modal" class="modal" aria-hidden="true">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="pillTitle">
+      <div class="modal-head">
+        <div id="pillTitle" class="modal-title">Details</div>
+        <button class="modal-close" data-close="#pill-modal" aria-label="Close">Close</button>
       </div>
       <div class="px-6 py-5">
         <ul class="space-y-3 text-sm text-gray-800">
-          <li><span class="font-semibold text-[#0f2747]">Challenge:</span> <span id="pill-challenge">Placeholder</span></li>
-          <li><span class="font-semibold text-[#0f2747]">Objective:</span> <span id="pill-objective">Placeholder</span></li>
-          <li><span class="font-semibold text-[#0f2747]">Goal:</span> <span id="pill-goal">Placeholder</span></li>
+          <li><span class="font-semibold text-[#0f2747]">Challenge:</span> <span id="pill-challenge">—</span></li>
+          <li><span class="font-semibold text-[#0f2747]">Objective:</span> <span id="pill-objective">—</span></li>
+          <li><span class="font-semibold text-[#0f2747]">Goal:</span> <span id="pill-goal">—</span></li>
         </ul>
       </div>
       <div class="px-6 py-4 border-t border-gray-200 text-right">
-        <button id="pill-modal-ok" class="inline-flex h-10 items-center px-5 rounded-full bg-[#0f2747] text-white text-sm font-semibold hover:opacity-90 transition">OK</button>
+        <button class="inline-flex h-10 items-center px-5 rounded-full bg-[#0f2747] text-white text-sm font-semibold hover:opacity-90 transition modal-close" data-close="#pill-modal">OK</button>
       </div>
     </div>
   </div>
 </section>
-
-<script>
-  (function () {
-    const modal = document.getElementById('pill-modal');
-    const titleEl = document.getElementById('pill-modal-title');
-    const chEl = document.getElementById('pill-challenge');
-    const obEl = document.getElementById('pill-objective');
-    const goEl = document.getElementById('pill-goal');
-    const closeBtns = [document.getElementById('pill-modal-close'), document.getElementById('pill-modal-ok')];
-
-    function openModal(data) {
-      titleEl.textContent = data.title || '';
-      chEl.textContent = data.challenge || '';
-      obEl.textContent = data.objective || '';
-      goEl.textContent = data.goal || '';
-      modal.classList.remove('hidden');
-      modal.setAttribute('aria-hidden', 'false');
-    }
-    function closeModal() {
-      modal.classList.add('hidden');
-      modal.setAttribute('aria-hidden', 'true');
-    }
-
-    // Open handlers for all pills in this section
-    document.currentScript.previousElementSibling
-      .querySelectorAll('button[data-title]')
-      .forEach(btn => {
-        btn.addEventListener('click', () => {
-          openModal({
-            title: btn.dataset.title,
-            challenge: btn.dataset.challenge,
-            objective: btn.dataset.objective,
-            goal: btn.dataset.goal
-          });
-        });
-      });
-
-    // Close handlers
-    closeBtns.forEach(b => b.addEventListener('click', closeModal));
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) closeModal(); // click backdrop
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
-    });
-  })();
-</script>
 
 <!-- ===== Ethics ===== -->
 <section id="ethics" class="py-16 md:py-24 bg-gray-50 border-t border-gray-200">
@@ -386,28 +275,28 @@
       <p class="text-xl text-gray-600 max-w-3xl mx-auto">Compliance and responsible AI built for the rigors of life-sciences training.</p>
     </div>
     <div class="grid md:grid-cols-2 gap-6">
-      <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-accent-teal">
+      <div class="bg-white p-6 rounded-xl shadow-lg border-t-4" style="border-color:#20bfa9">
         <h4 class="text-xl font-bold text-gray-900 mb-2 flex items-center">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent-teal mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
           Data Privacy & Security
         </h4>
         <p class="text-gray-600 text-sm">PHI is off by default; when enabled, BAA, encryption, and RBAC apply.</p>
       </div>
-      <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-accent-teal">
+      <div class="bg-white p-6 rounded-xl shadow-lg border-t-4" style="border-color:#20bfa9">
         <h4 class="text-xl font-bold text-gray-900 mb-2 flex items-center">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent-teal mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
           Algorithmic Bias & Fairness
         </h4>
         <p class="text-gray-600 text-sm">Pre-deployment bias testing with monitoring and remediation steps.</p>
       </div>
-      <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-accent-teal">
+      <div class="bg-white p-6 rounded-xl shadow-lg border-t-4" style="border-color:#20bfa9">
         <h4 class="text-xl font-bold text-gray-900 mb-2 flex items-center">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent-teal mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
           Transparency & Explainability
         </h4>
         <p class="text-gray-600 text-sm">Reason codes in-product; model cards document limits and cadence.</p>
       </div>
-      <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-accent-teal">
+      <div class="bg-white p-6 rounded-xl shadow-lg border-t-4" style="border-color:#20bfa9">
         <h4 class="text-xl font-bold text-gray-900 mb-2 flex items-center">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent-teal mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9l6-6M20 6l-6 6M10 20l-6-6M4 14l6 6"></path></svg>
           Human Oversight & Accountability
@@ -437,7 +326,6 @@
       </div>
     </div>
 
-    <!-- Form submits to Formspree like your prior version -->
     <form class="bg-white p-8 rounded-xl shadow-2xl border border-gray-100 w-full"
           action="https://formspree.io/f/reflectiv-demo" method="POST">
       <div class="space-y-6">
@@ -469,7 +357,7 @@
   </div>
 </footer>
 
-<!-- ===== Modals kept for info cards and Coach ===== -->
+<!-- ===== Card Modal kept (info cards) ===== -->
 <div id="cardModal" class="modal" aria-hidden="true">
   <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="cardTitle">
     <div class="modal-head">
@@ -480,14 +368,18 @@
   </div>
 </div>
 
+<!-- ===== Coach Modal ===== -->
 <div id="coachModal" class="modal" aria-hidden="true">
-  <div class="modal-box">
-    <div class="modal-head"><div class="modal-title">Reflectiv Coach</div><button class="modal-close" data-close="#coachModal">Close</button></div>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="coachTitle">
+    <div class="modal-head">
+      <div id="coachTitle" class="modal-title">Reflectiv Coach</div>
+      <button class="modal-close" data-close="#coachModal">Close</button>
+    </div>
     <div id="coachBody"><div id="reflectiv-widget" class="reflectiv-widget"><noscript>You need JavaScript to use the ReflectivAI Coach.</noscript></div></div>
   </div>
 </div>
 
-<!-- ===== Alora button and panel ===== -->
+<!-- ===== Alora FAB + panel ===== -->
 <button id="aloraFab" aria-label="Open Alora chat" title="Open Alora">
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path fill="#fff" d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9.4L5 19.9V16H5a2 2 0 0 1-2-2V5z"/></svg>
 </button>
@@ -497,28 +389,45 @@
   <form id="aloraForm" class="alora-input" autocomplete="off"><input id="aloraInput" placeholder="Ask about ReflectivAI…"><button class="btn primary" type="submit">Send</button></form>
 </div>
 
-<!-- ===== Robust JS bootstrap + Enhanced Alora Persona (v4) ===== -->
+<!-- ===== Bootstrap JS for modals, pills, coach trigger, Alora persona v4 ===== -->
 <script>
 (function(){
-  const onReady=(fn)=>{document.readyState!=='loading'?fn():document.addEventListener('DOMContentLoaded',fn);};
+  const onReady=(fn)=>{document.readyState!=='loading'?fn():document.addEventListener('DOMContentLoaded',fn,{once:true});};
   onReady(()=>{
 
-    /* ---------- modal + coach bootstrap ---------- */
-    function openModal(id){const el=document.querySelector(id);if(el)el.classList.add('open')}
-    function closeModal(id){const el=document.querySelector(id);if(el)el.classList.remove('open')}
+    /* ---------- Generic modal controls ---------- */
+    function openModal(sel){const el=document.querySelector(sel);if(el){el.classList.add('open');el.setAttribute('aria-hidden','false');}}
+    function closeModal(sel){const el=document.querySelector(sel);if(el){el.classList.remove('open');el.setAttribute('aria-hidden','true');}}
     document.querySelectorAll('.modal-close').forEach(b=>b.addEventListener('click',()=>closeModal(b.getAttribute('data-close'))));
     document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal('#'+m.id)}));
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal.open').forEach(m=>closeModal('#'+m.id));});
+
+    /* ---------- Coach trigger ---------- */
     document.getElementById('openCoach')?.addEventListener('click',e=>{e.preventDefault();openModal('#coachModal')});
+
+    /* ---------- Pill modal wiring ---------- */
+    (function(){
+      const scope=document.getElementById('therapeutic-areas');
+      if(!scope) return;
+      const modal='#pill-modal';
+      scope.querySelectorAll('button[data-title]').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          document.getElementById('pillTitle').textContent=btn.dataset.title||'';
+          document.getElementById('pill-challenge').textContent=btn.dataset.challenge||'';
+          document.getElementById('pill-objective').textContent=btn.dataset.objective||'';
+          document.getElementById('pill-goal').textContent=btn.dataset.goal||'';
+          openModal(modal);
+        });
+      });
+    })();
 
     /* ---------- Alora wiring ---------- */
     const aloraFab=document.getElementById('aloraFab');
     const alora=document.getElementById('alora');
     const aloraClose=document.getElementById('aloraClose');
-    window.aloraBody=document.getElementById('aloraBody');
+    const aloraBody=document.getElementById('aloraBody');
     const aloraForm=document.getElementById('aloraForm');
     const aloraInput=document.getElementById('aloraInput');
-
-    if(!aloraFab||!alora||!aloraClose||!aloraBody||!aloraForm||!aloraInput){console.warn('Alora elements missing');return;}
 
     function bot(t){const d=document.createElement('div');d.className='alora-msg bot';d.textContent=t;aloraBody.appendChild(d);aloraBody.scrollTop=aloraBody.scrollHeight}
     function user(t){const d=document.createElement('div');d.className='alora-msg user';d.textContent=t;aloraBody.appendChild(d);aloraBody.scrollTop=aloraBody.scrollHeight}
@@ -531,37 +440,30 @@
           body:JSON.stringify({role:'alora',site:'reflectivai',message:q})
         });
         if(r.ok){const j=await r.json();return j.reply||null}
-      }catch{}
+      }catch(e){}
       return null;
     }
 
-    /* ==========================================================
-       Alora persona v4 — friendly, professional, knowledgeable
-       Logic: keyword scoring + intent rules + smart fallbacks
-       Adds: richer answers, unique value, personas, EI rationale,
-             quick action chips, and section scrolling.
-       ========================================================== */
+    /* ---------- Alora persona v4: friendly, professional, knowledgeable ---------- */
+    const CHIPS_BASE=[['Open Coach','open-coach'],['Request Demo','request-demo'],['See Personas','see-personas'],['Why EI','see-ei']];
 
-    // Small DOM helpers + quick actions
-    const $=(s,root=document)=>root.querySelector(s);
     function scrollToId(id){
-      const el=document.getElementById(id)||$(`[data-anchor='${id}']`)||$(`[href='#${id}']`);
+      const el=document.getElementById(id) || document.querySelector(`[data-anchor='${id}']`) || document.querySelector(`[href='#${id}']`);
       if(el){el.scrollIntoView({behavior:'smooth',block:'start'});return true}
       return false;
     }
     function aloraAction(cmd){
       const c=String(cmd||'').toLowerCase();
-      if(c==='open-coach') return openModal('#coachModal'),true;
+      if(c==='open-coach'){openModal('#coachModal');return true}
       if(c==='request-demo') return scrollToId('contact');
       if(c==='see-platform') return scrollToId('platform');
       if(c==='see-analytics') return scrollToId('analytics');
       if(c==='see-ei') return scrollToId('why-it-matters');
-      if(c==='see-ethics') return scrollToId('ethics');
       if(c==='see-personas') return scrollToId('therapeutic-areas');
       return false;
     }
     function renderChips(pairs){
-      let wrap=$('.alora-suggest',aloraBody);
+      let wrap=aloraBody.querySelector('.alora-suggest');
       if(!wrap){wrap=document.createElement('div');wrap.className='alora-suggest';aloraBody.appendChild(wrap)}
       wrap.innerHTML='';
       (pairs||[]).forEach(([label,cmd])=>{
@@ -571,144 +473,34 @@
         wrap.appendChild(b);
       });
     }
-    // chip styles
-    (function(){
-      const css=`
-        .alora-suggest{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 0}
-        .alora-chip{border:1px solid #0f2747;border-radius:999px;padding:6px 10px;background:#fff;color:#0f2747;font:600 12px/1.1 Inter,system-ui;cursor:pointer}
-        .alora-chip:hover{background:#eef4fa}
-      `;
-      const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
-    })();
-
-    // Canonical chips
-    const CHIPS_BASE=[
-      ['Open Coach','open-coach'],
-      ['Request Demo','request-demo'],
-      ['See Personas','see-personas'],
-      ['Why EI','see-ei']
-    ];
-
-    // Persona catalogue (for better answers)
-    const PERSONAS=[
-      {id:'im',name:'Internal Medicine MD',need:'concise relevance',objection:'time pressure'},
-      {id:'onco',name:'Oncologist',need:'evidence depth + safety',objection:'outcomes and risk'},
-      {id:'np',name:'Nurse Practitioner',need:'workflow clarity',objection:'access steps'},
-      {id:'pa',name:'Physician Assistant',need:'protocol alignment',objection:'guardrails'},
-      {id:'id',name:'Infectious Disease Specialist',need:'guidelines + resistance',objection:'appropriateness'},
-      {id:'card',name:'Cardiologist',need:'absolute risk delta',objection:'tradeoffs'}
-    ];
-
-    // Keyword bins
-    const BIN={
-      unique:['unique','different','why choose','stand out','what makes','better than','value prop'],
-      price:['price','pricing','cost','quote','license','subscription'],
-      demo:['demo','request','book','schedule','contact','talk'],
-      sim:['simulate','simulation','coach','practice','roleplay','scenario'],
-      ei:['ei','emotional intelligence','empathy','tone','clarity'],
-      analytics:['analytics','dashboard','kpi','metrics','insight','leaderboard'],
-      integ:['integration','integrate','api','lms','crm','sso','okta','saml','salesforce','veeva','workday','cornerstone'],
-      sec:['security','privacy','hipaa','phi','gdpr','iso','nist','compliance','governance'],
-      persona:['persona','hcp','doctor','physician','oncologist','internal medicine','np','pa','cardiologist','infectious'],
-      therapy:['oncology','vaccine','vaccines','hiv','prep','cardio','cardiology','hepatitis','pulmonology','pulmonary'],
-      status:['status','outage','down','slow','latency','performance'],
-      brand:['brand','logo','colors','palette','style guide'],
-      faq:['faq','help','question','how to','where do i']
-    };
-
-    function scoreBins(q){
-      const s=(' '+q.toLowerCase()+' ').replace(/\s+/g,' ');
-      const out={}; for(const k in BIN){out[k]=0; BIN[k].forEach(w=>{ if(s.includes(w)) out[k]+=1; });}
-      return out;
-    }
-
-    // Answer book
     function answer(q){
-      const s=q.trim();
-      const b=scoreBins(s);
-
-      if(/^(hi|hello|hey|yo|hiya|howdy)\b/i.test(s)){
-        return {text:"Hi, I’m Alora. I can guide you around the platform, simulations, EI, analytics, integrations, and compliance.",chips:CHIPS_BASE};
-      }
-      if(b.unique>0){
-        const txt="What makes ReflectivAI unique: 1) Human coaching + AI simulations tied to EI signals. 2) Compliance-aware feedback that flags and rewrites risky lines. 3) Role-specific HCP personas by therapeutic area. 4) Analytics like Empathy Index and Readiness Velocity to prove lift. 5) Integrations with LMS/CRM and SSO for real rollout.";
-        return {text:txt,chips:[['See Platform','see-platform'],['Open Coach','open-coach'],['Request Demo','request-demo']]};
-      }
-      if(b.price>0){
-        return {text:"Pricing scales by team size and modules you select: Product Knowledge, Sales Simulation, EI Mode, and Analytics. We quote during a short demo.",chips:[['Request Demo','request-demo'],['See Analytics','see-analytics'],['Open Coach','open-coach']]};
-      }
-      if(b.demo>0){
-        return {text:"Tap Request a Demo. We tailor the walkthrough to your roles, disease areas, and compliance needs.",chips:[['Request Demo','request-demo'],['See Personas','see-personas'],['Why EI','see-ei']]};
-      }
-      if(b.sim>0){
-        return {text:"Open the Coach to role-play with HCP personas. You get live tips and scores for Empathy, Objection Handling, and Compliance after each turn.",chips:[['Open Coach','open-coach'],['See Personas','see-personas'],['See Platform','see-platform']],action:'open-coach'};
-      }
-      if(b.ei>0){
-        return {text:"EI is core here. We score Empathy, Tone, Clarity, Discovery, and Objection Handling. You see why the score moved and one practical fix to try next.",chips:[['Why EI','see-ei'],['Open Coach','open-coach'],['See Analytics','see-analytics']]};
-      }
-      if(b.analytics>0){
-        return {text:"Dashboards track Empathy Index, Readiness Velocity, Behavioral Blind Spots, and Content Accuracy. Coach and team views show trend lift.",chips:[['See Analytics','see-analytics'],['Request Demo','request-demo'],['Open Coach','open-coach']]};
-      }
-      if(b.integ>0){
-        return {text:"We integrate with Salesforce, Veeva, major LMS, and SSO (Okta/SAML). Data export via CSV or API with common field mapping.",chips:[['Request Demo','request-demo'],['See Platform','see-platform']]};
-      }
-      if(b.sec>0){
-        return {text:"HIPAA safeguards with PHI off by default; BAA when enabled. Controls align to NIST AI RMF and ISO 27001/42001. Least-data use and audit logs.",chips:[['Ethics & Governance','see-ethics'],['Request Demo','request-demo']]};
-      }
-      if(b.persona>0){
-        const list=PERSONAS.map(p=>p.name).join(', ');
-        return {text:`Personas: ${list}. Each has goals, common objections, and realistic constraints so practice feels like real calls.`,chips:[['See Personas','see-personas'],['Open Coach','open-coach']]};
-      }
-      if(b.therapy>0){
-        return {text:"Therapeutic libraries include Oncology, Vaccines, HIV PrEP, Cardiology, Hepatitis B, and Pulmonology. We add org-specific scenarios on request.",chips:[['See Personas','see-personas'],['Request Demo','request-demo']]};
-      }
-      if(b.status>0){
-        return {text:"If something feels slow, refresh and relaunch the Coach. For SLAs or incidents, note it in your demo request.",chips:[['Request Demo','request-demo'],['Open Coach','open-coach']]};
-      }
-      if(b.brand>0){
-        return {text:"Brand palette is navy, teal, white. A compact brand kit is shared during onboarding.",chips:[['Request Demo','request-demo'],['See Platform','see-platform']]};
-      }
-      if(b.faq>0){
-        return {text:"I can answer about modules, EI, pricing, integrations, analytics, and governance. Ask a topic or jump to a section.",chips:CHIPS_BASE};
-      }
-
-      if(/what.*(do|does).*reflectiv/i.test(s)) return {text:"ReflectivAI blends Product Knowledge, Sales Simulation, EI Mode, and Analytics to improve real HCP conversations.",chips:[['See Platform','see-platform'],['Open Coach','open-coach']]};
-      if(/make(s)? it (special|better|different|stand ?out)/i.test(s)) return {text:"Unique mix of EI-scored coaching, compliance guardrails, realistic HCP personas, and measurable lift in dashboards.",chips:[['See Analytics','see-analytics'],['Why EI','see-ei']]};
-
+      const s=(q||'').trim().toLowerCase();
+      if(/^(hi|hello|hey)\b/.test(s)) return {text:"Hi, I’m Alora. I can guide you around the platform, simulations, EI, analytics, integrations, and compliance.",chips:CHIPS_BASE};
+      if(s.includes('unique')||s.includes('stand out')||s.includes('different')) return {text:"What makes ReflectivAI unique: 1) Human coaching + AI simulations tied to EI signals. 2) Compliance-aware feedback that flags and rewrites risky lines. 3) Role-specific HCP personas by therapeutic area. 4) Analytics like Empathy Index and Readiness Velocity to prove lift. 5) Integrations with LMS/CRM and SSO for real rollout.",chips:[['See Platform','see-platform'],['Open Coach','open-coach'],['Request Demo','request-demo']]};
+      if(s.includes('price')||s.includes('pricing')||s.includes('cost')) return {text:"Pricing scales by team size and selected modules: Product Knowledge, Sales Simulation, EI Mode, and Analytics. We provide a tailored quote during a short demo.",chips:[['Request Demo','request-demo'],['See Analytics','see-analytics'],['Open Coach','open-coach']]};
+      if(s.includes('demo')||s.includes('request')) return {text:"Tap Request a Demo. We tailor the walkthrough to your roles, disease areas, and compliance needs.",chips:[['Request Demo','request-demo'],['See Personas','see-personas'],['Why EI','see-ei']]};
+      if(s.includes('simulate')||s.includes('coach')) return {text:"Open the Coach to role-play with HCP personas. You get live tips and scores for Empathy, Objection Handling, and Compliance after each turn.",chips:[['Open Coach','open-coach'],['See Personas','see-personas'],['See Platform','see-platform']],action:'open-coach'};
       return {text:"I cover platform, simulations, EI, analytics, integrations, and compliance. Ask a question or request a demo for a focused walkthrough.",chips:CHIPS_BASE};
     }
-
-    // Backward compatible responder used by UI
     function respondLocal(q){
       const r=answer(q||'');
-      window.__aloraLast=r;
-      try{ if(alora.classList.contains('open')) renderChips(r.chips); }catch(e){}
+      try{ renderChips(r.chips); }catch(e){}
       if(r.action) aloraAction(r.action);
       return r.text;
     }
-
-    // Open/close
     function aloraOpen(){
       alora.classList.add('open'); alora.setAttribute('aria-hidden','false');
       if(!aloraBody.dataset.greeted){
         bot("Hi, I’m Alora. Ask me about the platform, simulations, EI, pricing, integrations, or governance.");
-        renderChips([
-          ['What makes it unique?','see-platform'],
-          ['Open Coach','open-coach'],
-          ['See Analytics','see-analytics'],
-          ['Request Demo','request-demo']
-        ]);
+        renderChips([['What makes it unique?','see-platform'],['Open Coach','open-coach'],['See Analytics','see-analytics'],['Request Demo','request-demo']]);
         aloraBody.dataset.greeted='1';
       }
     }
     function aloraHide(){alora.classList.remove('open');alora.setAttribute('aria-hidden','true')}
 
-    aloraFab.addEventListener('click',aloraOpen);
-    aloraFab.setAttribute('tabindex','0');
-    aloraFab.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();aloraOpen();}});
-    aloraClose.addEventListener('click',aloraHide);
+    document.getElementById('aloraFab').addEventListener('click',aloraOpen);
+    document.getElementById('aloraClose').addEventListener('click',aloraHide);
 
-    // Form submit
     aloraForm.addEventListener('submit',async e=>{
       e.preventDefault();
       const q=aloraInput.value.trim(); if(!q) return;
@@ -717,7 +509,7 @@
       bot(remote || respondLocal(q));
     });
 
-    // page restore
+    /* Avoid white banner on bfcache restore */
     if('scrollRestoration'in history){history.scrollRestoration='manual'}
     window.addEventListener('pageshow',e=>{if(e.persisted)window.scrollTo(0,0)})
 
