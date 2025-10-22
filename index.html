@@ -87,29 +87,72 @@
 
 <body class="bg-slate-50">
 
-<!-- ===== Header ===== -->
-<header id="navbar" class="sticky-header fixed top-0 left-0 w-full z-50 bg-white shadow-md">
+<!-- Header & Navigation (Sticky, Navy, Teal underline) -->
+<header id="navbar"
+        class="fixed top-0 left-0 w-full z-50"
+        style="background:#0c2740;border-bottom:2px solid #20bfa9;">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between items-center h-16">
-      <a href="#home" class="flex items-center text-xl font-extrabold text-primary-dark tracking-tight">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-accent-teal mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+
+      <!-- Logo -->
+      <a href="#home" class="flex items-center text-xl font-extrabold tracking-tight"
+         style="color:#ffffff;text-decoration:none">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" viewBox="0 0 24 24"
+             fill="none" stroke="#20bfa9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle>
+        </svg>
         ReflectivAI
       </a>
-      <nav class="hidden md:flex space-x-8">
-        <a href="#platform" class="text-gray-600 hover:text-accent-teal transition">Platform</a>
-        <a href="#analytics" class="text-gray-600 hover:text-accent-teal transition">Analytics</a>
-        <a href="#ethics" class="text-gray-600 hover:text-accent-teal transition">Ethics</a>
-        <a href="#" onclick="openAboutEI();return false;">About EI</a>
 
-        <a href="#contact" class="px-4 py-2 rounded-full primary-dark text-white font-semibold shadow-lg hover:shadow-xl transition">Request Demo</a>
+      <!-- Desktop Navigation -->
+      <nav class="hidden md:flex items-center gap-6">
+
+        <!-- Platform dropdown -->
+        <details class="relative group">
+          <summary class="list-none cursor-pointer select-none"
+                   style="color:#ffffff">Platform ▾</summary>
+          <ul class="absolute mt-2 min-w-[180px] rounded-lg shadow"
+              style="background:#0c2740;border:1px solid #20bfa9;">
+            <li><a href="#simulations" class="block px-4 py-2" style="color:#ffffff">Simulations</a></li>
+            <li><a href="#coach" class="block px-4 py-2" style="color:#ffffff">AI Coach</a></li>
+            <li><a href="#learning" class="block px-4 py-2" style="color:#ffffff">Learning Center</a></li>
+          </ul>
+        </details>
+
+        <!-- Analytics dropdown -->
+        <details class="relative group">
+          <summary class="list-none cursor-pointer select-none"
+                   style="color:#ffffff">Analytics ▾</summary>
+          <ul class="absolute mt-2 min-w-[180px] rounded-lg shadow"
+              style="background:#0c2740;border:1px solid #20bfa9;">
+            <li><a href="#metrics" class="block px-4 py-2" style="color:#ffffff">Performance Metrics</a></li>
+            <li><a href="#dashboards" class="block px-4 py-2" style="color:#ffffff">Dashboards</a></li>
+          </ul>
+        </details>
+
+        <a href="#ethics" style="color:#ffffff" class="transition">Ethics</a>
+        <a href="#" onclick="openAboutEI();return false;" style="color:#ffffff" class="transition">About EI</a>
+
+        <a href="#contact"
+           class="px-4 py-2 rounded-full font-semibold shadow transition"
+           style="background:#20bfa9;color:#0c2740;text-decoration:none">Request Demo</a>
       </nav>
-      <button class="md:hidden p-2 text-gray-700 hover:text-accent-teal rounded-md transition" aria-label="Menu">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+
+      <!-- Mobile hamburger (opens native details menus) -->
+      <button class="md:hidden p-2 rounded-md"
+              aria-label="Menu" style="color:#ffffff">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+             viewBox="0 0 24 24" stroke="#ffffff">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 6h16M4 12h16m-7 6h7" />
+        </svg>
       </button>
+
     </div>
   </div>
 </header>
-<div class="pt-16" id="home"></div>
+<!-- Spacer so content isn't hidden under fixed header -->
+<div style="height:64px"></div>
 
 <!-- ===== Hero ===== -->
 <section class="py-16 md:py-24 bg-white">
