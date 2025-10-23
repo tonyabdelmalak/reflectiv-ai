@@ -320,6 +320,36 @@ function waitForMount(cb){
   }
 
   // ---------- EI feedback render ----------
+function generateFeedback() {
+  if (!feedbackDisplayElem) return;
+
+  if (currentMode !== "emotional-assessment") {
+    feedbackDisplayElem.innerHTML = "";
+    return;
+  }
+
+  const personaKey = personaSelectElem && personaSelectElem.value;
+  const featureKey = eiFeatureSelectElem && eiFeatureSelectElem.value;
+
+  if (!personaKey || !featureKey || !lastUserMessage) {
+    feedbackDisplayElem.innerHTML = `<span class="muted">Select a persona and EI feature, then send a message to see feedback.</span>`;
+    return;
+  }
+
+  let rating = null;
+  if (featureKey === "empathy") rating = calculateEmpathyRating(personaKey, lastUserMessage);
+  else if (featureKey === "stress") rating = calculateStressRating(personaKey, lastUserMessage);
+
+  const featureList = (cfg?.eiFeatures && cfg.eiFeatures.length ? cfg.eiFeatures : DEFAULT_EI_FEATURES);
+  const featureObj = featureList.find(f => f.key === featureKey || f.value === featureKey || f.id === featureKey);
+  const featureLabel = featureObj ? (featureObj.label || featureKey) : featureKey;
+  const fbTxt = generateDynamicFeedback(personaKey, featureKey);
+
+  feedbackDisplayElem.innerHTML = (rating == null)
+    ? `<strong>${esc(featureLabel)}</strong><br><p>${esc(fbTxt)}</p>`
+    : `<strong>${esc(featureLabel)}: ${rating}/5</strong><br><p>${esc(fbTxt)}</p>`;
+}
+
   // ---------- persona context ----------
 function currentPersonaHint() {
   // Prefer explicit scenario persona; fallback to EI persona select
@@ -1320,59 +1350,6 @@ If the user types "Evaluate this exchange" you will stop role-play and provide a
     renderMessages();
   }
 }
-
-      // ---- Load EI context and inject into system prompt ----
-      const sys = await EIContext.getSystemExtras();
-      if (sys) messages.unshift({ role: "system", content: sys });
-
-      const raw = await callModel(messages);
-      const { coach, clean } = extractCoach(raw);
-      const computed = scoreReply(userText, clean, currentMode);
-      const finalCoach = (() => {
-        if (coach && (coach.scores || coach.subscores)) {
-          const scores = coach.scores || coach.subscores;
-          const overall = typeof coach.overall === "number" ? coach.overall : (typeof coach.score === "number" ? coach.score : undefined);
-          return {
-            overall: overall ?? computed.overall,
-            scores,
-            feedback: coach.feedback || computed.feedback,
-            worked: coach.worked && coach.worked.length ? coach.worked : computed.worked,
-            improve: coach.improve && coach.improve.length ? coach.improve : computed.improve,
-            phrasing: typeof coach.phrasing === "string" && coach.phrasing ? coach.phrasing : computed.phrasing,
-            context: coach.context || { rep_question: userText, hcp_reply: clean },
-            score: overall ?? computed.overall,
-            subscores: scores
-          };
-        }
-        return computed;
-      })();
-
-      conversation.push({ role: "assistant", content: clean, _coach: finalCoach });
-      renderMessages(); renderCoach();
-
-      if (currentMode === "emotional-assessment") generateFeedback();
-
-      if (cfg && cfg.analyticsEndpoint) {
-        fetch(cfg.analyticsEndpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ts: Date.now(),
-            schema: (cfg.schemaVersion || "coach-v2"),
-            mode: currentMode,
-            scenarioId: currentScenarioId,
-            turn: conversation.length,
-            context: finalCoach.context || { rep_question: userText, hcp_reply: clean },
-            overall: finalCoach.overall,
-            scores: finalCoach.scores
-          })
-        }).catch(() => {});
-      }
-    } catch (e) {
-      conversation.push({ role: "assistant", content: `Model error: ${String(e.message || e)}` });
-      renderMessages();
-    }
-  }
 
   // ---------- scenarios loader ----------
 async function loadScenarios() {
