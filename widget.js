@@ -20,29 +20,43 @@
 let mount = null;
 let booted = false;
 
-function onReady(fn) {
+function onReady(fn){
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", fn, { once: true });
+    document.addEventListener("DOMContentLoaded", fn, { once:true });
   } else {
     fn();
   }
 }
 
-function waitForMount(cb) {
-  const tryRun = () => {
+function waitForMount(cb){
+  const get = () => document.getElementById("reflectiv-widget");
+
+  const run = () => {
     if (booted) return;
-    const el = document.getElementById("reflectiv-widget");
-    if (el) {
-      booted = true;
-      mount = el;
-      cb();
-    }
+    const el = get();
+    if (!el) return;
+    booted = true;
+    mount = el;
+    try { cb(); } catch (e) { console.error("[coach] init error:", e); }
   };
 
-  onReady(tryRun);
+  // 1) Try immediately when DOM ready
+  onReady(run);
 
-  const obs = new MutationObserver(tryRun);
-  obs.observe(document.documentElement, { childList: true, subtree: true });
+  // 2) Observe DOM mutations until found
+  const obs = new MutationObserver(run);
+  obs.observe(document.documentElement, { childList:true, subtree:true });
+
+  // 3) Poll as a fallback (covers cases where mutations are suppressed)
+  const poll = setInterval(run, 250);
+
+  // Stop watchers once booted
+  const stop = () => {
+    if (!booted) return;
+    try { obs.disconnect(); } catch {}
+    clearInterval(poll);
+  };
+  const stopCheck = setInterval(() => { if (booted) { clearInterval(stopCheck); stop(); } }, 250);
 }
 
   // ===========================
