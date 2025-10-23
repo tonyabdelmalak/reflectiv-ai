@@ -15,23 +15,35 @@
  */
 (function () {
   // ===========================
-  // Safe bootstrapping
-  // ===========================
-  let mount = null;
-  function onReady(fn){ if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn, { once:true }); else fn(); }
-  function waitForMount(cb){
-    const tryGet = () => {
-      mount = document.getElementById("reflectiv-widget");
-      if (mount) return cb();
-      const obs = new MutationObserver(() => {
-        mount = document.getElementById("reflectiv-widget");
-        if (mount) { obs.disconnect(); cb(); }
-      });
-      obs.observe(document.documentElement, { childList:true, subtree:true });
-      setTimeout(() => obs.disconnect(), 15000);
-    };
-    onReady(tryGet);
+// Safe bootstrapping
+// ===========================
+let mount = null;
+let booted = false;
+
+function onReady(fn) {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", fn, { once: true });
+  } else {
+    fn();
   }
+}
+
+function waitForMount(cb) {
+  const tryRun = () => {
+    if (booted) return;
+    const el = document.getElementById("reflectiv-widget");
+    if (el) {
+      booted = true;
+      mount = el;
+      cb();
+    }
+  };
+
+  onReady(tryRun);
+
+  const obs = new MutationObserver(tryRun);
+  obs.observe(document.documentElement, { childList: true, subtree: true });
+}
 
   // ===========================
   // Config / State
