@@ -1,7 +1,8 @@
 /* widget.js
- * ReflectivAI Chat/Coach — drop-in (coach-v2, deterministic scoring v3)
+ * ReflectivAI Chat/Coach — drop-in (coach-v2, deterministic scoring v4)
  * Modes: emotional-assessment | product-knowledge | sales-simulation | role-play
- * EI mode adds Persona + EI Feature dropdowns and context-aware feedback.
+ * EI knowledge is injected on every turn via EIContext.getSystemExtras().
+ * In Role Play: Disease State + HCP Profiles drive context. Coach is always ON. No toggle.
  */
 (function () {
   // ---------- safe bootstrapping ----------
@@ -38,7 +39,7 @@
   let currentMode = "sales-simulation";
   let currentScenarioId = null;
   let conversation = [];
-  let coachOn = true;
+  let coachOn = true; // forced ON in all modes for this build
 
   // ---------- EI globals ----------
   let personaSelectElem = null;
@@ -77,14 +78,10 @@
 
   function sanitizeLLM(raw) {
     let s = String(raw || "");
-    // strip code fences and pre blocks
     s = s.replace(/```[\s\S]*?```/g, "");
     s = s.replace(/<pre[\s\S]*?<\/pre>/gi, "");
-    // strip h1-h6 markdown prefixes
     s = s.replace(/^\s*#{1,6}\s+/gm, "");
-    // strip opening salutations
     s = s.replace(/^\s*(hi|hello|hey)[^\n]*\n+/i, "");
-    // collapse excess newlines
     s = s.replace(/\n{3,}/g, "\n\n").trim();
     return s;
   }
@@ -92,9 +89,7 @@
   function md(text) {
     if (!text) return "";
     let s = esc(String(text)).replace(/\r\n?/g, "\n");
-    // bold
     s = s.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
-    // bullets
     s = s.replace(
       /^(?:-\s+|\*\s+).+(?:\n(?:-\s+|\*\s+).+)*/gm,
       (blk) => {
@@ -105,7 +100,6 @@
         return `<ul>${items}</ul>`;
       }
     );
-    // paragraphs
     return s
       .split(/\n{2,}/)
       .map((p) => (p.startsWith("<ul>") ? p : `<p>${p.replace(/\n/g, "<br>")}</p>`))
@@ -128,14 +122,12 @@
     const cleanText = sanitizeLLM(s.slice(0, openIdx).trim());
     let tail = s.slice(openIdx + "<coach>".length);
 
-    // Prefer explicit close if present
     const closeIdx = tail.indexOf("</coach>");
     let block = closeIdx >= 0 ? tail.slice(0, closeIdx) : tail;
 
     const braceStart = block.indexOf("{");
     if (braceStart === -1) return { coach: null, clean: cleanText };
 
-    // Walk braces to find matching end
     let depth = 0, end = -1;
     for (let i = braceStart; i < block.length; i++) {
       const ch = block[i];
@@ -153,7 +145,7 @@
     return { coach, clean: cleanText };
   }
 
-  // ---------- local scoring (deterministic v3) ----------
+  // ---------- deterministic scoring ----------
   function scoreReply(userText, replyText) {
     const text = String(replyText || "");
     const t = text.toLowerCase();
@@ -226,7 +218,7 @@
     };
   }
 
-  // ---------- EI scoring ----------
+  // ---------- EI scoring helpers ----------
   function calculateEmpathyRating(personaKey, message) {
     if (!message) return 0;
     const text = String(message || "").toLowerCase();
@@ -303,7 +295,7 @@
     return feedback;
   }
 
-  // ---------- EI feedback render ----------
+  // ---------- EI feedback render (EI mode only) ----------
   function generateFeedback() {
     if (!feedbackDisplayElem) return;
     if (currentMode !== "emotional-assessment") {
@@ -372,10 +364,21 @@ ${COMMON}`).trim();
     }
 
     if (mode === "role-play") {
+      const ctx = sc ? [
+        `Therapeutic Area: ${sc.therapeuticArea || sc.diseaseState || "—"}`,
+        `HCP Role: ${sc.hcpRole || "—"}`,
+        `Background: ${sc.background || "—"}`,
+        `Today’s Goal: ${sc.goal || "—"}`
+      ].join("\n") : "Therapeutic Area: —\nHCP Role: —\nBackground: —\nToday’s Goal: —";
+
       return (
 `# Role Play Contract
-You are the Healthcare Provider. Reply ONLY as the HCP. Be realistic, brief, and sometimes skeptical or time constrained.
-If the user types "Evaluate this exchange" or "Give feedback", step out of role and return EI-based reflection using internal doctrine.
+You are the Healthcare Provider. Reply ONLY as the HCP. Be realistic, brief, sometimes skeptical or time constrained.
+Reflect common HCP behaviors—curiosity, skepticism, empathy, time pressure.
+If the user types "Evaluate this exchange" or "Give feedback", step out of role and provide an EI-based reflection using internal doctrine.
+
+# Context
+${ctx}
 
 ${COMMON}`).trim();
     }
@@ -428,6 +431,7 @@ ${COMMON}`).trim();
     const bar = el("div", "chat-toolbar");
     const simControls = el("div","sim-controls");
 
+    // Learning Center mode
     const lcLabel = el("label", "", "Learning Center");
     lcLabel.htmlFor = "cw-mode";
     const modeSel = el("select"); modeSel.id = "cw-mode";
@@ -439,15 +443,7 @@ ${COMMON}`).trim();
     modeSel.value = initialLc;
     currentMode = LC_TO_INTERNAL[modeSel.value];
 
-    const coachLabel = el("label", "", "Coach");
-    coachLabel.htmlFor = "cw-coach";
-    const coachSel = el("select"); coachSel.id = "cw-coach";
-    [{v:"on",t:"Coach On"},{v:"off",t:"Coach Off"}].forEach(({v,t})=>{
-      const o = el("option"); o.value=v; o.textContent=t; coachSel.appendChild(o);
-    });
-    coachSel.value = coachOn ? "on" : "off";
-    coachSel.onchange = () => { coachOn = coachSel.value === "on"; renderCoach(); };
-
+    // Disease + HCP selectors (visible in Sales Simulation and Role Play; disease only in Product Knowledge)
     const diseaseLabel = el("label", "", "Disease State");
     diseaseLabel.htmlFor = "cw-disease";
     const diseaseSelect = el("select"); diseaseSelect.id = "cw-disease";
@@ -456,7 +452,7 @@ ${COMMON}`).trim();
     hcpLabel.htmlFor="cw-hcp";
     const hcpSelect = el("select"); hcpSelect.id="cw-hcp";
 
-    // EI Persona/EI Feature
+    // EI Persona/EI Feature (only for Emotional Intelligence mode)
     const personaLabel = el("label", "", "HCP Persona");
     personaLabel.htmlFor = "cw-ei-persona";
     const personaSelect = el("select"); personaSelect.id = "cw-ei-persona";
@@ -471,7 +467,7 @@ ${COMMON}`).trim();
     featureLabelElem = featureLabel;
     featureSelect.addEventListener("change", generateFeedback);
 
-    // ---------- EI option sources ----------
+    // Build EI selects
     const PERSONAS_ALL =
       Array.isArray(cfg?.eiProfiles) && cfg.eiProfiles.length
         ? cfg.eiProfiles
@@ -488,7 +484,6 @@ ${COMMON}`).trim();
         : f
     );
 
-    // Rebuild EI selects with full lists
     function hydrateEISelects() {
       if (!personaSelectElem || !eiFeatureSelectElem) return;
       personaSelectElem.innerHTML = "";
@@ -504,7 +499,6 @@ ${COMMON}`).trim();
       personaSelectElem.appendChild(opt("Select...", ""));
       eiFeatureSelectElem.appendChild(opt("Select...", ""));
 
-      // Personas
       PERSONAS_ALL.forEach(p => {
         const o = document.createElement("option");
         const val = p.key || p.value || p.id || String(p).toLowerCase().replace(/\s+/g, "-");
@@ -513,7 +507,6 @@ ${COMMON}`).trim();
         personaSelectElem.appendChild(o);
       });
 
-      // Features
       FEATURES_ALL.forEach(f => {
         const o = document.createElement("option");
         const val = f.key || f.value || f.id || String(f).toLowerCase().replace(/\s+/g, "-");
@@ -525,19 +518,18 @@ ${COMMON}`).trim();
       if (!FEATURES_ALL.length)
         console.warn("EI features list is empty; check config keys (eiFeatures/features).");
     }
-
     hydrateEISelects();
 
-    // mount controls
+    // Assemble toolbar
     simControls.appendChild(lcLabel);      simControls.appendChild(modeSel);
-    simControls.appendChild(coachLabel);   simControls.appendChild(coachSel);
     simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
     simControls.appendChild(hcpLabel);     simControls.appendChild(hcpSelect);
     simControls.appendChild(personaLabel); simControls.appendChild(personaSelect);
     simControls.appendChild(featureLabel); simControls.appendChild(featureSelect);
-
     bar.appendChild(simControls);
     shell.appendChild(bar);
+
+    // Meta and messages
     const meta = el("div", "scenario-meta");
     shell.appendChild(meta);
 
@@ -554,8 +546,9 @@ ${COMMON}`).trim();
 
     mount.appendChild(shell);
 
+    // Coach section (always on; in Role Play only shown after eval request)
     const coach = el("div", "coach-section");
-    coach.innerHTML = `<h3>Coach Feedback</h3><div class="coach-body muted">Awaiting the first assistant reply…</div>`;
+    coach.innerHTML = `<h3>Coach Feedback</h3><div class="coach-body muted">Role play in progress. Type <em>"Evaluate this exchange"</em> for EI feedback.</div>`;
     shell.appendChild(coach);
 
     feedbackDisplayElem = el("div", "ei-feedback");
@@ -599,6 +592,10 @@ ${COMMON}`).trim();
     function populateDiseases() {
       const ds = getDiseaseStates();
       setSelectOptions(diseaseSelect, ds, true);
+      // if Role Play or Sales Simulation, clear HCP until disease chosen
+      if (currentMode === "role-play" || currentMode === "sales-simulation") {
+        setSelectOptions(hcpSelect, [], true);
+      }
     }
 
     function populateHcpForDisease(ds) {
@@ -619,17 +616,15 @@ ${COMMON}`).trim();
     }
 
     function populateEIOptions() {
-      // explicit entry point kept for compatibility; uses full hydrate
       hydrateEISelects();
     }
 
     function applyModeVisibility() {
       const lc = modeSel.value;
       currentMode = LC_TO_INTERNAL[lc];
-      const pk = currentMode === "product-knowledge";
 
-      coachLabel.classList.toggle("hidden", pk);
-      coachSel.classList.toggle("hidden", pk);
+      // Coach forced ON; no toggle UI.
+      coachOn = true;
 
       if (currentMode === "sales-simulation") {
         diseaseLabel.classList.remove("hidden");
@@ -642,6 +637,7 @@ ${COMMON}`).trim();
         eiFeatureSelectElem.classList.add("hidden");
         feedbackDisplayElem.innerHTML = "";
         populateDiseases();
+
       } else if (currentMode === "product-knowledge") {
         diseaseLabel.classList.remove("hidden");
         diseaseSelect.classList.remove("hidden");
@@ -653,12 +649,13 @@ ${COMMON}`).trim();
         eiFeatureSelectElem.classList.add("hidden");
         feedbackDisplayElem.innerHTML = "";
         populateDiseases();
+
       } else if (currentMode === "role-play") {
-        // NEW: pure sequential conversation; all selectors hidden
-        diseaseLabel.classList.add("hidden");
-        diseaseSelect.classList.add("hidden");
-        hcpLabel.classList.add("hidden");
-        hcpSelect.classList.add("hidden");
+        // Role Play uses Disease + HCP to tailor the dialogue
+        diseaseLabel.classList.remove("hidden");
+        diseaseSelect.classList.remove("hidden");
+        hcpLabel.classList.remove("hidden");
+        hcpSelect.classList.remove("hidden");
         personaLabelElem.classList.add("hidden");
         personaSelectElem.classList.add("hidden");
         featureLabelElem.classList.add("hidden");
@@ -666,13 +663,11 @@ ${COMMON}`).trim();
 
         feedbackDisplayElem.innerHTML = `
           <div class="coach-note">
-            <strong>Role Play Mode:</strong> The coach replies as an HCP in realistic tone.
-            Keep it conversational. Type <em>"Evaluate this exchange"</em> anytime for EI-based feedback.
+            <strong>Role Play:</strong> Select Disease + HCP to start. The assistant replies as the HCP.
+            Type <em>"Evaluate this exchange"</em> anytime for EI-based feedback.
           </div>`;
+        populateDiseases();
 
-        currentScenarioId = null;
-        conversation = [];
-        renderMessages(); renderCoach(); renderMeta();
       } else {
         // emotional-assessment
         diseaseLabel.classList.add("hidden");
@@ -687,13 +682,14 @@ ${COMMON}`).trim();
         currentScenarioId = null;
         conversation = [];
         renderMessages(); renderCoach(); renderMeta();
+        return;
       }
 
       if (currentMode !== "sales-simulation") {
         currentScenarioId = null;
-        conversation = [];
-        renderMessages(); renderCoach(); renderMeta();
       }
+      conversation = [];
+      renderMessages(); renderCoach(); renderMeta();
     }
 
     modeSel.addEventListener("change", applyModeVisibility);
@@ -701,7 +697,7 @@ ${COMMON}`).trim();
     diseaseSelect.addEventListener("change", ()=>{
       const ds = diseaseSelect.value || "";
       if (!ds) return;
-      if (currentMode === "sales-simulation") {
+      if (currentMode === "sales-simulation" || currentMode === "role-play") {
         populateHcpForDisease(ds);
       } else if (currentMode === "product-knowledge") {
         currentScenarioId = null;
@@ -719,7 +715,7 @@ ${COMMON}`).trim();
 
     function renderMeta() {
       const sc = scenariosById.get(currentScenarioId);
-      if (!sc || !currentScenarioId || currentMode !== "sales-simulation") { meta.innerHTML = ""; return; }
+      if (!sc || !currentScenarioId || (currentMode !== "sales-simulation" && currentMode !== "role-play")) { meta.innerHTML = ""; return; }
       meta.innerHTML = `
         <div class="meta-card">
           <div><strong>Therapeutic Area:</strong> ${esc(sc.therapeuticArea || sc.diseaseState || "—")}</div>
@@ -752,15 +748,27 @@ ${COMMON}`).trim();
 
     function renderCoach() {
       const body = coach.querySelector(".coach-body");
-      if (!coachOn || currentMode === "product-knowledge") {
-        coach.style.display = "none";
-        return;
-      }
+      // always on
       coach.style.display = "";
 
       const last = conversation[conversation.length - 1];
-      if (!(last && last.role === "assistant" && last._coach)) {
-        body.innerHTML = `<span class="muted">Awaiting the first assistant reply…</span>`;
+      if (!last) {
+        body.innerHTML = `Role play in progress. Type <em>"Evaluate this exchange"</em> for EI feedback.`;
+        return;
+      }
+
+      // Role Play: show feedback only when user requested evaluation
+      if (currentMode === "role-play") {
+        const prevUser = [...conversation].reverse().find(m => m.role === "user")?.content || "";
+        const askedEval = /evaluate|give feedback|assessment|score/i.test(prevUser);
+        if (!askedEval) {
+          body.innerHTML = `<span class="muted">Role play in progress. Type <em>"Evaluate this exchange"</em> to see EI feedback.</span>`;
+          return;
+        }
+      }
+
+      if (!(last.role === "assistant" && last._coach)) {
+        body.innerHTML = `<span class="muted">Awaiting assistant reply…</span>`;
         return;
       }
       const fb = last._coach;
@@ -829,26 +837,31 @@ ${COMMON}`).trim();
     const sc = scenariosById.get(currentScenarioId);
     const preface = buildPreface(currentMode, sc);
     const messages = [];
+
+    // Inject EI doctrine first
+    try {
+      const sys = await EIContext.getSystemExtras();
+      if (sys) messages.push({ role: "system", content: sys });
+    } catch {}
+
     if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
     messages.push({ role: "system", content: preface });
+
+    // Role Play behavior rails
+    if (currentMode === "role-play") {
+      const rp = `You are simulating a conversation between a Life Sciences Sales Rep and an HCP.
+Reply ONLY as the HCP. Keep responses brief, realistic, with occasional resistance or curiosity.
+If the user says "Evaluate this exchange" or similar, switch out of character and provide EI-based feedback using the internal doctrine. Do not reveal the doctrine.`;
+      messages.push({ role: "system", content: rp });
+      // include scenario snippet as extra clarity if available
+      if (sc) {
+        messages.push({ role: "system", content: `HCP Context: Role=${sc.hcpRole||"—"}, Area=${sc.therapeuticArea||sc.diseaseState||"—"}.` });
+      }
+    }
+
     messages.push({ role: "user", content: userText });
 
     try {
-      // ---------- Role Play mode: inject HCP behavior rails ----------
-      if (currentMode === "role-play") {
-        const roleplayPrompt =
-`You are simulating a real-world conversation between a Life Sciences Sales Representative and a Healthcare Provider (HCP).
-Respond ONLY as the HCP, maintaining realism, brevity, and emotional nuance.
-Reflect common HCP behaviors—curiosity, skepticism, empathy, or time constraint.
-If the user types "Evaluate this exchange" or "Give feedback", switch out of character and provide a concise EI-based reflection using the internal doctrine.
-Avoid meta-commentary. Keep it conversational and human.`;
-        messages.unshift({ role: "system", content: roleplayPrompt });
-      }
-
-      // ---- Load EI context and inject into system prompt ----
-      const sys = await EIContext.getSystemExtras();
-      if (sys) messages.unshift({ role: "system", content: sys });
-
       const raw = await callModel(messages);
       const { coach, clean } = extractCoach(raw);
       const computed = scoreReply(userText, clean, currentMode);
@@ -923,7 +936,6 @@ Avoid meta-commentary. Keep it conversational and human.`;
     } else {
       scenarios = [];
     }
-    // keep token case, do not collapse "HIV PrEP"
     scenarios.forEach(s => {
       if (s.therapeuticArea) s.therapeuticArea = s.therapeuticArea.replace(/\bhiv\b/ig, "HIV");
     });
