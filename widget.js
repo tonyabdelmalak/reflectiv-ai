@@ -528,13 +528,22 @@ ${commonCoachContract()}`).trim();
     }
 
     if (mode === "role-play") {
-      return (
-`# Role Play Contract
-You are the Healthcare Provider. Reply ONLY as the HCP. Be realistic, brief, and sometimes skeptical or time constrained.
-If the user types "Evaluate this exchange" or "Give feedback", step out of role and return EI-based reflection using internal doctrine.
+  return (
+`# Role Play — HCP only
+You are the Healthcare Provider. Reply ONLY as the HCP. Be realistic, brief, and sometimes skeptical or time-constrained.
 
-${commonCoachContract()}`).trim();
-    }
+Return exactly two parts. No code blocks. No headings.
+1) HCP: one natural, concise HCP message responding to the rep’s last message. No bullets. No meta.
+2) <coach>{
+     "overall": 0-100,
+     "scores": { "accuracy":0-5,"empathy":0-5,"clarity":0-5,"compliance":0-5,"discovery":0-5,"objection_handling":0-5 },
+     "worked": ["…"],
+     "improve": ["…"],
+     "phrasing": "…",
+     "feedback": "one concise paragraph",
+     "context": { "rep_question":"...", "hcp_reply":"..." }
+   }</coach>`.trim();
+}
 
     // emotional-intelligence
     return (
@@ -1240,8 +1249,10 @@ ${commonCoachContract()}`).trim();
 
     // Messages: include systemPrompt, preface, scenario context meta, and prior chat
     const messages = [];
-    if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
-    messages.push({ role: "system", content: preface });
+    if (currentMode !== "role-play" && systemPrompt) {
+  messages.push({ role: "system", content: systemPrompt });
+}
+messages.push({ role: "system", content: preface });
 
     // inject minimal scenario breadcrumb for role-play and sales-simulation
     if ((currentMode === "sales-simulation" || currentMode === "role-play") && sc){
