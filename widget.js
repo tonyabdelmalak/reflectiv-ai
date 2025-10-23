@@ -6,21 +6,36 @@
  */
 (function () {
   // ---------- safe bootstrapping ----------
-  let mount = null;
-  function onReady(fn){ if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn, { once:true }); else fn(); }
-  function waitForMount(cb){
-    const tryGet = () => {
-      mount = document.getElementById("reflectiv-widget");
-      if (mount) return cb();
-      const obs = new MutationObserver(() => {
-        mount = document.getElementById("reflectiv-widget");
-        if (mount) { obs.disconnect(); cb(); }
-      });
-      obs.observe(document.documentElement, { childList:true, subtree:true });
-      setTimeout(() => obs.disconnect(), 15000);
-    };
-    onReady(tryGet);
+let mount = null;
+
+function onReady(fn){
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", fn, { once:true });
+  } else {
+    fn();
   }
+}
+
+function waitForMount(cb){
+  const findMount = () =>
+    document.getElementById("reflectiv-widget")
+    || document.querySelector("#coach-widget, [data-coach-mount], .reflectiv-widget");
+
+  const tryGet = () => {
+    mount = findMount();
+    if (mount) return cb();
+
+    const obs = new MutationObserver(() => {
+      mount = findMount();
+      if (mount) { obs.disconnect(); cb(); }
+    });
+
+    obs.observe(document.documentElement, { childList:true, subtree:true });
+    setTimeout(() => obs.disconnect(), 15000);
+  };
+
+  onReady(tryGet);
+}
 
   // ---------- config/state ----------
   const LC_OPTIONS = ["Emotional Intelligence","Product Knowledge","Sales Simulation","Role Play"];
@@ -305,35 +320,23 @@
   }
 
   // ---------- EI feedback render ----------
-  function generateFeedback() {
-    if (!feedbackDisplayElem) return;
-    if (currentMode !== "emotional-assessment") {
-      feedbackDisplayElem.innerHTML = "";
-      return;
-    }
-    const personaKey = personaSelectElem && personaSelectElem.value;
-    const featureKey = eiFeatureSelectElem && eiFeatureSelectElem.value;
-    if (!personaKey || !featureKey || !lastUserMessage) {
-      feedbackDisplayElem.innerHTML = `<span class="muted">Select a persona and EI feature, then send a message to see feedback.</span>`;
-      return;
-    }
-    let rating = null;
-    if (featureKey === "empathy") rating = calculateEmpathyRating(personaKey, lastUserMessage);
-    else if (featureKey === "stress") rating = calculateStressRating(personaKey, lastUserMessage);
-
-    const featureList = (cfg?.eiFeatures && cfg.eiFeatures.length ? cfg.eiFeatures : DEFAULT_EI_FEATURES);
-    const featureObj = featureList.find(f => f.key === featureKey || f.value === featureKey || f.id === featureKey);
-    const featureLabel = featureObj ? (featureObj.label || featureKey) : featureKey;
-    const feedback = generateDynamicFeedback(personaKey, featureKey);
-
-    feedbackDisplayElem.innerHTML = (rating == null)
-      ? `<strong>${esc(featureLabel)}</strong><br><p>${esc(feedback)}</p>`
-      : `<strong>${esc(featureLabel)}: ${rating}/5</strong><br><p>${esc(feedback)}</p>`;
+  // ---------- persona context ----------
+function currentPersonaHint() {
+  // Prefer explicit scenario persona; fallback to EI persona select
+  const sc = scenariosById.get(currentScenarioId);
+  if (sc && (sc.hcpRole || sc.label)) {
+    const dz = sc.therapeuticArea || sc.diseaseState || "—";
+    const who = sc.hcpRole || sc.label;
+    return `HCP Persona: ${who}. Disease: ${dz}.`;
   }
+  const p = personaSelectElem && personaSelectElem.value;
+  if (p) return `HCP Persona: ${p}.`;
+  return "";
+}
 
-  // ---------- prompt preface ----------
-  function buildPreface(mode, sc) {
-    const COMMON =
+// ---------- prompt preface ----------
+function buildPreface(mode, sc) {
+  const COMMON =
 `# ReflectivAI — Output Contract
 Return exactly two parts. No code blocks. No markdown headings.
 1) Sales Guidance: short, actionable, accurate guidance.
@@ -345,14 +348,16 @@ Return exactly two parts. No code blocks. No markdown headings.
      "phrasing": "…",
      "feedback": "one concise paragraph",
      "context": { "rep_question":"...", "hcp_reply":"..." }
-   }</coach>`.trim();
+   }</coach>`;
+  const personaLine = currentPersonaHint();
 
-    if (mode === "sales-simulation") {
-      return (
+  if (mode === "sales-simulation") {
+    return (
 `# Role
 You are a virtual pharma coach. Be direct, label-aligned, and safe.
 
 # Scenario
+${personaLine}
 ${sc ? [
   `Therapeutic Area: ${sc.therapeuticArea || "—"}`,
   `HCP Role: ${sc.hcpRole || "—"}`,
@@ -366,40 +371,43 @@ ${sc ? [
 - No pricing advice or PHI. No off-label.
 
 ${COMMON}`).trim();
-    }
+  }
 
-    if (mode === "product-knowledge") {
-      return `Return a concise educational overview with reputable citations. Structure: key takeaways; mechanism/indications; safety/contraindications; efficacy; access notes; references.`.trim();
-    }
+  if (mode === "product-knowledge") {
+    return `Return a concise educational overview with reputable citations. Structure: key takeaways; mechanism/indications; safety/contraindications; efficacy; access notes; references.`.trim();
+  }
 
-    if (mode === "role-play") {
-      return (
+  if (mode === "role-play") {
+    return (
 `# Role Play Contract
 You are the Healthcare Provider. Reply ONLY as the HCP. Be realistic, brief, and sometimes skeptical or time constrained.
+${personaLine}
 If the user types "Evaluate this exchange" or "Give feedback", step out of role and return EI-based reflection using internal doctrine.
-
-${COMMON}`).trim();
-    }
-
-    // emotional-assessment
-    return (
-`Provide brief self-reflection tips tied to HCP communication.
-- 3–5 sentences, then one reflective question.
 
 ${COMMON}`).trim();
   }
 
-  // ---------- UI ----------
-  function buildUI() {
-    mount.innerHTML = "";
-    if (!mount.classList.contains("cw")) mount.classList.add("cw");
+  // emotional-assessment
+  return (
+`Provide brief self-reflection tips tied to HCP communication.
+- 3–5 sentences, then one reflective question.
 
-    const STYLE_ID = "reflectiv-widget-inline-style";
-    let style = document.getElementById(STYLE_ID);
-    if (!style) {
-      style = document.createElement("style");
-      style.id = STYLE_ID;
-      style.textContent = `
+${COMMON}`).trim();
+}
+
+// ---------- UI ----------
+function buildUI() {
+  // wipe mount and ensure base class
+  mount.innerHTML = "";
+  if (!mount.classList.contains("cw")) mount.classList.add("cw");
+
+  // inline style once
+  const STYLE_ID = "reflectiv-widget-inline-style";
+  let style = document.getElementById(STYLE_ID);
+  if (!style) {
+    style = document.createElement("style");
+    style.id = STYLE_ID;
+    style.textContent = `
 #reflectiv-widget .reflectiv-chat{display:flex;flex-direction:column;gap:12px;border:3px solid #bfc7d4;border-radius:14px;background:#fff;overflow:hidden}
 #reflectiv-widget .chat-toolbar{display:block;padding:14px 16px;background:#f6f8fb;border-bottom:1px solid #e1e6ef}
 #reflectiv-widget .sim-controls{display:grid;grid-template-columns:220px 1fr 220px 1fr;gap:12px 16px;align-items:center}
@@ -420,42 +428,394 @@ ${COMMON}`).trim();
 #reflectiv-widget .hidden{display:none!important}
 @media (max-width:900px){#reflectiv-widget .sim-controls{grid-template-columns:1fr;gap:8px}#reflectiv-widget .sim-controls label{justify-self:start}}
 @media (max-width:520px){#reflectiv-widget .chat-messages{height:46vh}}
-      `;
-      document.head.appendChild(style);
+    `;
+    document.head.appendChild(style);
+  }
+
+  // shell + immediate skeleton to prevent white flash
+  const shell = el("div", "reflectiv-chat");
+  shell.innerHTML = `
+    <div class="chat-toolbar"><div class="sim-controls"></div></div>
+    <div class="scenario-meta"></div>
+    <div class="chat-messages">
+      <div class="message assistant"><div class="content">Loading ReflectivAI Coach…</div></div>
+    </div>
+    <div class="chat-input">
+      <textarea placeholder="Type your message…"></textarea>
+      <button class="btn">Send</button>
+    </div>
+  `;
+  mount.appendChild(shell);
+
+  // rebuild real UI
+  const bar = el("div", "chat-toolbar");
+  const simControls = el("div","sim-controls");
+
+  const lcLabel = el("label", "", "Learning Center");
+  lcLabel.htmlFor = "cw-mode";
+  const modeSel = el("select"); modeSel.id = "cw-mode";
+  LC_OPTIONS.forEach((name) => {
+    const o = el("option"); o.value = name; o.textContent = name;
+    modeSel.appendChild(o);
+  });
+  const initialLc = Object.keys(LC_TO_INTERNAL).find(k => LC_TO_INTERNAL[k] === (cfg?.defaultMode || "sales-simulation")) || "Sales Simulation";
+  modeSel.value = initialLc;
+  currentMode = LC_TO_INTERNAL[modeSel.value];
+
+  const coachLabel = el("label", "", "Coach");
+  coachLabel.htmlFor = "cw-coach";
+  const coachSel = el("select"); coachSel.id = "cw-coach";
+  [{v:"on",t:"Coach On"},{v:"off",t:"Coach Off"}].forEach(({v,t})=>{
+    const o = el("option"); o.value=v; o.textContent=t; coachSel.appendChild(o);
+  });
+  coachSel.value = coachOn ? "on" : "off";
+  coachSel.onchange = () => { coachOn = coachSel.value === "on"; renderCoach(); };
+
+  const diseaseLabel = el("label", "", "Disease State");
+  diseaseLabel.htmlFor = "cw-disease";
+  const diseaseSelect = el("select"); diseaseSelect.id = "cw-disease";
+
+  const hcpLabel = el("label","","HCP Profiles");
+  hcpLabel.htmlFor="cw-hcp";
+  const hcpSelect = el("select"); hcpSelect.id="cw-hcp";
+
+  // EI Persona/EI Feature
+  const personaLabel = el("label", "", "HCP Persona");
+  personaLabel.htmlFor = "cw-ei-persona";
+  const personaSelect = el("select"); personaSelect.id = "cw-ei-persona";
+  personaSelectElem = personaSelect;
+  personaLabelElem = personaLabel;
+  personaSelect.addEventListener("change", generateFeedback);
+
+  const featureLabel = el("label", "", "EI Feature");
+  featureLabel.htmlFor = "cw-ei-feature";
+  const featureSelect = el("select"); featureSelect.id = "cw-ei-feature";
+  eiFeatureSelectElem = featureSelect;
+  featureLabelElem = featureLabel;
+  featureSelect.addEventListener("change", generateFeedback);
+
+  // EI option sources
+  const PERSONAS_ALL =
+    Array.isArray(cfg?.eiProfiles) && cfg.eiProfiles.length
+      ? cfg.eiProfiles
+      : DEFAULT_PERSONAS;
+
+  const FEATURES_ALL_RAW =
+    (Array.isArray(cfg?.eiFeatures) && cfg.eiFeatures.length && cfg.eiFeatures) ||
+    (Array.isArray(cfg?.features) && cfg.features.length && cfg.features) ||
+    DEFAULT_EI_FEATURES;
+
+  const FEATURES_ALL = FEATURES_ALL_RAW.map(f =>
+    typeof f === "string"
+      ? { key: f.toLowerCase().replace(/\s+/g, "-"), label: f }
+      : f
+  );
+
+  // hydrate EI selects
+  function hydrateEISelects() {
+    if (!personaSelectElem || !eiFeatureSelectElem) return;
+    personaSelectElem.innerHTML = "";
+    eiFeatureSelectElem.innerHTML = "";
+    personaSelectElem.disabled = false;
+    eiFeatureSelectElem.disabled = false;
+
+    const opt = (txt, val = "") => {
+      const o = document.createElement("option");
+      o.value = val; o.textContent = txt;
+      return o;
+    };
+    personaSelectElem.appendChild(opt("Select...", ""));
+    eiFeatureSelectElem.appendChild(opt("Select...", ""));
+
+    PERSONAS_ALL.forEach(p => {
+      const o = document.createElement("option");
+      const val = p.key || p.value || p.id || String(p).toLowerCase().replace(/\s+/g, "-");
+      const lab = p.label || p.name || p.title || String(p);
+      o.value = val; o.textContent = lab;
+      personaSelectElem.appendChild(o);
+    });
+
+    FEATURES_ALL.forEach(f => {
+      const o = document.createElement("option");
+      const val = f.key || f.value || f.id || String(f).toLowerCase().replace(/\s+/g, "-");
+      const lab = f.label || f.name || f.title || String(f);
+      o.value = val; o.textContent = lab;
+      eiFeatureSelectElem.appendChild(o);
+    });
+
+    if (!FEATURES_ALL.length)
+      console.warn("EI features list is empty; check config keys (eiFeatures/features).");
+  }
+
+  // mount controls
+  simControls.appendChild(lcLabel);      simControls.appendChild(modeSel);
+  simControls.appendChild(coachLabel);   simControls.appendChild(coachSel);
+  simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
+  simControls.appendChild(hcpLabel);     simControls.appendChild(hcpSelect);
+  simControls.appendChild(personaLabel); simControls.appendChild(personaSelect);
+  simControls.appendChild(featureLabel); simControls.appendChild(featureSelect);
+
+  bar.appendChild(simControls);
+  shell.innerHTML = ""; // replace skeleton with real UI
+  shell.appendChild(bar);
+
+  const meta = el("div", "scenario-meta");
+  shell.appendChild(meta);
+
+  const msgs = el("div", "chat-messages");
+  shell.appendChild(msgs);
+
+  const inp = el("div", "chat-input");
+  const ta = el("textarea"); ta.placeholder = "Type your message…";
+  ta.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send.click(); } });
+  const send = el("button", "btn", "Send");
+  send.onclick = () => { const t = ta.value.trim(); if (!t) return; sendMessage(t); ta.value = ""; };
+  inp.appendChild(ta); inp.appendChild(send);
+  shell.appendChild(inp);
+
+  const coach = el("div", "coach-section");
+  coach.innerHTML = `<h3>Coach Feedback</h3><div class="coach-body muted">Awaiting the first assistant reply…</div>`;
+  shell.appendChild(coach);
+
+  feedbackDisplayElem = el("div", "ei-feedback");
+  feedbackDisplayElem.id = "feedback-display";
+  feedbackDisplayElem.style.marginTop = "8px";
+  feedbackDisplayElem.style.padding = "8px";
+  feedbackDisplayElem.style.borderTop = "1px solid #e1e6ef";
+  feedbackDisplayElem.style.fontSize = "14px";
+  coach.appendChild(feedbackDisplayElem);
+
+  // helpers
+  function getDiseaseStates() {
+    let ds = Array.isArray(cfg?.diseaseStates) ? cfg.diseaseStates.slice() : [];
+    if (!ds.length && Array.isArray(scenarios) && scenarios.length){
+      ds = Array.from(new Set(scenarios.map(s => (s.therapeuticArea || s.diseaseState || "").trim()))).filter(Boolean);
+    }
+    ds = ds.map(x => x.replace(/\bhiv\b/ig,"HIV"));
+    return ds;
+  }
+
+  function elOption(select, val, label) {
+    const o = document.createElement("option");
+    o.value = val; o.textContent = label;
+    select.appendChild(o);
+  }
+
+  function setSelectOptions(select, values, withPlaceholder) {
+    select.innerHTML = "";
+    if (withPlaceholder) {
+      const p = document.createElement("option");
+      p.value = ""; p.textContent = "Select…"; p.disabled = true; p.selected = true;
+      select.appendChild(p);
+    }
+    values.forEach(v => {
+      if (!v) return;
+      if (typeof v === "string") elOption(select, v, v);
+      else elOption(select, v.value || v.id || v.key || v.label, v.label || v.value || v.id || v.key);
+    });
+  }
+
+  function populateDiseases() {
+    const ds = getDiseaseStates();
+    setSelectOptions(diseaseSelect, ds, true);
+  }
+
+  function populateHcpForDisease(ds) {
+    const dsKey = (ds || "").trim();
+    const scen = scenarios.filter(s => {
+      const area = (s.therapeuticArea || s.diseaseState || "").trim();
+      return area.toLowerCase() === dsKey.toLowerCase();
+    });
+
+    if (scen.length) {
+      const opts = scen.map(s => ({ value: s.id, label: s.label || s.id }));
+      setSelectOptions(hcpSelect, opts, true);
+      hcpSelect.disabled = false;
+    } else {
+      setSelectOptions(hcpSelect, [{ value:"", label:"No scenarios for this disease" }], true);
+      hcpSelect.disabled = true;
+    }
+  }
+
+  function populateEIOptions() { hydrateEISelects(); }
+
+  function applyModeVisibility() {
+    const lc = modeSel.value;
+    currentMode = LC_TO_INTERNAL[lc];
+    const pk = currentMode === "product-knowledge";
+
+    coachLabel.classList.toggle("hidden", pk);
+    coachSel.classList.toggle("hidden", pk);
+
+    if (currentMode === "sales-simulation") {
+      diseaseLabel.classList.remove("hidden");
+      diseaseSelect.classList.remove("hidden");
+      hcpLabel.classList.remove("hidden");
+      hcpSelect.classList.remove("hidden");
+      personaLabelElem.classList.add("hidden");
+      personaSelectElem.classList.add("hidden");
+      featureLabelElem.classList.add("hidden");
+      eiFeatureSelectElem.classList.add("hidden");
+      feedbackDisplayElem.innerHTML = "";
+      populateDiseases();
+    } else if (currentMode === "product-knowledge") {
+      diseaseLabel.classList.remove("hidden");
+      diseaseSelect.classList.remove("hidden");
+      hcpLabel.classList.add("hidden");
+      hcpSelect.classList.add("hidden");
+      personaLabelElem.classList.add("hidden");
+      personaSelectElem.classList.add("hidden");
+      featureLabelElem.classList.add("hidden");
+      eiFeatureSelectElem.classList.add("hidden");
+      feedbackDisplayElem.innerHTML = "";
+      populateDiseases();
+    } else if (currentMode === "role-play") {
+      // Use Disease + HCP in Role Play
+      diseaseLabel.classList.remove("hidden");
+      diseaseSelect.classList.remove("hidden");
+      hcpLabel.classList.remove("hidden");
+      hcpSelect.classList.remove("hidden");
+      // Hide EI-only selects
+      personaLabelElem.classList.add("hidden");
+      personaSelectElem.classList.add("hidden");
+      featureLabelElem.classList.add("hidden");
+      eiFeatureSelectElem.classList.add("hidden");
+      feedbackDisplayElem.innerHTML = `
+        <div class="coach-note">
+          <strong>Role Play Mode:</strong> You chat with an HCP persona selected by Disease + HCP.
+          Type <em>"Evaluate this exchange"</em> any time for a final assessment.
+        </div>`;
+      populateDiseases();
+      if (diseaseSelect.value) populateHcpForDisease(diseaseSelect.value);
+      renderMessages(); renderCoach(); renderMeta();
+    } else {
+      // emotional-assessment
+      diseaseLabel.classList.add("hidden");
+      diseaseSelect.classList.add("hidden");
+      hcpLabel.classList.add("hidden");
+      hcpSelect.classList.add("hidden");
+      personaLabelElem.classList.remove("hidden");
+      personaSelectElem.classList.remove("hidden");
+      featureLabelElem.classList.remove("hidden");
+      eiFeatureSelectElem.classList.remove("hidden");
+      feedbackDisplayElem.innerHTML = "";
+      currentScenarioId = null;
+      conversation = [];
+      renderMessages(); renderCoach(); renderMeta();
     }
 
-    const shell = el("div", "reflectiv-chat");
+    // Reset convo only for PK and EI, not Role Play
+    if (currentMode === "product-knowledge" || currentMode === "emotional-assessment") {
+      currentScenarioId = null;
+      conversation = [];
+      renderMessages(); renderCoach(); renderMeta();
+    }
+  }
 
-    const bar = el("div", "chat-toolbar");
-    const simControls = el("div","sim-controls");
+  modeSel.addEventListener("change", applyModeVisibility);
 
-    const lcLabel = el("label", "", "Learning Center");
-    lcLabel.htmlFor = "cw-mode";
-    const modeSel = el("select"); modeSel.id = "cw-mode";
-    LC_OPTIONS.forEach((name) => {
-      const o = el("option"); o.value = name; o.textContent = name;
-      modeSel.appendChild(o);
-    });
-    const initialLc = Object.keys(LC_TO_INTERNAL).find(k => LC_TO_INTERNAL[k] === (cfg?.defaultMode || "sales-simulation")) || "Sales Simulation";
-    modeSel.value = initialLc;
-    currentMode = LC_TO_INTERNAL[modeSel.value];
+diseaseSelect.addEventListener("change", ()=>{
+  const ds = diseaseSelect.value || "";
+  if (!ds) return;
+  if (currentMode === "sales-simulation" || currentMode === "role-play") {
+    populateHcpForDisease(ds);
+  } else if (currentMode === "product-knowledge") {
+    currentScenarioId = null;
+  }
+  // Keep conversation intact in Role Play; reset elsewhere
+  if (currentMode !== "role-play") {
+    conversation = [];
+  }
+  renderMessages(); renderCoach(); renderMeta();
+});
 
-    const coachLabel = el("label", "", "Coach");
-    coachLabel.htmlFor = "cw-coach";
-    const coachSel = el("select"); coachSel.id = "cw-coach";
-    [{v:"on",t:"Coach On"},{v:"off",t:"Coach Off"}].forEach(({v,t})=>{
-      const o = el("option"); o.value=v; o.textContent=t; coachSel.appendChild(o);
-    });
-    coachSel.value = coachOn ? "on" : "off";
-    coachSel.onchange = () => { coachOn = coachSel.value === "on"; renderCoach(); };
+hcpSelect.addEventListener("change", ()=>{
+  const sel = hcpSelect.value || "";
+  if (!sel) return;
+  const sc = scenariosById.get(sel);
+  currentScenarioId = sc ? sc.id : null;
+  // Keep conversation intact in Role Play; reset elsewhere
+  if (currentMode !== "role-play") {
+    conversation = [];
+  }
+  renderMessages(); renderCoach(); renderMeta();
+});
 
-    const diseaseLabel = el("label", "", "Disease State");
-    diseaseLabel.htmlFor = "cw-disease";
-    const diseaseSelect = el("select"); diseaseSelect.id = "cw-disease";
+function renderMeta() {
+  const sc = scenariosById.get(currentScenarioId);
+  const showMeta = currentMode === "sales-simulation" || currentMode === "role-play";
+  if (!sc || !currentScenarioId || !showMeta) { meta.innerHTML = ""; return; }
+  meta.innerHTML = `
+    <div class="meta-card">
+      <div><strong>Therapeutic Area:</strong> ${esc(sc.therapeuticArea || sc.diseaseState || "—")}</div>
+      <div><strong>HCP Role:</strong> ${esc(sc.hcpRole || "—")}</div>
+      <div><strong>Background:</strong> ${esc(sc.background || "—")}</div>
+      <div><strong>Today’s Goal:</strong> ${esc(sc.goal || "—")}</div>
+    </div>`;
+}
 
-    const hcpLabel = el("label","","HCP Profiles");
-    hcpLabel.htmlFor="cw-hcp";
-    const hcpSelect = el("select"); hcpSelect.id="cw-hcp";
+function renderMessages() {
+  const msgsEl = shell.querySelector(".chat-messages");
+  msgsEl.innerHTML = "";
+  for (const m of conversation) {
+    const row = el("div", `message ${m.role}`);
+    const c = el("div", "content");
+    c.innerHTML = md(m.content);
+    row.appendChild(c);
+    msgsEl.appendChild(row);
+  }
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+}
+
+function orderedPills(scores) {
+  const order = ["accuracy","empathy","clarity","compliance","discovery","objection_handling"];
+  return order
+    .filter(k => k in (scores || {}))
+    .map(k => `<span class="pill">${esc(k)}: ${scores[k]}</span>`)
+    .join(" ");
+}
+
+function renderCoach() {
+  const body = coach.querySelector(".coach-body");
+  if (!coachOn || currentMode === "product-knowledge") {
+    coach.style.display = "none";
+    return;
+  }
+  coach.style.display = "";
+
+  const last = conversation[conversation.length - 1];
+  if (!(last && last.role === "assistant" && last._coach)) {
+    body.innerHTML = `<span class="muted">Awaiting the first assistant reply…</span>`;
+    return;
+  }
+  const fb = last._coach;
+  const scores = fb.scores || fb.subscores || {};
+  const workedStr = (fb.worked && fb.worked.length)
+    ? fb.worked.join(". ") + "."
+    : "—";
+  const improveStr = (fb.improve && fb.improve.length)
+    ? fb.improve.join(". ") + "."
+    : (fb.feedback || "—");
+  body.innerHTML = `
+    <div class="coach-score">Score: <strong>${fb.overall ?? fb.score ?? "—"}</strong>/100</div>
+    <div class="coach-subs">${orderedPills(scores)}</div>
+    <ul class="coach-list">
+      <li><strong>What worked:</strong> ${esc(workedStr)}</li>
+      <li><strong>What to improve:</strong> ${esc(improveStr)}</li>
+      <li><strong>Suggested phrasing:</strong> ${esc(fb.phrasing || "—")}</li>
+    </ul>`;
+}
+
+// expose renders for sendMessage
+shell._renderMessages = renderMessages;
+shell._renderCoach = renderCoach;
+shell._renderMeta = renderMeta;
+
+  // initialize
+  populateDiseases();
+  populateEIOptions();
+  applyModeVisibility();
+}
 
     // EI Persona/EI Feature
     const personaLabel = el("label", "", "HCP Persona");
@@ -654,197 +1014,312 @@ ${COMMON}`).trim();
         eiFeatureSelectElem.classList.add("hidden");
         feedbackDisplayElem.innerHTML = "";
         populateDiseases();
-      } else if (currentMode === "role-play") {
-        // NEW: pure sequential conversation; all selectors hidden
-        diseaseLabel.classList.add("hidden");
-        diseaseSelect.classList.add("hidden");
-        hcpLabel.classList.add("hidden");
-        hcpSelect.classList.add("hidden");
-        personaLabelElem.classList.add("hidden");
-        personaSelectElem.classList.add("hidden");
-        featureLabelElem.classList.add("hidden");
-        eiFeatureSelectElem.classList.add("hidden");
+     } else if (currentMode === "role-play") {
+  // Role Play uses Disease + HCP like Sales Simulation
+  diseaseLabel.classList.remove("hidden");
+  diseaseSelect.classList.remove("hidden");
+  hcpLabel.classList.remove("hidden");
+  hcpSelect.classList.remove("hidden");
 
-        feedbackDisplayElem.innerHTML = `
-          <div class="coach-note">
-            <strong>Role Play Mode:</strong> The coach replies as an HCP in realistic tone.
-            Keep it conversational. Type <em>"Evaluate this exchange"</em> anytime for EI-based feedback.
-          </div>`;
+  // Hide EI-only selects
+  personaLabelElem.classList.add("hidden");
+  personaSelectElem.classList.add("hidden");
+  featureLabelElem.classList.add("hidden");
+  eiFeatureSelectElem.classList.add("hidden");
 
-        currentScenarioId = null;
-        conversation = [];
-        renderMessages(); renderCoach(); renderMeta();
-      } else {
-        // emotional-assessment
-        diseaseLabel.classList.add("hidden");
-        diseaseSelect.classList.add("hidden");
-        hcpLabel.classList.add("hidden");
-        hcpSelect.classList.add("hidden");
-        personaLabelElem.classList.remove("hidden");
-        personaSelectElem.classList.remove("hidden");
-        featureLabelElem.classList.remove("hidden");
-        eiFeatureSelectElem.classList.remove("hidden");
-        feedbackDisplayElem.innerHTML = "";
-        currentScenarioId = null;
-        conversation = [];
-        renderMessages(); renderCoach(); renderMeta();
-      }
+  // Helper text under the modal
+  feedbackDisplayElem.innerHTML = `
+    <div class="coach-note">
+      <strong>Role Play Mode:</strong> You chat with an HCP persona selected by Disease + HCP.
+      Type <em>"Evaluate this exchange"</em> any time for a final assessment.
+    </div>`;
 
-      if (currentMode !== "sales-simulation") {
-        currentScenarioId = null;
-        conversation = [];
-        renderMessages(); renderCoach(); renderMeta();
-      }
+  // Ensure lists are populated and keep the chat continuous
+  populateDiseases();
+  if (diseaseSelect.value) populateHcpForDisease(diseaseSelect.value);
+
+  renderMessages();
+  renderCoach();
+  renderMeta();
+
+} else {
+  // emotional-assessment
+  diseaseLabel.classList.add("hidden");
+  diseaseSelect.classList.add("hidden");
+  hcpLabel.classList.add("hidden");
+  hcpSelect.classList.add("hidden");
+  personaLabelElem.classList.remove("hidden");
+  personaSelectElem.classList.remove("hidden");
+  featureLabelElem.classList.remove("hidden");
+  eiFeatureSelectElem.classList.remove("hidden");
+  feedbackDisplayElem.innerHTML = "";
+  currentScenarioId = null;
+  conversation = [];
+  renderMessages(); renderCoach(); renderMeta();
+}
+
+// Only reset for PK and EI, not Role Play
+if (currentMode === "product-knowledge" || currentMode === "emotional-assessment") {
+  currentScenarioId = null;
+  conversation = [];
+  renderMessages(); renderCoach(); renderMeta();
+}
+}
+
+modeSel.addEventListener("change", applyModeVisibility);
+
+diseaseSelect.addEventListener("change", ()=>{
+  const ds = diseaseSelect.value || "";
+  if (!ds) return;
+  if (currentMode === "sales-simulation" || currentMode === "role-play") {
+    populateHcpForDisease(ds);
+  } else if (currentMode === "product-knowledge") {
+    currentScenarioId = null;
+  }
+  conversation = [];
+  renderMessages(); renderCoach(); renderMeta();
+});
+
+hcpSelect.addEventListener("change", ()=>{
+  const sel = hcpSelect.value || "";
+  if (!sel) return;
+  const sc = scenariosById.get(sel);
+  currentScenarioId = sc ? sc.id : null;
+  conversation = [];
+  renderMessages(); renderCoach(); renderMeta();
+});
+
+function renderMeta() {
+  const sc = scenariosById.get(currentScenarioId);
+  if (!sc || !currentScenarioId || currentMode !== "sales-simulation") { meta.innerHTML = ""; return; }
+  meta.innerHTML = `
+    <div class="meta-card">
+      <div><strong>Therapeutic Area:</strong> ${esc(sc.therapeuticArea || sc.diseaseState || "—")}</div>
+      <div><strong>HCP Role:</strong> ${esc(sc.hcpRole || "—")}</div>
+      <div><strong>Background:</strong> ${esc(sc.background || "—")}</div>
+      <div><strong>Today’s Goal:</strong> ${esc(sc.goal || "—")}</div>
+    </div>`;
+}
+
+function renderMessages() {
+  const msgsEl = shell.querySelector(".chat-messages");
+  msgsEl.innerHTML = "";
+  for (const m of conversation) {
+    const row = el("div", `message ${m.role}`);
+    const c = el("div", "content");
+    c.innerHTML = md(m.content);
+    row.appendChild(c);
+    msgsEl.appendChild(row);
+  }
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+}
+
+function orderedPills(scores) {
+  const order = ["accuracy","empathy","clarity","compliance","discovery","objection_handling"];
+  return order
+    .filter(k => k in (scores || {}))
+    .map(k => `<span class="pill">${esc(k)}: ${scores[k]}</span>`)
+    .join(" ");
+}
+
+function renderCoach() {
+  const body = coach.querySelector(".coach-body");
+  // Keep coach visible for Role Play; hide only for Product Knowledge
+  if (!coachOn || currentMode === "product-knowledge") {
+    coach.style.display = "none";
+    return;
+  }
+  coach.style.display = "";
+
+  const last = conversation[conversation.length - 1];
+  if (!(last && last.role === "assistant" && last._coach)) {
+    body.innerHTML = `<span class="muted">Awaiting the first assistant reply…</span>`;
+    return;
+  }
+  const fb = last._coach;
+  const scores = fb.scores || fb.subscores || {};
+  const workedStr = (fb.worked && fb.worked.length)
+    ? fb.worked.join(". ") + "."
+    : "—";
+  const improveStr = (fb.improve && fb.improve.length)
+    ? fb.improve.join(". ") + "."
+    : (fb.feedback || "—");
+  body.innerHTML = `
+    <div class="coach-score">Score: <strong>${fb.overall ?? fb.score ?? "—"}</strong>/100</div>
+    <div class="coach-subs">${orderedPills(scores)}</div>
+    <ul class="coach-list">
+      <li><strong>What worked:</strong> ${esc(workedStr)}</li>
+      <li><strong>What to improve:</strong> ${esc(improveStr)}</li>
+      <li><strong>Suggested phrasing:</strong> ${esc(fb.phrasing || "—")}</li>
+    </ul>`;
+}
+
+shell._renderMessages = renderMessages;
+shell._renderCoach = renderCoach;
+shell._renderMeta = renderMeta;
+
+// Populate dropdowns and apply mode
+populateDiseases();
+populateEIOptions();
+applyModeVisibility();
+
+// ---------- transport ----------
+async function callModel(messages) {
+  const url = (cfg?.apiBase || cfg?.workerUrl || "").trim();
+  if (!url) throw new Error("No API endpoint configured (set config.apiBase or config.workerUrl).");
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: (cfg && cfg.model) || "llama-3.1-8b-instant",
+      temperature: 0.2,
+      stream: !!cfg?.stream,
+      messages
+    })
+  });
+  if (!r.ok) {
+    const txt = await r.text().catch(() => "");
+    throw new Error(`HTTP ${r.status}: ${txt || "no body"}`);
+  }
+  const data = await r.json().catch(() => ({}));
+  return data?.content || data?.reply || data?.choices?.[0]?.message?.content || "";
+}
+
+// ---------- final-eval helper ----------
+async function evaluateConversation() {
+  const sc = scenariosById.get(currentScenarioId);
+  const turns = conversation.length ? conversation : [{ role: "system", content: "No prior turns." }];
+  const convoText = turns.map(m => `${m.role}: ${m.content}`).join("\n").slice(0, 24000); // guard size
+
+  const evalMsgs = [
+    systemPrompt ? { role: "system", content: systemPrompt } : null,
+    { role: "system", content: (buildPreface("role-play", sc) + "\nEvaluate the whole exchange now.") },
+    { role: "user", content:
+      `Evaluate this entire exchange for EI, clarity, accuracy, compliance, discovery, and objection handling. ` +
+      `Provide specific, actionable feedback and a 0-100 score.\n\nConversation:\n${convoText}`
     }
+  ].filter(Boolean);
 
-    modeSel.addEventListener("change", applyModeVisibility);
+  const raw = await callModel(evalMsgs);
+  const { coach, clean } = extractCoach(raw);
+  const finalCoach = coach || scoreReply("", clean);
+  conversation.push({ role: "assistant", content: clean, _coach: finalCoach });
+}
 
-    diseaseSelect.addEventListener("change", ()=>{
-      const ds = diseaseSelect.value || "";
-      if (!ds) return;
-      if (currentMode === "sales-simulation") {
-        populateHcpForDisease(ds);
-      } else if (currentMode === "product-knowledge") {
-        currentScenarioId = null;
-      }
-      conversation=[]; renderMessages(); renderCoach(); renderMeta();
-    });
+// ---------- send ----------
+async function sendMessage(userText) {
+  const shellEl = mount.querySelector(".reflectiv-chat");
+  const renderMessages = shellEl._renderMessages;
+  const renderCoach = shellEl._renderCoach;
 
-    hcpSelect.addEventListener("change", ()=>{
-      const sel = hcpSelect.value || "";
-      if (!sel) return;
-      const sc = scenariosById.get(sel);
-      currentScenarioId = sc ? sc.id : null;
-      conversation=[]; renderMessages(); renderCoach(); renderMeta();
-    });
+  // normalize input
+  userText = (userText || "").trim();
+  if (!userText) return;
+  lastUserMessage = userText;
 
-    function renderMeta() {
-      const sc = scenariosById.get(currentScenarioId);
-      if (!sc || !currentScenarioId || currentMode !== "sales-simulation") { meta.innerHTML = ""; return; }
-      meta.innerHTML = `
-        <div class="meta-card">
-          <div><strong>Therapeutic Area:</strong> ${esc(sc.therapeuticArea || sc.diseaseState || "—")}</div>
-          <div><strong>HCP Role:</strong> ${esc(sc.hcpRole || "—")}</div>
-          <div><strong>Background:</strong> ${esc(sc.background || "—")}</div>
-          <div><strong>Today’s Goal:</strong> ${esc(sc.goal || "—")}</div>
-        </div>`;
-    }
-
-    function renderMessages() {
-      const msgsEl = shell.querySelector(".chat-messages");
-      msgsEl.innerHTML = "";
-      for (const m of conversation) {
-        const row = el("div", `message ${m.role}`);
-        const c = el("div", "content");
-        c.innerHTML = md(m.content);
-        row.appendChild(c);
-        msgsEl.appendChild(row);
-      }
-      msgsEl.scrollTop = msgsEl.scrollHeight;
-    }
-
-    function orderedPills(scores) {
-      const order = ["accuracy","empathy","clarity","compliance","discovery","objection_handling"];
-      return order
-        .filter(k => k in (scores || {}))
-        .map(k => `<span class="pill">${esc(k)}: ${scores[k]}</span>`)
-        .join(" ");
-    }
-
-    function renderCoach() {
-      const body = coach.querySelector(".coach-body");
-      if (!coachOn || currentMode === "product-knowledge") {
-        coach.style.display = "none";
-        return;
-      }
-      coach.style.display = "";
-
-      const last = conversation[conversation.length - 1];
-      if (!(last && last.role === "assistant" && last._coach)) {
-        body.innerHTML = `<span class="muted">Awaiting the first assistant reply…</span>`;
-        return;
-      }
-      const fb = last._coach;
-      const scores = fb.scores || fb.subscores || {};
-      const workedStr = (fb.worked && fb.worked.length)
-        ? fb.worked.join(". ") + "."
-        : "—";
-      const improveStr = (fb.improve && fb.improve.length)
-        ? fb.improve.join(". ") + "."
-        : (fb.feedback || "—");
-      body.innerHTML = `
-        <div class="coach-score">Score: <strong>${fb.overall ?? fb.score ?? "—"}</strong>/100</div>
-        <div class="coach-subs">${orderedPills(scores)}</div>
-        <ul class="coach-list">
-          <li><strong>What worked:</strong> ${esc(workedStr)}</li>
-          <li><strong>What to improve:</strong> ${esc(improveStr)}</li>
-          <li><strong>Suggested phrasing:</strong> ${esc(fb.phrasing || "—")}</li>
-        </ul>`;
-    }
-
-    shell._renderMessages = renderMessages;
-    shell._renderCoach = renderCoach;
-    shell._renderMeta = renderMeta;
-
-    // Populate dropdowns and apply mode
-    populateDiseases();
-    populateEIOptions();
-    applyModeVisibility();
+  // Intercept final-evaluation intents (broader trigger set)
+  const evalRe = /\b(evaluate|assessment|assess|grade|score)\b.*\b(conversation|exchange|dialog|dialogue|chat)\b|\bfinal (eval|evaluation|assessment)\b/i;
+  if (evalRe.test(userText)) {
+    await evaluateConversation();
+    renderMessages();
+    renderCoach();
+    return;
   }
 
-  // ---------- transport ----------
-  async function callModel(messages) {
-    const url = (cfg?.apiBase || cfg?.workerUrl || "").trim();
-    if (!url) throw new Error("No API endpoint configured (set config.apiBase or config.workerUrl).");
-    const r = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: (cfg && cfg.model) || "llama-3.1-8b-instant",
-        temperature: 0.2,
-        stream: !!cfg?.stream,
-        messages
-      })
-    });
-    if (!r.ok) {
-      const txt = await r.text().catch(() => "");
-      throw new Error(`HTTP ${r.status}: ${txt || "no body"}`);
+  // Normal turn
+  conversation.push({ role: "user", content: userText });
+  renderMessages();
+  renderCoach();
+
+  if (currentMode === "emotional-assessment") generateFeedback();
+
+  const sc = scenariosById.get(currentScenarioId);
+  const preface = buildPreface(currentMode, sc);
+  const messages = [];
+  if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
+  messages.push({ role: "system", content: preface });
+  messages.push({ role: "user", content: userText });
+
+  try {
+    // Role Play rails + persona/disease context
+    if (currentMode === "role-play") {
+      const personaLine = currentPersonaHint();
+      const detail =
+        sc
+          ? `Therapeutic Area: ${sc.therapeuticArea || sc.diseaseState || "—"}. ` +
+            `HCP Role: ${sc.hcpRole || "—"}. ` +
+            (sc.background ? `Background: ${sc.background}. ` : "") +
+            (sc.goal ? `Today’s Goal: ${sc.goal}.` : "")
+          : "";
+      const roleplayPrompt =
+`You simulate a real HCP. Reply ONLY as the HCP. Natural tone. Sometimes terse if busy.
+${personaLine}
+${detail}
+Avoid meta-commentary. Do not include rubric text in replies.
+If the user types "Evaluate this exchange" you will stop role-play and provide a final assessment.`;
+      messages.unshift({ role: "system", content: roleplayPrompt });
     }
-    const data = await r.json().catch(() => ({}));
-    return data?.content || data?.reply || data?.choices?.[0]?.message?.content || "";
-  }
 
-  // ---------- send ----------
-  async function sendMessage(userText) {
-    const shellEl = mount.querySelector(".reflectiv-chat");
-    const renderMessages = shellEl._renderMessages;
-    const renderCoach = shellEl._renderCoach;
+    // Optional EI system extras if present
+    const sysExtras = (typeof EIContext !== "undefined" && EIContext?.getSystemExtras)
+      ? await EIContext.getSystemExtras().catch(()=>null)
+      : null;
+    if (sysExtras) messages.unshift({ role: "system", content: sysExtras });
 
-    lastUserMessage = userText;
+    // Call model
+    const raw = await callModel(messages);
 
-    conversation.push({ role: "user", content: userText });
-    renderMessages(); renderCoach();
+    // Parse assistant + coach payload
+    const { coach, clean } = extractCoach(raw);
+    const computed = scoreReply(userText, clean, currentMode);
+    const finalCoach = (() => {
+      if (coach && (coach.scores || coach.subscores)) {
+        const scores = coach.scores || coach.subscores;
+        const overall = typeof coach.overall === "number"
+          ? coach.overall
+          : (typeof coach.score === "number" ? coach.score : undefined);
+        return {
+          overall: overall ?? computed.overall,
+          scores,
+          feedback: coach.feedback || computed.feedback,
+          worked: coach.worked && coach.worked.length ? coach.worked : computed.worked,
+          improve: coach.improve && coach.improve.length ? coach.improve : computed.improve,
+          phrasing: typeof coach.phrasing === "string" && coach.phrasing ? coach.phrasing : computed.phrasing,
+          context: coach.context || { rep_question: userText, hcp_reply: clean },
+          score: overall ?? computed.overall,
+          subscores: scores
+        };
+      }
+      return computed;
+    })();
+
+    conversation.push({ role: "assistant", content: clean, _coach: finalCoach });
+    renderMessages();
+    renderCoach();
 
     if (currentMode === "emotional-assessment") generateFeedback();
 
-    const sc = scenariosById.get(currentScenarioId);
-    const preface = buildPreface(currentMode, sc);
-    const messages = [];
-    if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
-    messages.push({ role: "system", content: preface });
-    messages.push({ role: "user", content: userText });
-
-    try {
-      // ---------- Role Play mode: inject HCP behavior rails ----------
-      if (currentMode === "role-play") {
-        const roleplayPrompt =
-`You are simulating a real-world conversation between a Life Sciences Sales Representative and a Healthcare Provider (HCP).
-Respond ONLY as the HCP, maintaining realism, brevity, and emotional nuance.
-Reflect common HCP behaviors—curiosity, skepticism, empathy, or time constraint.
-If the user types "Evaluate this exchange" or "Give feedback", switch out of character and provide a concise EI-based reflection using the internal doctrine.
-Avoid meta-commentary. Keep it conversational and human.`;
-        messages.unshift({ role: "system", content: roleplayPrompt });
-      }
+    if (cfg && cfg.analyticsEndpoint) {
+      fetch(cfg.analyticsEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ts: Date.now(),
+          schema: (cfg.schemaVersion || "coach-v2"),
+          mode: currentMode,
+          scenarioId: currentScenarioId,
+          turn: conversation.length,
+          context: finalCoach.context || { rep_question: userText, hcp_reply: clean },
+          overall: finalCoach.overall,
+          scores: finalCoach.scores
+        })
+      }).catch(() => {});
+    }
+  } catch (e) {
+    conversation.push({ role: "assistant", content: `Model error: ${String(e.message || e)}` });
+    renderMessages();
+  }
+}
 
       // ---- Load EI context and inject into system prompt ----
       const sys = await EIContext.getSystemExtras();
@@ -900,13 +1375,14 @@ Avoid meta-commentary. Keep it conversational and human.`;
   }
 
   // ---------- scenarios loader ----------
-  async function loadScenarios() {
+async function loadScenarios() {
+  try {
     if (cfg && cfg.scenariosUrl) {
       const payload = await fetchLocal(cfg.scenariosUrl);
       const arr = Array.isArray(payload) ? payload : (payload.scenarios || []);
       scenarios = arr.map((s)=>({
-        id: s.id,
-        label: s.label || s.id,
+        id: String(s.id),
+        label: s.label || String(s.id),
         therapeuticArea: s.therapeuticArea || s.diseaseState || "",
         hcpRole: s.hcpRole || "",
         background: s.background || "",
@@ -914,8 +1390,8 @@ Avoid meta-commentary. Keep it conversational and human.`;
       }));
     } else if (Array.isArray(cfg?.scenarios)) {
       scenarios = cfg.scenarios.map((s)=>({
-        id: s.id,
-        label: s.label || s.id,
+        id: String(s.id),
+        label: s.label || String(s.id),
         therapeuticArea: (s.therapeuticArea||s.diseaseState||""),
         hcpRole: s.hcpRole || "",
         background: s.background || "",
@@ -924,34 +1400,44 @@ Avoid meta-commentary. Keep it conversational and human.`;
     } else {
       scenarios = [];
     }
-    // keep token case, do not collapse "HIV PrEP"
-    scenarios.forEach(s => {
-      if (s.therapeuticArea) s.therapeuticArea = s.therapeuticArea.replace(/\bhiv\b/ig, "HIV");
-    });
-    scenariosById = new Map(scenarios.map((s)=>[s.id,s]));
+  } catch (e) {
+    console.error("scenarios load failed:", e);
+    scenarios = [];
   }
 
-  // ---------- init ----------
-  async function init() {
-    try {
-      try { cfg = await fetchLocal("./assets/chat/config.json"); }
-      catch { cfg = await fetchLocal("./config.json"); }
-    } catch (e) {
-      console.error("config load failed:", e);
-      cfg = { defaultMode: "sales-simulation" };
-    }
+  // keep token case, do not collapse "HIV PrEP"
+  scenarios.forEach(s => {
+    if (s.therapeuticArea) s.therapeuticArea = s.therapeuticArea.replace(/\bhiv\b/ig, "HIV");
+  });
 
-    try {
-      systemPrompt = await fetchLocal("./assets/chat/system.md");
-    } catch (e) {
-      console.error("system.md load failed:", e);
-      systemPrompt = "";
-    }
+  // de-dup by id (last one wins)
+  const byId = new Map();
+  for (const s of scenarios) byId.set(s.id, s);
+  scenarios = Array.from(byId.values());
+  scenariosById = byId;
+}
 
-    await loadScenarios();
-    buildUI();
+// ---------- init ----------
+async function init() {
+  try {
+    try { cfg = await fetchLocal("./assets/chat/config.json"); }
+    catch { cfg = await fetchLocal("./config.json"); }
+  } catch (e) {
+    console.error("config load failed:", e);
+    cfg = { defaultMode: "sales-simulation" };
   }
 
-  // ---------- start ----------
-  waitForMount(init);
+  try {
+    systemPrompt = await fetchLocal("./assets/chat/system.md");
+  } catch (e) {
+    console.error("system.md load failed:", e);
+    systemPrompt = "";
+  }
+
+  await loadScenarios();
+  buildUI();
+}
+
+// ---------- start ----------
+waitForMount(init);
 })();
