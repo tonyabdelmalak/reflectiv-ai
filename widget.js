@@ -772,24 +772,44 @@ ${commonCoachContract()}`).trim();
     refs.msgs = msgs;
 
     // Input
-    const inp = el("div", "chat-input");
-    const ta = el("textarea"); ta.placeholder = "Type your message…";
-    ta.setAttribute("aria-label","Message input");
-    ta.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); refs.sendBtn.click(); }
-      if (e.key.toLowerCase() === "e" && (e.ctrlKey || e.metaKey) && e.shiftKey){ e.preventDefault(); evaluateTranscript(); }
-      if (e.key.toLowerCase() === "r" && (e.ctrlKey || e.metaKey) && e.shiftKey){ e.preventDefault(); resetSession(); }
-      if (e.key.toLowerCase() === "c" && (e.ctrlKey || e.metaKey) && e.shiftKey){ e.preventDefault(); copyToClipboard(transcriptText()); }
-      if (e.altKey){
-        const n = Number(e.key);
-        if (n>=1 && n<=4){
-          const name = LC_OPTIONS[n-1];
-          refs.modeSel.value = name;
-          applyModeVisibility();
-          savePrefs();
-        }
-      }
-    });
+const inp = el("div", "chat-input");
+const ta = el("textarea");
+ta.placeholder = "Type your message…";
+ta.setAttribute("aria-label","Message input");
+ta.addEventListener("keydown", (e) => {
+  // ignore IME/composition
+  if (e.isComposing || e.key === "Process") return;
+
+  // Send on Enter (no Shift)
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    refs.sendBtn && refs.sendBtn.click();
+    return;
+  }
+
+  // Normalize single-letter hotkeys
+  const k = (typeof e.key === "string" && e.key.length === 1) ? e.key.toLowerCase() : "";
+
+  // Ctrl/⌘+Shift shortcuts
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
+    if (k === "e") { e.preventDefault(); evaluateTranscript(); return; }
+    if (k === "r") { e.preventDefault(); resetSession(); return; }
+    if (k === "c") { e.preventDefault(); copyToClipboard(transcriptText()); return; }
+  }
+
+  // Alt+1..4 to switch modes (avoid AltGraph)
+  if (e.altKey && !e.ctrlKey && !e.metaKey) {
+    const n = Number(e.key);
+    if (n >= 1 && n <= 4) {
+      e.preventDefault();
+      const name = LC_OPTIONS[n - 1];
+      refs.modeSel.value = name;
+      applyModeVisibility();
+      savePrefs();
+    }
+  }
+});
+
     const send = el("button", "btn", "Send");
     send.setAttribute("aria-label","Send message");
     send.onclick = () => {
@@ -822,7 +842,9 @@ feedbackDisplayElem.style.marginTop = "8px";
 feedbackDisplayElem.style.padding = "8px";
 feedbackDisplayElem.style.borderTop = "1px solid #e1e6ef";
 feedbackDisplayElem.style.fontSize = "14px";
+refs.feedbackDisplay = feedbackDisplayElem; // <-- add
 coach.appendChild(feedbackDisplayElem);
+
 
     shell.appendChild(bar);
     shell.appendChild(meta);
@@ -1282,7 +1304,7 @@ Avoid meta-commentary. Keep it conversational and human.`;
     // history
 buildChatHistory(16).forEach(m => messages.push(m));
 // add the new turn
-messages.push({ role: "user", content: userText })
+messages.push({ role: "user", content: userText });
 
     try {
       const raw = await enqueue(()=> callModel(messages, {timeoutMs: 35000}));
