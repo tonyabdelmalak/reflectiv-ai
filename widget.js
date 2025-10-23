@@ -815,11 +815,13 @@ ${commonCoachContract()}`).trim();
     // EI feedback area (below coach header)
 feedbackDisplayElem = el("div", "ei-feedback");
 feedbackDisplayElem.id = "feedback-display";
+feedbackDisplayElem.setAttribute("role","region");
+feedbackDisplayElem.setAttribute("aria-live","polite");
+feedbackDisplayElem.setAttribute("aria-label","Emotional intelligence feedback");
 feedbackDisplayElem.style.marginTop = "8px";
 feedbackDisplayElem.style.padding = "8px";
 feedbackDisplayElem.style.borderTop = "1px solid #e1e6ef";
 feedbackDisplayElem.style.fontSize = "14px";
-refs.feedbackDisplay = feedbackDisplayElem; // ensure globally referenced
 coach.appendChild(feedbackDisplayElem);
 
     shell.appendChild(bar);
@@ -1278,7 +1280,9 @@ Avoid meta-commentary. Keep it conversational and human.`;
     if (sys) messages.unshift({ role: "system", content: sys });
 
     // history
-    buildChatHistory(16).forEach(m => messages.push(m));
+buildChatHistory(16).forEach(m => messages.push(m));
+// add the new turn
+messages.push({ role: "user", content: userText })
 
     try {
       const raw = await enqueue(()=> callModel(messages, {timeoutMs: 35000}));
