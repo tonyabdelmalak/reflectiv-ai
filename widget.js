@@ -981,42 +981,39 @@ coach.appendChild(feedbackDisplayElem);
     shell._renderCoach = renderCoach;
     shell._renderMeta = renderMeta;
 
-    function applyModeVisibility() {
-      const lc = refs.modeSel.value;
-      currentMode = LC_TO_INTERNAL[lc];
-      const pk = currentMode === "product-knowledge";
+    // ...inside buildUI()
+function applyModeVisibility() {
+  const lc = refs.modeSel.value;
+  currentMode = LC_TO_INTERNAL[lc];
+  const pk = currentMode === "product-knowledge";
 
-      // Show diseases/HCP for sales-simulation AND role-play
-      const showDiseaseHcp = (currentMode === "sales-simulation" || currentMode === "role-play");
+  const showDiseaseHcp = (currentMode === "sales-simulation" || currentMode === "role-play");
 
-      // coach visibility toggle for PK
-      coachLabel.classList.toggle("hidden", pk);
-      coachSel.classList.toggle("hidden", pk);
+  coachLabel.classList.toggle("hidden", pk);
+  coachSel.classList.toggle("hidden", pk);
 
-      // Disease/HCP
-      diseaseLabel.classList.toggle("hidden", !showDiseaseHcp);
-      refs.diseaseSel.classList.toggle("hidden", !showDiseaseHcp);
-      hcpLabel.classList.toggle("hidden", !showDiseaseHcp);
-      refs.hcpSel.classList.toggle("hidden", !showDiseaseHcp);
+  diseaseLabel.classList.toggle("hidden", !showDiseaseHcp);
+  refs.diseaseSel.classList.toggle("hidden", !showDiseaseHcp);
+  hcpLabel.classList.toggle("hidden", !showDiseaseHcp);
+  refs.hcpSel.classList.toggle("hidden", !showDiseaseHcp);
 
-      // EI fields
-      const showEI = currentMode === "emotional-intelligence";
-      personaLabelElem.classList.toggle("hidden", !showEI);
-      personaSelectElem.classList.toggle("hidden", !showEI);
-      featureLabelElem.classList.toggle("hidden", !showEI);
-      eiFeatureSelectElem.classList.toggle("hidden", !showEI);
-      if (!showEI) feedbackDisplayElem.innerHTML = "";
+  const showEI = currentMode === "emotional-intelligence";
+  personaLabelElem.classList.toggle("hidden", !showEI);
+  personaSelectElem.classList.toggle("hidden", !showEI);
+  featureLabelElem.classList.toggle("hidden", !showEI);
+  eiFeatureSelectElem.classList.toggle("hidden", !showEI);
+  if (!showEI) feedbackDisplayElem.innerHTML = "";
 
-      // Reset conversation on mode change to avoid cross-mode bleed
-conversation = [];
-if (currentMode !== "sales-simulation" && currentMode !== "role-play") currentScenarioId = null;
-// Only repopulate when relevant to avoid clobbering selection in other modes
-if (currentMode === "sales-simulation" || currentMode === "role-play") populateDiseases();
+  // reset
+  conversation = [];
+  if (currentMode !== "sales-simulation" && currentMode !== "role-play") currentScenarioId = null;
+  if (showDiseaseHcp) populateDiseases();
 
-refs.shell._renderMessages();
-refs.shell._renderCoach();
-refs.shell._renderMeta();
-savePrefs();
+  refs.shell._renderMessages();
+  refs.shell._renderCoach();
+  refs.shell._renderMeta();
+  savePrefs();
+} // <-- this closing brace was missing
 
     // wire handlers
     refs.modeSel.addEventListener("change", applyModeVisibility);
@@ -1301,10 +1298,8 @@ Avoid meta-commentary. Keep it conversational and human.`;
     const sys = await EIContext.getSystemExtras().catch(()=> "");
     if (sys) messages.unshift({ role: "system", content: sys });
 
-    // history
+    // history already includes the latest user turn
 buildChatHistory(16).forEach(m => messages.push(m));
-// add the new turn
-messages.push({ role: "user", content: userText });
 
     try {
       const raw = await enqueue(()=> callModel(messages, {timeoutMs: 35000}));
