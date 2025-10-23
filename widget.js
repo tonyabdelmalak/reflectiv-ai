@@ -813,16 +813,15 @@ ${commonCoachContract()}`).trim();
     refs.coachBody = coachBody;
 
     // EI feedback area (below coach header)
-    feedbackDisplayElem = el("div", "ei-feedback");
-    feedbackDisplayElem.id = "feedback-display";
-    feedbackDisplayElem.style.marginTop = "8px";
-    feedbackDisplayElem.style.padding = "8px";
-    feedbackDisplayElem.style.borderTop = "1px solid #e1e6ef";
-    feedbackDisplayElem.style.fontSize = "14px";
-    coach.appendChild(feedbackDisplayElem);
+feedbackDisplayElem = el("div", "ei-feedback");
+feedbackDisplayElem.id = "feedback-display";
+feedbackDisplayElem.style.marginTop = "8px";
+feedbackDisplayElem.style.padding = "8px";
+feedbackDisplayElem.style.borderTop = "1px solid #e1e6ef";
+feedbackDisplayElem.style.fontSize = "14px";
+refs.feedbackDisplay = feedbackDisplayElem; // ensure globally referenced
+coach.appendChild(feedbackDisplayElem);
 
-    // Assemble
-    refs.toolbar.appendChild(document.createElement("div")); // spacer if needed
     shell.appendChild(bar);
     shell.appendChild(meta);
     shell.appendChild(msgs);
@@ -985,12 +984,15 @@ ${commonCoachContract()}`).trim();
       if (!showEI) feedbackDisplayElem.innerHTML = "";
 
       // Reset conversation on mode change to avoid cross-mode bleed
-      conversation = [];
-      currentScenarioId = null;
-      populateDiseases();
-      refs.shell._renderMessages(); refs.shell._renderCoach(); refs.shell._renderMeta();
-      savePrefs();
-    }
+conversation = [];
+if (currentMode !== "sales-simulation" && currentMode !== "role-play") currentScenarioId = null;
+// Only repopulate when relevant to avoid clobbering selection in other modes
+if (currentMode === "sales-simulation" || currentMode === "role-play") populateDiseases();
+
+refs.shell._renderMessages();
+refs.shell._renderCoach();
+refs.shell._renderMeta();
+savePrefs();
 
     // wire handlers
     refs.modeSel.addEventListener("change", applyModeVisibility);
