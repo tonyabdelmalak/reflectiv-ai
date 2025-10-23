@@ -1,6 +1,6 @@
 /* widget.js
  * ReflectivAI Chat/Coach — drop-in (coach-v2, deterministic scoring v3)
- * Modes: emotional-assessment | product-knowledge | sales-simulation
+ * Modes: emotional-assessment | product-knowledge | sales-simulation | role-play
  * EI mode adds Persona + EI Feature dropdowns and context-aware feedback.
  */
 (function () {
@@ -22,11 +22,12 @@
   }
 
   // ---------- config/state ----------
-  const LC_OPTIONS = ["Emotional Intelligence","Product Knowledge","Sales Simulation"];
+  const LC_OPTIONS = ["Emotional Intelligence","Product Knowledge","Sales Simulation","Role Play"];
   const LC_TO_INTERNAL = {
     "Emotional Intelligence": "emotional-assessment",
     "Product Knowledge": "product-knowledge",
-    "Sales Simulation": "sales-simulation"
+    "Sales Simulation": "sales-simulation",
+    "Role Play": "role-play"
   };
 
   let cfg = null;
@@ -370,6 +371,16 @@ ${COMMON}`).trim();
       return `Return a concise educational overview with reputable citations. Structure: key takeaways; mechanism/indications; safety/contraindications; efficacy; access notes; references.`.trim();
     }
 
+    if (mode === "role-play") {
+      return (
+`# Role Play Contract
+You are the Healthcare Provider. Reply ONLY as the HCP. Be realistic, brief, and sometimes skeptical or time constrained.
+If the user types "Evaluate this exchange" or "Give feedback", step out of role and return EI-based reflection using internal doctrine.
+
+${COMMON}`).trim();
+    }
+
+    // emotional-assessment
     return (
 `Provide brief self-reflection tips tied to HCP communication.
 - 3–5 sentences, then one reflective question.
@@ -642,6 +653,26 @@ ${COMMON}`).trim();
         eiFeatureSelectElem.classList.add("hidden");
         feedbackDisplayElem.innerHTML = "";
         populateDiseases();
+      } else if (currentMode === "role-play") {
+        // NEW: pure sequential conversation; all selectors hidden
+        diseaseLabel.classList.add("hidden");
+        diseaseSelect.classList.add("hidden");
+        hcpLabel.classList.add("hidden");
+        hcpSelect.classList.add("hidden");
+        personaLabelElem.classList.add("hidden");
+        personaSelectElem.classList.add("hidden");
+        featureLabelElem.classList.add("hidden");
+        eiFeatureSelectElem.classList.add("hidden");
+
+        feedbackDisplayElem.innerHTML = `
+          <div class="coach-note">
+            <strong>Role Play Mode:</strong> The coach replies as an HCP in realistic tone.
+            Keep it conversational. Type <em>"Evaluate this exchange"</em> anytime for EI-based feedback.
+          </div>`;
+
+        currentScenarioId = null;
+        conversation = [];
+        renderMessages(); renderCoach(); renderMeta();
       } else {
         // emotional-assessment
         diseaseLabel.classList.add("hidden");
@@ -803,9 +834,21 @@ ${COMMON}`).trim();
     messages.push({ role: "user", content: userText });
 
     try {
+      // ---------- Role Play mode: inject HCP behavior rails ----------
+      if (currentMode === "role-play") {
+        const roleplayPrompt =
+`You are simulating a real-world conversation between a Life Sciences Sales Representative and a Healthcare Provider (HCP).
+Respond ONLY as the HCP, maintaining realism, brevity, and emotional nuance.
+Reflect common HCP behaviors—curiosity, skepticism, empathy, or time constraint.
+If the user types "Evaluate this exchange" or "Give feedback", switch out of character and provide a concise EI-based reflection using the internal doctrine.
+Avoid meta-commentary. Keep it conversational and human.`;
+        messages.unshift({ role: "system", content: roleplayPrompt });
+      }
+
       // ---- Load EI context and inject into system prompt ----
       const sys = await EIContext.getSystemExtras();
       if (sys) messages.unshift({ role: "system", content: sys });
+
       const raw = await callModel(messages);
       const { coach, clean } = extractCoach(raw);
       const computed = scoreReply(userText, clean, currentMode);
