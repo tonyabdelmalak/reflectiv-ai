@@ -1277,7 +1277,6 @@ Avoid meta-commentary. Keep it conversational and human.`;
 
     // history
     buildChatHistory(16).forEach(m => messages.push(m));
-    messages.push({ role: "user", content: userText });
 
     try {
       const raw = await enqueue(()=> callModel(messages, {timeoutMs: 35000}));
