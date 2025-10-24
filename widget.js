@@ -443,6 +443,10 @@ ${COMMON}`).trim();
 #reflectiv-widget .coach-subs .pill{display:inline-block;padding:2px 8px;margin-right:6px;font-size:12px;background:#f1f3f7;border:1px solid #d6dbe3;border-radius:999px}
 #reflectiv-widget .scenario-meta .meta-card{padding:10px 12px;background:#f7f9fc;border:1px solid #e1e6ef;border-radius:10px}
 #reflectiv-widget .hidden{display:none!important}
+/* speaker chips for role-play */
+#reflectiv-widget .speaker{display:inline-block;margin:0 0 6px 2px;padding:2px 8px;font-size:11px;font-weight:700;border-radius:999px;border:1px solid #cfd6df}
+#reflectiv-widget .speaker.hcp{background:#eef4ff;color:#0f2a6b;border-color:#c9d6ff}
+#reflectiv-widget .speaker.rep{background:#e8fff2;color:#0b5a2a;border-color:#bfeacc}
 @media (max-width:900px){#reflectiv-widget .sim-controls{grid-template-columns:1fr;gap:8px}#reflectiv-widget .sim-controls label{justify-self:start}}
 @media (max-width:520px){#reflectiv-widget .chat-messages{height:46vh}}
       `;
@@ -672,10 +676,26 @@ ${COMMON}`).trim();
     function renderMessages() {
       const msgsEl = shell.querySelector(".chat-messages");
       msgsEl.innerHTML = "";
+      const rp = currentMode === "role-play";
+
       for (const m of conversation) {
         const row = el("div", `message ${m.role}`);
         const c = el("div", "content");
-        c.innerHTML = md(m.content);
+
+        if (rp) {
+          const chipText = m._speaker === "hcp" ? "HCP" :
+                           m._speaker === "rep" ? "Rep" :
+                           (m.role === "assistant" ? "Assistant" : "You");
+          const chipCls  = m._speaker === "hcp" ? "speaker hcp" :
+                           m._speaker === "rep" ? "speaker rep" : "speaker";
+          const chip = el("div", chipCls, chipText);
+          c.appendChild(chip);
+        }
+
+        const body = el("div");
+        body.innerHTML = md(m.content);
+        c.appendChild(body);
+
         row.appendChild(c);
         msgsEl.appendChild(row);
       }
@@ -887,7 +907,11 @@ ${COMMON}`).trim();
     }
 
     // normal turn
-    conversation.push({ role: "user", content: userText });
+    conversation.push({
+      role: "user",
+      content: userText,
+      _speaker: (currentMode === "role-play" ? "rep" : "user")
+    });
     renderMessages();
     renderCoach();
 
@@ -965,7 +989,12 @@ Hard rules:
         return computed;
       })();
 
-      conversation.push({ role: "assistant", content: clean, _coach: finalCoach });
+      conversation.push({
+        role: "assistant",
+        content: clean,
+        _coach: finalCoach,
+        _speaker: (currentMode === "role-play" ? "hcp" : "assistant")
+      });
       renderMessages();
       renderCoach();
 
