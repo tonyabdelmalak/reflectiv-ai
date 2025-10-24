@@ -155,7 +155,7 @@
       .replace(/[‘’]/g, "'");
 
     let coach = null;
-    try { coach = JSON.parse(jsonTxt); } catch {}
+    try { coach = JSON.parse(jsonTxt); } catch (e) {}
     return { coach, clean: cleanText };
   }
 
@@ -449,6 +449,7 @@ ${COMMON}`).trim();
       document.head.appendChild(style);
     }
 
+    // shell + immediate skeleton
     const shell = el("div", "reflectiv-chat");
     shell.innerHTML = `
       <div class="chat-toolbar"><div class="sim-controls"></div></div>
@@ -463,6 +464,7 @@ ${COMMON}`).trim();
     `;
     mount.appendChild(shell);
 
+    // rebuild real UI
     const bar = el("div", "chat-toolbar");
     const simControls = el("div","sim-controls");
 
@@ -494,6 +496,7 @@ ${COMMON}`).trim();
     hcpLabel.htmlFor="cw-hcp";
     const hcpSelect = el("select"); hcpSelect.id="cw-hcp";
 
+    // EI Persona/EI Feature
     const personaLabel = el("label", "", "HCP Persona");
     personaLabel.htmlFor = "cw-ei-persona";
     const personaSelect = el("select"); personaSelect.id = "cw-ei-persona";
@@ -508,6 +511,7 @@ ${COMMON}`).trim();
     featureLabelElem = featureLabel;
     featureSelect.addEventListener("change", generateFeedback);
 
+    // EI option sources
     const PERSONAS_ALL =
       Array.isArray(cfg?.eiProfiles) && cfg.eiProfiles.length
         ? cfg.eiProfiles
@@ -524,6 +528,7 @@ ${COMMON}`).trim();
         : f
     );
 
+    // hydrate EI selects
     function hydrateEISelects() {
       if (!personaSelectElem || !eiFeatureSelectElem) return;
       personaSelectElem.innerHTML = "";
@@ -559,6 +564,7 @@ ${COMMON}`).trim();
         console.warn("EI features list is empty; check config keys (eiFeatures/features).");
     }
 
+    // mount controls
     simControls.appendChild(lcLabel);      simControls.appendChild(modeSel);
     simControls.appendChild(coachLabel);   simControls.appendChild(coachSel);
     simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
@@ -567,7 +573,7 @@ ${COMMON}`).trim();
     simControls.appendChild(featureLabel); simControls.appendChild(featureSelect);
 
     bar.appendChild(simControls);
-    shell.innerHTML = "";
+    shell.innerHTML = ""; // replace skeleton with real UI
     shell.appendChild(bar);
 
     const meta = el("div", "scenario-meta");
@@ -596,6 +602,7 @@ ${COMMON}`).trim();
     feedbackDisplayElem.style.fontSize = "14px";
     coach.appendChild(feedbackDisplayElem);
 
+    // helpers
     function getDiseaseStates() {
       let ds = Array.isArray(cfg?.diseaseStates) ? cfg.diseaseStates.slice() : [];
       if (!ds.length && Array.isArray(scenarios) && scenarios.length){
@@ -762,6 +769,7 @@ ${COMMON}`).trim();
         if (diseaseSelect.value) populateHcpForDisease(diseaseSelect.value);
         renderMessages(); renderCoach(); renderMeta();
       } else {
+        // emotional-assessment
         diseaseLabel.classList.add("hidden");
         diseaseSelect.classList.add("hidden");
         hcpLabel.classList.add("hidden");
@@ -804,10 +812,12 @@ ${COMMON}`).trim();
       renderMessages(); renderCoach(); renderMeta();
     });
 
+    // expose renders for sendMessage
     shell._renderMessages = renderMessages;
     shell._renderCoach = renderCoach;
     shell._renderMeta = renderMeta;
 
+    // initialize UI
     populateDiseases();
     populateEIOptions();
     applyModeVisibility();
@@ -839,7 +849,7 @@ ${COMMON}`).trim();
   async function evaluateConversation() {
     const sc = scenariosById.get(currentScenarioId);
     const turns = conversation.length ? conversation : [{ role: "system", content: "No prior turns." }];
-    const convoText = turns.map(m => `${m.role}: ${m.content}`).join("\n").slice(0, 24000);
+    const convoText = turns.map(m => `${m.role}: ${m.content}`).join("\n").slice(0, 24000); // guard size
 
     const evalMsgs = [
       systemPrompt ? { role: "system", content: systemPrompt } : null,
@@ -857,50 +867,50 @@ ${COMMON}`).trim();
   }
 
   // ---------- send ----------
-async function sendMessage(userText) {
-  const shellEl = mount.querySelector(".reflectiv-chat");
-  const renderMessages = shellEl._renderMessages;
-  const renderCoach = shellEl._renderCoach;
+  async function sendMessage(userText) {
+    const shellEl = mount.querySelector(".reflectiv-chat");
+    const renderMessages = shellEl._renderMessages;
+    const renderCoach = shellEl._renderCoach;
 
-  // normalize input
-  userText = (userText || "").trim();
-  if (!userText) return;
-  lastUserMessage = userText;
+    // normalize input
+    userText = (userText || "").trim();
+    if (!userText) return;
+    lastUserMessage = userText;
 
-  // intercept evaluation intents
-  const evalRe = /\b(evaluate|assessment|assess|grade|score)\b.*\b(conversation|exchange|dialog|dialogue|chat)\b|\bfinal (eval|evaluation|assessment)\b/i;
-  if (evalRe.test(userText)) {
-    await evaluateConversation();
+    // intercept evaluation intents
+    const evalRe = /\b(evaluate|assessment|assess|grade|score)\b.*\b(conversation|exchange|dialog|dialogue|chat)\b|\bfinal (eval|evaluation|assessment)\b/i;
+    if (evalRe.test(userText)) {
+      await evaluateConversation();
+      renderMessages();
+      renderCoach();
+      return;
+    }
+
+    // normal turn
+    conversation.push({ role: "user", content: userText });
     renderMessages();
     renderCoach();
-    return;
-  }
 
-  // normal turn
-  conversation.push({ role: "user", content: userText });
-  renderMessages();
-  renderCoach();
+    if (currentMode === "emotional-assessment") generateFeedback();
 
-  if (currentMode === "emotional-assessment") generateFeedback();
+    const sc = scenariosById.get(currentScenarioId);
+    const messages = [];
 
-  const sc = scenariosById.get(currentScenarioId);
-  const messages = [];
+    // optional global system prompt
+    if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
 
-  // optional global system prompt
-  if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
-
-  // mode-specific rails
-  if (currentMode === "role-play") {
-    // PURE role-play. Do not include the Sales Guidance/coach contract.
-    const personaLine = currentPersonaHint();
-    const detail =
-      sc
-        ? `Therapeutic Area: ${sc.therapeuticArea || sc.diseaseState || "—"}. ` +
-          `HCP Role: ${sc.hcpRole || "—"}. ` +
-          (sc.background ? `Background: ${sc.background}. ` : "") +
-          (sc.goal ? `Today’s Goal: ${sc.goal}.` : "")
-        : "";
-    const roleplayRails =
+    // mode-specific rails
+    if (currentMode === "role-play") {
+      // PURE role-play. Do not include the Sales Guidance/coach contract.
+      const personaLine = currentPersonaHint();
+      const detail =
+        sc
+          ? `Therapeutic Area: ${sc.therapeuticArea || sc.diseaseState || "—"}. ` +
+            `HCP Role: ${sc.hcpRole || "—"}. ` +
+            (sc.background ? `Background: ${sc.background}. ` : "") +
+            (sc.goal ? `Today’s Goal: ${sc.goal}.` : "")
+          : "";
+      const roleplayRails =
 `You are the Healthcare Provider (HCP). Stay strictly in character.
 Reply ONLY as the HCP in first person. Natural, concise clinical dialogue. Be brief if busy.
 Persona context:
@@ -911,155 +921,53 @@ Hard rules:
 - Do NOT output coaching, rubrics, scores, JSON, or any "<coach>" block.
 - Do NOT output "Sales Guidance" or meta commentary.
 - Continue real-time back-and-forth as the HCP.`;
-    messages.push({ role: "system", content: roleplayRails });
-  } else {
-    // non-role-play modes use the contract preface
-    messages.push({ role: "system", content: buildPreface(currentMode, sc) });
-  }
-
-  // user message
-  messages.push({ role: "user", content: userText });
-
-  try {
-    // optional EI extras
-    const sysExtras = (typeof EIContext !== "undefined" && EIContext?.getSystemExtras)
-      ? await EIContext.getSystemExtras().catch(() => null)
-      : null;
-    if (sysExtras) messages.unshift({ role: "system", content: sysExtras });
-
-    // call model
-    const raw = await callModel(messages);
-
-    // parse assistant + coach payload
-    const { coach, clean } = extractCoach(raw);
-    const computed = scoreReply(userText, clean, currentMode);
-
-    const finalCoach = (() => {
-      if (coach && (coach.scores || coach.subscores)) {
-        const scores = coach.scores || coach.subscores;
-        const overall = typeof coach.overall === "number"
-          ? coach.overall
-          : (typeof coach.score === "number" ? coach.score : undefined);
-        return {
-          overall: overall ?? computed.overall,
-          scores,
-          feedback: coach.feedback || computed.feedback,
-          worked: coach.worked && coach.worked.length ? coach.worked : computed.worked,
-          improve: coach.improve && coach.improve.length ? coach.improve : computed.improve,
-          phrasing: typeof coach.phrasing === "string" && coach.phrasing ? coach.phrasing : computed.phrasing,
-          context: coach.context || { rep_question: userText, hcp_reply: clean },
-          score: overall ?? computed.overall,
-          subscores: scores
-        };
-      }
-      return computed;
-    })();
-
-    conversation.push({ role: "assistant", content: clean, _coach: finalCoach });
-    renderMessages();
-    renderCoach();
-  } catch (e) {
-    conversation.push({ role: "assistant", content: `Model error: ${String(e.message || e)}` });
-    renderMessages();
-  }
-}
-
-    if (currentMode === "emotional-assessment") generateFeedback();
-
-    if (cfg && cfg.analyticsEndpoint) {
-      fetch(cfg.analyticsEndpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ts: Date.now(),
-          schema: (cfg.schemaVersion || "coach-v2"),
-          mode: currentMode,
-          scenarioId: currentScenarioId,
-          turn: conversation.length,
-          context: finalCoach.context || { rep_question: userText, hcp_reply: clean },
-          overall: finalCoach.overall,
-          scores: finalCoach.scores
-        })
-      }).catch(() => {});
+      messages.push({ role: "system", content: roleplayRails });
+    } else {
+      // non-role-play modes use the contract preface
+      messages.push({ role: "system", content: buildPreface(currentMode, sc) });
     }
-  } catch (e) {
-    conversation.push({ role: "assistant", content: `Model error: ${String(e.message || e)}` });
-    renderMessages();
-  }
-}
 
-    if (currentMode === "emotional-assessment") generateFeedback();
-
-    const sc = scenariosById.get(currentScenarioId);
-    const preface = buildPreface(currentMode, sc);
-    const messages = [];
-    if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
-    messages.push({ role: "system", content: preface });
+    // user message
     messages.push({ role: "user", content: userText });
 
     try {
-      if (currentMode === "role-play") {
-        const personaLine = currentPersonaHint();
-        const detail =
-          sc
-            ? `Therapeutic Area: ${sc.therapeuticArea || sc.diseaseState || "—"}. ` +
-              `HCP Role: ${sc.hcpRole || "—"}. ` +
-              (sc.background ? `Background: ${sc.background}. ` : "") +
-              (sc.goal ? `Today’s Goal: ${sc.goal}.` : "")
-            : "";
-              const roleplayPrompt =
-`You are the Healthcare Provider (HCP). Stay strictly in character.
-Reply ONLY as the HCP. Use natural, concise clinical dialogue. Be brief if busy.
-Persona context:
-${personaLine}
-${detail}
+      // optional EI extras
+      const sysExtras = (typeof EIContext !== "undefined" && EIContext?.getSystemExtras)
+        ? await EIContext.getSystemExtras().catch(() => null)
+        : null;
+      if (sysExtras) messages.unshift({ role: "system", content: sysExtras });
 
-Hard rules:
-- Do NOT output coaching, rubrics, scores, or JSON.
-- Do NOT output "<coach>" blocks or any meta commentary.
-- Do NOT output "Sales Guidance" or instructions to the user.
-- Continue real-time back-and-forth as the HCP.
+      // call model
+      const raw = await callModel(messages);
 
-Exit:
-If the user types "Evaluate this exchange" (or similar), stop role-play and provide a final assessment only when asked.`;
-      messages.unshift({ role: "system", content: roleplayPrompt });
-    }
+      // parse assistant + coach payload
+      const { coach, clean } = extractCoach(raw);
+      const computed = scoreReply(userText, clean, currentMode);
 
-    const sysExtras = (typeof EIContext !== "undefined" && EIContext?.getSystemExtras)
-      ? await EIContext.getSystemExtras().catch(()=>null)
-      : null;
-    if (sysExtras) messages.unshift({ role: "system", content: sysExtras });
+      const finalCoach = (() => {
+        if (coach && (coach.scores || coach.subscores)) {
+          const scores = coach.scores || coach.subscores;
+          const overall = typeof coach.overall === "number"
+            ? coach.overall
+            : (typeof coach.score === "number" ? coach.score : undefined);
+          return {
+            overall: overall ?? computed.overall,
+            scores,
+            feedback: coach.feedback || computed.feedback,
+            worked: coach.worked && coach.worked.length ? coach.worked : computed.worked,
+            improve: coach.improve && coach.improve.length ? coach.improve : computed.improve,
+            phrasing: typeof coach.phrasing === "string" && coach.phrasing ? coach.phrasing : computed.phrasing,
+            context: coach.context || { rep_question: userText, hcp_reply: clean },
+            score: overall ?? computed.overall,
+            subscores: scores
+          };
+        }
+        return computed;
+      })();
 
-    const raw = await callModel(messages);
-
-    // Parse assistant + optional coach payload; sanitize any accidental rubric leakage
-    const { coach, clean } = extractCoach(raw);
-    const computed = scoreReply(userText, clean, currentMode);
-
-    const finalCoach = (() => {
-      if (coach && (coach.scores || coach.subscores)) {
-        const scores = coach.scores || coach.subscores;
-        const overall = typeof coach.overall === "number"
-          ? coach.overall
-          : (typeof coach.score === "number" ? coach.score : undefined);
-        return {
-          overall: overall ?? computed.overall,
-          scores,
-          feedback: coach.feedback || computed.feedback,
-          worked: coach.worked && coach.worked.length ? coach.worked : computed.worked,
-          improve: coach.improve && coach.improve.length ? coach.improve : computed.improve,
-          phrasing: typeof coach.phrasing === "string" && coach.phrasing ? coach.phrasing : computed.phrasing,
-          context: coach.context || { rep_question: userText, hcp_reply: clean },
-          score: overall ?? computed.overall,
-          subscores: scores
-        };
-      }
-      return computed;
-    })();
-
-    conversation.push({ role: "assistant", content: clean, _coach: finalCoach });
-    renderMessages();
-    renderCoach();
+      conversation.push({ role: "assistant", content: clean, _coach: finalCoach });
+      renderMessages();
+      renderCoach();
 
       if (currentMode === "emotional-assessment") generateFeedback();
 
@@ -1116,10 +1024,12 @@ If the user types "Evaluate this exchange" (or similar), stop role-play and prov
       scenarios = [];
     }
 
+    // keep token case, do not collapse "HIV PrEP"
     scenarios.forEach(s => {
       if (s.therapeuticArea) s.therapeuticArea = s.therapeuticArea.replace(/\bhiv\b/ig, "HIV");
     });
 
+    // de-dup by id (last one wins)
     const byId = new Map();
     for (const s of scenarios) byId.set(s.id, s);
     scenarios = Array.from(byId.values());
@@ -1130,7 +1040,7 @@ If the user types "Evaluate this exchange" (or similar), stop role-play and prov
   async function init() {
     try {
       try { cfg = await fetchLocal("./assets/chat/config.json"); }
-      catch { cfg = await fetchLocal("./config.json"); }
+      catch (e) { cfg = await fetchLocal("./config.json"); }
     } catch (e) {
       console.error("config load failed:", e);
       cfg = { defaultMode: "sales-simulation" };
