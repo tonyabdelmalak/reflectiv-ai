@@ -857,26 +857,126 @@ ${COMMON}`).trim();
   }
 
   // ---------- send ----------
-  async function sendMessage(userText) {
-    const shellEl = mount.querySelector(".reflectiv-chat");
-    const renderMessages = shellEl._renderMessages;
-    const renderCoach = shellEl._renderCoach;
+async function sendMessage(userText) {
+  const shellEl = mount.querySelector(".reflectiv-chat");
+  const renderMessages = shellEl._renderMessages;
+  const renderCoach = shellEl._renderCoach;
 
-    userText = (userText || "").trim();
-    if (!userText) return;
-    lastUserMessage = userText;
+  // normalize input
+  userText = (userText || "").trim();
+  if (!userText) return;
+  lastUserMessage = userText;
 
-    const evalRe = /\b(evaluate|assessment|assess|grade|score)\b.*\b(conversation|exchange|dialog|dialogue|chat)\b|\bfinal (eval|evaluation|assessment)\b/i;
-    if (evalRe.test(userText)) {
-      await evaluateConversation();
-      renderMessages();
-      renderCoach();
-      return;
-    }
-
-    conversation.push({ role: "user", content: userText });
+  // intercept evaluation intents
+  const evalRe = /\b(evaluate|assessment|assess|grade|score)\b.*\b(conversation|exchange|dialog|dialogue|chat)\b|\bfinal (eval|evaluation|assessment)\b/i;
+  if (evalRe.test(userText)) {
+    await evaluateConversation();
     renderMessages();
     renderCoach();
+    return;
+  }
+
+  // normal turn
+  conversation.push({ role: "user", content: userText });
+  renderMessages();
+  renderCoach();
+
+  if (currentMode === "emotional-assessment") generateFeedback();
+
+  const sc = scenariosById.get(currentScenarioId);
+  const messages = [];
+
+  // optional global system prompt
+  if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
+
+  // mode-specific rails
+  if (currentMode === "role-play") {
+    // PURE role-play. Do not include the Sales Guidance preface.
+    const personaLine = currentPersonaHint();
+    const detail =
+      sc
+        ? `Therapeutic Area: ${sc.therapeuticArea || sc.diseaseState || "—"}. ` +
+          `HCP Role: ${sc.hcpRole || "—"}. ` +
+          (sc.background ? `Background: ${sc.background}. ` : "") +
+          (sc.goal ? `Today’s Goal: ${sc.goal}.` : "")
+        : "";
+    const roleplayRails =
+`You are the Healthcare Provider. Reply ONLY as the HCP in first person. Be realistic, brief, and sometimes time-constrained.
+${personaLine}
+${detail}
+Stay in role for every turn. No rubric text. No coaching. No Sales Guidance.
+If the user types "Evaluate this exchange", exit role and provide the EI assessment.`;
+    messages.push({ role: "system", content: roleplayRails });
+  } else {
+    // non-role-play modes use the contract preface
+    messages.push({ role: "system", content: buildPreface(currentMode, sc) });
+  }
+
+  // user message
+  messages.push({ role: "user", content: userText });
+
+  try {
+    // optional EI extras
+    const sysExtras = (typeof EIContext !== "undefined" && EIContext?.getSystemExtras)
+      ? await EIContext.getSystemExtras().catch(() => null)
+      : null;
+    if (sysExtras) messages.unshift({ role: "system", content: sysExtras });
+
+    // call model
+    const raw = await callModel(messages);
+
+    // parse assistant + coach payload
+    const { coach, clean } = extractCoach(raw);
+    const computed = scoreReply(userText, clean, currentMode);
+
+    const finalCoach = (() => {
+      if (coach && (coach.scores || coach.subscores)) {
+        const scores = coach.scores || coach.subscores;
+        const overall = typeof coach.overall === "number"
+          ? coach.overall
+          : (typeof coach.score === "number" ? coach.score : undefined);
+        return {
+          overall: overall ?? computed.overall,
+          scores,
+          feedback: coach.feedback || computed.feedback,
+          worked: coach.worked && coach.worked.length ? coach.worked : computed.worked,
+          improve: coach.improve && coach.improve.length ? coach.improve : computed.improve,
+          phrasing: typeof coach.phrasing === "string" && coach.phrasing ? coach.phrasing : computed.phrasing,
+          context: coach.context || { rep_question: userText, hcp_reply: clean },
+          score: overall ?? computed.overall,
+          subscores: scores
+        };
+      }
+      return computed;
+    })();
+
+    conversation.push({ role: "assistant", content: clean, _coach: finalCoach });
+    renderMessages();
+    renderCoach();
+
+    if (currentMode === "emotional-assessment") generateFeedback();
+
+    if (cfg && cfg.analyticsEndpoint) {
+      fetch(cfg.analyticsEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ts: Date.now(),
+          schema: (cfg.schemaVersion || "coach-v2"),
+          mode: currentMode,
+          scenarioId: currentScenarioId,
+          turn: conversation.length,
+          context: finalCoach.context || { rep_question: userText, hcp_reply: clean },
+          overall: finalCoach.overall,
+          scores: finalCoach.scores
+        })
+      }).catch(() => {});
+    }
+  } catch (e) {
+    conversation.push({ role: "assistant", content: `Model error: ${String(e.message || e)}` });
+    renderMessages();
+  }
+}
 
     if (currentMode === "emotional-assessment") generateFeedback();
 
@@ -897,47 +997,59 @@ ${COMMON}`).trim();
               (sc.background ? `Background: ${sc.background}. ` : "") +
               (sc.goal ? `Today’s Goal: ${sc.goal}.` : "")
             : "";
-        const roleplayPrompt =
-`You simulate a real HCP. Reply ONLY as the HCP. Natural tone. Sometimes terse if busy.
+              const roleplayPrompt =
+`You are the Healthcare Provider (HCP). Stay strictly in character.
+Reply ONLY as the HCP. Use natural, concise clinical dialogue. Be brief if busy.
+Persona context:
 ${personaLine}
 ${detail}
-Avoid meta-commentary. Do not include rubric text in replies.
-If the user types "Evaluate this exchange" you will stop role-play and provide a final assessment.`;
-        messages.unshift({ role: "system", content: roleplayPrompt });
+
+Hard rules:
+- Do NOT output coaching, rubrics, scores, or JSON.
+- Do NOT output "<coach>" blocks or any meta commentary.
+- Do NOT output "Sales Guidance" or instructions to the user.
+- Continue real-time back-and-forth as the HCP.
+
+Exit:
+If the user types "Evaluate this exchange" (or similar), stop role-play and provide a final assessment only when asked.`;
+      messages.unshift({ role: "system", content: roleplayPrompt });
+    }
+
+    const sysExtras = (typeof EIContext !== "undefined" && EIContext?.getSystemExtras)
+      ? await EIContext.getSystemExtras().catch(()=>null)
+      : null;
+    if (sysExtras) messages.unshift({ role: "system", content: sysExtras });
+
+    const raw = await callModel(messages);
+
+    // Parse assistant + optional coach payload; sanitize any accidental rubric leakage
+    const { coach, clean } = extractCoach(raw);
+    const computed = scoreReply(userText, clean, currentMode);
+
+    const finalCoach = (() => {
+      if (coach && (coach.scores || coach.subscores)) {
+        const scores = coach.scores || coach.subscores;
+        const overall = typeof coach.overall === "number"
+          ? coach.overall
+          : (typeof coach.score === "number" ? coach.score : undefined);
+        return {
+          overall: overall ?? computed.overall,
+          scores,
+          feedback: coach.feedback || computed.feedback,
+          worked: coach.worked && coach.worked.length ? coach.worked : computed.worked,
+          improve: coach.improve && coach.improve.length ? coach.improve : computed.improve,
+          phrasing: typeof coach.phrasing === "string" && coach.phrasing ? coach.phrasing : computed.phrasing,
+          context: coach.context || { rep_question: userText, hcp_reply: clean },
+          score: overall ?? computed.overall,
+          subscores: scores
+        };
       }
+      return computed;
+    })();
 
-      const sysExtras = (typeof EIContext !== "undefined" && EIContext?.getSystemExtras)
-        ? await EIContext.getSystemExtras().catch(()=>null)
-        : null;
-      if (sysExtras) messages.unshift({ role: "system", content: sysExtras });
-
-      const raw = await callModel(messages);
-      const { coach, clean } = extractCoach(raw);
-      const computed = scoreReply(userText, clean, currentMode);
-      const finalCoach = (() => {
-        if (coach && (coach.scores || coach.subscores)) {
-          const scores = coach.scores || coach.subscores;
-          const overall = typeof coach.overall === "number"
-            ? coach.overall
-            : (typeof coach.score === "number" ? coach.score : undefined);
-          return {
-            overall: overall ?? computed.overall,
-            scores,
-            feedback: coach.feedback || computed.feedback,
-            worked: coach.worked && coach.worked.length ? coach.worked : computed.worked,
-            improve: coach.improve && coach.improve.length ? coach.improve : computed.improve,
-            phrasing: typeof coach.phrasing === "string" && coach.phrasing ? coach.phrasing : computed.phrasing,
-            context: coach.context || { rep_question: userText, hcp_reply: clean },
-            score: overall ?? computed.overall,
-            subscores: scores
-          };
-        }
-        return computed;
-      })();
-
-      conversation.push({ role: "assistant", content: clean, _coach: finalCoach });
-      renderMessages();
-      renderCoach();
+    conversation.push({ role: "assistant", content: clean, _coach: finalCoach });
+    renderMessages();
+    renderCoach();
 
       if (currentMode === "emotional-assessment") generateFeedback();
 
