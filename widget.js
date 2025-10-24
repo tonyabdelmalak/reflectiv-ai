@@ -106,33 +106,73 @@
     return s;
   }
 
+  // --- sentence helpers
+  function splitSentences(text) {
+    const t = String(text || "");
+    // naive sentence split that preserves ?!. Handles quotes.
+    return t
+      .replace(/\s+/g, " ")
+      .match(/[^.!?]+[.!?]?/g) || [];
+  }
+
   // Role-play only sanitizer: strip leaked coaching/meta blocks and force HCP POV
   function sanitizeRolePlayOnly(text) {
     let s = String(text || "");
 
-    // remove any embedded coach JSON blocks
+    // remove any embedded coach JSON blocks and rubric sections
     s = s.replace(/<coach>[\s\S]*?<\/coach>/gi, "");
+    s = s.replace(/(?:^|\n)\s*(?:\*\*)?\s*(?:Sales\s*Guidance|Challenge|My\s*Approach|Impact)\s*(?:\*\*)?\s*:\s*[\s\S]*?(?=\n\s*\n|$)/gmi, "");
 
-    // remove rubric sections entirely
-    const RUBRIC_BLOCK = /(?:^|\n)\s*(?:\*\*)?\s*(?:Sales\s*Guidance|Challenge|My\s*Approach|Impact)\s*(?:\*\*)?\s*:\s*[\s\S]*?(?=\n\s*\n|$)/gmi;
-    s = s.replace(RUBRIC_BLOCK, "");
+    // remove prefixed speaker/meta labels and greetings
+    s = s.replace(/^(?:Assistant|Coach|System|Rep|User|Sales Rep)\s*:\s*/gmi, "");
+    s = s.replace(/^\s*["“']?\s*(hi|hello|hey)\b.*$/gmi, "");
 
-    // remove prefixed speaker/meta labels
-    s = s.replace(/^(?:Assistant|Coach|System|Rep)\s*:\s*/gmi, "");
-
-    // drop leftover markdown bullets, headings, quotes
+    // drop markdown bullets, headings, quotes
     s = s.replace(/^\s*[-*]\s+/gm, "");
     s = s.replace(/^\s*#{1,6}\s+.*$/gm, "");
     s = s.replace(/^\s*>\s?/gm, "");
 
-    // POV correction: ban rep-style clinic metrics about "your X"
-    // Only rewrite clinical/workflow nouns to HCP ownership.
-    const nouns = "(patients?|panel|clinic|practice|workflow|nurses?|staff|team|MA|MAs|prescribing|prescriptions)";
-    s = s.replace(new RegExp(`\\byour\\s+${nouns}\\b`, "gi"), (m) =>
-      m.replace(/\byour\b/i, "my")
-    );
+    // POV correction: convert second-person clinic nouns to first-person
+    const nouns = "(patients?|panel|clinic|practice|workflow|nurses?|staff|team|MA|MAs|prescribing|prescriptions|criteria|approach)";
+    s = s.replace(new RegExp(`\\byour\\s+${nouns}\\b`, "gi"), (m) => m.replace(/\byour\b/i, "my"));
 
-    // De-coachify common sales prompts leaking into HCP speech
+    // Convert or drop rep-discovery questions addressed to "you/your"
+    const sentences = splitSentences(s).map((sentRaw) => {
+      let sent = sentRaw.trim();
+      if (!sent) return "";
+
+      // if the sentence is a question to the rep about their process, rewrite
+      const isQ = /\?\s*$/.test(sent);
+      const hasYou = /\byou(r)?\b/i.test(sent);
+      const repDiscoveryCue = /(how\s+do\s+you|can\s+we\s+review\s+your|can\s+you\s+walk\s+me|help\s+me\s+understand\s+your|what\s+do\s+you\s+do|how\s+are\s+you\s+identif)/i.test(sent);
+
+      if (isQ && hasYou && repDiscoveryCue) {
+        // rewrite as HCP statement
+        // Examples in screenshot: “Can we review your approach for high-risk patients?”
+        sent = sent
+          .replace(/\bcan\s+we\s+review\s+your\s+approach\b/i, "In my clinic, we review our approach")
+          .replace(/\bhow\s+do\s+you\s+identif(?:y|ies)\b/gi, "Here is how I identify")
+          .replace(/\bhelp\s+me\s+understand\s+your\b/gi, "I consider my")
+          .replace(/\bwhat\s+do\s+you\s+do\b/gi, "What I usually do is");
+
+        // remove second person that remains
+        sent = sent.replace(/\byour\b/gi, "my").replace(/\byou\b/gi, "I");
+
+        // convert question to statement
+        sent = sent.replace(/\?\s*$/, ".").trim();
+      }
+
+      // ban meta prompts like “Can we discuss how you currently identify…”
+      if (isQ && /\bcan\s+we\s+discuss\b/i.test(sent) && hasYou) {
+        return ""; // drop entirely
+      }
+
+      return sent;
+    }).filter(Boolean);
+
+    s = sentences.join(" ").trim();
+
+    // de-coachify common sales prompts leaking into HCP speech
     s = s.replace(/\bcan you tell me\b/gi, "I’m considering");
     s = s.replace(/\bhelp me understand\b/gi, "I want to understand");
     s = s.replace(/\bwhat would it take to\b/gi, "Here’s what I’d need to");
@@ -142,9 +182,9 @@
     s = s.replace(/^[“"']|[”"']$/g, "");
 
     // collapse whitespace
-    s = s.replace(/\n{3,}/g, "\n\n").trim();
+    s = s.replace(/\s{2,}/g, " ").trim();
 
-    if (!s) s = "Okay. What would you like to focus on for this patient?";
+    if (!s) s = "From my perspective, we evaluate high-risk patients using history, behaviors, and adherence context.";
     return s;
   }
 
@@ -540,7 +580,7 @@ If the user types "Evaluate this exchange" or "Give feedback", step out of role 
 Hard bans:
 - Do NOT output coaching, rubrics, scores, JSON, or any "<coach>" block.
 - Do NOT output headings or bullet lists.
-- Do NOT ask the rep for the rep’s clinic metrics or patient counts (e.g., “what percentage of *your* patients…”).
+- Do NOT ask the rep about the rep’s process, approach, or clinic metrics.
 - Do NOT interview the rep with sales-discovery prompts.
 
 Allowable questions from HCP:
@@ -907,6 +947,15 @@ ${COMMON}`
       }
       coach.style.display = "";
 
+      // Hide per-turn coaching in Role Play until final evaluation
+      if (currentMode === "role-play") {
+        const last = conversation[conversation.length - 1];
+        if (!last || !last._finalEval) {
+          body.innerHTML = `<span class="muted">Final evaluation will appear after you request it by typing “Evaluate this exchange”.</span>`;
+          return;
+        }
+      }
+
       const last = conversation[conversation.length - 1];
       if (!(last && last.role === "assistant" && last._coach)) {
         body.innerHTML = `<span class="muted">Awaiting the first assistant reply…</span>`;
@@ -1080,7 +1129,7 @@ ${COMMON}`
     const raw = await callModel(evalMsgs);
     const { coach, clean } = extractCoach(raw);
     const finalCoach = coach || scoreReply("", clean);
-    conversation.push({ role: "assistant", content: clean, _coach: finalCoach });
+    conversation.push({ role: "assistant", content: clean, _coach: finalCoach, _finalEval: true });
   }
 
   // ---------- send ----------
