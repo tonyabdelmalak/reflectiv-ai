@@ -106,35 +106,47 @@
     return s;
   }
 
-  // Role-play only sanitizer: strip leaked coaching/meta blocks and formatting
-function sanitizeRolePlayOnly(text) {
-  let s = String(text || "");
+  // Role-play only sanitizer: strip leaked coaching/meta blocks and force HCP POV
+  function sanitizeRolePlayOnly(text) {
+    let s = String(text || "");
 
-  // remove any embedded coach JSON blocks
-  s = s.replace(/<coach>[\s\S]*?<\/coach>/gi, "");
+    // remove any embedded coach JSON blocks
+    s = s.replace(/<coach>[\s\S]*?<\/coach>/gi, "");
 
-  // remove rubric sections entirely
-  const RUBRIC_BLOCK = /(?:^|\n)\s*(?:\*\*)?\s*(?:Sales\s*Guidance|Challenge|My\s*Approach|Impact)\s*(?:\*\*)?\s*:\s*[\s\S]*?(?=\n\s*\n|$)/gmi;
-  s = s.replace(RUBRIC_BLOCK, "");
+    // remove rubric sections entirely
+    const RUBRIC_BLOCK = /(?:^|\n)\s*(?:\*\*)?\s*(?:Sales\s*Guidance|Challenge|My\s*Approach|Impact)\s*(?:\*\*)?\s*:\s*[\s\S]*?(?=\n\s*\n|$)/gmi;
+    s = s.replace(RUBRIC_BLOCK, "");
 
-  // remove prefixed speaker/meta labels
-  s = s.replace(/^(?:Assistant|Coach|System)\s*:\s*/gmi, "");
+    // remove prefixed speaker/meta labels
+    s = s.replace(/^(?:Assistant|Coach|System|Rep)\s*:\s*/gmi, "");
 
-  // drop leftover markdown bullets, headings, quotes
-  s = s.replace(/^\s*[-*]\s+/gm, "");
-  s = s.replace(/^\s*#{1,6}\s+.*$/gm, "");
-  s = s.replace(/^\s*>\s?/gm, "");
+    // drop leftover markdown bullets, headings, quotes
+    s = s.replace(/^\s*[-*]\s+/gm, "");
+    s = s.replace(/^\s*#{1,6}\s+.*$/gm, "");
+    s = s.replace(/^\s*>\s?/gm, "");
 
-  // trim dangling bold markers or quotes
-  s = s.replace(/\*\*(?=\s|$)/g, "");
-  s = s.replace(/^[“"']|[”"']$/g, "");
+    // POV correction: ban rep-style clinic metrics about "your X"
+    // Only rewrite clinical/workflow nouns to HCP ownership.
+    const nouns = "(patients?|panel|clinic|practice|workflow|nurses?|staff|team|MA|MAs|prescribing|prescriptions)";
+    s = s.replace(new RegExp(`\\byour\\s+${nouns}\\b`, "gi"), (m) =>
+      m.replace(/\byour\b/i, "my")
+    );
 
-  // collapse whitespace
-  s = s.replace(/\n{3,}/g, "\n\n").trim();
+    // De-coachify common sales prompts leaking into HCP speech
+    s = s.replace(/\bcan you tell me\b/gi, "I’m considering");
+    s = s.replace(/\bhelp me understand\b/gi, "I want to understand");
+    s = s.replace(/\bwhat would it take to\b/gi, "Here’s what I’d need to");
 
-  if (!s) s = "Okay. What would you like to focus on for this patient?";
-  return s;
-}
+    // trim dangling bold markers or quotes
+    s = s.replace(/\*\*(?=\s|$)/g, "");
+    s = s.replace(/^[“"']|[”"']$/g, "");
+
+    // collapse whitespace
+    s = s.replace(/\n{3,}/g, "\n\n").trim();
+
+    if (!s) s = "Okay. What would you like to focus on for this patient?";
+    return s;
+  }
 
   function md(text) {
     if (!text) return "";
@@ -520,12 +532,22 @@ ${COMMON}`
 
     if (mode === "role-play") {
       return (
-        `# Role Play Contract
-You are the Healthcare Provider. Reply ONLY as the HCP. Be realistic, brief, and sometimes skeptical or time constrained.
+        `# Role Play Contract — HCP Only
+You are the Healthcare Provider. Reply ONLY as the HCP. First-person. Realistic, concise clinical dialogue.
 ${personaLine}
-If the user types "Evaluate this exchange" or "Give feedback", step out of role and return EI-based reflection using internal doctrine.
+If the user types "Evaluate this exchange" or "Give feedback", step out of role and return EI-based reflection.
 
-${COMMON}`
+Hard bans:
+- Do NOT output coaching, rubrics, scores, JSON, or any "<coach>" block.
+- Do NOT output headings or bullet lists.
+- Do NOT ask the rep for the rep’s clinic metrics or patient counts (e.g., “what percentage of *your* patients…”).
+- Do NOT interview the rep with sales-discovery prompts.
+
+Allowable questions from HCP:
+- Clarify therapy, safety, logistics, coverage, workflow impact.
+- Questions must reflect HCP’s POV (“my clinic”, “my patients”, “our team”).
+
+Output only the HCP utterance.`
       ).trim();
     }
 
@@ -1101,23 +1123,18 @@ ${COMMON}`
 
     // mode-specific rails
     if (currentMode === "role-play") {
-      // PURE role-play. Do not include the Sales Guidance/coach contract.
+      // PURE role-play rails with HCP-only, anti-leak rules
       const personaLine = currentPersonaHint();
       const detail = sc
         ? `Therapeutic Area: ${sc.therapeuticArea || sc.diseaseState || "—"}. HCP Role: ${sc.hcpRole || "—"}. ${
             sc.background ? `Background: ${sc.background}. ` : ""
           }${sc.goal ? `Today’s Goal: ${sc.goal}.` : ""}`
         : "";
-      const roleplayRails = `You are the Healthcare Provider (HCP). Stay strictly in character.
-Reply ONLY as the HCP in first person. Natural, concise clinical dialogue. Be brief if busy.
-Persona context:
-${personaLine}
-${detail}
+      const roleplayRails = buildPreface("role-play", sc) + `
 
-Hard rules:
-- Do NOT output coaching, rubrics, scores, JSON, or any "<coach>" block.
-- Do NOT output "Sales Guidance", headings, bullet lists, or meta commentary.
-- Output only the HCP utterance.`;
+Context:
+${personaLine}
+${detail}`;
       messages.push({ role: "system", content: roleplayRails });
     } else {
       // non-role-play modes use the contract preface
