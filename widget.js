@@ -7,18 +7,18 @@
   // ---------- safe bootstrapping ----------
   let mount = null;
 
-  function onReady(fn){
+  function onReady(fn) {
     if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", fn, { once:true });
+      document.addEventListener("DOMContentLoaded", fn, { once: true });
     } else {
       fn();
     }
   }
 
-  function waitForMount(cb){
+  function waitForMount(cb) {
     const findMount = () =>
-      document.getElementById("reflectiv-widget")
-      || document.querySelector("#coach-widget, [data-coach-mount], .reflectiv-widget");
+      document.getElementById("reflectiv-widget") ||
+      document.querySelector("#coach-widget, [data-coach-mount], .reflectiv-widget");
 
     const tryGet = () => {
       mount = findMount();
@@ -26,10 +26,13 @@
 
       const obs = new MutationObserver(() => {
         mount = findMount();
-        if (mount) { obs.disconnect(); cb(); }
+        if (mount) {
+          obs.disconnect();
+          cb();
+        }
       });
 
-      obs.observe(document.documentElement, { childList:true, subtree:true });
+      obs.observe(document.documentElement, { childList: true, subtree: true });
       setTimeout(() => obs.disconnect(), 15000);
     };
 
@@ -37,7 +40,7 @@
   }
 
   // ---------- config/state ----------
-  const LC_OPTIONS = ["Emotional Intelligence","Product Knowledge","Sales Simulation","Role Play"];
+  const LC_OPTIONS = ["Emotional Intelligence", "Product Knowledge", "Sales Simulation", "Role Play"];
   const LC_TO_INTERNAL = {
     "Emotional Intelligence": "emotional-assessment",
     "Product Knowledge": "product-knowledge",
@@ -65,15 +68,15 @@
 
   // ---------- EI defaults ----------
   const DEFAULT_PERSONAS = [
-    { key: "difficult",   label: "Difficult HCP" },
-    { key: "busy",        label: "Busy HCP" },
-    { key: "engaged",     label: "Engaged HCP" },
+    { key: "difficult", label: "Difficult HCP" },
+    { key: "busy", label: "Busy HCP" },
+    { key: "engaged", label: "Engaged HCP" },
     { key: "indifferent", label: "Indifferent HCP" }
   ];
   const DEFAULT_EI_FEATURES = [
-    { key: "empathy",    label: "Empathy Rating" },
-    { key: "stress",     label: "Stress Level Indicator" },
-    { key: "listening",  label: "Active Listening Hints" },
+    { key: "empathy", label: "Empathy Rating" },
+    { key: "stress", label: "Stress Level Indicator" },
+    { key: "listening", label: "Active Listening Hints" },
     { key: "validation", label: "Validation & Reframing Tips" }
   ];
 
@@ -87,8 +90,11 @@
 
   const esc = (s) =>
     String(s || "")
-      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
 
   function sanitizeLLM(raw) {
     let s = String(raw || "");
@@ -96,6 +102,19 @@
     s = s.replace(/<pre[\s\S]*?<\/pre>/gi, "");
     s = s.replace(/^\s*#{1,6}\s+/gm, "");
     s = s.replace(/^\s*(hi|hello|hey)[^\n]*\n+/i, "");
+    s = s.replace(/\n{3,}/g, "\n\n").trim();
+    return s;
+  }
+
+  // role-play only: strip any leaked meta/coaching
+  function sanitizeRolePlayOnly(text) {
+    let s = String(text || "");
+    s = s.replace(/<coach>[\s\S]*?<\/coach>/gi, "");
+    s = s.replace(/^(?:Assistant|Coach|System)\s*:\s*/gmi, "");
+    s = s.replace(/\b(Sales Guidance|Challenge|My\s*Approach|Impact)\s*:/gmi, "");
+    s = s.replace(/^\s*[-*]\s+/gm, "");
+    s = s.replace(/^\s*#{1,6}\s+.*$/gm, "");
+    s = s.replace(/^[“"']|[”"']$/g, "");
     s = s.replace(/\n{3,}/g, "\n\n").trim();
     return s;
   }
@@ -142,20 +161,29 @@
     const braceStart = block.indexOf("{");
     if (braceStart === -1) return { coach: null, clean: cleanText };
 
-    let depth = 0, end = -1;
+    let depth = 0,
+      end = -1;
     for (let i = braceStart; i < block.length; i++) {
       const ch = block[i];
       if (ch === "{") depth++;
-      if (ch === "}") { depth--; if (depth === 0) { end = i; break; } }
+      if (ch === "}") {
+        depth--;
+        if (depth === 0) {
+          end = i;
+          break;
+        }
+      }
     }
     if (end === -1) return { coach: null, clean: cleanText };
 
-    let jsonTxt = block.slice(braceStart, end + 1)
+    let jsonTxt = block
+      .slice(braceStart, end + 1)
       .replace(/[“”]/g, '"')
       .replace(/[‘’]/g, "'");
-
     let coach = null;
-    try { coach = JSON.parse(jsonTxt); } catch (e) {}
+    try {
+      coach = JSON.parse(jsonTxt);
+    } catch (e) {}
     return { coach, clean: cleanText };
   }
 
@@ -172,29 +200,31 @@
       discovery: endsWithQ || /(how|what|could you|can you|help me understand|walk me|clarify)\b/i.test(t),
       objection: /(concern|barrier|risk|coverage|auth|denied|cost|workflow|adherence|side effect|safety)/i.test(t),
       empathy: /(i understand|appreciate|given your time|thanks for|i hear|it sounds like)/i.test(t),
-      accuracyCue: /(renal|egfr|creatinine|bmd|resistance|ddi|interaction|efficacy|safety|adherence|formulary|access|prior auth|prep|tdf|taf|bictegravir|cabotegravir|rilpivirine|descovy|biktarvy|cabenuva)/i.test(t),
+      accuracyCue:
+        /(renal|egfr|creatinine|bmd|resistance|ddi|interaction|efficacy|safety|adherence|formulary|access|prior auth|prep|tdf|taf|bictegravir|cabotegravir|rilpivirine|descovy|biktarvy|cabenuva)/i.test(
+          t
+        ),
       tooLong: words > 180,
       idealLen: inRange(words, 45, 120)
     };
 
-    const accuracy  = sig.accuracyCue ? (sig.label ? 5 : 4) : 3;
-    const compliance= sig.label ? 5 : 3;
+    const accuracy = sig.accuracyCue ? (sig.label ? 5 : 4) : 3;
+    const compliance = sig.label ? 5 : 3;
     const discovery = sig.discovery ? 4 : 2;
     const objection_handling = sig.objection ? (sig.accuracyCue ? 4 : 3) : 2;
-    const empathy   = sig.empathy ? 3 : 2;
-    const clarity   = sig.tooLong ? 2 : (sig.idealLen ? 4 : 3);
+    const empathy = sig.empathy ? 3 : 2;
+    const clarity = sig.tooLong ? 2 : sig.idealLen ? 4 : 3;
 
-    const W = { accuracy:.26, compliance:.22, discovery:.16, objection_handling:.14, clarity:.12, empathy:.10 };
-    const toPct = v => v * 20;
+    const W = { accuracy: 0.26, compliance: 0.22, discovery: 0.16, objection_handling: 0.14, clarity: 0.12, empathy: 0.1 };
+    const toPct = (v) => v * 20;
 
-    let overall = (
-      toPct(accuracy)  * W.accuracy +
-      toPct(compliance)* W.compliance +
+    let overall =
+      toPct(accuracy) * W.accuracy +
+      toPct(compliance) * W.compliance +
       toPct(discovery) * W.discovery +
-      toPct(objection_handling)*W.objection_handling +
-      toPct(clarity)   * W.clarity +
-      toPct(empathy)   * W.empathy
-    );
+      toPct(objection_handling) * W.objection_handling +
+      toPct(clarity) * W.clarity +
+      toPct(empathy) * W.empathy;
     if (sig.idealLen) overall += 3;
     if (endsWithQ) overall += 3;
     if (sig.tooLong) overall -= 6;
@@ -214,15 +244,15 @@
       clarity < 4 ? "Use one idea per sentence" : null
     ].filter(Boolean);
 
-    const phrasing =
-      sig.discovery
-        ? "Given your criteria, which patients would be the best fit to start, and what would help you try one this month?"
-        : "Would it help to align on eligibility criteria and agree on one next step for your earliest appropriate patient?";
+    const phrasing = sig.discovery
+      ? "Given your criteria, which patients would be the best fit to start, and what would help you try one this month?"
+      : "Would it help to align on eligibility criteria and agree on one next step for your earliest appropriate patient?";
 
     return {
       overall,
       scores: { accuracy, empathy, clarity, compliance, discovery, objection_handling },
-      feedback: "Be concise, cite label or guidelines for clinical points, ask one focused discovery question, and propose a concrete next step.",
+      feedback:
+        "Be concise, cite label or guidelines for clinical points, ask one focused discovery question, and propose a concrete next step.",
       worked,
       improve,
       phrasing,
@@ -238,14 +268,36 @@
     const text = String(message || "").toLowerCase();
     let score = 0;
     switch (personaKey) {
-      case "difficult": score = 1; break;
-      case "busy": score = 2; break;
-      case "engaged": score = 4; break;
-      case "indifferent": score = 3; break;
-      default: score = 3;
+      case "difficult":
+        score = 1;
+        break;
+      case "busy":
+        score = 2;
+        break;
+      case "engaged":
+        score = 4;
+        break;
+      case "indifferent":
+        score = 3;
+        break;
+      default:
+        score = 3;
     }
-    const empathyKeywords = ["understand","appreciate","concern","feel","sorry","hear","sounds like","empathize","thanks","acknowledge"];
-    empathyKeywords.forEach((kw)=>{ if (text.includes(kw)) score++; });
+    const empathyKeywords = [
+      "understand",
+      "appreciate",
+      "concern",
+      "feel",
+      "sorry",
+      "hear",
+      "sounds like",
+      "empathize",
+      "thanks",
+      "acknowledge"
+    ];
+    empathyKeywords.forEach((kw) => {
+      if (text.includes(kw)) score++;
+    });
     return Math.min(5, score);
   }
 
@@ -254,14 +306,25 @@
     const text = String(message || "").toLowerCase();
     let score = 0;
     switch (personaKey) {
-      case "difficult": score = 4; break;
-      case "busy": score = 5; break;
-      case "engaged": score = 2; break;
-      case "indifferent": score = 3; break;
-      default: score = 3;
+      case "difficult":
+        score = 4;
+        break;
+      case "busy":
+        score = 5;
+        break;
+      case "engaged":
+        score = 2;
+        break;
+      case "indifferent":
+        score = 3;
+        break;
+      default:
+        score = 3;
     }
-    const stressWords = ["stress","busy","overwhelmed","frustrated","tired","pressure","deadline"];
-    stressWords.forEach((kw)=>{ if (text.includes(kw)) score++; });
+    const stressWords = ["stress", "busy", "overwhelmed", "frustrated", "tired", "pressure", "deadline"];
+    stressWords.forEach((kw) => {
+      if (text.includes(kw)) score++;
+    });
     return Math.min(5, score);
   }
 
@@ -272,35 +335,71 @@
 
     if (featureKey === "empathy") {
       switch (personaKey) {
-        case "difficult":   feedback = "Acknowledge frustration and keep voice calm. Use short validating phrases before you propose next steps."; break;
-        case "busy":        feedback = "Empathize in one line, then get to the point. Lead with the outcome and time saved."; break;
-        case "engaged":     feedback = "Reinforce collaboration. Thank them for input and ask one specific next question."; break;
-        case "indifferent": feedback = "Validate neutrality, then pivot to patient impact and one meaningful benefit."; break;
-        default:            feedback = "Match tone to the HCP and show you understand their context before offering guidance.";
+        case "difficult":
+          feedback = "Acknowledge frustration and keep voice calm. Use short validating phrases before you propose next steps.";
+          break;
+        case "busy":
+          feedback = "Empathize in one line, then get to the point. Lead with the outcome and time saved.";
+          break;
+        case "engaged":
+          feedback = "Reinforce collaboration. Thank them for input and ask one specific next question.";
+          break;
+        case "indifferent":
+          feedback = "Validate neutrality, then pivot to patient impact and one meaningful benefit.";
+          break;
+        default:
+          feedback = "Match tone to the HCP and show you understand their context before offering guidance.";
       }
     } else if (featureKey === "stress") {
       switch (personaKey) {
-        case "difficult":   feedback = "Stress likely high. Keep it brief and reassuring. Remove jargon."; break;
-        case "busy":        feedback = "Time pressure high. Bottom line first. Offer one low-effort next step."; break;
-        case "engaged":     feedback = "Moderate stress. Provide clear info and invite collaboration."; break;
-        case "indifferent": feedback = "Average stress. Build rapport through patient-centered framing."; break;
-        default:            feedback = "Adjust tone to stress level. Reduce cognitive load and give clear choices.";
+        case "difficult":
+          feedback = "Stress likely high. Keep it brief and reassuring. Remove jargon.";
+          break;
+        case "busy":
+          feedback = "Time pressure high. Bottom line first. Offer one low-effort next step.";
+          break;
+        case "engaged":
+          feedback = "Moderate stress. Provide clear info and invite collaboration.";
+          break;
+        case "indifferent":
+          feedback = "Average stress. Build rapport through patient-centered framing.";
+          break;
+        default:
+          feedback = "Adjust tone to stress level. Reduce cognitive load and give clear choices.";
       }
     } else if (featureKey === "listening") {
       switch (personaKey) {
-        case "difficult":   feedback = "Reflect back their words. Confirm you got it right, then ask a short clarifier."; break;
-        case "busy":        feedback = "Summarize their point in one sentence. Ask one yes or no clarifier."; break;
-        case "engaged":     feedback = "Affirm insights and build on them. Use clarifying questions to deepen trust."; break;
-        case "indifferent": feedback = "Use light affirmations to draw them in. Ask a simple patient-impact question."; break;
-        default:            feedback = "Use reflective and clarifying questions. Keep it concise.";
+        case "difficult":
+          feedback = "Reflect back their words. Confirm you got it right, then ask a short clarifier.";
+          break;
+        case "busy":
+          feedback = "Summarize their point in one sentence. Ask one yes or no clarifier.";
+          break;
+        case "engaged":
+          feedback = "Affirm insights and build on them. Use clarifying questions to deepen trust.";
+          break;
+        case "indifferent":
+          feedback = "Use light affirmations to draw them in. Ask a simple patient-impact question.";
+          break;
+        default:
+          feedback = "Use reflective and clarifying questions. Keep it concise.";
       }
     } else if (featureKey === "validation") {
       switch (personaKey) {
-        case "difficult":   feedback = "Validate frustration first. Reframe around shared goals and patient outcomes."; break;
-        case "busy":        feedback = "Validate time constraints. Reframe to efficiency and workflow fit."; break;
-        case "engaged":     feedback = "Validate expertise. Reframe to partnership and quick experimentation."; break;
-        case "indifferent": feedback = "Validate neutrality. Reframe to meaningful benefits for a typical patient."; break;
-        default:            feedback = "Validate perspective and reframe to collaboration and patient value.";
+        case "difficult":
+          feedback = "Validate frustration first. Reframe around shared goals and patient outcomes.";
+          break;
+        case "busy":
+          feedback = "Validate time constraints. Reframe to efficiency and workflow fit.";
+          break;
+        case "engaged":
+          feedback = "Validate expertise. Reframe to partnership and quick experimentation.";
+          break;
+        case "indifferent":
+          feedback = "Validate neutrality. Reframe to meaningful benefits for a typical patient.";
+          break;
+        default:
+          feedback = "Validate perspective and reframe to collaboration and patient value.";
       }
     } else {
       feedback = "Select a valid EI feature for targeted guidance.";
@@ -331,13 +430,14 @@
     else if (featureKey === "stress") rating = calculateStressRating(personaKey, lastUserMessage);
 
     const featureList = (cfg?.eiFeatures && cfg.eiFeatures.length ? cfg.eiFeatures : DEFAULT_EI_FEATURES);
-    const featureObj = featureList.find(f => f.key === featureKey || f.value === featureKey || f.id === featureKey);
-    const featureLabel = featureObj ? (featureObj.label || featureKey) : featureKey;
+    const featureObj = featureList.find((f) => f.key === featureKey || f.value === featureKey || f.id === featureKey);
+    const featureLabel = featureObj ? featureObj.label || featureKey : featureKey;
     const fbTxt = generateDynamicFeedback(personaKey, featureKey);
 
-    feedbackDisplayElem.innerHTML = (rating == null)
-      ? `<strong>${esc(featureLabel)}</strong><br><p>${esc(fbTxt)}</p>`
-      : `<strong>${esc(featureLabel)}: ${rating}/5</strong><br><p>${esc(fbTxt)}</p>`;
+    feedbackDisplayElem.innerHTML =
+      rating == null
+        ? `<strong>${esc(featureLabel)}</strong><br><p>${esc(fbTxt)}</p>`
+        : `<strong>${esc(featureLabel)}: ${rating}/5</strong><br><p>${esc(fbTxt)}</p>`;
   }
 
   // ---------- persona context ----------
@@ -355,8 +455,7 @@
 
   // ---------- prompt preface ----------
   function buildPreface(mode, sc) {
-    const COMMON =
-`# ReflectivAI — Output Contract
+    const COMMON = `# ReflectivAI — Output Contract
 Return exactly two parts. No code blocks. No markdown headings.
 1) Sales Guidance: short, actionable, accurate guidance.
 2) <coach>{
@@ -368,28 +467,34 @@ Return exactly two parts. No code blocks. No markdown headings.
      "feedback": "one concise paragraph",
      "context": { "rep_question":"...", "hcp_reply":"..." }
    }</coach>`;
+
     const personaLine = currentPersonaHint();
 
     if (mode === "sales-simulation") {
       return (
-`# Role
+        `# Role
 You are a virtual pharma coach. Be direct, label-aligned, and safe.
 
 # Scenario
 ${personaLine}
-${sc ? [
-  `Therapeutic Area: ${sc.therapeuticArea || "—"}`,
-  `HCP Role: ${sc.hcpRole || "—"}`,
-  `Background: ${sc.background || "—"}`,
-  `Today’s Goal: ${sc.goal || "—"}`
-].join("\n") : ""}
+${
+  sc
+    ? [
+        `Therapeutic Area: ${sc.therapeuticArea || "—"}`,
+        `HCP Role: ${sc.hcpRole || "—"}`,
+        `Background: ${sc.background || "—"}`,
+        `Today’s Goal: ${sc.goal || "—"}`
+      ].join("\n")
+    : ""
+}
 
 # Style
 - 3–6 sentences and one closing question.
 - Only appropriate, publicly known, label-aligned facts.
 - No pricing advice or PHI. No off-label.
 
-${COMMON}`).trim();
+${COMMON}`
+      ).trim();
     }
 
     if (mode === "product-knowledge") {
@@ -398,20 +503,22 @@ ${COMMON}`).trim();
 
     if (mode === "role-play") {
       return (
-`# Role Play Contract
+        `# Role Play Contract
 You are the Healthcare Provider. Reply ONLY as the HCP. Be realistic, brief, and sometimes skeptical or time constrained.
 ${personaLine}
 If the user types "Evaluate this exchange" or "Give feedback", step out of role and return EI-based reflection using internal doctrine.
 
-${COMMON}`).trim();
+${COMMON}`
+      ).trim();
     }
 
     // emotional-assessment
     return (
-`Provide brief self-reflection tips tied to HCP communication.
+      `Provide brief self-reflection tips tied to HCP communication.
 - 3–5 sentences, then one reflective question.
 
-${COMMON}`).trim();
+${COMMON}`
+    ).trim();
   }
 
   // ---------- UI ----------
@@ -443,7 +550,6 @@ ${COMMON}`).trim();
 #reflectiv-widget .coach-subs .pill{display:inline-block;padding:2px 8px;margin-right:6px;font-size:12px;background:#f1f3f7;border:1px solid #d6dbe3;border-radius:999px}
 #reflectiv-widget .scenario-meta .meta-card{padding:10px 12px;background:#f7f9fc;border:1px solid #e1e6ef;border-radius:10px}
 #reflectiv-widget .hidden{display:none!important}
-/* speaker chips for role-play */
 #reflectiv-widget .speaker{display:inline-block;margin:0 0 6px 2px;padding:2px 8px;font-size:11px;font-weight:700;border-radius:999px;border:1px solid #cfd6df}
 #reflectiv-widget .speaker.hcp{background:#eef4ff;color:#0f2a6b;border-color:#c9d6ff}
 #reflectiv-widget .speaker.rep{background:#e8fff2;color:#0b5a2a;border-color:#bfeacc}
@@ -470,66 +576,81 @@ ${COMMON}`).trim();
 
     // rebuild real UI
     const bar = el("div", "chat-toolbar");
-    const simControls = el("div","sim-controls");
+    const simControls = el("div", "sim-controls");
 
     const lcLabel = el("label", "", "Learning Center");
     lcLabel.htmlFor = "cw-mode";
-    const modeSel = el("select"); modeSel.id = "cw-mode";
+    const modeSel = el("select");
+    modeSel.id = "cw-mode";
     LC_OPTIONS.forEach((name) => {
-      const o = el("option"); o.value = name; o.textContent = name;
+      const o = el("option");
+      o.value = name;
+      o.textContent = name;
       modeSel.appendChild(o);
     });
-    const initialLc = Object.keys(LC_TO_INTERNAL).find(k => LC_TO_INTERNAL[k] === (cfg?.defaultMode || "sales-simulation")) || "Sales Simulation";
+    const initialLc =
+      Object.keys(LC_TO_INTERNAL).find((k) => LC_TO_INTERNAL[k] === (cfg?.defaultMode || "sales-simulation")) ||
+      "Sales Simulation";
     modeSel.value = initialLc;
     currentMode = LC_TO_INTERNAL[modeSel.value];
 
     const coachLabel = el("label", "", "Coach");
     coachLabel.htmlFor = "cw-coach";
-    const coachSel = el("select"); coachSel.id = "cw-coach";
-    [{v:"on",t:"Coach On"},{v:"off",t:"Coach Off"}].forEach(({v,t})=>{
-      const o = el("option"); o.value=v; o.textContent=t; coachSel.appendChild(o);
+    const coachSel = el("select");
+    coachSel.id = "cw-coach";
+    [
+      { v: "on", t: "Coach On" },
+      { v: "off", t: "Coach Off" }
+    ].forEach(({ v, t }) => {
+      const o = el("option");
+      o.value = v;
+      o.textContent = t;
+      coachSel.appendChild(o);
     });
     coachSel.value = coachOn ? "on" : "off";
-    coachSel.onchange = () => { coachOn = coachSel.value === "on"; renderCoach(); };
+    coachSel.onchange = () => {
+      coachOn = coachSel.value === "on";
+      renderCoach();
+    };
 
     const diseaseLabel = el("label", "", "Disease State");
     diseaseLabel.htmlFor = "cw-disease";
-    const diseaseSelect = el("select"); diseaseSelect.id = "cw-disease";
+    const diseaseSelect = el("select");
+    diseaseSelect.id = "cw-disease";
 
-    const hcpLabel = el("label","","HCP Profiles");
-    hcpLabel.htmlFor="cw-hcp";
-    const hcpSelect = el("select"); hcpSelect.id="cw-hcp";
+    const hcpLabel = el("label", "", "HCP Profiles");
+    hcpLabel.htmlFor = "cw-hcp";
+    const hcpSelect = el("select");
+    hcpSelect.id = "cw-hcp";
 
     // EI Persona/EI Feature
     const personaLabel = el("label", "", "HCP Persona");
     personaLabel.htmlFor = "cw-ei-persona";
-    const personaSelect = el("select"); personaSelect.id = "cw-ei-persona";
+    const personaSelect = el("select");
+    personaSelect.id = "cw-ei-persona";
     personaSelectElem = personaSelect;
     personaLabelElem = personaLabel;
     personaSelect.addEventListener("change", generateFeedback);
 
     const featureLabel = el("label", "", "EI Feature");
     featureLabel.htmlFor = "cw-ei-feature";
-    const featureSelect = el("select"); featureSelect.id = "cw-ei-feature";
+    const featureSelect = el("select");
+    featureSelect.id = "cw-ei-feature";
     eiFeatureSelectElem = featureSelect;
     featureLabelElem = featureLabel;
     featureSelect.addEventListener("change", generateFeedback);
 
     // EI option sources
     const PERSONAS_ALL =
-      Array.isArray(cfg?.eiProfiles) && cfg.eiProfiles.length
-        ? cfg.eiProfiles
-        : DEFAULT_PERSONAS;
+      Array.isArray(cfg?.eiProfiles) && cfg.eiProfiles.length ? cfg.eiProfiles : DEFAULT_PERSONAS;
 
     const FEATURES_ALL_RAW =
       (Array.isArray(cfg?.eiFeatures) && cfg.eiFeatures.length && cfg.eiFeatures) ||
       (Array.isArray(cfg?.features) && cfg.features.length && cfg.features) ||
       DEFAULT_EI_FEATURES;
 
-    const FEATURES_ALL = FEATURES_ALL_RAW.map(f =>
-      typeof f === "string"
-        ? { key: f.toLowerCase().replace(/\s+/g, "-"), label: f }
-        : f
+    const FEATURES_ALL = FEATURES_ALL_RAW.map((f) =>
+      typeof f === "string" ? { key: f.toLowerCase().replace(/\s+/g, "-"), label: f } : f
     );
 
     // hydrate EI selects
@@ -542,39 +663,47 @@ ${COMMON}`).trim();
 
       const opt = (txt, val = "") => {
         const o = document.createElement("option");
-        o.value = val; o.textContent = txt;
+        o.value = val;
+        o.textContent = txt;
         return o;
       };
       personaSelectElem.appendChild(opt("Select...", ""));
       eiFeatureSelectElem.appendChild(opt("Select...", ""));
 
-      PERSONAS_ALL.forEach(p => {
+      PERSONAS_ALL.forEach((p) => {
         const o = document.createElement("option");
         const val = p.key || p.value || p.id || String(p).toLowerCase().replace(/\s+/g, "-");
         const lab = p.label || p.name || p.title || String(p);
-        o.value = val; o.textContent = lab;
+        o.value = val;
+        o.textContent = lab;
         personaSelectElem.appendChild(o);
       });
 
-      FEATURES_ALL.forEach(f => {
+      FEATURES_ALL.forEach((f) => {
         const o = document.createElement("option");
         const val = f.key || f.value || f.id || String(f).toLowerCase().replace(/\s+/g, "-");
         const lab = f.label || f.name || f.title || String(f);
-        o.value = val; o.textContent = lab;
+        o.value = val;
+        o.textContent = lab;
         eiFeatureSelectElem.appendChild(o);
       });
 
-      if (!FEATURES_ALL.length)
-        console.warn("EI features list is empty; check config keys (eiFeatures/features).");
+      if (!FEATURES_ALL.length) console.warn("EI features list is empty; check config keys (eiFeatures/features).");
     }
 
     // mount controls
-    simControls.appendChild(lcLabel);      simControls.appendChild(modeSel);
-    simControls.appendChild(coachLabel);   simControls.appendChild(coachSel);
-    simControls.appendChild(diseaseLabel); simControls.appendChild(diseaseSelect);
-    simControls.appendChild(hcpLabel);     simControls.appendChild(hcpSelect);
-    simControls.appendChild(personaLabel); simControls.appendChild(personaSelect);
-    simControls.appendChild(featureLabel); simControls.appendChild(featureSelect);
+    simControls.appendChild(lcLabel);
+    simControls.appendChild(modeSel);
+    simControls.appendChild(coachLabel);
+    simControls.appendChild(coachSel);
+    simControls.appendChild(diseaseLabel);
+    simControls.appendChild(diseaseSelect);
+    simControls.appendChild(hcpLabel);
+    simControls.appendChild(hcpSelect);
+    simControls.appendChild(personaLabel);
+    simControls.appendChild(personaSelect);
+    simControls.appendChild(featureLabel);
+    simControls.appendChild(featureSelect);
 
     bar.appendChild(simControls);
     shell.innerHTML = ""; // replace skeleton with real UI
@@ -587,11 +716,23 @@ ${COMMON}`).trim();
     shell.appendChild(msgs);
 
     const inp = el("div", "chat-input");
-    const ta = el("textarea"); ta.placeholder = "Type your message…";
-    ta.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send.click(); } });
+    const ta = el("textarea");
+    ta.placeholder = "Type your message…";
+    ta.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        send.click();
+      }
+    });
     const send = el("button", "btn", "Send");
-    send.onclick = () => { const t = ta.value.trim(); if (!t) return; sendMessage(t); ta.value = ""; };
-    inp.appendChild(ta); inp.appendChild(send);
+    send.onclick = () => {
+      const t = ta.value.trim();
+      if (!t) return;
+      sendMessage(t);
+      ta.value = "";
+    };
+    inp.appendChild(ta);
+    inp.appendChild(send);
     shell.appendChild(inp);
 
     const coach = el("div", "coach-section");
@@ -609,16 +750,19 @@ ${COMMON}`).trim();
     // helpers
     function getDiseaseStates() {
       let ds = Array.isArray(cfg?.diseaseStates) ? cfg.diseaseStates.slice() : [];
-      if (!ds.length && Array.isArray(scenarios) && scenarios.length){
-        ds = Array.from(new Set(scenarios.map(s => (s.therapeuticArea || s.diseaseState || "").trim()))).filter(Boolean);
+      if (!ds.length && Array.isArray(scenarios) && scenarios.length) {
+        ds = Array.from(
+          new Set(scenarios.map((s) => (s.therapeuticArea || s.diseaseState || "").trim()))
+        ).filter(Boolean);
       }
-      ds = ds.map(x => x.replace(/\bhiv\b/ig,"HIV"));
+      ds = ds.map((x) => x.replace(/\bhiv\b/gi, "HIV"));
       return ds;
     }
 
     function elOption(select, val, label) {
       const o = document.createElement("option");
-      o.value = val; o.textContent = label;
+      o.value = val;
+      o.textContent = label;
       select.appendChild(o);
     }
 
@@ -626,10 +770,13 @@ ${COMMON}`).trim();
       select.innerHTML = "";
       if (withPlaceholder) {
         const p = document.createElement("option");
-        p.value = ""; p.textContent = "Select…"; p.disabled = true; p.selected = true;
+        p.value = "";
+        p.textContent = "Select…";
+        p.disabled = true;
+        p.selected = true;
         select.appendChild(p);
       }
-      values.forEach(v => {
+      values.forEach((v) => {
         if (!v) return;
         if (typeof v === "string") elOption(select, v, v);
         else elOption(select, v.value || v.id || v.key || v.label, v.label || v.value || v.id || v.key);
@@ -643,27 +790,32 @@ ${COMMON}`).trim();
 
     function populateHcpForDisease(ds) {
       const dsKey = (ds || "").trim();
-      const scen = scenarios.filter(s => {
+      const scen = scenarios.filter((s) => {
         const area = (s.therapeuticArea || s.diseaseState || "").trim();
         return area.toLowerCase() === dsKey.toLowerCase();
       });
 
       if (scen.length) {
-        const opts = scen.map(s => ({ value: s.id, label: s.label || s.id }));
+        const opts = scen.map((s) => ({ value: s.id, label: s.label || s.id }));
         setSelectOptions(hcpSelect, opts, true);
         hcpSelect.disabled = false;
       } else {
-        setSelectOptions(hcpSelect, [{ value:"", label:"No scenarios for this disease" }], true);
+        setSelectOptions(hcpSelect, [{ value: "", label: "No scenarios for this disease" }], true);
         hcpSelect.disabled = true;
       }
     }
 
-    function populateEIOptions() { hydrateEISelects(); }
+    function populateEIOptions() {
+      hydrateEISelects();
+    }
 
     function renderMeta() {
       const sc = scenariosById.get(currentScenarioId);
       const showMeta = currentMode === "sales-simulation" || currentMode === "role-play";
-      if (!sc || !currentScenarioId || !showMeta) { meta.innerHTML = ""; return; }
+      if (!sc || !currentScenarioId || !showMeta) {
+        meta.innerHTML = "";
+        return;
+      }
       meta.innerHTML = `
         <div class="meta-card">
           <div><strong>Therapeutic Area:</strong> ${esc(sc.therapeuticArea || sc.diseaseState || "—")}</div>
@@ -683,11 +835,9 @@ ${COMMON}`).trim();
         const c = el("div", "content");
 
         if (rp) {
-          const chipText = m._speaker === "hcp" ? "HCP" :
-                           m._speaker === "rep" ? "Rep" :
-                           (m.role === "assistant" ? "Assistant" : "You");
-          const chipCls  = m._speaker === "hcp" ? "speaker hcp" :
-                           m._speaker === "rep" ? "speaker rep" : "speaker";
+          const chipText =
+            m._speaker === "hcp" ? "HCP" : m._speaker === "rep" ? "Rep" : m.role === "assistant" ? "Assistant" : "You";
+          const chipCls = m._speaker === "hcp" ? "speaker hcp" : m._speaker === "rep" ? "speaker rep" : "speaker";
           const chip = el("div", chipCls, chipText);
           c.appendChild(chip);
         }
@@ -703,10 +853,10 @@ ${COMMON}`).trim();
     }
 
     function orderedPills(scores) {
-      const order = ["accuracy","empathy","clarity","compliance","discovery","objection_handling"];
+      const order = ["accuracy", "empathy", "clarity", "compliance", "discovery", "objection_handling"];
       return order
-        .filter(k => k in (scores || {}))
-        .map(k => `<span class="pill">${esc(k)}: ${scores[k]}</span>`)
+        .filter((k) => k in (scores || {}))
+        .map((k) => `<span class="pill">${esc(k)}: ${scores[k]}</span>`)
         .join(" ");
     }
 
@@ -725,12 +875,8 @@ ${COMMON}`).trim();
       }
       const fb = last._coach;
       const scores = fb.scores || fb.subscores || {};
-      const workedStr = (fb.worked && fb.worked.length)
-        ? fb.worked.join(". ") + "."
-        : "—";
-      const improveStr = (fb.improve && fb.improve.length)
-        ? fb.improve.join(". ") + "."
-        : (fb.feedback || "—");
+      const workedStr = fb.worked && fb.worked.length ? fb.worked.join(". ") + "." : "—";
+      const improveStr = fb.improve && fb.improve.length ? fb.improve.join(". ") + "." : fb.feedback || "—";
       body.innerHTML = `
         <div class="coach-score">Score: <strong>${fb.overall ?? fb.score ?? "—"}</strong>/100</div>
         <div class="coach-subs">${orderedPills(scores)}</div>
@@ -787,7 +933,9 @@ ${COMMON}`).trim();
           </div>`;
         populateDiseases();
         if (diseaseSelect.value) populateHcpForDisease(diseaseSelect.value);
-        renderMessages(); renderCoach(); renderMeta();
+        renderMessages();
+        renderCoach();
+        renderMeta();
       } else {
         // emotional-assessment
         diseaseLabel.classList.add("hidden");
@@ -801,19 +949,23 @@ ${COMMON}`).trim();
         feedbackDisplayElem.innerHTML = "";
         currentScenarioId = null;
         conversation = [];
-        renderMessages(); renderCoach(); renderMeta();
+        renderMessages();
+        renderCoach();
+        renderMeta();
       }
 
       if (currentMode === "product-knowledge" || currentMode === "emotional-assessment") {
         currentScenarioId = null;
         conversation = [];
-        renderMessages(); renderCoach(); renderMeta();
+        renderMessages();
+        renderCoach();
+        renderMeta();
       }
     }
 
     modeSel.addEventListener("change", applyModeVisibility);
 
-    diseaseSelect.addEventListener("change", ()=>{
+    diseaseSelect.addEventListener("change", () => {
       const ds = diseaseSelect.value || "";
       if (!ds) return;
       if (currentMode === "sales-simulation" || currentMode === "role-play") {
@@ -821,15 +973,19 @@ ${COMMON}`).trim();
       } else if (currentMode === "product-knowledge") {
         currentScenarioId = null;
       }
-      renderMessages(); renderCoach(); renderMeta();
+      renderMessages();
+      renderCoach();
+      renderMeta();
     });
 
-    hcpSelect.addEventListener("change", ()=>{
+    hcpSelect.addEventListener("change", () => {
       const sel = hcpSelect.value || "";
       if (!sel) return;
       const sc = scenariosById.get(sel);
       currentScenarioId = sc ? sc.id : null;
-      renderMessages(); renderCoach(); renderMeta();
+      renderMessages();
+      renderCoach();
+      renderMeta();
     });
 
     // expose renders for sendMessage
@@ -869,14 +1025,16 @@ ${COMMON}`).trim();
   async function evaluateConversation() {
     const sc = scenariosById.get(currentScenarioId);
     const turns = conversation.length ? conversation : [{ role: "system", content: "No prior turns." }];
-    const convoText = turns.map(m => `${m.role}: ${m.content}`).join("\n").slice(0, 24000); // guard size
+    const convoText = turns.map((m) => `${m.role}: ${m.content}`).join("\n").slice(0, 24000); // guard size
 
     const evalMsgs = [
       systemPrompt ? { role: "system", content: systemPrompt } : null,
-      { role: "system", content: (buildPreface("role-play", sc) + "\nEvaluate the whole exchange now.") },
-      { role: "user", content:
-        `Evaluate this entire exchange for EI, clarity, accuracy, compliance, discovery, and objection handling. ` +
-        `Provide specific, actionable feedback and a 0-100 score.\n\nConversation:\n${convoText}`
+      { role: "system", content: buildPreface("role-play", sc) + "\nEvaluate the whole exchange now." },
+      {
+        role: "user",
+        content:
+          `Evaluate this entire exchange for EI, clarity, accuracy, compliance, discovery, and objection handling. ` +
+          `Provide specific, actionable feedback and a 0-100 score.\n\nConversation:\n${convoText}`
       }
     ].filter(Boolean);
 
@@ -898,7 +1056,8 @@ ${COMMON}`).trim();
     lastUserMessage = userText;
 
     // intercept evaluation intents
-    const evalRe = /\b(evaluate|assessment|assess|grade|score)\b.*\b(conversation|exchange|dialog|dialogue|chat)\b|\bfinal (eval|evaluation|assessment)\b/i;
+    const evalRe =
+      /\b(evaluate|assessment|assess|grade|score)\b.*\b(conversation|exchange|dialog|dialogue|chat)\b|\bfinal (eval|evaluation|assessment)\b/i;
     if (evalRe.test(userText)) {
       await evaluateConversation();
       renderMessages();
@@ -910,7 +1069,7 @@ ${COMMON}`).trim();
     conversation.push({
       role: "user",
       content: userText,
-      _speaker: (currentMode === "role-play" ? "rep" : "user")
+      _speaker: currentMode === "role-play" ? "rep" : "user"
     });
     renderMessages();
     renderCoach();
@@ -921,21 +1080,18 @@ ${COMMON}`).trim();
     const messages = [];
 
     // optional global system prompt
-    if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
+    if (systemPrompt && currentMode !== "role-play") messages.push({ role: "system", content: systemPrompt });
 
     // mode-specific rails
     if (currentMode === "role-play") {
       // PURE role-play. Do not include the Sales Guidance/coach contract.
       const personaLine = currentPersonaHint();
-      const detail =
-        sc
-          ? `Therapeutic Area: ${sc.therapeuticArea || sc.diseaseState || "—"}. ` +
-            `HCP Role: ${sc.hcpRole || "—"}. ` +
-            (sc.background ? `Background: ${sc.background}. ` : "") +
-            (sc.goal ? `Today’s Goal: ${sc.goal}.` : "")
-          : "";
-      const roleplayRails =
-`You are the Healthcare Provider (HCP). Stay strictly in character.
+      const detail = sc
+        ? `Therapeutic Area: ${sc.therapeuticArea || sc.diseaseState || "—"}. HCP Role: ${sc.hcpRole || "—"}. ${
+            sc.background ? `Background: ${sc.background}. ` : ""
+          }${sc.goal ? `Today’s Goal: ${sc.goal}.` : ""}`
+        : "";
+      const roleplayRails = `You are the Healthcare Provider (HCP). Stay strictly in character.
 Reply ONLY as the HCP in first person. Natural, concise clinical dialogue. Be brief if busy.
 Persona context:
 ${personaLine}
@@ -943,8 +1099,8 @@ ${detail}
 
 Hard rules:
 - Do NOT output coaching, rubrics, scores, JSON, or any "<coach>" block.
-- Do NOT output "Sales Guidance" or meta commentary.
-- Continue real-time back-and-forth as the HCP.`;
+- Do NOT output "Sales Guidance", headings, bullet lists, or meta commentary.
+- Output only the HCP utterance.`;
       messages.push({ role: "system", content: roleplayRails });
     } else {
       // non-role-play modes use the contract preface
@@ -955,25 +1111,28 @@ Hard rules:
     messages.push({ role: "user", content: userText });
 
     try {
-      // optional EI extras
-      const sysExtras = (typeof EIContext !== "undefined" && EIContext?.getSystemExtras)
-        ? await EIContext.getSystemExtras().catch(() => null)
-        : null;
-      if (sysExtras) messages.unshift({ role: "system", content: sysExtras });
+      // optional EI extras (non-role-play only)
+      if (currentMode !== "role-play") {
+        const sysExtras =
+          typeof EIContext !== "undefined" && EIContext?.getSystemExtras
+            ? await EIContext.getSystemExtras().catch(() => null)
+            : null;
+        if (sysExtras) messages.unshift({ role: "system", content: sysExtras });
+      }
 
       // call model
       const raw = await callModel(messages);
 
       // parse assistant + coach payload
       const { coach, clean } = extractCoach(raw);
-      const computed = scoreReply(userText, clean, currentMode);
+      const replyText = currentMode === "role-play" ? sanitizeRolePlayOnly(clean) : sanitizeLLM(clean);
+      const computed = scoreReply(userText, replyText, currentMode);
 
       const finalCoach = (() => {
-        if (coach && (coach.scores || coach.subscores)) {
+        if (coach && (coach.scores || coach.subscores) && currentMode !== "role-play") {
           const scores = coach.scores || coach.subscores;
-          const overall = typeof coach.overall === "number"
-            ? coach.overall
-            : (typeof coach.score === "number" ? coach.score : undefined);
+          const overall =
+            typeof coach.overall === "number" ? coach.overall : typeof coach.score === "number" ? coach.score : undefined;
           return {
             overall: overall ?? computed.overall,
             scores,
@@ -981,7 +1140,7 @@ Hard rules:
             worked: coach.worked && coach.worked.length ? coach.worked : computed.worked,
             improve: coach.improve && coach.improve.length ? coach.improve : computed.improve,
             phrasing: typeof coach.phrasing === "string" && coach.phrasing ? coach.phrasing : computed.phrasing,
-            context: coach.context || { rep_question: userText, hcp_reply: clean },
+            context: coach.context || { rep_question: userText, hcp_reply: replyText },
             score: overall ?? computed.overall,
             subscores: scores
           };
@@ -991,9 +1150,9 @@ Hard rules:
 
       conversation.push({
         role: "assistant",
-        content: clean,
+        content: replyText,
         _coach: finalCoach,
-        _speaker: (currentMode === "role-play" ? "hcp" : "assistant")
+        _speaker: currentMode === "role-play" ? "hcp" : "assistant"
       });
       renderMessages();
       renderCoach();
@@ -1006,11 +1165,11 @@ Hard rules:
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             ts: Date.now(),
-            schema: (cfg.schemaVersion || "coach-v2"),
+            schema: cfg.schemaVersion || "coach-v2",
             mode: currentMode,
             scenarioId: currentScenarioId,
             turn: conversation.length,
-            context: finalCoach.context || { rep_question: userText, hcp_reply: clean },
+            context: finalCoach.context || { rep_question: userText, hcp_reply: replyText },
             overall: finalCoach.overall,
             scores: finalCoach.scores
           })
@@ -1027,8 +1186,8 @@ Hard rules:
     try {
       if (cfg && cfg.scenariosUrl) {
         const payload = await fetchLocal(cfg.scenariosUrl);
-        const arr = Array.isArray(payload) ? payload : (payload.scenarios || []);
-        scenarios = arr.map((s)=>({
+        const arr = Array.isArray(payload) ? payload : payload.scenarios || [];
+        scenarios = arr.map((s) => ({
           id: String(s.id),
           label: s.label || String(s.id),
           therapeuticArea: s.therapeuticArea || s.diseaseState || "",
@@ -1037,10 +1196,10 @@ Hard rules:
           goal: s.goal || ""
         }));
       } else if (Array.isArray(cfg?.scenarios)) {
-        scenarios = cfg.scenarios.map((s)=>({
+        scenarios = cfg.scenarios.map((s) => ({
           id: String(s.id),
           label: s.label || String(s.id),
-          therapeuticArea: (s.therapeuticArea||s.diseaseState||""),
+          therapeuticArea: s.therapeuticArea || s.diseaseState || "",
           hcpRole: s.hcpRole || "",
           background: s.background || "",
           goal: s.goal || ""
@@ -1054,8 +1213,8 @@ Hard rules:
     }
 
     // keep token case, do not collapse "HIV PrEP"
-    scenarios.forEach(s => {
-      if (s.therapeuticArea) s.therapeuticArea = s.therapeuticArea.replace(/\bhiv\b/ig, "HIV");
+    scenarios.forEach((s) => {
+      if (s.therapeuticArea) s.therapeuticArea = s.therapeuticArea.replace(/\bhiv\b/gi, "HIV");
     });
 
     // de-dup by id (last one wins)
@@ -1068,8 +1227,11 @@ Hard rules:
   // ---------- init ----------
   async function init() {
     try {
-      try { cfg = await fetchLocal("./assets/chat/config.json"); }
-      catch (e) { cfg = await fetchLocal("./config.json"); }
+      try {
+        cfg = await fetchLocal("./assets/chat/config.json");
+      } catch (e) {
+        cfg = await fetchLocal("./config.json");
+      }
     } catch (e) {
       console.error("config load failed:", e);
       cfg = { defaultMode: "sales-simulation" };
