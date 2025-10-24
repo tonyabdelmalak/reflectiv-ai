@@ -1,7 +1,12 @@
 /* widget.js
  * ReflectivAI Chat/Coach — drop-in (coach-v2, deterministic scoring v3)
  * Modes: emotional-assessment | product-knowledge | sales-simulation | role-play
- * EI mode adds Persona + EI Feature dropdowns and context-aware feedback.
+ * PROACTIVE SAFEGUARDS:
+ * - duplicate-cycle guard (ring buffer)        - double-send lock
+ * - Enter throttling                           - stricter HCP-only sanitizer & leak detection
+ * - fixes malformed “walk me through …”        - conversation trimming
+ * - empty-reply fallback                       - time-outed model calls
+ * - length clamps                              - anti-echo of the user’s text
  */
 (function () {
   // ---------- safe bootstrapping ----------
@@ -106,13 +111,19 @@
     return s;
   }
 
-  // --- sentence helpers
+  function clampLen(s, max) {
+    s = String(s || "");
+    if (s.length <= max) return s;
+    return s.slice(0, max).replace(/\s+\S*$/, "").trim() + "…";
+  }
+
+  // sentence helpers
   function splitSentences(text) {
     const t = String(text || "");
     return t.replace(/\s+/g, " ").match(/[^.!?]+[.!?]?/g) || [];
   }
 
-  // --- shared leak patterns (used in multiple functions)
+  // --- shared leak patterns
   const BRAND_RE = /\b(descovy|biktarvy|cabenuva|truvada|prep)\b/i;
   const PROMO_ARTIFACTS_RE =
     /\b(educational (resources?|materials?)|training session|in-?service|lunch-?and-?learn|handout|one-?pager|brochure|leave-?behind|job aid|script|slide deck|webinar|office hours)\b/i;
@@ -121,36 +132,34 @@
   const OFFER_OR_TRAINING_WORD_RE =
     /\b(offer|provide|train|training|educate|education|materials?|resources?|handouts?|brochures?|one-?pagers?|scripts?)\b/i;
 
-  // Role-play only sanitizer: strip leaked coaching/meta blocks and force HCP POV
+  // ---------- Role-play sanitizer ----------
   function sanitizeRolePlayOnly(text) {
     let s = String(text || "");
 
-    // If a stray <coach> appears, drop everything after it
+    // drop everything after accidental <coach>
     const coachIdx = s.indexOf("<coach>");
     if (coachIdx >= 0) s = s.slice(0, coachIdx);
 
-    // remove any embedded coach JSON blocks and rubric sections
     s = s.replace(/<coach>[\s\S]*?<\/coach>/gi, "");
     s = s.replace(
       /(?:^|\n)\s*(?:\*\*)?\s*(?:Sales\s*Guidance|Challenge|My\s*Approach|Impact)\s*(?:\*\*)?\s*:\s*[\s\S]*?(?=\n\s*\n|$)/gmi,
       ""
     );
 
-    // remove prefixed speaker/meta labels and greetings
+    // strip speaker/meta
     s = s.replace(/^(?:Assistant|Coach|System|Rep|User|Sales Rep)\s*:\s*/gmi, "");
     s = s.replace(/^\s*["“']?\s*(hi|hello|hey)\b.*$/gmi, "");
 
-    // drop markdown bullets, headings, quotes
+    // markdown cleanup
     s = s.replace(/^\s*[-*]\s+/gm, "");
     s = s.replace(/^\s*#{1,6}\s+.*$/gm, "");
     s = s.replace(/^\s*>\s?/gm, "");
 
-    // POV correction: convert second-person clinic nouns to first-person
+    // POV convert “your clinic” nouns
     const nouns =
       "(patients?|panel|clinic|practice|workflow|nurses?|staff|team|MA|MAs|prescribing|prescriptions|criteria|approach)";
     s = s.replace(new RegExp(`\\byour\\s+${nouns}\\b`, "gi"), (m) => m.replace(/\byour\b/i, "my"));
 
-    // sentence-level transforms
     const IMPERATIVE_START =
       /^(ask|emphasize|consider|provide|offer|educate|ensure|recommend|suggest|discuss|address|reinforce|encourage|support)\b/i;
 
@@ -166,9 +175,8 @@
             sent
           );
 
-        // Normalize classic rep-facing asks to HCP statements
+        // Normalize rep-facing asks to HCP statements
         if (isQ && (hasYou || /walk\s+me\s+through/i.test(sent)) && repDiscoveryCue) {
-          // Replace second-person prompts with first-person desire
           sent = sent
             .replace(/\bcan\s+we\s+review\s+your\s+approach\b/i, "In my clinic, we review our approach")
             .replace(/\bhow\s+do\s+you\s+identif(?:y|ies)\b/gi, "Here is how I identify")
@@ -181,40 +189,25 @@
             .trim();
         }
 
-        // Drop “can we discuss … you …”
-        if (isQ && /\bcan\s+we\s+discuss\b/i.test(sent) && hasYou) return "";
-
-        // convert sentence-initial imperatives to HCP first-person
+        // convert imperative openings to first-person
         if (IMPERATIVE_START.test(sent)) {
-          const m = sent.match(IMPERATIVE_START);
-          const verb = m ? m[1].toLowerCase() : "consider";
           const rest = sent.replace(IMPERATIVE_START, "").replace(/^[:,\s]+/, "");
-          sent = `In my clinic, I ${verb} ${rest}`.replace(/\?\s*$/, ".").trim();
+          sent = `In my clinic, I ${rest}`.replace(/\?\s*$/, ".").trim();
         }
 
-        // rewrite first-person offers tied to promo artifacts or brands
+        // rewrite first-person offers or training talk
         if (FIRST_PERSON_OFFER_RE.test(sent) || (/(?:^|\b)(?:i|we)\b/i.test(sent) && OFFER_OR_TRAINING_WORD_RE.test(sent))) {
-          if (PROMO_ARTIFACTS_RE.test(sent) || BRAND_RE.test(sent)) {
-            sent =
-              "In my clinic, I follow current guidelines and our internal processes; my focus is on patient selection and follow-up.";
-          } else {
-            sent =
-              "In my clinic, I rely on our internal processes and current guidelines; my focus is on patient selection and follow-up.";
-          }
+          sent =
+            "In my clinic, I rely on our internal processes and current guidelines; my focus is on patient selection and follow-up.";
         }
 
-        // FINAL cleanup for malformed pronouns created by replacements
-        // e.g., "Can I walk me through the data..." -> "I would like to review the data."
+        // repair malformed pronouns from rewrites
         sent = sent
           .replace(/\bcan\s+i\s+walk\s+me\s+through\b/gi, "I would like to review")
           .replace(/\bi\s+walk\s+me\s+through\b/gi, "I review")
           .replace(/\bwalk\s+me\s+through\b/gi, "review")
-          .replace(/\bcan\s+i\s+share\b/gi, "I would like to review")
-          .replace(/\bcan\s+i\s+explain\b/gi, "I would like to review")
-          .replace(/\bcan\s+i\s+present\b/gi, "I would like to review")
-          .replace(/\bcan\s+i\s+go\s+over\b/gi, "I would like to review");
+          .replace(/\bcan\s+i\s+(share|explain|present|go\s+over)\b/gi, "I would like to review");
 
-        // ensure period not question for these rewrites
         if (/I would like to review/i.test(sent)) sent = sent.replace(/\?\s*$/, ".").trim();
 
         return sent;
@@ -223,16 +216,13 @@
 
     s = sentences.join(" ").trim();
 
-    // de-coachify common sales prompts leaking into HCP speech
+    // de-coachify generic prompts
     s = s.replace(/\bcan you tell me\b/gi, "I’m considering");
     s = s.replace(/\bhelp me understand\b/gi, "I want to understand");
     s = s.replace(/\bwhat would it take to\b/gi, "Here’s what I’d need to");
 
-    // trim dangling bold markers or quotes
     s = s.replace(/\*\*(?=\s|$)/g, "");
     s = s.replace(/^[“"']|[”"']$/g, "");
-
-    // collapse whitespace
     s = s.replace(/\s{2,}/g, " ").trim();
 
     if (!s) s = "From my perspective, we evaluate high-risk patients using history, behaviors, and adherence context.";
@@ -257,15 +247,12 @@
       imperativeStart
     ];
 
-    // general leakage threshold: >= 2 cues
     const generalHits = cues.filter((re) => re.test(t)).length >= 2;
 
-    // “I/We can …” offers OR training talk, even brandless
     const offerHit =
       FIRST_PERSON_OFFER_RE.test(t) ||
       ((/^(?:i|we)\b/i.test(t)) && OFFER_OR_TRAINING_WORD_RE.test(t) && /staff|team|your\s+staff/i.test(t));
 
-    // promo or brand makes a single sentence suspicious
     const artifactHit = PROMO_ARTIFACTS_RE.test(t) || BRAND_RE.test(t);
 
     return generalHits || offerHit || artifactHit;
@@ -310,8 +297,6 @@
     } catch (_) {}
 
     // Pass 3: last-ditch strip
-
-    // Strip first-person offers, training talk, or promo artifacts (sentence-level)
     out = out.replace(
       new RegExp(
         String.raw`(?:^|\s)(?:I|We)\s+(?:can\s+)?(?:provide|offer|arrange|conduct|deliver|send|share|supply|set up|schedule|organize|host|walk (?:you|your team) through|train|educate)\b[^.!?]*[.!?]\s*`,
@@ -320,8 +305,6 @@
       ""
     );
     out = out.replace(new RegExp(String.raw`${PROMO_ARTIFACTS_RE.source}[^.!?]*[.!?]\s*`, "gi"), "");
-
-    // Generic guidance strips
     out = out
       .replace(/\b(i recommend|i suggest|consider|you should|you can|best practice)\b[^.!?]*[.!?]\s*/gi, "")
       .replace(/\b(emphasize|ensure|educate|recommend|suggest|encourage|support|provide|offer)\b[^.!?]*\b(you|your)\b[^.!?]*[.!?]\s*/gi, "")
@@ -331,7 +314,6 @@
       )
       .trim();
 
-    // Dynamic fallback to avoid repetition
     if (!out) {
       const variants = [
         "From my perspective, we review patient histories and behaviors to understand risk patterns.",
@@ -795,7 +777,7 @@ ${COMMON}`
       document.head.appendChild(style);
     }
 
-    // shell + immediate skeleton
+    // shell + skeleton
     const shell = el("div", "reflectiv-chat");
     shell.innerHTML = `
       <div class="chat-toolbar"><div class="sim-controls"></div></div>
@@ -876,7 +858,6 @@ ${COMMON}`
     featureLabelElem = featureLabel;
     featureSelect.addEventListener("change", generateFeedback);
 
-    // EI option sources
     const PERSONAS_ALL =
       Array.isArray(cfg?.eiProfiles) && cfg.eiProfiles.length ? cfg.eiProfiles : DEFAULT_PERSONAS;
 
@@ -889,7 +870,6 @@ ${COMMON}`
       typeof f === "string" ? { key: f.toLowerCase().replace(/\s+/g, "-"), label: f } : f
     );
 
-    // hydrate EI selects
     function hydrateEISelects() {
       if (!personaSelectElem || !eiFeatureSelectElem) return;
       personaSelectElem.innerHTML = "";
@@ -942,7 +922,7 @@ ${COMMON}`
     simControls.appendChild(featureSelect);
 
     bar.appendChild(simControls);
-    shell.innerHTML = ""; // replace skeleton with real UI
+    shell.innerHTML = "";
     shell.appendChild(bar);
 
     const meta = el("div", "scenario-meta");
@@ -954,8 +934,14 @@ ${COMMON}`
     const inp = el("div", "chat-input");
     const ta = el("textarea");
     ta.placeholder = "Type your message…";
+
+    // Enter throttle
+    let lastKeyTs = 0;
     ta.addEventListener("keydown", (e) => {
+      const now = Date.now();
       if (e.key === "Enter" && !e.shiftKey) {
+        if (now - lastKeyTs < 250) return; // throttle
+        lastKeyTs = now;
         e.preventDefault();
         send.click();
       }
@@ -983,7 +969,6 @@ ${COMMON}`
     feedbackDisplayElem.style.fontSize = "14px";
     coach.appendChild(feedbackDisplayElem);
 
-    // helpers
     function getDiseaseStates() {
       let ds = Array.isArray(cfg?.diseaseStates) ? cfg.diseaseStates.slice() : [];
       if (!ds.length && Array.isArray(scenarios) && scenarios.length) {
@@ -1039,10 +1024,6 @@ ${COMMON}`
         setSelectOptions(hcpSelect, [{ value: "", label: "No scenarios for this disease" }], true);
         hcpSelect.disabled = true;
       }
-    }
-
-    function populateEIOptions() {
-      hydrateEISelects();
     }
 
     function renderMeta() {
@@ -1233,37 +1214,48 @@ ${COMMON}`
       renderMeta();
     });
 
-    // expose renders for sendMessage
+    // expose for sendMessage
     shell._renderMessages = renderMessages;
     shell._renderCoach = renderCoach;
     shell._renderMeta = renderMeta;
+    shell._sendBtn = send;
+    shell._ta = ta;
 
-    // initialize UI
     populateDiseases();
-    populateEIOptions();
+    hydrateEISelects();
     applyModeVisibility();
   }
 
-  // ---------- transport ----------
+  // ---------- transport with timeout + endpoint fallback ----------
   async function callModel(messages) {
-    const url = (cfg?.apiBase || cfg?.workerUrl || "").trim();
-    if (!url) throw new Error("No API endpoint configured (set config.apiBase or config.workerUrl).");
-    const r = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: (cfg && cfg.model) || "llama-3.1-8b-instant",
-        temperature: 0.2,
-        stream: !!cfg?.stream,
-        messages
-      })
-    });
-    if (!r.ok) {
-      const txt = await r.text().catch(() => "");
-      throw new Error(`HTTP ${r.status}: ${txt || "no body"}`);
+    // FALLBACKS: config.json -> HTML globals
+    const url = (cfg?.apiBase || cfg?.workerUrl || window.COACH_ENDPOINT || window.WORKER_URL || "").trim();
+    if (!url) throw new Error("No API endpoint configured (set config.apiBase/workerUrl or window.COACH_ENDPOINT).");
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort("timeout"), 22000);
+
+    try {
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: (cfg && cfg.model) || "llama-3.1-8b-instant",
+          temperature: 0.2,
+          stream: !!cfg?.stream,
+          messages
+        }),
+        signal: controller.signal
+      });
+      if (!r.ok) {
+        const txt = await r.text().catch(() => "");
+        throw new Error(`HTTP ${r.status}: ${txt || "no body"}`);
+      }
+      const data = await r.json().catch(() => ({}));
+      return data?.content || data?.reply || data?.choices?.[0]?.message?.content || "";
+    } finally {
+      clearTimeout(timer);
     }
-    const data = await r.json().catch(() => ({}));
-    return data?.content || data?.reply || data?.choices?.[0]?.message?.content || "";
   }
 
   // ---------- final-eval helper ----------
@@ -1292,152 +1284,186 @@ ${COMMON}`
   // ---------- send ----------
   function norm(txt){return String(txt||"").toLowerCase().replace(/\s+/g," ").trim();}
   let lastAssistantNorm = "";
+  let recentAssistantNorms = [];
+  function pushRecent(n){ recentAssistantNorms.push(n); if(recentAssistantNorms.length>3) recentAssistantNorms.shift(); }
+  function isRecent(n){ return recentAssistantNorms.includes(n); }
+
+  let isSending = false;
+
+  function trimConversationIfNeeded() {
+    // keep last 30 turns to avoid runaway context
+    if (conversation.length <= 30) return;
+    conversation = conversation.slice(-30);
+  }
 
   async function sendMessage(userText) {
+    if (isSending) return;            // double-send lock
+    isSending = true;
+
     const shellEl = mount.querySelector(".reflectiv-chat");
     const renderMessages = shellEl._renderMessages;
     const renderCoach = shellEl._renderCoach;
-
-    // normalize input
-    userText = (userText || "").trim();
-    if (!userText) return;
-    lastUserMessage = userText;
-
-    // intercept evaluation intents
-    const evalRe =
-      /\b(evaluate|assessment|assess|grade|score)\b.*\b(conversation|exchange|dialog|dialogue|chat)\b|\bfinal (eval|evaluation|assessment)\b/i;
-    if (evalRe.test(userText)) {
-      await evaluateConversation();
-      renderMessages();
-      renderCoach();
-      return;
-    }
-
-    // normal turn
-    conversation.push({
-      role: "user",
-      content: userText,
-      _speaker: currentMode === "role-play" ? "rep" : "user"
-    });
-    renderMessages();
-    renderCoach();
-
-    if (currentMode === "emotional-assessment") generateFeedback();
-
-    const sc = scenariosById.get(currentScenarioId);
-    const messages = [];
-
-    // optional global system prompt
-    if (systemPrompt && currentMode !== "role-play") messages.push({ role: "system", content: systemPrompt });
-
-    // mode-specific rails
-    if (currentMode === "role-play") {
-      const personaLine = currentPersonaHint();
-      const detail = sc
-        ? `Therapeutic Area: ${sc.therapeuticArea || sc.diseaseState || "—"}. HCP Role: ${sc.hcpRole || "—"}. ${
-            sc.background ? `Background: ${sc.background}. ` : ""
-          }${sc.goal ? `Today’s Goal: ${sc.goal}.` : ""}`
-        : "";
-      const roleplayRails = buildPreface("role-play", sc) + `
-
-Context:
-${personaLine}
-${detail}`;
-      // Ensure RP rails are the first system message
-      messages.unshift({ role: "system", content: roleplayRails });
-    } else {
-      messages.push({ role: "system", content: buildPreface(currentMode, sc) });
-    }
-
-    // user message
-    messages.push({ role: "user", content: userText });
+    const sendBtn = shellEl._sendBtn;
+    const ta = shellEl._ta;
+    if (sendBtn) sendBtn.disabled = true;
+    if (ta) ta.disabled = true;
 
     try {
-      // optional EI extras (non-role-play only)
-      if (currentMode !== "role-play") {
-        const sysExtras =
-          typeof EIContext !== "undefined" && EIContext?.getSystemExtras
-            ? await EIContext.getSystemExtras().catch(() => null)
-            : null;
-        if (sysExtras) messages.unshift({ role: "system", content: sysExtras });
+      // normalize input
+      userText = clampLen((userText || "").trim(), 1200);
+      if (!userText) return;
+      lastUserMessage = userText;
+
+      // intercept evaluation intents
+      const evalRe =
+        /\b(evaluate|assessment|assess|grade|score)\b.*\b(conversation|exchange|dialog|dialogue|chat)\b|\bfinal (eval|evaluation|assessment)\b/i;
+      if (evalRe.test(userText)) {
+        await evaluateConversation();
+        trimConversationIfNeeded();
+        renderMessages();
+        renderCoach();
+        return;
       }
 
-      // call model
-      const raw = await callModel(messages);
-
-      // parse assistant + coach payload
-      const { coach, clean } = extractCoach(raw);
-      let replyText = currentMode === "role-play" ? sanitizeRolePlayOnly(clean) : sanitizeLLM(clean);
-
-      // enforce HCP-only for role-play with regeneration loop
-      if (currentMode === "role-play") {
-        replyText = await enforceHcpOnly(replyText, sc, messages, callModel);
-      }
-
-      // prevent duplicate assistant replies
-      const candidate = norm(replyText);
-      if (candidate && candidate === lastAssistantNorm) {
-        const alts = [
-          "From my perspective, we review histories, behaviors, and adherence to identify risk.",
-          "In my clinic, I consider history, behavior, and adherence to assess candidacy.",
-          "I focus on patient history and follow-up to guide decisions."
-        ];
-        replyText = alts[Math.floor(Math.random() * alts.length)];
-      }
-      lastAssistantNorm = norm(replyText);
-
-      const computed = scoreReply(userText, replyText, currentMode);
-
-      const finalCoach = (() => {
-        if (coach && (coach.scores || coach.subscores) && currentMode !== "role-play") {
-          const scores = coach.scores || coach.subscores;
-          const overall =
-            typeof coach.overall === "number" ? coach.overall : typeof coach.score === "number" ? coach.score : undefined;
-          return {
-            overall: overall ?? computed.overall,
-            scores,
-            feedback: coach.feedback || computed.feedback,
-            worked: coach.worked && coach.worked.length ? coach.worked : computed.worked,
-            improve: coach.improve && coach.improve.length ? coach.improve : computed.improve,
-            phrasing: typeof coach.phrasing === "string" && coach.phrasing ? coach.phrasing : computed.phrasing,
-            context: coach.context || { rep_question: userText, hcp_reply: replyText },
-            score: overall ?? computed.overall,
-            subscores: scores
-          };
-        }
-        return computed;
-      })();
-
+      // normal turn
       conversation.push({
-        role: "assistant",
-        content: replyText,
-        _coach: finalCoach,
-        _speaker: currentMode === "role-play" ? "hcp" : "assistant"
+        role: "user",
+        content: userText,
+        _speaker: currentMode === "role-play" ? "rep" : "user"
       });
+      trimConversationIfNeeded();
       renderMessages();
       renderCoach();
 
       if (currentMode === "emotional-assessment") generateFeedback();
 
-      if (cfg && cfg.analyticsEndpoint) {
-        fetch(cfg.analyticsEndpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ts: Date.now(),
-            schema: cfg.schemaVersion || "coach-v2",
-            mode: currentMode,
-            scenarioId: currentScenarioId,
-            turn: conversation.length,
-            context: finalCoach.context || { rep_question: userText, hcp_reply: replyText },
-            overall: finalCoach.overall,
-            scores: finalCoach.scores
-          })
-        }).catch(() => {});
+      const sc = scenariosById.get(currentScenarioId);
+      const messages = [];
+
+      if (systemPrompt && currentMode !== "role-play") messages.push({ role: "system", content: systemPrompt });
+
+      if (currentMode === "role-play") {
+        const personaLine = currentPersonaHint();
+        const detail = sc
+          ? `Therapeutic Area: ${sc.therapeuticArea || sc.diseaseState || "—"}. HCP Role: ${sc.hcpRole || "—"}. ${
+              sc.background ? `Background: ${sc.background}. ` : ""
+            }${sc.goal ? `Today’s Goal: ${sc.goal}.` : ""}`
+          : "";
+        const roleplayRails = buildPreface("role-play", sc) + `
+
+Context:
+${personaLine}
+${detail}`;
+        messages.unshift({ role: "system", content: roleplayRails });
+      } else {
+        messages.push({ role: "system", content: buildPreface(currentMode, sc) });
       }
-    } catch (e) {
-      conversation.push({ role: "assistant", content: `Model error: ${String(e.message || e)}` });
-      renderMessages();
+
+      messages.push({ role: "user", content: userText });
+
+      try {
+        if (currentMode !== "role-play") {
+          const sysExtras =
+            typeof EIContext !== "undefined" && EIContext?.getSystemExtras
+              ? await EIContext.getSystemExtras().catch(() => null)
+              : null;
+          if (sysExtras) messages.unshift({ role: "system", content: sysExtras });
+        }
+
+        let raw = await callModel(messages);
+        if (!raw) raw = "From my perspective, we review patient histories and adherence to guide decisions.";
+
+        const { coach, clean } = extractCoach(raw);
+        let replyText = currentMode === "role-play" ? sanitizeRolePlayOnly(clean) : sanitizeLLM(clean);
+
+        // enforce HCP-only in RP
+        if (currentMode === "role-play") {
+          replyText = await enforceHcpOnly(replyText, sc, messages, callModel);
+        }
+
+        // anti-echo: if assistant equals user prompt
+        if (norm(replyText) === norm(userText)) {
+          replyText = "From my perspective, we evaluate high-risk patients using history, behaviors, and adherence context.";
+        }
+
+        // prevent duplicate/cycling assistant replies (ring buffer)
+        let candidate = norm(replyText);
+        if (candidate && (candidate === lastAssistantNorm || isRecent(candidate))) {
+          const alts = [
+            "In my clinic, we review history, behaviors, and adherence to understand risk.",
+            "I rely on history and follow-up patterns to guide decisions.",
+            "We focus on adherence and recent exposures when assessing candidacy."
+          ];
+          replyText = alts[Math.floor(Math.random()*alts.length)];
+          candidate = norm(replyText);
+        }
+        lastAssistantNorm = candidate;
+        pushRecent(candidate);
+
+        replyText = clampLen(replyText, 1400);
+
+        const computed = scoreReply(userText, replyText, currentMode);
+
+        const finalCoach = (() => {
+          if (coach && (coach.scores || coach.subscores) && currentMode !== "role-play") {
+            const scores = coach.scores || coach.subscores;
+            const overall =
+              typeof coach.overall === "number" ? coach.overall : typeof coach.score === "number" ? coach.score : undefined;
+            return {
+              overall: overall ?? computed.overall,
+              scores,
+              feedback: coach.feedback || computed.feedback,
+              worked: coach.worked && coach.worked.length ? coach.worked : computed.worked,
+              improve: coach.improve && coach.improve.length ? coach.improve : computed.improve,
+              phrasing: typeof coach.phrasing === "string" && coach.phrasing ? coach.phrasing : computed.phrasing,
+              context: coach.context || { rep_question: userText, hcp_reply: replyText },
+              score: overall ?? computed.overall,
+              subscores: scores
+            };
+          }
+          return computed;
+        })();
+
+        conversation.push({
+          role: "assistant",
+          content: replyText,
+          _coach: finalCoach,
+          _speaker: currentMode === "role-play" ? "hcp" : "assistant"
+        });
+        trimConversationIfNeeded();
+        renderMessages();
+        renderCoach();
+
+        if (currentMode === "emotional-assessment") generateFeedback();
+
+        if (cfg && cfg.analyticsEndpoint) {
+          fetch(cfg.analyticsEndpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ts: Date.now(),
+              schema: cfg.schemaVersion || "coach-v2",
+              mode: currentMode,
+              scenarioId: currentScenarioId,
+              turn: conversation.length,
+              context: finalCoach.context || { rep_question: userText, hcp_reply: replyText },
+              overall: finalCoach.overall,
+              scores: finalCoach.scores
+            })
+          }).catch(() => {});
+        }
+      } catch (e) {
+        conversation.push({ role: "assistant", content: `Model error: ${String(e.message || e)}` });
+        trimConversationIfNeeded();
+        renderMessages();
+      }
+    } finally {
+      const shellEl2 = mount.querySelector(".reflectiv-chat");
+      const sendBtn2 = shellEl2?._sendBtn;
+      const ta2 = shellEl2?._ta;
+      if (sendBtn2) sendBtn2.disabled = false;
+      if (ta2) { ta2.disabled = false; ta2.focus(); }
+      isSending = false;
     }
   }
 
@@ -1472,12 +1498,10 @@ ${detail}`;
       scenarios = [];
     }
 
-    // keep token case, do not collapse "HIV PrEP"
     scenarios.forEach((s) => {
       if (s.therapeuticArea) s.therapeuticArea = s.therapeuticArea.replace(/\bhiv\b/gi, "HIV");
     });
 
-    // de-dup by id (last one wins)
     const byId = new Map();
     for (const s of scenarios) byId.set(s.id, s);
     scenarios = Array.from(byId.values());
@@ -1495,6 +1519,11 @@ ${detail}`;
     } catch (e) {
       console.error("config load failed:", e);
       cfg = { defaultMode: "sales-simulation" };
+    }
+
+    // Ensure endpoint is set even without config.json
+    if (!cfg.apiBase && !cfg.workerUrl) {
+      cfg.apiBase = (window.COACH_ENDPOINT || window.WORKER_URL || "").trim();
     }
 
     try {
