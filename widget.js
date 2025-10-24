@@ -137,7 +137,10 @@
       "(patients?|panel|clinic|practice|workflow|nurses?|staff|team|MA|MAs|prescribing|prescriptions|criteria|approach)";
     s = s.replace(new RegExp(`\\byour\\s+${nouns}\\b`, "gi"), (m) => m.replace(/\byour\b/i, "my"));
 
-    // Convert or drop rep-discovery questions addressed to "you/your"
+    // sentence-level transforms
+    const IMPERATIVE_START =
+      /^(ask|emphasize|consider|provide|offer|educate|ensure|recommend|suggest|discuss|address|reinforce|encourage|support)\b/i;
+
     const sentences = splitSentences(s)
       .map((sentRaw) => {
         let sent = sentRaw.trim();
@@ -149,6 +152,7 @@
           sent
         );
 
+        // Convert rep-facing questions to first-person statements
         if (isQ && hasYou && repDiscoveryCue) {
           sent = sent
             .replace(/\bcan\s+we\s+review\s+your\s+approach\b/i, "In my clinic, we review our approach")
@@ -161,7 +165,17 @@
             .trim();
         }
 
+        // Drop “can we discuss … you …”
         if (isQ && /\bcan\s+we\s+discuss\b/i.test(sent) && hasYou) return "";
+
+        // NEW: convert sentence-initial imperatives to HCP first-person
+        if (IMPERATIVE_START.test(sent)) {
+          const m = sent.match(IMPERATIVE_START);
+          const verb = m ? m[1].toLowerCase() : "consider";
+          const rest = sent.replace(IMPERATIVE_START, "").replace(/^[:,\s]+/, "");
+          sent = `In my clinic, I ${verb} ${rest}`.replace(/\?\s*$/, ".").trim();
+        }
+
         return sent;
       })
       .filter(Boolean);
@@ -187,13 +201,20 @@
   // --------- COACH/GUIDANCE LEAK GUARD (Role Play only) ----------
   function isGuidanceLeak(txt) {
     const t = String(txt || "").toLowerCase();
+
+    // imperative verbs that indicate coaching when used sentence-initially
+    const imperativeStart =
+      /(?:^|\s[.“"'])\s*(ask|emphasize|consider|provide|offer|educate|ensure|recommend|suggest|discuss|address|reinforce|encourage|support)\b/;
+
     const cues = [
       /\b(you should|you can|i recommend|i suggest|best practice|consider providing|here'?s how|you’ll want to)\b/,
       /\b(coaching|guidance|sales guidance|coach)\b/,
       /\b(provide|offer)\b.*\b(script|handout|one[- ]pager|counseling)\b/,
-      /\b(emphasize|ensure|educate|recommend)\b.*\b(you|your)\b/,
+      /\b(emphasize|ensure|educate|recommend|suggest|encourage|support)\b.*\b(you|your)\b/,
+      /\b(prescribing|initiate|start|switch|promote|increase uptake)\b/, // promo/prescribing cues
       /^[-*]\s/,
-      /<coach>|\bworked:|\bimprove:/
+      /<coach>|\bworked:|\bimprove:/,
+      imperativeStart
     ];
     return cues.some((re) => re.test(t));
   }
@@ -207,7 +228,7 @@
       `Rewrite strictly as the HCP.`,
       `First-person. 2–5 sentences. No advice to the rep. No “you/your” guidance.`,
       `No lists, no headings, no rubric, no JSON, no "<coach>".`,
-      `Stay clinical and reflective only. If you ask a question, it must be about your clinic/patients, not the rep.`,
+      `Describe your own clinical approach. If you ask a question, it must be about your clinic/patients.`,
       personaLine
     ].join("\n");
   }
@@ -235,10 +256,11 @@
       if (!isGuidanceLeak(out)) return out;
     } catch (_) {}
 
-    // Pass 3: last-ditch strip
+    // Pass 3: last-ditch strip of remaining guidance sentences, incl. imperatives
     out = out
       .replace(/\b(i recommend|i suggest|consider|you should|you can|best practice)\b.*?([.!?])\s*/gi, "")
-      .replace(/\b(emphasize|ensure|educate)\b.*?([.!?])\s*/gi, "")
+      .replace(/\b(emphasize|ensure|educate|recommend|suggest|encourage|support)\b.*?([.!?])\s*/gi, "")
+      .replace(/^(ask|emphasize|consider|provide|offer|educate|ensure|recommend|suggest|discuss|address|reinforce|encourage|support)\b[^.!?]*[.!?]\s*/gi, "")
       .trim();
 
     return out || "From my perspective, we evaluate patients based on history, behaviors, and adherence context.";
@@ -315,7 +337,7 @@
   // ---------- local scoring (deterministic v3) ----------
   function scoreReply(userText, replyText) {
     const text = String(replyText || "");
-    const t = text.toLowerCase();
+       const t = text.toLowerCase();
     const words = text.split(/\s+/).filter(Boolean).length;
     const endsWithQ = /\?\s*$/.test(text);
     const inRange = (n, a, b) => n >= a && n <= b;
@@ -1264,7 +1286,7 @@ ${detail}`;
       const { coach, clean } = extractCoach(raw);
       let replyText = currentMode === "role-play" ? sanitizeRolePlayOnly(clean) : sanitizeLLM(clean);
 
-      // NEW: enforce HCP-only for role-play with regeneration loop
+      // enforce HCP-only for role-play with regeneration loop
       if (currentMode === "role-play") {
         replyText = await enforceHcpOnly(replyText, sc, messages, callModel);
       }
