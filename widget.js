@@ -106,18 +106,35 @@
     return s;
   }
 
-  // role-play only: strip any leaked meta/coaching
-  function sanitizeRolePlayOnly(text) {
-    let s = String(text || "");
-    s = s.replace(/<coach>[\s\S]*?<\/coach>/gi, "");
-    s = s.replace(/^(?:Assistant|Coach|System)\s*:\s*/gmi, "");
-    s = s.replace(/\b(Sales Guidance|Challenge|My\s*Approach|Impact)\s*:/gmi, "");
-    s = s.replace(/^\s*[-*]\s+/gm, "");
-    s = s.replace(/^\s*#{1,6}\s+.*$/gm, "");
-    s = s.replace(/^[“"']|[”"']$/g, "");
-    s = s.replace(/\n{3,}/g, "\n\n").trim();
-    return s;
-  }
+  // Role-play only sanitizer: strip leaked coaching/meta blocks and formatting
+function sanitizeRolePlayOnly(text) {
+  let s = String(text || "");
+
+  // remove any embedded coach JSON blocks
+  s = s.replace(/<coach>[\s\S]*?<\/coach>/gi, "");
+
+  // remove rubric sections entirely
+  const RUBRIC_BLOCK = /(?:^|\n)\s*(?:\*\*)?\s*(?:Sales\s*Guidance|Challenge|My\s*Approach|Impact)\s*(?:\*\*)?\s*:\s*[\s\S]*?(?=\n\s*\n|$)/gmi;
+  s = s.replace(RUBRIC_BLOCK, "");
+
+  // remove prefixed speaker/meta labels
+  s = s.replace(/^(?:Assistant|Coach|System)\s*:\s*/gmi, "");
+
+  // drop leftover markdown bullets, headings, quotes
+  s = s.replace(/^\s*[-*]\s+/gm, "");
+  s = s.replace(/^\s*#{1,6}\s+.*$/gm, "");
+  s = s.replace(/^\s*>\s?/gm, "");
+
+  // trim dangling bold markers or quotes
+  s = s.replace(/\*\*(?=\s|$)/g, "");
+  s = s.replace(/^[“"']|[”"']$/g, "");
+
+  // collapse whitespace
+  s = s.replace(/\n{3,}/g, "\n\n").trim();
+
+  if (!s) s = "Okay. What would you like to focus on for this patient?";
+  return s;
+}
 
   function md(text) {
     if (!text) return "";
