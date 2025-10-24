@@ -109,10 +109,7 @@
   // --- sentence helpers
   function splitSentences(text) {
     const t = String(text || "");
-    // naive sentence split that preserves ?!. Handles quotes.
-    return t
-      .replace(/\s+/g, " ")
-      .match(/[^.!?]+[.!?]?/g) || [];
+    return t.replace(/\s+/g, " ").match(/[^.!?]+[.!?]?/g) || [];
   }
 
   // Role-play only sanitizer: strip leaked coaching/meta blocks and force HCP POV
@@ -121,7 +118,10 @@
 
     // remove any embedded coach JSON blocks and rubric sections
     s = s.replace(/<coach>[\s\S]*?<\/coach>/gi, "");
-    s = s.replace(/(?:^|\n)\s*(?:\*\*)?\s*(?:Sales\s*Guidance|Challenge|My\s*Approach|Impact)\s*(?:\*\*)?\s*:\s*[\s\S]*?(?=\n\s*\n|$)/gmi, "");
+    s = s.replace(
+      /(?:^|\n)\s*(?:\*\*)?\s*(?:Sales\s*Guidance|Challenge|My\s*Approach|Impact)\s*(?:\*\*)?\s*:\s*[\s\S]*?(?=\n\s*\n|$)/gmi,
+      ""
+    );
 
     // remove prefixed speaker/meta labels and greetings
     s = s.replace(/^(?:Assistant|Coach|System|Rep|User|Sales Rep)\s*:\s*/gmi, "");
@@ -133,42 +133,38 @@
     s = s.replace(/^\s*>\s?/gm, "");
 
     // POV correction: convert second-person clinic nouns to first-person
-    const nouns = "(patients?|panel|clinic|practice|workflow|nurses?|staff|team|MA|MAs|prescribing|prescriptions|criteria|approach)";
+    const nouns =
+      "(patients?|panel|clinic|practice|workflow|nurses?|staff|team|MA|MAs|prescribing|prescriptions|criteria|approach)";
     s = s.replace(new RegExp(`\\byour\\s+${nouns}\\b`, "gi"), (m) => m.replace(/\byour\b/i, "my"));
 
     // Convert or drop rep-discovery questions addressed to "you/your"
-    const sentences = splitSentences(s).map((sentRaw) => {
-      let sent = sentRaw.trim();
-      if (!sent) return "";
+    const sentences = splitSentences(s)
+      .map((sentRaw) => {
+        let sent = sentRaw.trim();
+        if (!sent) return "";
 
-      // if the sentence is a question to the rep about their process, rewrite
-      const isQ = /\?\s*$/.test(sent);
-      const hasYou = /\byou(r)?\b/i.test(sent);
-      const repDiscoveryCue = /(how\s+do\s+you|can\s+we\s+review\s+your|can\s+you\s+walk\s+me|help\s+me\s+understand\s+your|what\s+do\s+you\s+do|how\s+are\s+you\s+identif)/i.test(sent);
+        const isQ = /\?\s*$/.test(sent);
+        const hasYou = /\byou(r)?\b/i.test(sent);
+        const repDiscoveryCue = /(how\s+do\s+you|can\s+we\s+review\s+your|can\s+you\s+walk\s+me|help\s+me\s+understand\s+your|what\s+do\s+you\s+do|how\s+are\s+you\s+identif)/i.test(
+          sent
+        );
 
-      if (isQ && hasYou && repDiscoveryCue) {
-        // rewrite as HCP statement
-        // Examples in screenshot: “Can we review your approach for high-risk patients?”
-        sent = sent
-          .replace(/\bcan\s+we\s+review\s+your\s+approach\b/i, "In my clinic, we review our approach")
-          .replace(/\bhow\s+do\s+you\s+identif(?:y|ies)\b/gi, "Here is how I identify")
-          .replace(/\bhelp\s+me\s+understand\s+your\b/gi, "I consider my")
-          .replace(/\bwhat\s+do\s+you\s+do\b/gi, "What I usually do is");
+        if (isQ && hasYou && repDiscoveryCue) {
+          sent = sent
+            .replace(/\bcan\s+we\s+review\s+your\s+approach\b/i, "In my clinic, we review our approach")
+            .replace(/\bhow\s+do\s+you\s+identif(?:y|ies)\b/gi, "Here is how I identify")
+            .replace(/\bhelp\s+me\s+understand\s+your\b/gi, "I consider my")
+            .replace(/\bwhat\s+do\s+you\s+do\b/gi, "What I usually do is")
+            .replace(/\byour\b/gi, "my")
+            .replace(/\byou\b/gi, "I")
+            .replace(/\?\s*$/, ".")
+            .trim();
+        }
 
-        // remove second person that remains
-        sent = sent.replace(/\byour\b/gi, "my").replace(/\byou\b/gi, "I");
-
-        // convert question to statement
-        sent = sent.replace(/\?\s*$/, ".").trim();
-      }
-
-      // ban meta prompts like “Can we discuss how you currently identify…”
-      if (isQ && /\bcan\s+we\s+discuss\b/i.test(sent) && hasYou) {
-        return ""; // drop entirely
-      }
-
-      return sent;
-    }).filter(Boolean);
+        if (isQ && /\bcan\s+we\s+discuss\b/i.test(sent) && hasYou) return "";
+        return sent;
+      })
+      .filter(Boolean);
 
     s = sentences.join(" ").trim();
 
@@ -186,6 +182,66 @@
 
     if (!s) s = "From my perspective, we evaluate high-risk patients using history, behaviors, and adherence context.";
     return s;
+  }
+
+  // --------- COACH/GUIDANCE LEAK GUARD (Role Play only) ----------
+  function isGuidanceLeak(txt) {
+    const t = String(txt || "").toLowerCase();
+    const cues = [
+      /\b(you should|you can|i recommend|i suggest|best practice|consider providing|here'?s how|you’ll want to)\b/,
+      /\b(coaching|guidance|sales guidance|coach)\b/,
+      /\b(provide|offer)\b.*\b(script|handout|one[- ]pager|counseling)\b/,
+      /\b(emphasize|ensure|educate|recommend)\b.*\b(you|your)\b/,
+      /^[-*]\s/,
+      /<coach>|\bworked:|\bimprove:/
+    ];
+    return cues.some((re) => re.test(t));
+  }
+
+  function correctiveRails(sc) {
+    const personaLine =
+      sc && (sc.hcpRole || sc.label)
+        ? `HCP Persona: ${sc.hcpRole || sc.label}. Disease: ${sc.therapeuticArea || sc.diseaseState || "—"}.`
+        : "";
+    return [
+      `Rewrite strictly as the HCP.`,
+      `First-person. 2–5 sentences. No advice to the rep. No “you/your” guidance.`,
+      `No lists, no headings, no rubric, no JSON, no "<coach>".`,
+      `Stay clinical and reflective only. If you ask a question, it must be about your clinic/patients, not the rep.`,
+      personaLine
+    ].join("\n");
+  }
+
+  async function enforceHcpOnly(replyText, sc, messages, callModelFn) {
+    let out = sanitizeRolePlayOnly(replyText);
+    if (!isGuidanceLeak(out)) return out;
+
+    // Pass 1: rewrite under stricter rails
+    const rewriteMsgs = [
+      { role: "system", content: correctiveRails(sc) },
+      { role: "user", content: out }
+    ];
+    try {
+      const r1 = await callModelFn(rewriteMsgs);
+      out = sanitizeRolePlayOnly(r1);
+      if (!isGuidanceLeak(out)) return out;
+    } catch (_) {}
+
+    // Pass 2: fresh completion with corrective rails prepended to original convo
+    try {
+      const hardened = [{ role: "system", content: correctiveRails(sc) }, ...messages];
+      const r2 = await callModelFn(hardened);
+      out = sanitizeRolePlayOnly(r2);
+      if (!isGuidanceLeak(out)) return out;
+    } catch (_) {}
+
+    // Pass 3: last-ditch strip
+    out = out
+      .replace(/\b(i recommend|i suggest|consider|you should|you can|best practice)\b.*?([.!?])\s*/gi, "")
+      .replace(/\b(emphasize|ensure|educate)\b.*?([.!?])\s*/gi, "")
+      .trim();
+
+    return out || "From my perspective, we evaluate patients based on history, behaviors, and adherence context.";
   }
 
   function md(text) {
@@ -1113,7 +1169,7 @@ ${COMMON}`
   async function evaluateConversation() {
     const sc = scenariosById.get(currentScenarioId);
     const turns = conversation.length ? conversation : [{ role: "system", content: "No prior turns." }];
-    const convoText = turns.map((m) => `${m.role}: ${m.content}`).join("\n").slice(0, 24000); // guard size
+    const convoText = turns.map((m) => `${m.role}: ${m.content}`).join("\n").slice(0, 24000);
 
     const evalMsgs = [
       systemPrompt ? { role: "system", content: systemPrompt } : null,
@@ -1172,7 +1228,6 @@ ${COMMON}`
 
     // mode-specific rails
     if (currentMode === "role-play") {
-      // PURE role-play rails with HCP-only, anti-leak rules
       const personaLine = currentPersonaHint();
       const detail = sc
         ? `Therapeutic Area: ${sc.therapeuticArea || sc.diseaseState || "—"}. HCP Role: ${sc.hcpRole || "—"}. ${
@@ -1186,7 +1241,6 @@ ${personaLine}
 ${detail}`;
       messages.push({ role: "system", content: roleplayRails });
     } else {
-      // non-role-play modes use the contract preface
       messages.push({ role: "system", content: buildPreface(currentMode, sc) });
     }
 
@@ -1208,7 +1262,13 @@ ${detail}`;
 
       // parse assistant + coach payload
       const { coach, clean } = extractCoach(raw);
-      const replyText = currentMode === "role-play" ? sanitizeRolePlayOnly(clean) : sanitizeLLM(clean);
+      let replyText = currentMode === "role-play" ? sanitizeRolePlayOnly(clean) : sanitizeLLM(clean);
+
+      // NEW: enforce HCP-only for role-play with regeneration loop
+      if (currentMode === "role-play") {
+        replyText = await enforceHcpOnly(replyText, sc, messages, callModel);
+      }
+
       const computed = scoreReply(userText, replyText, currentMode);
 
       const finalCoach = (() => {
