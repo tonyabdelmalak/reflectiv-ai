@@ -115,13 +115,19 @@
   // --- shared leak patterns (used in multiple functions)
   const BRAND_RE = /\b(descovy|biktarvy|cabenuva|truvada|prep)\b/i;
   const PROMO_ARTIFACTS_RE =
-    /\b(educational (resources?|materials?)|training session|in-?service|lunch-?and-?learn|handout|one-?pager|brochure|leave-?behind|job aid|script)\b/i;
+    /\b(educational (resources?|materials?)|training session|in-?service|lunch-?and-?learn|handout|one-?pager|brochure|leave-?behind|job aid|script|slide deck|webinar|office hours)\b/i;
   const FIRST_PERSON_OFFER_RE =
-    /\b(i\s+(?:can\s+)?(?:provide|offer|arrange|conduct|deliver|send|share|supply|set up|organize|walk you through))\b/i;
+    /\b((?:i|we)\s+(?:can\s+)?(?:provide|offer|arrange|conduct|deliver|send|share|supply|set up|schedule|organize|host|walk (?:you|your team) through|train|educate))\b/i;
+  const OFFER_OR_TRAINING_WORD_RE =
+    /\b(offer|provide|train|training|educate|education|materials?|resources?|handouts?|brochures?|one-?pagers?|scripts?)\b/i;
 
   // Role-play only sanitizer: strip leaked coaching/meta blocks and force HCP POV
   function sanitizeRolePlayOnly(text) {
     let s = String(text || "");
+
+    // If a stray <coach> appears, drop everything after it
+    const coachIdx = s.indexOf("<coach>");
+    if (coachIdx >= 0) s = s.slice(0, coachIdx);
 
     // remove any embedded coach JSON blocks and rubric sections
     s = s.replace(/<coach>[\s\S]*?<\/coach>/gi, "");
@@ -155,17 +161,20 @@
 
         const isQ = /\?\s*$/.test(sent);
         const hasYou = /\byou(r)?\b/i.test(sent);
-        const repDiscoveryCue = /(how\s+do\s+you|can\s+we\s+review\s+your|can\s+you\s+walk\s+me|help\s+me\s+understand\s+your|what\s+do\s+you\s+do|how\s+are\s+you\s+identif)/i.test(
-          sent
-        );
+        const repDiscoveryCue =
+          /(how\s+do\s+you|can\s+we\s+review\s+your|can\s+you\s+(?:share|explain|present|go over)|help\s+me\s+understand\s+your|what\s+do\s+you\s+do|how\s+are\s+you\s+identif|walk\s+me\s+through)/i.test(
+            sent
+          );
 
-        // Convert rep-facing questions to first-person statements
-        if (isQ && hasYou && repDiscoveryCue) {
+        // Normalize classic rep-facing asks to HCP statements
+        if (isQ && (hasYou || /walk\s+me\s+through/i.test(sent)) && repDiscoveryCue) {
+          // Replace second-person prompts with first-person desire
           sent = sent
             .replace(/\bcan\s+we\s+review\s+your\s+approach\b/i, "In my clinic, we review our approach")
             .replace(/\bhow\s+do\s+you\s+identif(?:y|ies)\b/gi, "Here is how I identify")
             .replace(/\bhelp\s+me\s+understand\s+your\b/gi, "I consider my")
-            .replace(/\bwhat\s+do\s+you\s+do\b/gi, "What I usually do is")
+            .replace(/\b(can|could)\s+you\s+(share|explain|present|go over)\b/gi, "I would like to review")
+            .replace(/\bwalk\s+me\s+through\b/gi, "review")
             .replace(/\byour\b/gi, "my")
             .replace(/\byou\b/gi, "I")
             .replace(/\?\s*$/, ".")
@@ -184,10 +193,29 @@
         }
 
         // rewrite first-person offers tied to promo artifacts or brands
-        if (FIRST_PERSON_OFFER_RE.test(sent) && (PROMO_ARTIFACTS_RE.test(sent) || BRAND_RE.test(sent))) {
-          sent =
-            "In my clinic, I follow current guidelines and our internal processes; my focus is on patient selection and follow-up.";
+        if (FIRST_PERSON_OFFER_RE.test(sent) || (/(?:^|\b)(?:i|we)\b/i.test(sent) && OFFER_OR_TRAINING_WORD_RE.test(sent))) {
+          if (PROMO_ARTIFACTS_RE.test(sent) || BRAND_RE.test(sent)) {
+            sent =
+              "In my clinic, I follow current guidelines and our internal processes; my focus is on patient selection and follow-up.";
+          } else {
+            sent =
+              "In my clinic, I rely on our internal processes and current guidelines; my focus is on patient selection and follow-up.";
+          }
         }
+
+        // FINAL cleanup for malformed pronouns created by replacements
+        // e.g., "Can I walk me through the data..." -> "I would like to review the data."
+        sent = sent
+          .replace(/\bcan\s+i\s+walk\s+me\s+through\b/gi, "I would like to review")
+          .replace(/\bi\s+walk\s+me\s+through\b/gi, "I review")
+          .replace(/\bwalk\s+me\s+through\b/gi, "review")
+          .replace(/\bcan\s+i\s+share\b/gi, "I would like to review")
+          .replace(/\bcan\s+i\s+explain\b/gi, "I would like to review")
+          .replace(/\bcan\s+i\s+present\b/gi, "I would like to review")
+          .replace(/\bcan\s+i\s+go\s+over\b/gi, "I would like to review");
+
+        // ensure period not question for these rewrites
+        if (/I would like to review/i.test(sent)) sent = sent.replace(/\?\s*$/, ".").trim();
 
         return sent;
       })
@@ -213,15 +241,17 @@
 
   // --------- COACH/GUIDANCE LEAK GUARD (Role Play only) ----------
   function isGuidanceLeak(txt) {
-    const t = String(txt || "").toLowerCase();
+    const t = String(txt || "");
 
     const imperativeStart =
       /(?:^|\s[.“"'])\s*(ask|emphasize|consider|provide|offer|educate|ensure|recommend|suggest|discuss|address|reinforce|encourage|support)\b/i;
 
+    const secondPersonGuidance = /\b(emphasize|ensure|educate|recommend|suggest|encourage|support|provide|offer)\b.*\b(you|your)\b/i;
+
     const cues = [
-      /\b(you should|you can|i recommend|i suggest|best practice|consider providing|here'?s how|you’ll want to)\b/i,
+      /\b(you should|you can|i recommend|i suggest|best practice|here'?s how|you’ll want to)\b/i,
       /\b(coaching|guidance|sales guidance|coach)\b/i,
-      /\b(emphasize|ensure|educate|recommend|suggest|encourage|support)\b.*\b(you|your)\b/i,
+      secondPersonGuidance,
       /^[-*]\s/m,
       /<coach>|\bworked:|\bimprove:/i,
       imperativeStart
@@ -230,10 +260,15 @@
     // general leakage threshold: >= 2 cues
     const generalHits = cues.filter((re) => re.test(t)).length >= 2;
 
-    // first-person offer + promo artifact or brand
-    const offerHit = FIRST_PERSON_OFFER_RE.test(t) && (PROMO_ARTIFACTS_RE.test(t) || BRAND_RE.test(t));
+    // “I/We can …” offers OR training talk, even brandless
+    const offerHit =
+      FIRST_PERSON_OFFER_RE.test(t) ||
+      ((/^(?:i|we)\b/i.test(t)) && OFFER_OR_TRAINING_WORD_RE.test(t) && /staff|team|your\s+staff/i.test(t));
 
-    return generalHits || offerHit;
+    // promo or brand makes a single sentence suspicious
+    const artifactHit = PROMO_ARTIFACTS_RE.test(t) || BRAND_RE.test(t);
+
+    return generalHits || offerHit || artifactHit;
   }
 
   function correctiveRails(sc) {
@@ -276,19 +311,20 @@
 
     // Pass 3: last-ditch strip
 
-    // Strip first-person offers tied to promo artifacts/brands
+    // Strip first-person offers, training talk, or promo artifacts (sentence-level)
     out = out.replace(
       new RegExp(
-        String.raw`\bI\s+(?:can\s+)?(?:provide|offer|arrange|conduct|deliver|send|share|supply|set up|organize|walk you through)\b[^.!?]*?(?:${PROMO_ARTIFACTS_RE.source}|${BRAND_RE.source})[^.!?]*[.!?]\s*`,
+        String.raw`(?:^|\s)(?:I|We)\s+(?:can\s+)?(?:provide|offer|arrange|conduct|deliver|send|share|supply|set up|schedule|organize|host|walk (?:you|your team) through|train|educate)\b[^.!?]*[.!?]\s*`,
         "gi"
       ),
       ""
     );
+    out = out.replace(new RegExp(String.raw`${PROMO_ARTIFACTS_RE.source}[^.!?]*[.!?]\s*`, "gi"), "");
 
     // Generic guidance strips
     out = out
-      .replace(/\b(i recommend|i suggest|consider|you should|you can|best practice)\b.*?([.!?])\s*/gi, "")
-      .replace(/\b(emphasize|ensure|educate|recommend|suggest|encourage|support)\b.*?([.!?])\s*/gi, "")
+      .replace(/\b(i recommend|i suggest|consider|you should|you can|best practice)\b[^.!?]*[.!?]\s*/gi, "")
+      .replace(/\b(emphasize|ensure|educate|recommend|suggest|encourage|support|provide|offer)\b[^.!?]*\b(you|your)\b[^.!?]*[.!?]\s*/gi, "")
       .replace(
         /^(ask|emphasize|consider|provide|offer|educate|ensure|recommend|suggest|discuss|address|reinforce|encourage|support)\b[^.!?]*[.!?]\s*/gim,
         ""
@@ -702,6 +738,7 @@ Hard bans:
 - Do NOT ask the rep about the rep’s process, approach, or clinic metrics.
 - Do NOT interview the rep with sales-discovery prompts.
 - Do NOT make offers like "I can provide/offer/arrange training, resources, handouts, or scripts," and do NOT propose to educate the rep or their staff.
+- Do NOT propose support, resources, training, education, materials, webinars, or handouts for the rep or their staff.
 
 Allowable questions from HCP:
 - Clarify therapy, safety, logistics, coverage, workflow impact.
@@ -1253,6 +1290,9 @@ ${COMMON}`
   }
 
   // ---------- send ----------
+  function norm(txt){return String(txt||"").toLowerCase().replace(/\s+/g," ").trim();}
+  let lastAssistantNorm = "";
+
   async function sendMessage(userText) {
     const shellEl = mount.querySelector(".reflectiv-chat");
     const renderMessages = shellEl._renderMessages;
@@ -1303,7 +1343,8 @@ ${COMMON}`
 Context:
 ${personaLine}
 ${detail}`;
-      messages.push({ role: "system", content: roleplayRails });
+      // Ensure RP rails are the first system message
+      messages.unshift({ role: "system", content: roleplayRails });
     } else {
       messages.push({ role: "system", content: buildPreface(currentMode, sc) });
     }
@@ -1332,6 +1373,18 @@ ${detail}`;
       if (currentMode === "role-play") {
         replyText = await enforceHcpOnly(replyText, sc, messages, callModel);
       }
+
+      // prevent duplicate assistant replies
+      const candidate = norm(replyText);
+      if (candidate && candidate === lastAssistantNorm) {
+        const alts = [
+          "From my perspective, we review histories, behaviors, and adherence to identify risk.",
+          "In my clinic, I consider history, behavior, and adherence to assess candidacy.",
+          "I focus on patient history and follow-up to guide decisions."
+        ];
+        replyText = alts[Math.floor(Math.random() * alts.length)];
+      }
+      lastAssistantNorm = norm(replyText);
 
       const computed = scoreReply(userText, replyText, currentMode);
 
