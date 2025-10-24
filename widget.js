@@ -168,7 +168,7 @@
         // Drop “can we discuss … you …”
         if (isQ && /\bcan\s+we\s+discuss\b/i.test(sent) && hasYou) return "";
 
-        // NEW: convert sentence-initial imperatives to HCP first-person
+        // convert sentence-initial imperatives to HCP first-person
         if (IMPERATIVE_START.test(sent)) {
           const m = sent.match(IMPERATIVE_START);
           const verb = m ? m[1].toLowerCase() : "consider";
@@ -211,12 +211,15 @@
       /\b(coaching|guidance|sales guidance|coach)\b/,
       /\b(provide|offer)\b.*\b(script|handout|one[- ]pager|counseling)\b/,
       /\b(emphasize|ensure|educate|recommend|suggest|encourage|support)\b.*\b(you|your)\b/,
-      /\b(prescribing|initiate|start|switch|promote|increase uptake)\b/, // promo/prescribing cues
+      /\b(prescribing|initiate|start|switch|promote|increase uptake)\b/,
       /^[-*]\s/,
       /<coach>|\bworked:|\bimprove:/,
       imperativeStart
     ];
-    return cues.some((re) => re.test(t));
+
+    // soften trigger: require at least two cues to fire to reduce false positives
+    const hits = cues.filter((re) => re.test(t));
+    return hits.length >= 2;
   }
 
   function correctiveRails(sc) {
@@ -263,7 +266,15 @@
       .replace(/^(ask|emphasize|consider|provide|offer|educate|ensure|recommend|suggest|discuss|address|reinforce|encourage|support)\b[^.!?]*[.!?]\s*/gi, "")
       .trim();
 
-    return out || "From my perspective, we evaluate patients based on history, behaviors, and adherence context.";
+    if (!out) {
+      const variants = [
+        "From my perspective, we review patient histories and behaviors to understand risk patterns.",
+        "In my clinic, we evaluate adherence and lifestyle to assess patient risk.",
+        "I typically consider history, behavior, and adherence when identifying high-risk patients."
+      ];
+      out = variants[Math.floor(Math.random() * variants.length)];
+    }
+    return out;
   }
 
   function md(text) {
@@ -337,7 +348,7 @@
   // ---------- local scoring (deterministic v3) ----------
   function scoreReply(userText, replyText) {
     const text = String(replyText || "");
-       const t = text.toLowerCase();
+    const t = text.toLowerCase();
     const words = text.split(/\s+/).filter(Boolean).length;
     const endsWithQ = /\?\s*$/.test(text);
     const inRange = (n, a, b) => n >= a && n <= b;
