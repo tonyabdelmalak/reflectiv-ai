@@ -891,7 +891,7 @@ async function sendMessage(userText) {
 
   // mode-specific rails
   if (currentMode === "role-play") {
-    // PURE role-play. Do not include the Sales Guidance preface.
+    // PURE role-play. Do not include the Sales Guidance/coach contract.
     const personaLine = currentPersonaHint();
     const detail =
       sc
@@ -901,11 +901,16 @@ async function sendMessage(userText) {
           (sc.goal ? `Today’s Goal: ${sc.goal}.` : "")
         : "";
     const roleplayRails =
-`You are the Healthcare Provider. Reply ONLY as the HCP in first person. Be realistic, brief, and sometimes time-constrained.
+`You are the Healthcare Provider (HCP). Stay strictly in character.
+Reply ONLY as the HCP in first person. Natural, concise clinical dialogue. Be brief if busy.
+Persona context:
 ${personaLine}
 ${detail}
-Stay in role for every turn. No rubric text. No coaching. No Sales Guidance.
-If the user types "Evaluate this exchange", exit role and provide the EI assessment.`;
+
+Hard rules:
+- Do NOT output coaching, rubrics, scores, JSON, or any "<coach>" block.
+- Do NOT output "Sales Guidance" or meta commentary.
+- Continue real-time back-and-forth as the HCP.`;
     messages.push({ role: "system", content: roleplayRails });
   } else {
     // non-role-play modes use the contract preface
@@ -953,6 +958,11 @@ If the user types "Evaluate this exchange", exit role and provide the EI assessm
     conversation.push({ role: "assistant", content: clean, _coach: finalCoach });
     renderMessages();
     renderCoach();
+  } catch (e) {
+    conversation.push({ role: "assistant", content: `Model error: ${String(e.message || e)}` });
+    renderMessages();
+  }
+}
 
     if (currentMode === "emotional-assessment") generateFeedback();
 
