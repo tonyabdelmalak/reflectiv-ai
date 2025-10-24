@@ -112,6 +112,13 @@
     return t.replace(/\s+/g, " ").match(/[^.!?]+[.!?]?/g) || [];
   }
 
+  // --- shared leak patterns (used in multiple functions)
+  const BRAND_RE = /\b(descovy|biktarvy|cabenuva|truvada|prep)\b/i;
+  const PROMO_ARTIFACTS_RE =
+    /\b(educational (resources?|materials?)|training session|in-?service|lunch-?and-?learn|handout|one-?pager|brochure|leave-?behind|job aid|script)\b/i;
+  const FIRST_PERSON_OFFER_RE =
+    /\b(i\s+(?:can\s+)?(?:provide|offer|arrange|conduct|deliver|send|share|supply|set up|organize|walk you through))\b/i;
+
   // Role-play only sanitizer: strip leaked coaching/meta blocks and force HCP POV
   function sanitizeRolePlayOnly(text) {
     let s = String(text || "");
@@ -176,6 +183,12 @@
           sent = `In my clinic, I ${verb} ${rest}`.replace(/\?\s*$/, ".").trim();
         }
 
+        // rewrite first-person offers tied to promo artifacts or brands
+        if (FIRST_PERSON_OFFER_RE.test(sent) && (PROMO_ARTIFACTS_RE.test(sent) || BRAND_RE.test(sent))) {
+          sent =
+            "In my clinic, I follow current guidelines and our internal processes; my focus is on patient selection and follow-up.";
+        }
+
         return sent;
       })
       .filter(Boolean);
@@ -202,24 +215,25 @@
   function isGuidanceLeak(txt) {
     const t = String(txt || "").toLowerCase();
 
-    // imperative verbs that indicate coaching when used sentence-initially
     const imperativeStart =
-      /(?:^|\s[.“"'])\s*(ask|emphasize|consider|provide|offer|educate|ensure|recommend|suggest|discuss|address|reinforce|encourage|support)\b/;
+      /(?:^|\s[.“"'])\s*(ask|emphasize|consider|provide|offer|educate|ensure|recommend|suggest|discuss|address|reinforce|encourage|support)\b/i;
 
     const cues = [
-      /\b(you should|you can|i recommend|i suggest|best practice|consider providing|here'?s how|you’ll want to)\b/,
-      /\b(coaching|guidance|sales guidance|coach)\b/,
-      /\b(provide|offer)\b.*\b(script|handout|one[- ]pager|counseling)\b/,
-      /\b(emphasize|ensure|educate|recommend|suggest|encourage|support)\b.*\b(you|your)\b/,
-      /\b(prescribing|initiate|start|switch|promote|increase uptake)\b/,
-      /^[-*]\s/,
-      /<coach>|\bworked:|\bimprove:/,
+      /\b(you should|you can|i recommend|i suggest|best practice|consider providing|here'?s how|you’ll want to)\b/i,
+      /\b(coaching|guidance|sales guidance|coach)\b/i,
+      /\b(emphasize|ensure|educate|recommend|suggest|encourage|support)\b.*\b(you|your)\b/i,
+      /^[-*]\s/m,
+      /<coach>|\bworked:|\bimprove:/i,
       imperativeStart
     ];
 
-    // soften trigger: require at least two cues to fire to reduce false positives
-    const hits = cues.filter((re) => re.test(t));
-    return hits.length >= 2;
+    // general leakage threshold: >= 2 cues
+    const generalHits = cues.filter((re) => re.test(t)).length >= 2;
+
+    // first-person offer + promo artifact or brand
+    const offerHit = FIRST_PERSON_OFFER_RE.test(t) && (PROMO_ARTIFACTS_RE.test(t) || BRAND_RE.test(t));
+
+    return generalHits || offerHit;
   }
 
   function correctiveRails(sc) {
@@ -231,6 +245,7 @@
       `Rewrite strictly as the HCP.`,
       `First-person. 2–5 sentences. No advice to the rep. No “you/your” guidance.`,
       `No lists, no headings, no rubric, no JSON, no "<coach>".`,
+      `Do not make offers like "I can provide/offer/arrange training, resources, handouts, or scripts," and do not propose to educate the rep or their staff.`,
       `Describe your own clinical approach. If you ask a question, it must be about your clinic/patients.`,
       personaLine
     ].join("\n");
@@ -259,13 +274,28 @@
       if (!isGuidanceLeak(out)) return out;
     } catch (_) {}
 
-    // Pass 3: last-ditch strip of remaining guidance sentences, incl. imperatives
+    // Pass 3: last-ditch strip
+
+    // Strip first-person offers tied to promo artifacts/brands
+    out = out.replace(
+      new RegExp(
+        String.raw`\bI\s+(?:can\s+)?(?:provide|offer|arrange|conduct|deliver|send|share|supply|set up|organize|walk you through)\b[^.!?]*?(?:${PROMO_ARTIFACTS_RE.source}|${BRAND_RE.source})[^.!?]*[.!?]\s*`,
+        "gi"
+      ),
+      ""
+    );
+
+    // Generic guidance strips
     out = out
       .replace(/\b(i recommend|i suggest|consider|you should|you can|best practice)\b.*?([.!?])\s*/gi, "")
       .replace(/\b(emphasize|ensure|educate|recommend|suggest|encourage|support)\b.*?([.!?])\s*/gi, "")
-      .replace(/^(ask|emphasize|consider|provide|offer|educate|ensure|recommend|suggest|discuss|address|reinforce|encourage|support)\b[^.!?]*[.!?]\s*/gi, "")
+      .replace(
+        /^(ask|emphasize|consider|provide|offer|educate|ensure|recommend|suggest|discuss|address|reinforce|encourage|support)\b[^.!?]*[.!?]\s*/gim,
+        ""
+      )
       .trim();
 
+    // Dynamic fallback to avoid repetition
     if (!out) {
       const variants = [
         "From my perspective, we review patient histories and behaviors to understand risk patterns.",
@@ -671,6 +701,7 @@ Hard bans:
 - Do NOT output headings or bullet lists.
 - Do NOT ask the rep about the rep’s process, approach, or clinic metrics.
 - Do NOT interview the rep with sales-discovery prompts.
+- Do NOT make offers like "I can provide/offer/arrange training, resources, handouts, or scripts," and do NOT propose to educate the rep or their staff.
 
 Allowable questions from HCP:
 - Clarify therapy, safety, logistics, coverage, workflow impact.
