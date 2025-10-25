@@ -1,5 +1,4 @@
-Here’s the full drop-in widget.js with the Role-Play state cache, trimmed-turn evaluation, and UI guard applied.
-
+ 
 /* widget.js
  * ReflectivAI Chat/Coach — drop-in (coach-v2, deterministic scoring v3)
  * Modes: emotional-assessment | product-knowledge | sales-simulation | role-play
