@@ -1,15 +1,18 @@
+<!-- widget.js (ReflectivAI Chat/Coach — coach-v2, deterministic scoring v3, RP hardening 2025-10-24) -->
+<script>
 /* widget.js
  * ReflectivAI Chat/Coach — drop-in (coach-v2, deterministic scoring v3)
  * Modes: emotional-assessment | product-knowledge | sales-simulation | role-play
  * PROACTIVE SAFEGUARDS:
- * - duplicate-cycle guard (ring buffer)        - double-send lock
+ * - duplicate-cycle guard (ring buffer)        - double-send lock (3s)  [NEW]
  * - Enter throttling                           - stricter HCP-only sanitizer & leak detection
- * - malformed “walk me through …” fixes        - conversation trimming
+ * - malformed “walk me through …” fixes        - conversation trimming (RP >35→keep last 30)  [NEW]
  * - empty-reply fallback                       - time-outed model calls
  * - length clamps                              - anti-echo of the user’s text
  * - RP state cache to stop mid-turn resets     - mount auto-create
- * - identity-drift detector/repair in RP
- * - sessionStorage backup for RP state (modal unmount safe)
+ * - identity-drift detector/repair in RP       - stable RP anchor added every turn  [NEW]
+ * - sessionStorage backup for RP + mode/scenario (modal unmount safe)  [NEW]
+ * - 25s last-line rollback prompt if model stalls  [NEW]
  */
 (function () {
   // ---------- safe bootstrapping ----------
@@ -64,6 +67,7 @@
     "Sales Simulation": "sales-simulation",
     "Role Play": "role-play"
   };
+  const INTERNAL_TO_LC = Object.fromEntries(Object.entries(LC_TO_INTERNAL).map(([k,v])=>[v,k]));
 
   let cfg = null;
   let systemPrompt = "";
@@ -75,7 +79,11 @@
   let conversation = [];
   let coachOn = true;
 
-  // ---------- Role-Play cache safeguard (root-cause reset fix) ----------
+  // Persisted mode/scenario (survive remounts)  [NEW]
+  const MODE_KEY = "reflectiv_last_mode";
+  const SCEN_KEY  = "reflectiv_last_scenario";
+
+  // ---------- Role-Play cache safeguard ----------
   const RP_SESSION_KEY = "reflectiv_rp_cache_v1";
   let rpCache = null;
   function persistRolePlayState() {
@@ -551,14 +559,6 @@
         case "indifferent": feedback = "Use light affirmations to draw them in. Ask a simple patient-impact question."; break;
         default: feedback = "Use reflective and clarifying questions. Keep it concise.";
       }
-    } else if (featureKey === "validation") {
-      switch (personaKey) {
-        case "difficult": feedback = "Validate frustration first. Reframe around shared goals and patient outcomes."; break;
-        case "busy": feedback = "Validate time constraints. Reframe to efficiency and workflow fit."; break;
-        case "engaged": feedback = "Validate expertise. Reframe to partnership and quick experimentation."; break;
-        case "indifferent": feedback = "Validate neutrality. Reframe to meaningful benefits for a typical patient."; break;
-        default: feedback = "Validate perspective and reframe to collaboration and patient value.";
-      }
     } else {
       feedback = "Select a valid EI feature for targeted guidance.";
     }
@@ -692,6 +692,7 @@ ${COMMON}`
   }
 
   // ---------- UI ----------
+  let modeSel, diseaseSelect, hcpSelect; // forward refs
   function buildUI() {
     mount.innerHTML = "";
     if (!mount.classList.contains("cw")) mount.classList.add("cw");
@@ -750,16 +751,19 @@ ${COMMON}`
 
     const lcLabel = el("label", "", "Learning Center");
     lcLabel.htmlFor = "cw-mode";
-    const modeSel = el("select");
+    modeSel = el("select");
     modeSel.id = "cw-mode";
     LC_OPTIONS.forEach((name) => {
       const o = el("option");
       o.value = name; o.textContent = name; o.selected = false;
       modeSel.appendChild(o);
     });
+
+    // restore persisted mode if present  [NEW]
+    const persistedMode = sessionStorage.getItem(MODE_KEY);
     const initialLc =
-      Object.keys(LC_TO_INTERNAL).find((k) => LC_TO_INTERNAL[k] === (cfg?.defaultMode || "sales-simulation")) ||
-      "Sales Simulation";
+      persistedMode ? (INTERNAL_TO_LC[persistedMode] || "Sales Simulation")
+      : (Object.keys(LC_TO_INTERNAL).find((k) => LC_TO_INTERNAL[k] === (cfg?.defaultMode || "sales-simulation")) || "Sales Simulation");
     modeSel.value = initialLc;
     currentMode = LC_TO_INTERNAL[modeSel.value];
 
@@ -775,11 +779,11 @@ ${COMMON}`
 
     const diseaseLabel = el("label", "", "Disease State");
     diseaseLabel.htmlFor = "cw-disease";
-    const diseaseSelect = el("select"); diseaseSelect.id = "cw-disease";
+    diseaseSelect = el("select"); diseaseSelect.id = "cw-disease";
 
     const hcpLabel = el("label", "", "HCP Profiles");
     hcpLabel.htmlFor = "cw-hcp";
-    const hcpSelect = el("select"); hcpSelect.id = "cw-hcp";
+    hcpSelect = el("select"); hcpSelect.id = "cw-hcp";
 
     // EI Persona/EI Feature
     const personaLabel = el("label", "", "HCP Persona");
@@ -980,6 +984,9 @@ ${COMMON}`
       const stayingInRolePlay = wasRolePlay && nextMode === "role-play";
       currentMode = nextMode;
 
+      // persist mode immediately  [NEW]
+      try { sessionStorage.setItem(MODE_KEY, currentMode); } catch {}
+
       if (stayingInRolePlay) persistRolePlayState();
 
       const pk = currentMode === "product-knowledge";
@@ -1026,6 +1033,9 @@ ${COMMON}`
         currentScenarioId = null; conversation = [];
         renderMessages(); renderCoach(); renderMeta();
       }
+
+      // persist scenario after visibility changes  [NEW]
+      try { sessionStorage.setItem(SCEN_KEY, currentScenarioId || ""); } catch {}
     }
 
     modeSel.addEventListener("change", applyModeVisibility);
@@ -1034,12 +1044,14 @@ ${COMMON}`
       const ds = diseaseSelect.value || ""; if (!ds) return;
       if (currentMode === "sales-simulation" || currentMode === "role-play") populateHcpForDisease(ds);
       else if (currentMode === "product-knowledge") currentScenarioId = null;
+      try { sessionStorage.setItem(SCEN_KEY, currentScenarioId || ""); } catch {}
       renderMessages(); renderCoach(); renderMeta();
     });
 
     hcpSelect.addEventListener("change", () => {
       const sel = hcpSelect.value || ""; if (!sel) return;
       const sc = scenariosById.get(sel); currentScenarioId = sc ? sc.id : null;
+      try { sessionStorage.setItem(SCEN_KEY, currentScenarioId || ""); } catch {}
       renderMessages(); renderCoach(); renderMeta();
     });
 
@@ -1052,13 +1064,35 @@ ${COMMON}`
 
     populateDiseases();
     hydrateEISelects();
-    applyModeVisibility();
+
+    // if a scenario was persisted, try to restore selection  [NEW]
+    const persistedScenario = sessionStorage.getItem(SCEN_KEY);
+    if (persistedScenario) {
+      // we must render first so selects exist
+      applyModeVisibility();
+      // ensure disease select set for that scenario if resolvable
+      const sc = scenariosById.get(persistedScenario);
+      if (sc) {
+        diseaseSelect.value = sc.therapeuticArea || sc.diseaseState || "";
+        populateHcpForDisease(diseaseSelect.value);
+        hcpSelect.value = sc.id;
+        currentScenarioId = sc.id;
+      }
+    } else {
+      applyModeVisibility();
+    }
   }
 
   // ---------- transport with timeout + endpoint fallback ----------
   async function callModel(messages) {
     const url = (cfg?.apiBase || cfg?.workerUrl || window.COACH_ENDPOINT || window.WORKER_URL || "").trim();
     if (!url) throw new Error("No API endpoint configured (set config.apiBase/workerUrl or window.COACH_ENDPOINT).");
+
+    // Pin stable model + temperature by mode  [NEW]
+    const modelName = currentMode === "role-play"
+      ? "llama-3.1-8b-instant"
+      : (cfg && cfg.model) ? cfg.model : "llama-3.1-8b";
+    const temp = currentMode === "role-play" ? 0.1 : 0.2;
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort("timeout"), 22000);
@@ -1068,8 +1102,8 @@ ${COMMON}`
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: (cfg && cfg.model) || "llama-3.1-8b-instant",
-          temperature: 0.2,
+          model: modelName,
+          temperature: temp,
           stream: !!cfg?.stream,
           messages
         }),
@@ -1115,12 +1149,25 @@ ${COMMON}`
   let lastAssistantNorm = "";
   let recentAssistantNorms = [];
   function pushRecent(n){ recentAssistantNorms.push(n); if(recentAssistantNorms.length>3) recentAssistantNorms.shift(); }
-  function isRecent(n){ return recentAssistantNorms.includes(n); }
   let isSending = false;
+  let sendInProgress = false;              // 3s double-send guard  [NEW]
+  let pendingRecoveryTimer = null;         // 25s rollback timer    [NEW]
 
-  function trimConversationIfNeeded() { if (conversation.length <= 30) return; conversation = conversation.slice(-30); }
+  function trimConversationIfNeeded() {
+    if (currentMode === "role-play" && conversation.length > 35) {
+      conversation = conversation.slice(-30);
+      console.warn("[ReflectivAI] Conversation auto-trimmed to last 30 turns.");
+    } else if (conversation.length > 60) {
+      conversation = conversation.slice(-40);
+    }
+  }
 
   async function sendMessage(userText) {
+    // Double-send guard  [NEW]
+    if (sendInProgress) return;
+    sendInProgress = true;
+    setTimeout(() => (sendInProgress = false), 3000);
+
     if (isSending) return;
     isSending = true;
 
@@ -1158,6 +1205,14 @@ ${COMMON}`
       const sc = scenariosById.get(currentScenarioId);
       const messages = [];
 
+      // Stable Context Anchor per turn (Role Play)  [NEW]
+      if (currentMode === "role-play") {
+        messages.unshift({
+          role: "system",
+          content: "Stay purely in character as the healthcare provider. Speak as 'I'. Do not coach the rep. Continue from your last HCP reply."
+        });
+      }
+
       if (systemPrompt && currentMode !== "role-play") messages.push({ role: "system", content: systemPrompt });
 
       if (currentMode === "role-play") {
@@ -1171,11 +1226,34 @@ Context:
 ${personaLine}
 ${detail}`;
         messages.unshift({ role: "system", content: roleplayRails });
+
+        // Auto-Reinforcement every 10 turns  [NEW]
+        if (conversation.length % 10 === 0) {
+          messages.unshift({
+            role: "system",
+            content: "Reminder: you are the HCP in this simulated clinical conversation. Use first-person and continue from your last answer."
+          });
+        }
       } else {
         messages.push({ role: "system", content: buildPreface(currentMode, sc) });
       }
 
       messages.push({ role: "user", content: userText });
+
+      // RP lean context just before call  [NEW]
+      trimConversationIfNeeded();
+
+      // 25s last-line rollback if model stalls  [NEW]
+      if (pendingRecoveryTimer) { clearTimeout(pendingRecoveryTimer); pendingRecoveryTimer = null; }
+      pendingRecoveryTimer = setTimeout(() => {
+        try {
+          if (conversation.length && conversation[conversation.length - 1].role === "user") {
+            conversation.push({ role: "assistant", content: "Let’s continue where we left off—what’s next?", _speaker: currentMode === "role-play" ? "hcp" : "assistant" });
+            persistRolePlayState();
+            shellEl._renderMessages(); shellEl._renderCoach();
+          }
+        } catch {}
+      }, 25000);
 
       try {
         if (currentMode !== "role-play") {
@@ -1198,17 +1276,17 @@ ${detail}`;
           replyText = "From my perspective, we evaluate high-risk patients using history, behaviors, and adherence context.";
         }
 
-        let candidate = norm(replyText);
-        if (candidate && (candidate === lastAssistantNorm || isRecent(candidate))) {
+        const candidate = norm(replyText);
+        if (candidate && (candidate === lastAssistantNorm || recentAssistantNorms.includes(candidate))) {
           const alts = [
             "In my clinic, we review history, behaviors, and adherence to understand risk.",
             "I rely on history and follow-up patterns to guide decisions.",
             "We focus on adherence and recent exposures when assessing candidacy."
           ];
           replyText = alts[Math.floor(Math.random()*alts.length)];
-          candidate = norm(replyText);
         }
-        lastAssistantNorm = candidate; pushRecent(candidate);
+        lastAssistantNorm = norm(replyText);
+        pushRecent(lastAssistantNorm);
 
         replyText = clampLen(replyText, 1400);
 
@@ -1242,29 +1320,12 @@ ${detail}`;
         persistRolePlayState();
         trimConversationIfNeeded();
         renderMessages(); renderCoach();
-
-        if (currentMode === "emotional-assessment") generateFeedback();
-
-        if (cfg && cfg.analyticsEndpoint) {
-          fetch(cfg.analyticsEndpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              ts: Date.now(),
-              schema: cfg.schemaVersion || "coach-v2",
-              mode: currentMode,
-              scenarioId: currentScenarioId,
-              turn: conversation.length,
-              context: finalCoach.context || { rep_question: userText, hcp_reply: replyText },
-              overall: finalCoach.overall,
-              scores: finalCoach.scores
-            })
-          }).catch(() => {});
-        }
       } catch (e) {
         if (currentMode === "role-play") restoreRolePlayState();
         conversation.push({ role: "assistant", content: `Model error: ${String(e.message || e)}` });
         trimConversationIfNeeded(); renderMessages();
+      } finally {
+        if (pendingRecoveryTimer) { clearTimeout(pendingRecoveryTimer); pendingRecoveryTimer = null; }
       }
     } finally {
       const shellEl2 = mount.querySelector(".reflectiv-chat");
@@ -1329,6 +1390,14 @@ ${detail}`;
     try { systemPrompt = await fetchLocal("./assets/chat/system.md"); }
     catch (e) { console.error("system.md load failed:", e); systemPrompt = ""; }
 
+    // Restore persisted mode/scenario before UI build  [NEW]
+    try {
+      const m = sessionStorage.getItem(MODE_KEY);
+      if (m) currentMode = m;
+      const cs = sessionStorage.getItem(SCEN_KEY);
+      if (cs) currentScenarioId = cs || null;
+    } catch {}
+
     await loadScenarios();
     buildUI();
 
@@ -1339,3 +1408,4 @@ ${detail}`;
   // ---------- start ----------
   waitForMount(init);
 })();
+</script>
