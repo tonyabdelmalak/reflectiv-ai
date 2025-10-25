@@ -1,3 +1,5 @@
+Here’s the full drop-in widget.js with the Role-Play state cache, trimmed-turn evaluation, and UI guard applied.
+
 /* widget.js
  * ReflectivAI Chat/Coach — drop-in (coach-v2, deterministic scoring v3)
  * Modes: emotional-assessment | product-knowledge | sales-simulation | role-play
@@ -7,6 +9,7 @@
  * - fixes malformed “walk me through …”        - conversation trimming
  * - empty-reply fallback                       - time-outed model calls
  * - length clamps                              - anti-echo of the user’s text
+ * - Role-Play state cache to prevent mid-turn resets
  */
 (function () {
   // ---------- safe bootstrapping ----------
@@ -62,6 +65,19 @@
   let currentScenarioId = null;
   let conversation = [];
   let coachOn = true;
+
+  // ---------- Role-Play cache safeguard ----------
+  let rpCache = null;
+  function persistRolePlayState() {
+    if (currentMode === "role-play" && conversation.length) {
+      rpCache = JSON.parse(JSON.stringify(conversation));
+    }
+  }
+  function restoreRolePlayState() {
+    if (currentMode === "role-play" && (!conversation || !conversation.length) && rpCache) {
+      conversation = JSON.parse(JSON.stringify(rpCache));
+    }
+  }
 
   // ---------- EI globals ----------
   let personaSelectElem = null;
@@ -1115,7 +1131,16 @@ ${COMMON}`
 
     function applyModeVisibility() {
       const lc = modeSel.value;
-      currentMode = LC_TO_INTERNAL[lc];
+      const nextMode = LC_TO_INTERNAL[lc];
+      const wasRolePlay = currentMode === "role-play";
+      const stayingInRolePlay = wasRolePlay && nextMode === "role-play";
+      currentMode = nextMode;
+
+      if (stayingInRolePlay) {
+        // do not reset UI or conversation when RP already active
+        persistRolePlayState();
+      }
+
       const pk = currentMode === "product-knowledge";
 
       coachLabel.classList.toggle("hidden", pk);
@@ -1159,6 +1184,7 @@ ${COMMON}`
           </div>`;
         populateDiseases();
         if (diseaseSelect.value) populateHcpForDisease(diseaseSelect.value);
+        restoreRolePlayState();
         renderMessages();
         renderCoach();
         renderMeta();
@@ -1261,8 +1287,8 @@ ${COMMON}`
   // ---------- final-eval helper ----------
   async function evaluateConversation() {
     const sc = scenariosById.get(currentScenarioId);
-    const turns = conversation.length ? conversation : [{ role: "system", content: "No prior turns." }];
-    const convoText = turns.map((m) => `${m.role}: ${m.content}`).join("\n").slice(0, 24000);
+    const turns = conversation.slice(-30); // keep recent context only
+    const convoText = turns.map((m) => `${m.role}: ${m.content}`).join("\n");
 
     const evalMsgs = [
       systemPrompt ? { role: "system", content: systemPrompt } : null,
@@ -1279,6 +1305,7 @@ ${COMMON}`
     const { coach, clean } = extractCoach(raw);
     const finalCoach = coach || scoreReply("", clean);
     conversation.push({ role: "assistant", content: clean, _coach: finalCoach, _finalEval: true });
+    persistRolePlayState();
   }
 
   // ---------- send ----------
@@ -1299,6 +1326,8 @@ ${COMMON}`
   async function sendMessage(userText) {
     if (isSending) return;            // double-send lock
     isSending = true;
+
+    restoreRolePlayState();           // recover RP turns if any transient reset occurred
 
     const shellEl = mount.querySelector(".reflectiv-chat");
     const renderMessages = shellEl._renderMessages;
@@ -1331,6 +1360,7 @@ ${COMMON}`
         content: userText,
         _speaker: currentMode === "role-play" ? "rep" : "user"
       });
+      persistRolePlayState();
       trimConversationIfNeeded();
       renderMessages();
       renderCoach();
@@ -1367,7 +1397,7 @@ ${detail}`;
             typeof EIContext !== "undefined" && EIContext?.getSystemExtras
               ? await EIContext.getSystemExtras().catch(() => null)
               : null;
-          if (sysExtras) messages.unshift({ role: "system", content: sysExtras });
+        if (sysExtras) messages.unshift({ role: "system", content: sysExtras });
         }
 
         let raw = await callModel(messages);
@@ -1430,6 +1460,7 @@ ${detail}`;
           _coach: finalCoach,
           _speaker: currentMode === "role-play" ? "hcp" : "assistant"
         });
+        persistRolePlayState();
         trimConversationIfNeeded();
         renderMessages();
         renderCoach();
@@ -1453,6 +1484,7 @@ ${detail}`;
           }).catch(() => {});
         }
       } catch (e) {
+        if (currentMode === "role-play") restoreRolePlayState();
         conversation.push({ role: "assistant", content: `Model error: ${String(e.message || e)}` });
         trimConversationIfNeeded();
         renderMessages();
