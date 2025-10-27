@@ -72,6 +72,9 @@
   let featureLabelElem = null;
   let lastUserMessage = "";
 
+  // ---------- Rep-only eval panel store ----------
+  let repOnlyPanelHTML = "";
+
   // ---------- EI defaults ----------
   const DEFAULT_PERSONAS = [
     { key: "difficult", label: "Difficult HCP" },
@@ -365,38 +368,38 @@
     const openIdx = s.indexOf("<coach>");
     if (openIdx === -1) return { coach: null, clean: sanitizeLLM(s) };
 
-const head = s.slice(0, openIdx);
-const tail = s.slice(openIdx + "<coach>".length);
+    const head = s.slice(0, openIdx);
+    const tail = s.slice(openIdx + "<coach>".length);
 
-const closeIdx = tail.indexOf("</coach>");
-let block = closeIdx >= 0 ? tail.slice(0, closeIdx) : tail;
+    const closeIdx = tail.indexOf("</coach>");
+    let block = closeIdx >= 0 ? tail.slice(0, closeIdx) : tail;
 
-const braceStart = block.indexOf("{");
-if (braceStart === -1) return { coach: null, clean: sanitizeLLM(head) };
+    const braceStart = block.indexOf("{");
+    if (braceStart === -1) return { coach: null, clean: sanitizeLLM(head) };
 
-let depth = 0, end = -1;
-for (let i = braceStart; i < block.length; i++) {
-  const ch = block[i];
-  if (ch === "{") depth++;
-  if (ch === "}") depth--;
-  if (depth === 0) {
-    end = i;
-    break;
-  }
-}
-if (end === -1) return { coach: null, clean: sanitizeLLM(head) };
+    let depth = 0, end = -1;
+    for (let i = braceStart; i < block.length; i++) {
+      const ch = block[i];
+      if (ch === "{") depth++;
+      if (ch === "}") depth--;
+      if (depth === 0) {
+        end = i;
+        break;
+      }
+    }
+    if (end === -1) return { coach: null, clean: sanitizeLLM(head) };
 
-// parse JSON inside <coach>…</coach>
-const jsonTxt = block.slice(braceStart, end + 1);
-let coach = {};
-try {
-  coach = JSON.parse(jsonTxt);
-} catch (e) {
-  console.warn("Coach JSON parse error", e);
-}
-const after = closeIdx >= 0 ? tail.slice(closeIdx + "</coach>".length) : "";
-const clean = sanitizeLLM((head + " " + after).trim());
-return { coach, clean };
+    // parse JSON inside <coach>…</coach>
+    const jsonTxt = block.slice(braceStart, end + 1);
+    let coach = {};
+    try {
+      coach = JSON.parse(jsonTxt);
+    } catch (e) {
+      console.warn("Coach JSON parse error", e);
+    }
+    const after = closeIdx >= 0 ? tail.slice(closeIdx + "</coach>".length) : "";
+    const clean = sanitizeLLM((head + " " + after).trim());
+    return { coach, clean };
   }
 
   // ---------- local scoring (deterministic v3) ----------
@@ -443,19 +446,19 @@ return { coach, clean };
     overall = Math.max(0, Math.min(100, Math.round(overall)));
 
     // --- present-tense feedback text for yellow panel
-  const worked = [
-  sig.empathy ? "Acknowledge HCP context" : null,
-  sig.discovery ? "Close with a clear discovery question" : null,
-  sig.label ? "Reference label or guidelines" : null,
-  sig.accuracyCue ? "Tie points to clinical cues" : null
-].filter(Boolean);
+    const worked = [
+      sig.empathy ? "Acknowledge HCP context" : null,
+      sig.discovery ? "Close with a clear discovery question" : null,
+      sig.label ? "Reference label or guidelines" : null,
+      sig.accuracyCue ? "Tie points to clinical cues" : null
+    ].filter(Boolean);
 
-  const improve = [
-  sig.tooLong ? "Keep to 3–5 sentences" : null,
-  sig.discovery ? null : "End with one specific question",
-  sig.label ? null : "Anchor claims to label or guideline",
-  clarity < 4 ? "Use one idea per sentence" : null
-].filter(Boolean);
+    const improve = [
+      sig.tooLong ? "Keep to 3–5 sentences" : null,
+      sig.discovery ? null : "End with one specific question",
+      sig.label ? null : "Anchor claims to label or guideline",
+      clarity < 4 ? "Use one idea per sentence" : null
+    ].filter(Boolean);
 
     const phrasing = sig.discovery
       ? "Given your criteria, which patients would be the best fit to start, and what would help you try one this month?"
@@ -1100,7 +1103,10 @@ ${COMMON}`
       if (currentMode === "role-play") {
         const last = conversation[conversation.length - 1];
         if (!last || !last._finalEval) {
-          body.innerHTML = `<span class="muted">Final evaluation will appear after you request it by typing “Evaluate this exchange”.</span>`;
+          const extra = repOnlyPanelHTML
+            ? `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e1e6ef">${repOnlyPanelHTML}</div>`
+            : "";
+          body.innerHTML = `<span class="muted">Final evaluation will appear after you request it by typing “Evaluate this exchange”.</span>${extra}`;
           return;
         }
       }
@@ -1114,7 +1120,6 @@ ${COMMON}`
       const scores = fb.scores || fb.subscores || {};
 
       // Sales Simulation yellow panel spec:
-      // Static headers Focus/Strategy. No score chips. No Suggested Phrasing here.
       if (currentMode === "sales-simulation") {
         const workedStr = fb.worked && fb.worked.length ? `<ul>${fb.worked.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>` : "—";
         const improveStr = fb.improve && fb.improve.length ? `<ul>${fb.improve.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>` : "—";
@@ -1123,7 +1128,8 @@ ${COMMON}`
           <ul class="coach-list">
             <li><strong>Focus:</strong> ${workedStr}</li>
             <li><strong>Strategy:</strong> ${improveStr}</li>
-          </ul>`;
+          </ul>
+          ${repOnlyPanelHTML ? `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e1e6ef">${repOnlyPanelHTML}</div>` : ""}`;
         return;
       }
 
@@ -1137,7 +1143,8 @@ ${COMMON}`
           <li><strong>What worked:</strong> ${esc(workedStr)}</li>
           <li><strong>What to improve:</strong> ${esc(improveStr)}</li>
           <li><strong>Suggested phrasing:</strong> ${esc(fb.phrasing || "—")}</li>
-        </ul>`;
+        </ul>
+        ${repOnlyPanelHTML ? `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e1e6ef">${repOnlyPanelHTML}</div>` : ""}`;
     }
 
     function applyModeVisibility() {
@@ -1158,6 +1165,7 @@ ${COMMON}`
         featureLabelElem.classList.add("hidden");
         eiFeatureSelectElem.classList.add("hidden");
         feedbackDisplayElem.innerHTML = "";
+        repOnlyPanelHTML = "";
         populateDiseases();
       } else if (currentMode === "product-knowledge") {
         diseaseLabel.classList.remove("hidden");
@@ -1169,6 +1177,7 @@ ${COMMON}`
         featureLabelElem.classList.add("hidden");
         eiFeatureSelectElem.classList.add("hidden");
         feedbackDisplayElem.innerHTML = "";
+        repOnlyPanelHTML = "";
         populateDiseases();
       } else if (currentMode === "role-play") {
         diseaseLabel.classList.remove("hidden");
@@ -1179,10 +1188,11 @@ ${COMMON}`
         personaSelectElem.classList.add("hidden");
         featureLabelElem.classList.add("hidden");
         eiFeatureSelectElem.classList.add("hidden");
+        repOnlyPanelHTML = "";
         feedbackDisplayElem.innerHTML = `
           <div class="coach-note">
             <strong>Role Play Mode:</strong> You chat with an HCP persona selected by Disease + HCP.
-            Type <em>"Evaluate this exchange"</em> any time for a final assessment.
+            Type <em>"Evaluate this exchange"</em> for a full assessment, or <em>"Evaluate Rep"</em> for a Rep-only review.
           </div>`;
         populateDiseases();
         if (diseaseSelect.value) populateHcpForDisease(diseaseSelect.value);
@@ -1200,6 +1210,7 @@ ${COMMON}`
         featureLabelElem.classList.remove("hidden");
         eiFeatureSelectElem.classList.remove("hidden");
         feedbackDisplayElem.innerHTML = "";
+        repOnlyPanelHTML = "";
         currentScenarioId = null;
         conversation = [];
         renderMessages();
@@ -1253,58 +1264,58 @@ ${COMMON}`
     applyModeVisibility();
   }
 
-// ---------- callModel (hardened with retries, timeout, and backoff) ----------
-function rid() {
-  return Math.random().toString(36).slice(2);
-}
+  // ---------- callModel (hardened with retries, timeout, and backoff) ----------
+  function rid() {
+    return Math.random().toString(36).slice(2);
+  }
 
-async function callModel(messages) {
-  const url = (cfg?.apiBase || cfg?.workerUrl || window.COACH_ENDPOINT || window.WORKER_URL || "").trim();
+  async function callModel(messages) {
+    const url = (cfg?.apiBase || cfg?.workerUrl || window.COACH_ENDPOINT || window.WORKER_URL || "").trim();
 
-  const attempt = async (n, delayMs) => {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort("timeout"), 45000); // up to 45s
-    try {
-      const r = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Req-Id": rid()
-        },
-        body: JSON.stringify({
-          model: (cfg?.model) || "llama-3.1-8b-instant",
-          temperature: 0.2,
-          stream: !!cfg?.stream,
-          max_output_tokens: (cfg?.max_output_tokens || cfg?.maxTokens) || 1400,
-          messages
-        }),
-        signal: controller.signal
-      });
+    const attempt = async (n, delayMs) => {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort("timeout"), 45000); // up to 45s
+      try {
+        const r = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Req-Id": rid()
+          },
+          body: JSON.stringify({
+            model: (cfg?.model) || "llama-3.1-8b-instant",
+            temperature: 0.2,
+            stream: !!cfg?.stream,
+            max_output_tokens: (cfg?.max_output_tokens || cfg?.maxTokens) || 1400,
+            messages
+          }),
+          signal: controller.signal
+        });
 
-      if (!r.ok) throw new Error("HTTP " + r.status);
+        if (!r.ok) throw new Error("HTTP " + r.status);
 
-      const data = await r.json().catch(() => ({}));
-      return (
-        data?.content ||
-        data?.reply ||
-        data?.choices?.[0]?.message?.content ||
-        ""
-      );
-    } catch (e) {
-      // retry only on backend/network errors
-      if (n > 0 && /HTTP 5\d\d|timeout|TypeError|NetworkError/i.test(String(e))) {
-        await new Promise((res) => setTimeout(res, delayMs));
-        return attempt(n - 1, delayMs * 2);
+        const data = await r.json().catch(() => ({}));
+        return (
+          data?.content ||
+          data?.reply ||
+          data?.choices?.[0]?.message?.content ||
+          ""
+        );
+      } catch (e) {
+        // retry only on backend/network errors
+        if (n > 0 && /HTTP 5\d\d|timeout|TypeError|NetworkError/i.test(String(e))) {
+          await new Promise((res) => setTimeout(res, delayMs));
+          return attempt(n - 1, delayMs * 2);
+        }
+        console.warn("Model call failed:", e);
+        return ""; // fallback empty
+      } finally {
+        clearTimeout(timeout);
       }
-      console.warn("Model call failed:", e);
-      return ""; // fallback empty
-    } finally {
-      clearTimeout(timeout);
-    }
-  };
+    };
 
-  return attempt(2, 400); // up to 3 total tries
-}
+    return attempt(2, 400); // up to 3 total tries
+  }
 
   // ---------- final-eval helper ----------
   async function evaluateConversation() {
@@ -1329,6 +1340,77 @@ async function callModel(messages) {
     conversation.push({ role: "assistant", content: clean, _coach: finalCoach, _finalEval: true });
   }
 
+  /* ---------- Rep-only evaluation helpers ---------- */
+  function repTurns(history, max = 12) {
+    const repLike = ["rep", "user"]; // Rep messages stored as _speaker:'rep' or role:'user'
+    const seq = (history || []).filter(
+      (m) => repLike.includes(String(m._speaker || "").toLowerCase()) || repLike.includes(String(m.role || "").toLowerCase())
+    );
+    return seq.slice(-max).map(({ role, content, _speaker }) => ({
+      role: (role || _speaker || "user"),
+      content: String(content || "")
+    }));
+  }
+
+  async function evaluateRepOnly({ history, personaLabel, goal }) {
+    const transcript = repTurns(history);
+
+    const sys = [
+      "You are the ReflectivAI Coach.",
+      "Evaluate ONLY the Rep’s utterances.",
+      "Ignore HCP content except as context.",
+      `Persona: ${personaLabel || "unspecified persona"}.`,
+      `Scenario Goal: ${goal || "unspecified goal"}.`,
+      "Rubric: Accuracy, Compliance, Discovery, Clarity, Objection Handling, Empathy.",
+      "Return JSON with keys: scores{accuracy,compliance,discovery,clarity,objectionHandling,empathy}, summary, strengths[], improvements[], actionable[]. Scores 1–5 integers."
+    ].join(" ");
+
+    const user = {
+      role: "user",
+      content: JSON.stringify({
+        mode: "rep_only",
+        rubric: ["Accuracy", "Compliance", "Discovery", "Clarity", "Objection Handling", "Empathy"],
+        transcript
+      })
+    };
+
+    let raw = "";
+    try {
+      raw = await callModel([{ role: "system", content: sys }, user]);
+    } catch (e) {
+      return { html: `<div class='coach-panel'><h4>Rep-only Evaluation</h4><p>Unavailable now. Try again.</p></div>` };
+    }
+
+    let data = null;
+    try { data = JSON.parse(raw); } catch (_) {}
+
+    // Fallback to simple text if JSON not returned
+    if (!data || !data.scores) {
+      const safe = sanitizeLLM(raw || "Rep-only evaluation unavailable.");
+      return { html: `<div class='coach-panel'><h4>Rep-only Evaluation</h4><p>${esc(safe)}</p></div>` };
+    }
+
+    const s = data.scores || {};
+    const list = (arr) => Array.isArray(arr) && arr.length ? `<ul>${arr.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>` : "—";
+    const html = `
+      <div class="coach-panel">
+        <h4>Rep-only Evaluation</h4>
+        <div class="coach-subs">
+          <span class="pill">Accuracy: ${s.accuracy ?? "—"}</span>
+          <span class="pill">Compliance: ${s.compliance ?? "—"}</span>
+          <span class="pill">Discovery: ${s.discovery ?? "—"}</span>
+          <span class="pill">Clarity: ${s.clarity ?? "—"}</span>
+          <span class="pill">Objection Handling: ${s.objectionHandling ?? "—"}</span>
+          <span class="pill">Empathy: ${s.empathy ?? "—"}</span>
+        </div>
+        ${data.summary ? `<p>${esc(data.summary)}</p>` : ""}
+        <h5>Strengths</h5>${list(data.strengths)}
+        <h5>Improvements</h5>${list(data.improvements)}
+        <h5>Actionable Feedback</h5>${list(data.actionable)}
+      </div>`;
+    return { html };
+  }
+
   // ---------- send ----------
   function norm(txt){return String(txt||"").toLowerCase().replace(/\s+/g," ").trim();}
   let lastAssistantNorm = "";
@@ -1344,146 +1426,53 @@ async function callModel(messages) {
     conversation = conversation.slice(-30);
   }
 
-async function sendMessage(userText) {
-  if (isSending) return;            // double-send lock
-  isSending = true;
+  async function sendMessage(userText) {
+    if (isSending) return;            // double-send lock
+    isSending = true;
 
-  const shellEl = mount.querySelector(".reflectiv-chat");
-  const renderMessages = shellEl._renderMessages;
-  const renderCoach = shellEl._renderCoach;
-  const sendBtn = shellEl._sendBtn;
-  const ta = shellEl._ta;
-  if (sendBtn) sendBtn.disabled = true;
-  if (ta) ta.disabled = true;
-
-  try {
-    // normalize input
-    userText = clampLen((userText || "").trim(), 1600);
-    if (!userText) return;
-    lastUserMessage = userText;
-
-    // intercept evaluation intents
-    const evalRe =
-      /\b(evaluate|assessment|assess|grade|score)\b.*\b(conversation|exchange|dialog|dialogue|chat)\b|\bfinal (eval|evaluation|assessment)\b/i;
-    if (evalRe.test(userText)) {
-      await evaluateConversation();
-      trimConversationIfNeeded();
-      renderMessages();
-      renderCoach();
-      return;
-    }
-
-    // normal turn
-    conversation.push({
-      role: "user",
-      content: userText,
-      _speaker: currentMode === "role-play" ? "rep" : "user"
-    });
-    trimConversationIfNeeded();
-    renderMessages();
-    renderCoach();
-
-    if (currentMode === "emotional-assessment") generateFeedback();
-
-    const sc = scenariosById.get(currentScenarioId);
-    const messages = [];
-
-    // 1) Core runtime rules (system.md) + EI layer
-    if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
-    if ((currentMode === "sales-simulation" || currentMode === "role-play") && eiHeuristics) {
-      messages.push({ role: "system", content: eiHeuristics });
-    }
-
-    // 2) Mode/scenario preface
-    if (currentMode === "role-play") {
-      const personaLine = currentPersonaHint();
-      const detail = sc
-        ? `Therapeutic Area: ${sc.therapeuticArea || sc.diseaseState || "—"}. HCP Role: ${sc.hcpRole || "—"}. ${
-            sc.background ? `Background: ${sc.background}. ` : ""
-          }${sc.goal ? `Today’s Goal: ${sc.goal}.` : ""}`
-        : "";
-      const roleplayRails = buildPreface("role-play", sc) + `
-
-Context:
-${personaLine}
-${detail}`;
-      messages.push({ role: "system", content: roleplayRails });
-    } else {
-      messages.push({ role: "system", content: buildPreface(currentMode, sc) });
-    }
-
-    // 3) User turn
-    messages.push({ role: "user", content: userText });
+    const shellEl = mount.querySelector(".reflectiv-chat");
+    const renderMessages = shellEl._renderMessages;
+    const renderCoach = shellEl._renderCoach;
+    const sendBtn = shellEl._sendBtn;
+    const ta = shellEl._ta;
+    if (sendBtn) sendBtn.disabled = true;
+    if (ta) ta.disabled = true;
 
     try {
-      if (currentMode !== "role-play") {
-        const sysExtras =
-          typeof EIContext !== "undefined" && EIContext?.getSystemExtras
-            ? await EIContext.getSystemExtras().catch(() => null)
-            : null;
-        if (sysExtras) messages.unshift({ role: "system", content: sysExtras });
+      // normalize input
+      userText = clampLen((userText || "").trim(), 1600);
+      if (!userText) return;
+      lastUserMessage = userText;
+
+      // intercept evaluation intents
+      const evalRe =
+        /\b(evaluate|assessment|assess|grade|score)\b.*\b(conversation|exchange|dialog|dialogue|chat)\b|\bfinal (eval|evaluation|assessment)\b/i;
+      if (evalRe.test(userText)) {
+        await evaluateConversation();
+        trimConversationIfNeeded();
+        renderMessages();
+        renderCoach();
+        return;
       }
 
-      let raw = await callModel(messages);
-      if (!raw) raw = "From my perspective, we review patient histories and adherence to guide decisions.";
-
-      const { coach, clean } = extractCoach(raw);
-      let replyText = currentMode === "role-play" ? sanitizeRolePlayOnly(clean) : sanitizeLLM(clean);
-
-      // enforce HCP-only in RP
-      if (currentMode === "role-play") {
-        replyText = await enforceHcpOnly(replyText, sc, messages, callModel);
+      // Rep-only evaluation trigger
+      const repEvalRe = /^\s*(evaluate\s+rep|rep\s+only\s+eval(?:uation)?|evaluate\s+the\s+rep)\s*$/i;
+      if (repEvalRe.test(userText)) {
+        const sc = scenariosById.get(currentScenarioId);
+        const persona = sc?.hcpRole || sc?.label || "";
+        const goal = sc?.goal || "";
+        const res = await evaluateRepOnly({ history: conversation, personaLabel: persona, goal });
+        repOnlyPanelHTML = res?.html || "<div class='coach-panel'><h4>Rep-only Evaluation</h4><p>Unavailable.</p></div>";
+        // show note, but do not add a new assistant message
+        renderCoach();
+        return;
       }
 
-      // anti-echo: if assistant equals user prompt
-      if (norm(replyText) === norm(userText)) {
-        replyText = "From my perspective, we evaluate high-risk patients using history, behaviors, and adherence context.";
-      }
-
-      // prevent duplicate/cycling assistant replies (ring buffer)
-      let candidate = norm(replyText);
-      if (candidate && (candidate === lastAssistantNorm || isRecent(candidate))) {
-        const alts = [
-          "In my clinic, we review history, behaviors, and adherence to understand risk.",
-          "I rely on history and follow-up patterns to guide decisions.",
-          "We focus on adherence and recent exposures when assessing candidacy."
-        ];
-        replyText = alts[Math.floor(Math.random()*alts.length)];
-        candidate = norm(replyText);
-      }
-      lastAssistantNorm = candidate;
-      pushRecent(candidate);
-
-      // allow longer Sales Coach responses
-      replyText = clampLen(replyText, currentMode === "sales-simulation" ? 2200 : 1400);
-
-      const computed = scoreReply(userText, replyText, currentMode);
-
-      const finalCoach = (() => {
-        if (coach && (coach.scores || coach.subscores) && currentMode !== "role-play") {
-          const scores = coach.scores || coach.subscores;
-          const overall =
-            typeof coach.overall === "number" ? coach.overall : typeof coach.score === "number" ? coach.score : undefined;
-          return {
-            overall: overall ?? computed.overall,
-            scores,
-            feedback: coach.feedback || computed.feedback,
-            worked: coach.worked && coach.worked.length ? coach.worked : computed.worked,
-            improve: coach.improve && coach.improve.length ? coach.improve : computed.improve,
-            phrasing: typeof coach.phrasing === "string" && coach.phrasing ? coach.phrasing : computed.phrasing,
-            context: coach.context || { rep_question: userText, hcp_reply: replyText },
-            score: overall ?? computed.overall,
-            subscores: scores
-          };
-        }
-        return computed;
-      })();
-
+      // normal turn
       conversation.push({
-        role: "assistant",
-        content: replyText,
-        _coach: finalCoach,
-        _speaker: currentMode === "role-play" ? "hcp" : "assistant"
+        role: "user",
+        content: userText,
+        _speaker: currentMode === "role-play" ? "rep" : "user"
       });
       trimConversationIfNeeded();
       renderMessages();
@@ -1491,36 +1480,142 @@ ${detail}`;
 
       if (currentMode === "emotional-assessment") generateFeedback();
 
-      if (cfg && cfg.analyticsEndpoint) {
-        fetch(cfg.analyticsEndpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ts: Date.now(),
-            schema: cfg.schemaVersion || "coach-v2",
-            mode: currentMode,
-            scenarioId: currentScenarioId,
-            turn: conversation.length,
-            context: finalCoach.context || { rep_question: userText, hcp_reply: replyText },
-            overall: finalCoach.overall,
-            scores: finalCoach.scores
-          })
-        }).catch(() => {});
+      const sc = scenariosById.get(currentScenarioId);
+      const messages = [];
+
+      // 1) Core runtime rules (system.md) + EI layer
+      if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
+      if ((currentMode === "sales-simulation" || currentMode === "role-play") && eiHeuristics) {
+        messages.push({ role: "system", content: eiHeuristics });
       }
-    } catch (e) {
-      conversation.push({ role: "assistant", content: `Model error: ${String(e.message || e)}` });
-      trimConversationIfNeeded();
-      renderMessages();
+
+      // 2) Mode/scenario preface
+      if (currentMode === "role-play") {
+        const personaLine = currentPersonaHint();
+        const detail = sc
+          ? `Therapeutic Area: ${sc.therapeuticArea || sc.diseaseState || "—"}. HCP Role: ${sc.hcpRole || "—"}. ${
+              sc.background ? `Background: ${sc.background}. ` : ""
+            }${sc.goal ? `Today’s Goal: ${sc.goal}.` : ""}`
+          : "";
+        const roleplayRails = buildPreface("role-play", sc) + `
+
+Context:
+${personaLine}
+${detail}`;
+        messages.push({ role: "system", content: roleplayRails });
+      } else {
+        messages.push({ role: "system", content: buildPreface(currentMode, sc) });
+      }
+
+      // 3) User turn
+      messages.push({ role: "user", content: userText });
+
+      try {
+        if (currentMode !== "role-play") {
+          const sysExtras =
+            typeof EIContext !== "undefined" && EIContext?.getSystemExtras
+              ? await EIContext.getSystemExtras().catch(() => null)
+              : null;
+          if (sysExtras) messages.unshift({ role: "system", content: sysExtras });
+        }
+
+        let raw = await callModel(messages);
+        if (!raw) raw = "From my perspective, we review patient histories and adherence to guide decisions.";
+
+        const { coach, clean } = extractCoach(raw);
+        let replyText = currentMode === "role-play" ? sanitizeRolePlayOnly(clean) : sanitizeLLM(clean);
+
+        // enforce HCP-only in RP
+        if (currentMode === "role-play") {
+          replyText = await enforceHcpOnly(replyText, sc, messages, callModel);
+        }
+
+        // anti-echo: if assistant equals user prompt
+        if (norm(replyText) === norm(userText)) {
+          replyText = "From my perspective, we evaluate high-risk patients using history, behaviors, and adherence context.";
+        }
+
+        // prevent duplicate/cycling assistant replies (ring buffer)
+        let candidate = norm(replyText);
+        if (candidate && (candidate === lastAssistantNorm || isRecent(candidate))) {
+          const alts = [
+            "In my clinic, we review history, behaviors, and adherence to understand risk.",
+            "I rely on history and follow-up patterns to guide decisions.",
+            "We focus on adherence and recent exposures when assessing candidacy."
+          ];
+          replyText = alts[Math.floor(Math.random()*alts.length)];
+          candidate = norm(replyText);
+        }
+        lastAssistantNorm = candidate;
+        pushRecent(candidate);
+
+        // allow longer Sales Coach responses
+        replyText = clampLen(replyText, currentMode === "sales-simulation" ? 2200 : 1400);
+
+        const computed = scoreReply(userText, replyText, currentMode);
+
+        const finalCoach = (() => {
+          if (coach && (coach.scores || coach.subscores) && currentMode !== "role-play") {
+            const scores = coach.scores || coach.subscores;
+            const overall =
+              typeof coach.overall === "number" ? coach.overall : typeof coach.score === "number" ? coach.score : undefined;
+            return {
+              overall: overall ?? computed.overall,
+              scores,
+              feedback: coach.feedback || computed.feedback,
+              worked: coach.worked && coach.worked.length ? coach.worked : computed.worked,
+              improve: coach.improve && coach.improve.length ? coach.improve : computed.improve,
+              phrasing: typeof coach.phrasing === "string" && coach.phrasing ? coach.phrasing : computed.phrasing,
+              context: coach.context || { rep_question: userText, hcp_reply: replyText },
+              score: overall ?? computed.overall,
+              subscores: scores
+            };
+          }
+          return computed;
+        })();
+
+        conversation.push({
+          role: "assistant",
+          content: replyText,
+          _coach: finalCoach,
+          _speaker: currentMode === "role-play" ? "hcp" : "assistant"
+        });
+        trimConversationIfNeeded();
+        renderMessages();
+        renderCoach();
+
+        if (currentMode === "emotional-assessment") generateFeedback();
+
+        if (cfg && cfg.analyticsEndpoint) {
+          fetch(cfg.analyticsEndpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ts: Date.now(),
+              schema: cfg.schemaVersion || "coach-v2",
+              mode: currentMode,
+              scenarioId: currentScenarioId,
+              turn: conversation.length,
+              context: finalCoach.context || { rep_question: userText, hcp_reply: replyText },
+              overall: finalCoach.overall,
+              scores: finalCoach.scores
+            })
+          }).catch(() => {});
+        }
+      } catch (e) {
+        conversation.push({ role: "assistant", content: `Model error: ${String(e.message || e)}` });
+        trimConversationIfNeeded();
+        renderMessages();
+      }
+    } finally {
+      const shellEl2 = mount.querySelector(".reflectiv-chat");
+      const sendBtn2 = shellEl2?._sendBtn;
+      const ta2 = shellEl2?._ta;
+      if (sendBtn2) sendBtn2.disabled = false;
+      if (ta2) { ta2.disabled = false; ta2.focus(); }
+      isSending = false;
     }
-  } finally {
-    const shellEl2 = mount.querySelector(".reflectiv-chat");
-    const sendBtn2 = shellEl2?._sendBtn;
-    const ta2 = shellEl2?._ta;
-    if (sendBtn2) sendBtn2.disabled = false;
-    if (ta2) { ta2.disabled = false; ta2.focus(); }
-    isSending = false;
   }
-}
 
   // ---------- scenarios loader ----------
   async function loadScenarios() {
@@ -1564,41 +1659,41 @@ ${detail}`;
   }
 
   // ---------- init ----------
-async function init() {
-  try {
+  async function init() {
     try {
-      cfg = await fetchLocal("./assets/chat/config.json");
+      try {
+        cfg = await fetchLocal("./assets/chat/config.json");
+      } catch (e) {
+        cfg = await fetchLocal("./config.json");
+      }
     } catch (e) {
-      cfg = await fetchLocal("./config.json");
+      console.error("config load failed:", e);
+      cfg = { defaultMode: "sales-simulation" };
     }
-  } catch (e) {
-    console.error("config load failed:", e);
-    cfg = { defaultMode: "sales-simulation" };
-  }
 
-  // Ensure endpoint is set even without config.json
-  if (!cfg.apiBase && !cfg.workerUrl) {
-    cfg.apiBase = (window.COACH_ENDPOINT || window.WORKER_URL || "").trim();
-  }
+    // Ensure endpoint is set even without config.json
+    if (!cfg.apiBase && !cfg.workerUrl) {
+      cfg.apiBase = (window.COACH_ENDPOINT || window.WORKER_URL || "").trim();
+    }
 
-  try {
-    systemPrompt = await fetchLocal("./assets/chat/system.md");
-  } catch (e) {
-    console.error("system.md load failed:", e);
-    systemPrompt = "";
-  }
+    try {
+      systemPrompt = await fetchLocal("./assets/chat/system.md");
+    } catch (e) {
+      console.error("system.md load failed:", e);
+      systemPrompt = "";
+    }
 
-  // EI foundation (about-ei.md)
-  try {
-    eiHeuristics = await fetchLocal("./assets/chat/about-ei.md");
-  } catch (e) {
-    console.warn("about-ei.md load failed:", e);
-    eiHeuristics = "";
-  }
+    // EI foundation (about-ei.md)
+    try {
+      eiHeuristics = await fetchLocal("./assets/chat/about-ei.md");
+    } catch (e) {
+      console.warn("about-ei.md load failed:", e);
+      eiHeuristics = "";
+    }
 
-  await loadScenarios();
-  buildUI();
-}
+    await loadScenarios();
+    buildUI();
+  }
 
   // ---------- start ----------
   waitForMount(init);
