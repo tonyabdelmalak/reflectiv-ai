@@ -1,28 +1,8 @@
-
 {
-  "version": "2025-10-14",
-  "schemaVersion": "coach-v2",
-  "model": "llama-3.1-8b-instant",
-  "apiBase": "https://my-chat-agent-v2.tonyabdelmalak.workers.dev/chat",
-  "workerUrl": "https://my-chat-agent-v2.tonyabdelmalak.workers.dev/chat",
-  "stream": false,
-  "modes": [
-    "emotional-assessment",
-    "product-knowledge",
-    "sales-simulation"
-  ],
-  "defaultMode": "sales-simulation",
-  "analyticsEndpoint": "https://my-chat-agent-v2.tonyabdelmalak.workers.dev/coach-metrics",
-  "brand": { "accent": "#2f3a4f", "radius": "14px" },
-  "scenariosUrl": "assets/chat/data/scenarios.merged.json",
-  "ui": { "showCoach": true, "showMeta": true, "allowModeSwitch": true },
-  "personas": [
-    { "key": "difficult", "label": "Difficult HCP", "description": "Resistant, emotional, argumentative" },
-    { "key": "engaged", "label": "Highly Engaged HCP", "description": "Collaborative, attentive, empathetic" },
-    { "key": "indifferent", "label": "Nice but Doesn’t Prescribe", "description": "Pleasant, but disengaged, no prescriptions" }
-  ],
-  "eiFeatures": [
-    { "key": "empathy", "label": "Empathy Rating" },
-    { "key": "stress", "label": "Stress Level Indicator" }
-  ]
+  "proxyUrl": "https://my-chat-agent.tonyabdelmalak.workers.dev/chat",
+  "title": "Ask Tony’s Copilot",
+  "greeting": "How can I help you explore Tony’s journey, dashboards, or career?",
+  "brand": { "accent": "#4f46e5", "radius": "12px" },
+  "rateLimit": 10,
+  "model": "llama3-8b-8192"
 }
