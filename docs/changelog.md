@@ -1,5 +1,11 @@
 # ReflectivAI Changelog
 
+## 2025-01-15 — Groq-backed chat widget polish
+
+- Confirmed the chat widget lives under `/assets/chat/` with the required HTML includes and merged defaults from `config.json`.
+- Added a lightweight client-side rate limiter aligned to the `rateLimit` config value to protect the Worker.
+- Documented the Groq proxy layout in `/cloudflare-worker/`, environment variables (`GROQ_API_KEY`, `ALLOWED_ORIGINS`), and updated testing guidance with a CORS note.
+
 ## 2025-10-09 — Initial Release
 
 - Initial release of the ReflectivAI Sales Enablement Platform.
