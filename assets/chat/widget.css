@@ -1,0 +1,204 @@
+:root {
+  --chat-accent: #4f46e5;
+  --chat-radius: 12px;
+  --chat-surface: #ffffff;
+  --chat-surface-muted: #eef2ff;
+  --chat-border: rgba(15, 23, 42, 0.12);
+  --chat-text: #0f172a;
+  --chat-muted: #475569;
+  --chat-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+}
+
+.chat-widget-root,
+.chat-widget-root * {
+  box-sizing: border-box;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.chat-widget-root {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1000;
+  font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--chat-text);
+}
+
+.chat-widget-launcher {
+  width: 64px;
+  height: 64px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--chat-accent);
+  color: #fff;
+  font-size: 28px;
+  cursor: pointer;
+  box-shadow: var(--chat-shadow);
+}
+
+.chat-widget-panel {
+  width: min(360px, calc(100vw - 32px));
+  max-height: min(640px, calc(100vh - 112px));
+  margin-top: 12px;
+  border: 1px solid var(--chat-border);
+  border-radius: calc(var(--chat-radius) + 6px);
+  background: var(--chat-surface);
+  box-shadow: var(--chat-shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-widget-root[data-open="false"] .chat-widget-panel {
+  display: none;
+}
+
+.chat-widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--chat-accent), #312e81);
+  color: #fff;
+}
+
+.chat-widget-header h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.chat-widget-header p {
+  margin: 4px 0 0;
+  font-size: 0.825rem;
+  opacity: 0.9;
+}
+
+.chat-widget-close {
+  border: 0;
+  background: rgba(255, 255, 255, 0.12);
+  color: inherit;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+.chat-widget-status {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--chat-border);
+  background: #f8fafc;
+  color: var(--chat-muted);
+  font-size: 0.825rem;
+}
+
+.chat-widget-messages {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  min-height: 320px;
+}
+
+.chat-widget-message {
+  max-width: 85%;
+  padding: 12px 14px;
+  border-radius: 16px;
+  line-height: 1.5;
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.chat-widget-message--assistant {
+  align-self: flex-start;
+  background: var(--chat-surface-muted);
+  border-top-left-radius: 6px;
+}
+
+.chat-widget-message--user {
+  align-self: flex-end;
+  color: #fff;
+  background: var(--chat-accent);
+  border-top-right-radius: 6px;
+}
+
+.chat-widget-message--error {
+  align-self: stretch;
+  background: #fff1f2;
+  color: #9f1239;
+  border: 1px solid rgba(225, 29, 72, 0.2);
+}
+
+.chat-widget-form {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border-top: 1px solid var(--chat-border);
+  background: var(--chat-surface);
+}
+
+.chat-widget-form textarea {
+  width: 100%;
+  min-height: 88px;
+  resize: vertical;
+  padding: 12px;
+  border: 1px solid var(--chat-border);
+  border-radius: var(--chat-radius);
+  font: inherit;
+}
+
+.chat-widget-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.chat-widget-hint {
+  color: var(--chat-muted);
+  font-size: 0.8rem;
+}
+
+.chat-widget-form button[type="submit"] {
+  border: 0;
+  border-radius: 999px;
+  background: var(--chat-accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  padding: 10px 18px;
+  cursor: pointer;
+}
+
+.chat-widget-form button[disabled],
+.chat-widget-launcher[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .chat-widget-root {
+    right: 16px;
+    bottom: 16px;
+  }
+
+  .chat-widget-panel {
+    width: min(100vw - 24px, 360px);
+  }
+}
