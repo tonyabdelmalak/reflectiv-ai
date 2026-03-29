@@ -1,5 +1,11 @@
 # ReflectivAI Changelog
 
+## 2026-03-20 — Chat widget + Groq worker cleanup
+
+- Replaced the legacy root widget assets with a single production widget served from `assets/chat/`.
+- Added a dedicated Cloudflare Worker project under `cloudflare-worker/` for the Groq `/chat` proxy.
+- Archived duplicate root widget files and refreshed documentation plus curl-based test instructions.
+
 ## 2025-10-09 — Initial Release
 
 - Initial release of the ReflectivAI Sales Enablement Platform.
